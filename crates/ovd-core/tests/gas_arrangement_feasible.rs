@@ -1,0 +1,260 @@
+//! Seam: the public `ovd_core::gas_arrangement` API, issue #264: `fit` returns an arrangement that
+//! meets every check (stability included), feasible first and then most cargo; when none does it says
+//! so (`feasible == false`) and names the failing checks of the closest candidate.
+//!
+//! Label: property
+//!
+//! No test here pins a calculated number as engineering evidence. The hulls are the design-impact
+//! cases of the repo; the payloads in the comments are what the code printed before and after the
+//! change (the 2,808 t of the old `fit` is the `cargo_t` the design-impact base run printed for
+//! "sweep gas passes all checks IGC_2G 110x11.4").
+
+use ovd_core::checks::all_ok;
+use ovd_core::gas_arrangement::{
+    ArrangementFit, FitOptions, IsCodeConditions, fit, is_code_cargo, is_code_conditions,
+    smallest_viable_loa,
+};
+use ovd_core::gas_stability::{self as gs, GasCapacityResult};
+
+/// The stability of a returned arrangement, assessed again on its own, not through `fit`. Issue #498:
+/// the legacy "Light" condition may fail the angle of maximum GZ alone (a warning of the check, not a
+/// failure); every other criterion of every condition must hold.
+fn stability_ok(f: &ArrangementFit) -> bool {
+    let basis = GasCapacityResult::try_from(&f.engine_result).unwrap();
+    let assessed = gs::assess(
+        &basis,
+        f.payload_t,
+        gs::DEFAULT_WATER_DENSITY,
+        gs::criteria_set_for(&f.ruleset),
+    )
+    .unwrap();
+    assessed.conditions.iter().all(|c| {
+        c.ok()
+            || (c.name == "Light"
+                && c.criteria
+                    .iter()
+                    .filter(|x| !x.ok)
+                    .map(|x| x.name.as_str())
+                    .eq(["Angle of max GZ"]))
+    })
+}
+
+fn options(depth: f64) -> FitOptions {
+    FitOptions {
+        depths: vec![depth],
+        fill_ratio: 0.98,
+        ..FitOptions::default()
+    }
+}
+
+#[test]
+fn the_search_takes_the_arrangement_with_most_cargo_that_passes() {
+    // 110 x 11.4 x 6.0 m LPG propane, draught cap 5.7 m. The base arrangement (no extra side
+    // clearance) carries most cargo and passes every check on the hull's sections (issues #448,
+    // #498); the whole search keeps it.
+    let only_most_cargo = FitOptions {
+        extra_clearance_m: vec![],
+        ..options(6.0)
+    };
+    let base = fit(110.0, 11.4, "LPG_propane", 5.7, &only_most_cargo).unwrap();
+    assert!(base.feasible, "{:?}", base.failed_checks);
+    assert!(base.failed_checks.is_empty());
+    assert!(base.payload_t > 2808.0);
+
+    let f = fit(110.0, 11.4, "LPG_propane", 5.7, &options(6.0)).unwrap();
+    assert!(f.feasible, "{:?}", f.failed_checks);
+    assert!(f.failed_checks.is_empty());
+    assert!(all_ok(&f.engine_result.checks));
+    assert!(f.payload_t >= base.payload_t);
+}
+
+#[test]
+fn a_light_condition_that_fails_only_the_angle_of_max_gz_is_a_warning_not_a_failure() {
+    // Issue #498. 60 x 10 x 6 m LPG propane: the legacy Light condition (no ballast) fails the angle of
+    // maximum GZ, IS Code 2.2.3, and nothing else. It was infeasible; now the check is a warning and
+    // the arrangement is feasible. The Python assessment (`assess().ok()`) is unchanged: it still
+    // says the Light condition does not pass.
+    let f = fit(60.0, 10.0, "LPG_propane", 5.7, &options(6.0)).unwrap();
+    assert!(f.feasible, "{:?}", f.failed_checks);
+    assert!(f.failed_checks.is_empty(), "{:?}", f.failed_checks);
+    assert!(f.payload_t > 0.0);
+    let basis = GasCapacityResult::try_from(&f.engine_result).unwrap();
+    let strict = gs::assess(
+        &basis,
+        f.payload_t,
+        gs::DEFAULT_WATER_DENSITY,
+        gs::criteria_set_for(&f.ruleset),
+    )
+    .unwrap();
+    assert!(!strict.ok());
+    assert!(stability_ok(&f));
+}
+
+#[test]
+fn the_closest_candidate_is_the_one_with_the_fewest_failed_checks() {
+    // 60 x 20 x 3.5 m LPG propane fails three stability conditions in every arrangement; the
+    // closest one has no more failures than any single arrangement searched alone.
+    let all = fit(60.0, 20.0, "LPG_propane", 3.2, &options(3.5)).unwrap();
+    assert!(!all.feasible);
+    for nw in [1, 2, 3] {
+        let one = fit(
+            60.0,
+            20.0,
+            "LPG_propane",
+            3.2,
+            &FitOptions {
+                tanks_wide: vec![nw],
+                ..options(3.5)
+            },
+        )
+        .unwrap();
+        assert!(all.failed_checks.len() <= one.failed_checks.len() || one.payload_t == 0.0);
+    }
+}
+
+#[test]
+fn a_candidate_that_over_runs_the_air_draft_limit_does_not_pass() {
+    // The light air draft of this hull is over 1 m, so no arrangement meets a 1 m limit.
+    let o = FitOptions {
+        air_draft_limit_m: Some(1.0),
+        ..options(6.0)
+    };
+    let f = fit(110.0, 11.4, "LPG_propane", 5.7, &o).unwrap();
+    assert!(!f.feasible);
+    assert!(
+        f.failed_checks
+            .iter()
+            .any(|c| c.starts_with("air_draft_within_limit")),
+        "{:?}",
+        f.failed_checks
+    );
+}
+
+#[test]
+fn a_load_that_leaves_less_freeboard_than_required_does_not_pass() {
+    // A 3.5 m deep hull held to a 0.8 m draught is draught-bound and keeps 2.7 m of freeboard. The
+    // search passes it at the default 0.3 m and refuses it when 2.8 m is required.
+    let ok = fit(110.0, 20.0, "LPG_propane", 0.8, &options(3.5)).unwrap();
+    assert_eq!(ok.binding, "draft");
+    assert!(
+        !ok.failed_checks
+            .iter()
+            .any(|c| c.starts_with("freeboard_at_payload")),
+        "{:?}",
+        ok.failed_checks
+    );
+    let o = FitOptions {
+        required_freeboard_m: 2.8,
+        ..options(3.5)
+    };
+    let f = fit(110.0, 20.0, "LPG_propane", 0.8, &o).unwrap();
+    assert!(!f.feasible);
+    assert!(
+        f.failed_checks
+            .iter()
+            .any(|c| c.starts_with("freeboard_at_payload")),
+        "{:?}",
+        f.failed_checks
+    );
+}
+
+#[test]
+fn no_arrangement_labelled_feasible_has_a_failing_check() {
+    let mut feasible = 0;
+    let mut infeasible = 0;
+    for loa in [40.0, 60.0, 80.0, 110.0, 150.0] {
+        for beam in [8.0, 10.0, 14.0, 20.0] {
+            for depth in [3.5, 4.5, 6.0] {
+                for cargo in ["LPG_propane", "LNG", "LPG_butane"] {
+                    for self_propelled in [true, false] {
+                        let o = FitOptions {
+                            self_propelled,
+                            ..options(depth)
+                        };
+                        let f = fit(loa, beam, cargo, depth - 0.3, &o).unwrap();
+                        let what = format!("{loa}x{beam}x{depth} {cargo} sp={self_propelled}");
+                        if f.feasible {
+                            feasible += 1;
+                            assert!(f.failed_checks.is_empty(), "{what}: {:?}", f.failed_checks);
+                            assert!(f.payload_t > 0.0, "{what}");
+                            assert!(all_ok(&f.engine_result.checks), "{what}");
+                            assert!(stability_ok(&f), "{what}");
+                        } else {
+                            infeasible += 1;
+                            assert!(!f.failed_checks.is_empty(), "{what}");
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // The sweep must have both kinds, or it proves nothing.
+    assert!(
+        feasible > 20 && infeasible > 20,
+        "{feasible} / {infeasible}"
+    );
+}
+
+#[test]
+fn the_smallest_viable_loa_has_a_passing_arrangement() {
+    let o = FitOptions {
+        fill_ratio: 0.98,
+        ..FitOptions::for_smallest_viable_loa()
+    };
+    let loa = smallest_viable_loa(12.0, "LNG", 3.0, 20.0, 150.0, &o).unwrap();
+    assert!(loa.is_finite());
+    let f = fit(loa, 12.0, "LNG", 3.0, &o).unwrap();
+    assert!(f.feasible, "{loa}: {:?}", f.failed_checks);
+    assert!(stability_ok(&f));
+}
+
+// --- Issue #426 part 3: the search checks its candidates in the IS Code conditions. ---
+
+fn is_code_options(depth: f64, consumables_t: f64) -> FitOptions {
+    FitOptions {
+        is_code: Some(IsCodeConditions {
+            consumables_t,
+            may_sail_without_ballast: false,
+            user_ballast: None,
+        }),
+        ..options(depth)
+    }
+}
+
+#[test]
+fn a_feasible_arrangement_meets_every_is_code_condition() {
+    let o = is_code_options(6.0, 60.0);
+    let f = fit(110.0, 11.4, "LPG_propane", 5.7, &o).unwrap();
+    assert!(f.feasible, "{:?}", f.failed_checks);
+    let ic = o.is_code.as_ref().unwrap();
+    let cargo = is_code_cargo(&f.engine_result, f.payload_t, 110.0, 11.4, 5.7, &o, ic);
+    let conds = is_code_conditions(&f.engine_result, &f.engine_inputs, cargo, &o, ic).unwrap();
+    assert_eq!(conds.len(), 4);
+    for c in &conds {
+        assert!(c.ok(), "{}", c.condition.name);
+    }
+}
+
+#[test]
+fn the_is_code_cargo_is_the_payload_less_the_consumables_only_when_the_draught_binds() {
+    let o = is_code_options(6.0, 60.0);
+    let ic = o.is_code.as_ref().unwrap();
+    let f = fit(110.0, 11.4, "LPG_propane", 5.7, &options(6.0)).unwrap();
+    let r = &f.engine_result;
+    // Issue #448: the hull's displacement at the draught cap, from its sections (it was
+    // 0.85 x L x B x T).
+    let hull = ovd_core::hydrostatics::Hull::build(r.hull_spec.as_ref().unwrap()).unwrap();
+    let room = hull.volume_at(5.7) * gs::DEFAULT_WATER_DENSITY - r.lightship_t - 60.0;
+    // A payload above the room left by the stores and fuel is cut to it.
+    assert_eq!(
+        is_code_cargo(r, room + 100.0, 110.0, 11.4, 5.7, &o, ic),
+        room
+    );
+    // A payload below it does not change.
+    assert_eq!(
+        is_code_cargo(r, room - 100.0, 110.0, 11.4, 5.7, &o, ic),
+        room - 100.0
+    );
+    // No room: no cargo.
+    assert_eq!(is_code_cargo(r, 10.0, 110.0, 11.4, 0.1, &o, ic), 0.0);
+}

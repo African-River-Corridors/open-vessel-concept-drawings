@@ -5,13 +5,13 @@
 > Code state: written against `main` at commit `f6d446c` (2026-10-20). The hull and hydrostatics text follows
 > issue #448 (hydrostatics and GZ from the Sections Table); its line references are to that change.
 
-**For:** naval architect  ·  **Code:** `crates/ovcd-core/src/sections.rs`, `hydrostatics.rs` (`Hull`), `hull.rs`,
+**For:** naval architect  ·  **Code:** `crates/ovd-core/src/sections.rs`, `hydrostatics.rs` (`Hull`), `hull.rs`,
 `stern_form.rs`, `barge_capacity.rs`, `vessel_classes.rs`, `vessel_standards.rs`, `squat.rs` (hull-form terms
-only); `crates/ovcd-format/src/class_input.rs`, `vdesign.rs`, `simulate.rs`; Defaults Profile
-`crates/ovcd-format/src/builtin_profile.json`  ·  **Rule Sets:** none. This area applies no published Rule. Its
-feasibility tests (the hull floats within its depth, the hull finds a trim within ±10°) are OVCD Checks.
+only); `crates/ovd-format/src/class_input.rs`, `vdesign.rs`, `simulate.rs`; Defaults Profile
+`crates/ovd-format/src/builtin_profile.json`  ·  **Rule Sets:** none. This area applies no published Rule. Its
+feasibility tests (the hull floats within its depth, the hull finds a trim within ±10°) are OVD Checks.
 
-## What OVCD computes here
+## What OVD computes here
 
 - **Principal dimensions:** length overall, beam and Moulded Depth of one Hull, typed or taken from a Vessel Class.
   A left-out depth comes from a depth-to-beam ratio per Cargo group.
@@ -24,7 +24,7 @@ feasibility tests (the hull floats within its depth, the hull finds a trim withi
   limit that sets the weight-bound cargo (`draught_max_m`).
 - **Hull values in the results:** `hydrostatics` (the upright values at the laden draught) and `hydrostatic_table`
   (10 draughts, 0.1 D to D). The block coefficient `Cb` (`dims.cb`) is a result, not an input.
-- **Trim:** the free-trim floating position, where OVCD has the mass items along the hull. The check
+- **Trim:** the free-trim floating position, where OVD has the mass items along the hull. The check
   `trim_in_range` says when no trim within ±10° balances the hull.
 - **Form values for stability:** KM_T of the upright cut at a draught. Area 03 uses it for GM, and the sections for GZ.
 - **Legacy path only** (the Python API and the evaluation harness): KB, BM, LCB, a linear trim and the draughts fore
@@ -39,7 +39,7 @@ There is one hull model: the **Sections Table** (ADR 0012, spec 0008). Every hyd
    `Hull::build` (`hydrostatics.rs:328-354`), called at `barge_capacity.rs:1208`, `simulate.rs:1625`
    (`option_hull`) and `journey_derating.rs:113`. Label: Method.
 2. **Legacy path** (`BargeInputs`, `hydrostatics::calculate_stability` and `calculate_trim`, reached from
-   `crates/ovcd-format/src/eval.rs`). The hull is the **raked box** of `hull.rs`, with flat-bottom rakes at bow and
+   `crates/ovd-format/src/eval.rs`). The hull is the **raked box** of `hull.rs`, with flat-bottom rakes at bow and
    stern. It is turned into sections (`RakedBox::sections`, `hull.rs:433`) before any integration. Label: Method.
 
 The Sections Table holds offsets at stations. The bilge radius (16 chords per quarter circle), sheer (a parabola, 0 at
@@ -110,7 +110,7 @@ and the resistance wetted surface (Step 6). They can disagree a little with the 
 
 - **Volume.** `∇` is the volume of the sections below the waterplane, in m³ (`sections::immersed`,
   `sections.rs:645`). Each section is clipped by the waterplane (Sutherland–Hodgman). The shoelace formula gives
-  its area and moments. Along the length, OVCD splits each interval where an edge crosses the waterplane, then
+  its area and moments. Along the length, OVD splits each interval where an edge crosses the waterplane, then
   uses Simpson's rule. This is exact (to rounding) for a prismatic interval and for the upright raked box.
   Displacement `Δ = ρ × ∇`, in t. Label: Method.
 - **Level draught.** `draught_for_volume` (`sections.rs:814`) finds the upright, level draught for a volume. It
@@ -224,7 +224,7 @@ The resistance wetted surface stays box-based: `(L_WL B + 2 L_WL T) × 1.02`, pl
 | HF-A28 | Use of Cb | Removed (#448). The volume comes from the sections, not from `Cb L B T` | — | — | — | — |
 | HF-A29 | Water density | 1.0 t/m³ (fresh). Hard 0.9 to 1.1; soft 0.99 to 1.03 | Estimate | Fresh water; sea water about 1.025 | profile `water_density_t_per_m3`; `simulate.rs:669` | In sea water, draught 2.5 % too deep: conservative |
 | HF-A30 | Draught solver | Illinois secant method, at most 16 steps, stop at 1e-13 of the target volume; bracket from the keel to the top of the hull | Fixed in code | Step cap and tolerance are fixed, so native and WebAssembly stop at the same step and give the same bits | `sections.rs:757`, `:782-826` | Negligible |
-| HF-A31 | Draught clamp | `T ≤ D`; `overloaded` when `W / ρ` is more than the volume of the sections to the deck | Fixed in code (OVCD Check) | Physical | `barge_capacity.rs:1223-1235` | None |
+| HF-A31 | Draught clamp | `T ≤ D`; `overloaded` when `W / ρ` is more than the volume of the sections to the deck | Fixed in code (OVD Check) | Physical | `barge_capacity.rs:1223-1235` | None |
 | HF-A32 | Freeboard | `F = D − T`, at the side, at mid-length, with no sheer or camber | Method | Plane of maximum draught to the deck at side | `barge_capacity.rs:1298`; `simulate.rs:1248` | With trim, the freeboard at the deeper end is less: non-conservative |
 | HF-A33 | Minimum freeboard | 0.3 m; must be less than `D` | Estimate | Carried over; no source given | profile `min_freeboard_m` | Area 08 |
 | HF-A34 | Draught limit | `min(D − F_min, draught_limit_m, channel depth − UKC)` | Method | None | `simulate.rs:1053-1066` | Area 08 |
@@ -246,12 +246,12 @@ The resistance wetted surface stays box-based: `(L_WL B + 2 L_WL T) × 1.02`, pl
 | HF-A50 | Squat midship area | The hull's own: the immersed section at mid-length of the waterline | Method | Cut of the sections | `squat.rs:147-152`; `sections.rs:674-680` | Small. The Python API keeps `B × T` |
 | HF-A51 | Barrass II | `Cb × S_b^0.81 × V^2.08 / 20` | Method | Named "Barrass II" in code; source text not read | `squat.rs:107-112` | Area 08 |
 | HF-A52 | ICORELS | `2.4 ∇ / Lpp² × Fnh² / √(1 − Fnh²)` | Method | Named "ICORELS / PIANC" in code; source text not read | `squat.rs:115-127` | Area 08 |
-| HF-A53 | Squat validity | `Fnh < 0.70` and blockage `≤ 0.35` warn; `Cb` 0.3 to 1.0 refused outside | Fixed in code (OVCD Check) | No source read | `squat.rs:26`, `:75`, `:202`, `:214` | Warning only |
+| HF-A53 | Squat validity | `Fnh < 0.70` and blockage `≤ 0.35` warn; `Cb` 0.3 to 1.0 refused outside | Fixed in code (OVD Check) | No source read | `squat.rs:26`, `:75`, `:202`, `:214` | Warning only |
 | HF-A54 | Resistance midship area | The hull's own, as HF-A50 | Method | Cut of the sections | `resistance.rs:395-402`; `simulate.rs:370` | Small (area 07) |
 | HF-A55 | Wetted surface | `(L_WL B + 2 L_WL T) × 1.02`, plus the area the Stern Form adds. Still box-based; it does not use the sections | Fixed in code | "1.02 rake form factor"; no source | `resistance.rs:345-349` | Area 07. Out of scope of #448 |
 | HF-A56 | Volume integration | Each section clipped by the waterplane (Sutherland–Hodgman), shoelace area and moments; Simpson's rule along the length, split where an edge crosses the waterplane | Method | Standard polygon geometry (spec 0008) | `sections.rs:645` `immersed` | Exact to rounding for prismatic intervals and the upright raked box. Small for the Stern Form's curved run |
 | HF-A57 | Free-trim float | Inner solve on the volume (at most 16 steps), outer solve on the trim (at most 12 steps), Illinois secant method, each stopping at a tolerance | Method | Free-floating equilibrium; G and B on one vertical | `sections.rs:757-762`, `:891-951`; `hydrostatics.rs:372-386` | Negligible inside the bracket |
-| HF-A58 | Trim limit | The trim is searched within ±10°. No balance there: the condition keeps its level draught and fails `trim_in_range` (dry bulk) or the criterion "Trim within the solver's range" (area 03) | Fixed in code (OVCD Check) | An end would go under before 10° on these hulls | `sections.rs:762`, `:937-941`; `barge_capacity.rs:1274-1283`, `:1461-1476` | Conservative: the condition fails |
+| HF-A58 | Trim limit | The trim is searched within ±10°. No balance there: the condition keeps its level draught and fails `trim_in_range` (dry bulk) or the criterion "Trim within the solver's range" (area 03) | Fixed in code (OVD Check) | An end would go under before 10° on these hulls | `sections.rs:762`, `:937-941`; `barge_capacity.rs:1274-1283`, `:1461-1476` | Conservative: the condition fails |
 | HF-A59 | Where the hull floats at free trim | Dry bulk with a stern block (Laden, Light); the IS Code conditions; the legacy gas conditions with a stern block. Every other condition floats level | Fixed in code | Free trim needs the mass items along the hull | `barge_capacity.rs:1241-1296`; `loading_conditions.rs:448-506`; `gas_stability.rs:329-385` | Unknown where a level hull would trim |
 | HF-A60 | Cb, a result | `∇ / (L_WL B_WL T)` at the laden level draught; at the design draught when there is no draught | Method | ES-TRIN 2025/1 Art. 1.01, 4.9 | `sections.rs:736`; `simulate.rs:1232`, `:2085-2090` | None; it is reported, and read by the squat and the IGC acceleration |
 | HF-A61 | Reported draught | `draught_m` is the level draught of the reported displacement. Draughts aft and forward are at `x = 0` and `x = L`, square to the base line | Fixed in code | Issue #448 definitions | `simulate.rs:1103`, `:2074-2075`; `hydrostatics.rs:372-386` | Small; with trim, see the `trim` list |
@@ -299,7 +299,7 @@ input. The V-bottom and chine values are inputs, but no hull uses them yet.
   finds no balance there. It keeps its level draught and fails `trim_in_range`.
 - The freeboard is taken at mid-length. With trim, the deeper end has less.
 - The hydrostatic table is upright and level. There are no cross curves (KN against heel) in the results.
-- A GZ curve on the sections costs time: about 200 ms per curve natively on a tunnel stern. OVCD builds a curve
+- A GZ curve on the sections costs time: about 200 ms per curve natively on a tunnel stern. OVD builds a curve
   only where a criterion needs it (area 03).
 - Settled by #448: the hull is no longer a box with one `Cb` factor; `Cb` is on `L_WL × B_WL × T`, the ES-TRIN
   2025/1 Article 1.01, 4.9 basis; the drawn bow rake is in the hydrostatics; there is no default `Cb` to sit below
@@ -314,17 +314,17 @@ input. The V-bottom and chine values are inputs, but no hull uses them yet.
 
 ## Evidence
 
-- `crates/ovcd-core/tests/hull_hydrostatics.rs`: the `Hull` of the sections against closed forms. A box gives
+- `crates/ovd-core/tests/hull_hydrostatics.rs`: the `Hull` of the sections against closed forms. A box gives
   `∇ = L B T`, `KB = T / 2`, `BM_T = B² / (12 T)` and `Cb = 1`. A raked box matches the closed forms of `hull.rs`. A
   Stern Form removes the volume `SternGeometry::removed` gives. The free-trim float is level when G is over B and
   trims by the bow when G is forward. The table has 10 rows from 0.1 D to D.
-- `crates/ovcd-core/tests/sections_equilibrium.rs`: the free-trim float and GZ against the box GZ, the wall-sided
+- `crates/ovd-core/tests/sections_equilibrium.rs`: the free-trim float and GZ against the box GZ, the wall-sided
   formula and the first-order trim; a trim beyond 10° is an error.
-- `crates/ovcd-core/tests/hull.rs` and `tests/hydrostatics.rs`: the legacy entry points. These prove the port of
+- `crates/ovd-core/tests/hull.rs` and `tests/hydrostatics.rs`: the legacy entry points. These prove the port of
   the solver edge cases, not the physics.
-- `crates/ovcd-core/tests/vessel_classes.rs`, `crates/ovcd-format/tests/vessel_class.rs`: the ladder, placement,
+- `crates/ovd-core/tests/vessel_classes.rs`, `crates/ovd-format/tests/vessel_class.rs`: the ladder, placement,
   limits, and that picking any class and placing its maxima gives the same class back, for every class.
-- `crates/ovcd-format/tests/default_depth.rs`: the default depth rule.
+- `crates/ovd-format/tests/default_depth.rs`: the default depth rule.
 - `catalogue/depth_rule.md`: the depth rule against 41 reference vessels with a published depth.
 - `calibration/results.md`: deadweight at the stated draught, 30 held-out box barges, mean error −2.1 %, 30 of 30
   inside the band. **This run used a box hull with the fitted `Cb` of 0.928, before #448.** It is not yet re-run
@@ -342,5 +342,5 @@ input. The V-bottom and chine values are inputs, but no hull uses them yet.
 7. For squat, `Lpp` is now `L_WL` at the draught. Is that fair, or should it be the length between perpendiculars?
 8. Settled (#448): the blockage takes the hull's own midship area.
 9. Is ±10° a fair limit for the free-trim search? A hull that needs more fails the condition.
-10. Should the reported `draught_m` be the free-trim draught at mid-length where OVCD has the mass items, not the
+10. Should the reported `draught_m` be the free-trim draught at mid-length where OVD has the mass items, not the
     level draught?

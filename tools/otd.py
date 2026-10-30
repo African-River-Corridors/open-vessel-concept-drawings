@@ -3,7 +3,7 @@
     python3 tools/otd.py        # the crate's folder (in cargo's git checkout)
     python3 tools/otd.py pin    # "<repository>@<commit>" of the standard that `otd` vendors
 
-OVCD pins `otd` by git tag in the root Cargo.toml (as the `ovcd-draw` dependency). The vendored
+OVD pins `otd` by git tag in the root Cargo.toml (as the `ovd-draw` dependency). The vendored
 standard, its PIN.json and its conformance suite live in that crate's `standard/` folder. Cargo
 fetches the crate on first use. Standard library only.
 """

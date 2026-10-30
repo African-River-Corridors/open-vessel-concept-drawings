@@ -1,0 +1,95 @@
+{
+  "$schema": "../rule-set.schema.json",
+  "id": "abs-barges",
+  "family": "abs-barges",
+  "title": "ABS Steel Barges 2024, Part 5 Chapter 3 Section 1: notes for an integrated tug-barge (ATB)",
+  "version": "1.0.0",
+  "edition": {
+    "document": "ABS Rules for Building and Classing Steel Barges",
+    "edition": "January 2024",
+    "in_force": "January 2024 edition; Part 5 Chapter 3 Section 1 paragraphs marked (2020) were last revised in 2020"
+  },
+  "sources": [
+    {
+      "document": "ABS Rules for Building and Classing Steel Barges",
+      "edition": "January 2024",
+      "access": "free",
+      "sha256": "e18634f9ed6a118f90e8a74035371d22f33c205299be16fd38bfb4443a6048fc"
+    }
+  ],
+  "status": "draft",
+  "applies_when": {},
+  "includes": [],
+  "known_conflicts": [],
+  "tables": [],
+  "rules": [
+    {
+      "id": "abs-barges/5-3-1.1.3/two-vessels",
+      "title": "The tug and the barge of an integrated tug-barge are classed as two separate vessels, cross-referenced in the Record: the approval of each is its own",
+      "origin": "regulation",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2024",
+        "locator": "5-3-1.1.3",
+        "page": "10-barge-rules-jan24.pdf, Part 5 Chapter 3 Section 1, p. 267 (printed)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#363"
+      },
+      "verified": false,
+      "applies_when": {
+        "formation_kind": [
+          "atb"
+        ]
+      },
+      "kind": "note",
+      "measure": {
+        "id": "formation.separate_vessels"
+      },
+      "tolerance": 0,
+      "consequence": "note",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "An approval item, not a calculation: ABS classes the tug and the barge as two separate vessels, so the tug and the barge are each submitted for class. OVD runs the ATB as one Equivalent Hull for resistance and powering only; it does not assess either vessel against class",
+      "finding": "#363",
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-barges/5-3-1.11.3/notch-wing-walls",
+      "title": "Structure in way of the connection: the barge's wing walls at a notch need an analysis that takes torsional shear as well as primary and secondary shear and bending, by finite element analysis, with the connector loads of 11.1",
+      "origin": "regulation",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2024",
+        "locator": "5-3-1.11.3",
+        "page": "10-barge-rules-jan24.pdf, Part 5 Chapter 3 Section 1, p. 271 (printed)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#363"
+      },
+      "verified": false,
+      "applies_when": {
+        "formation_kind": [
+          "atb"
+        ]
+      },
+      "kind": "note",
+      "measure": {
+        "id": "formation.notch_wing_walls"
+      },
+      "tolerance": 0,
+      "consequence": "note",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "An approval item, not a calculation: the analysis of the wing walls at the Notch, and of the structure of the tug and the barge in way of the connection, is submitted for review. OVD has no structure model for it, and the connector loads (5-3-1/11.1) come from model tests or a multi-body analysis it does not do",
+      "finding": "#363",
+      "since": "1.0.0"
+    }
+  ]
+}

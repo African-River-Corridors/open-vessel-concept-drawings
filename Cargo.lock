@@ -2227,10 +2227,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "ovcd-app"
+name = "ovd-app"
 version = "0.2.4"
 dependencies = [
- "ovcd-shell",
+ "ovd-shell",
  "serde_json",
  "tauri",
  "tauri-build",
@@ -2238,16 +2238,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "ovcd-cli"
+name = "ovd-cli"
 version = "0.2.4"
 dependencies = [
  "otd",
- "ovcd-format",
+ "ovd-format",
  "serde_json",
 ]
 
 [[package]]
-name = "ovcd-core"
+name = "ovd-core"
 version = "0.2.4"
 dependencies = [
  "arc-rules",
@@ -2256,44 +2256,44 @@ dependencies = [
 ]
 
 [[package]]
-name = "ovcd-format"
+name = "ovd-format"
 version = "0.2.4"
 dependencies = [
  "arc-rules",
  "fluent-bundle",
  "libm",
  "otd",
- "ovcd-core",
+ "ovd-core",
  "serde",
  "serde_json",
  "sha2 0.11.1",
 ]
 
 [[package]]
-name = "ovcd-py"
+name = "ovd-py"
 version = "0.2.4"
 dependencies = [
- "ovcd-format",
+ "ovd-format",
  "pyo3",
 ]
 
 [[package]]
-name = "ovcd-shell"
+name = "ovd-shell"
 version = "0.2.4"
 dependencies = [
  "otd",
- "ovcd-core",
- "ovcd-format",
+ "ovd-core",
+ "ovd-format",
  "serde_json",
 ]
 
 [[package]]
-name = "ovcd-web"
+name = "ovd-web"
 version = "0.2.4"
 dependencies = [
  "otd",
- "ovcd-format",
- "ovcd-shell",
+ "ovd-format",
+ "ovd-shell",
  "serde_json",
  "wasm-bindgen",
 ]
@@ -4716,7 +4716,7 @@ dependencies = [
 name = "xtask"
 version = "0.2.4"
 dependencies = [
- "ovcd-core",
+ "ovd-core",
 ]
 
 [[package]]

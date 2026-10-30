@@ -32,8 +32,8 @@ the Calibration Bands are (issue #119). A `results.md` that is not what the run 
 A stern case is a self-propelled craft with the numbers a run reads from its results: the Blind Distance light
 and laden, the speed through the water in deep water (km/h), the Design Speed, the propeller diameter and the
 largest the stern allows, whether it is ducted, the lightest aft draught and the blade load. The runner selects
-`es-trin-2025`, `solas-v22`, `rheinschpv` and `ovcd` for them and compares each Rule keyed by rule id: ES-TRIN
-7.02(2), 5.06(1) and 28.04(1)(a), SOLAS V/22.1.1, RheinSchPV 1.07(2), and the speed and propeller Checks of `ovcd`.
+`es-trin-2025`, `solas-v22`, `rheinschpv` and `ovd` for them and compares each Rule keyed by rule id: ES-TRIN
+7.02(2), 5.06(1) and 28.04(1)(a), SOLAS V/22.1.1, RheinSchPV 1.07(2), and the speed and propeller Checks of `ovd`.
 `oracle/stern_oracle.py` works the verdicts out from the texts; `stern_mutants.yaml` moves one number to each side
 of each limit by one step (the Blind Distance 249 and 251 m, the speed 12.9 and 13.1 km/h and a craft of 110.1 m
 with and without a bow thruster are base cases). Rule mutation runs on the Rules these cases expect, over the base
@@ -118,7 +118,7 @@ cargo tank has the verdict of its worst tank.
   publication) and `oracle/mutants.py` writes `tank_mutants.yaml`: for each evaluated Rule of each base case, the
   input that moves the Rule's governing value (the double side, the double bottom, the cofferdam, the slop share,
   or the cargo zone for a tank's volume and length) set one step inside and one step across the limit, with a big
-  and a small step. A limit that no cargo zone inside the hull reaches has no boundary case (`skipped`). The oracle has `marpol/23.3.2/cargo-tank-length` (under 5,000 t deadweight: the tank length over the limit of 23.3.2.1 and 23.3.2.2). It has no `marpol/23/accidental-oil-outflow`: the mean oil outflow needs the draught, which a case does not give, so that Rule's two mutants are the known weak corpus (`ovcd-core/tests/oil_outflow.rs` checks its method on the published tank barge of Res. MEPC.122(52)).
+  and a small step. A limit that no cargo zone inside the hull reaches has no boundary case (`skipped`). The oracle has `marpol/23.3.2/cargo-tank-length` (under 5,000 t deadweight: the tank length over the limit of 23.3.2.1 and 23.3.2.2). It has no `marpol/23/accidental-oil-outflow`: the mean oil outflow needs the draught, which a case does not give, so that Rule's two mutants are the known weak corpus (`ovd-core/tests/oil_outflow.rs` checks its method on the published tank barge of Res. MEPC.122(52)).
 - The rule-data mutation runs over these cases for `adn-tank` and `marpol-i`. The base cases are chosen so that every
   row of the capacity and length tables, and each of the 0.76 m minimum and the formula of Reg. 19.6, governs
   somewhere: no mutant goes unnoticed.
@@ -128,14 +128,14 @@ cargo tank has the verdict of its worst tank.
   says what is missing in its `gap`.
 - ADN 9.3.x.15.1 (damage stability) is evaluated in a run (issue #341), where the damages come from the laden
   departure condition. A `tank` case has no loading condition, so its row is `not evaluated` with that reason, and
-  the harness has no case for it; `crates/ovcd-core/tests/damage_stability.rs` checks the calculation against closed forms.
+  the harness has no case for it; `crates/ovd-core/tests/damage_stability.rs` checks the calculation against closed forms.
 
 ## Why phase 0 uses particulars
 
 The core checks the IMO Intact Stability Code 2008, Part A 2.2 only inside the gas `assess()`, and
 there the KG comes out of the gas arrangement, so a `.vdesign` cannot set a known KG. Phase 0 therefore
 takes box particulars (beam, depth, draught, KG, free surface) and calls `box_condition`, the
-per-condition work `assess` does, made callable on its own (`ovcd_core::gas_stability::box_condition`;
+per-condition work `assess` does, made callable on its own (`ovd_core::gas_stability::box_condition`;
 `evaluation/engine.py`, the harness's one call into the engine, outside the package's public API).
 `box_trace` evaluates the selected Rule Sets on that one loading condition, named "Box", and gives
 the Rule Trace a run writes. A later phase runs whole `.vdesign` files; the case format already has a

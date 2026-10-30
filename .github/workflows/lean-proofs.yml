@@ -50,7 +50,7 @@ jobs:
           if grep -q sorryAx axioms.txt; then echo "a proof uses sorry"; exit 1; fi
       - name: The oracle gives the expected output on the example cases
         run: |
-          ./.lake/build/bin/ovcd-rules-oracle examples/cases.json > out.json
+          ./.lake/build/bin/ovd-rules-oracle examples/cases.json > out.json
           diff -u examples/expected.json out.json
       - name: Install the pinned Rust toolchain (rust-toolchain.toml)
         working-directory: .
@@ -58,6 +58,6 @@ jobs:
       - name: The rules kernel agrees with the Lean model (arc-rules differential test)
         working-directory: .
         env:
-          ARC_RULES_LEAN_ORACLE: ${{ github.workspace }}/proofs/lean/.lake/build/bin/ovcd-rules-oracle
+          ARC_RULES_LEAN_ORACLE: ${{ github.workspace }}/proofs/lean/.lake/build/bin/ovd-rules-oracle
           ARC_RULES_LEAN_CASES: "2000"
         run: cargo test -p arc-rules --test lean_oracle -- --nocapture

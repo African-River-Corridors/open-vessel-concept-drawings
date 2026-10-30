@@ -10,8 +10,8 @@ Profile takes the fitted values.
 import copy
 import re
 
-from vessel_designer import calibration
-from vessel_designer.calibration import (BANDS, CAL, _assess_installed_power, _assess_propulsion,
+from ovd import calibration
+from ovd.calibration import (BANDS, CAL, _assess_installed_power, _assess_propulsion,
                                          _bollard_pull, _fit_bollard_pull_factor,
                                          _fit_efficiency_factor, _installed_power,
                                          _load_propulsion_cases, _propulsion_warnings_for, report)
@@ -64,7 +64,7 @@ def test_the_fit_ignores_held_out_cases():
 
 
 def test_the_committed_factors_hold_the_fit():
-    """The Defaults Profile takes the same values: `crates/ovcd-format/tests/propulsor_inputs.rs`.
+    """The Defaults Profile takes the same values: `crates/ovd-format/tests/propulsor_inputs.rs`.
 
     Label: property
     """

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-label="OVD app icon (16 px)">
+<title>OVD app icon (16 px)</title>
+
+<rect width="1024" height="1024" rx="160" fill="#24496c"/><g transform="translate(32 32) scale(15)"><g fill="none" stroke-linecap="round" stroke-linejoin="round">
+<path d="M5.5 34 H58.5" stroke="#eef6f6" stroke-width="4.4"/>
+<path d="M32 48 C38 45.5 43.6 33 44.4 12" stroke="#eef6f6" stroke-width="4.4"/>
+<path d="M32 48 H18 Q10 48 10 40 V16 M32 48 H46 Q54 48 54 40 V16" stroke="#eef6f6" stroke-width="6.6"/>
+</g></g>
+</svg>

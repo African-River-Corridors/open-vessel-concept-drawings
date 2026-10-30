@@ -4,7 +4,7 @@
 # `text!` call and run the tool again. A number argument arrives as text, already rounded.
 
 
-## crates/ovcd-format/src/ga/arrangement.rs
+## crates/ovd-format/src/ga/arrangement.rs
 
 draw-coupling-points = COUPLING POINTS ({ $count })
 draw-overall-length = OVERALL LENGTH { $length }
@@ -18,7 +18,7 @@ draw-note-barges = { $abreast } ABREAST BY { $in_line } IN LINE.
 draw-note-blind-distance = BLIND DISTANCE AHEAD OF THE BOW: LIGHT { $light } M, LADEN { $laden } M, LIMIT { $limit } M.
 draw-note-scope = FOR CONCEPT AND PRELIMINARY DESIGN ONLY, NOT FOR APPROVAL.
 
-## crates/ovcd-format/src/ga/tug.rs
+## crates/ovd-format/src/ga/tug.rs
 
 draw-tug-atb = ATB TUG
 draw-tug-towing = TOWING TUG
@@ -38,7 +38,7 @@ draw-note-dimensions = { $view }. DIMENSIONS IN METRES.
 draw-note-tug = { $tug } { $length } X { $beam } X { $draught } M; { $count } X { $propulsor }, DIAMETER { $diameter } M.
 draw-note-tug-positions = PROPELLERS, RUDDERS AND PUSH KNEES ARE DRAWN TO SHOW THE ARRANGEMENT, NOT CALCULATED.
 
-## crates/ovcd-format/src/ga.rs
+## crates/ovd-format/src/ga.rs
 
 draw-double-bottom = DOUBLE BOTTOM
 draw-wbt-both-sides = WBT (BOTH SIDES)

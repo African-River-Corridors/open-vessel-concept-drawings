@@ -80,7 +80,7 @@ ADDED_FIELDS = {"BargeCapacityInputs": {"max_tank_od_m"}}
 
 def cap12(c):
     """Keyword arguments that give the package under test the 12 m cap the frozen one has."""
-    return {"max_tank_od_m": c.n(12.0)} if c.pkg == "vessel_designer" else {}
+    return {"max_tank_od_m": c.n(12.0)} if c.pkg == "ovd" else {}
 
 
 # --- results -> plain data -----------------------------------------------------------------
@@ -280,7 +280,7 @@ def _(c):
 def _(c):
     f = c.mod("core.barge_capacity").tanks_wide_for_beam
     # The two calls that leave out the cap use the default: 12 m in 0.1.0, 16 m now (issue #175).
-    od = {"max_od_m": c.n(12.0)} if c.pkg == "vessel_designer" else {}
+    od = {"max_od_m": c.n(12.0)} if c.pkg == "ovd" else {}
     return [f(c.n(20), c.n(1), **od), f(c.n(30), c.n(1), c.n(1), c.n(12)), f(c.n(14.8), c.n(1), **od)]
 
 

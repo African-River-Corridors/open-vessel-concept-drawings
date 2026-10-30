@@ -3,7 +3,7 @@
 # `text!` call and run the tool again. A number argument arrives as text, already rounded.
 
 
-## crates/ovcd-core/src/aft_arrangement.rs
+## crates/ovd-core/src/aft_arrangement.rs
 
 check-name-thrusters-fit-beam = thrusters fit beam
 check-thrusters-fit-beam = { $count } x { $envelope } m thrusters need { $needed } m across a { $beam } m beam
@@ -29,7 +29,7 @@ check-name-wheelhouse-sees-over-cargo = wheelhouse sees over cargo
 check-wheelhouse-sees-over-cargo = raised eye { $eye } m >= obstruction { $obstruction } m + { $margin } m margin (lift used { $lift } m of { $max_lift } m)
 warn-aft-sightline-lift = Sightline needs { $lift } m of lift; the column gives { $max_lift } m. Raise the column or lower the cargo top.
 
-## crates/ovcd-core/src/barge_capacity.rs
+## crates/ovd-core/src/barge_capacity.rs
 
 warn-barge-bulk-gm = Bulk GM is first-order (assumed lightship KG); cargo-shift/angle-of-repose not modelled — confirm with a full intact-stability booklet.
 check-wheelhouse-blind-distance = blind distance ahead of the bow { $blind } m <= { $limit } m, light (ES-TRIN 7.02(2)); lift used { $lift } m of { $max_lift } m
@@ -55,7 +55,7 @@ check-name-gm-positive = gm positive
 check-gm-positive = hopper intact GM { $gm } m >= 0.15 m (first-order; KG_light @0.5D)
 warn-steel-mass-disagreement = The lightship uses { $top_down } t of hull steel (top-down); the cost prices { $bottom_up } t (bottom-up). They differ by { $delta } t ({ $pct } %), more than the { $limit } % limit (an Estimate). The cost keeps the bottom-up mass.
 
-## crates/ovcd-core/src/barge_cost.rs
+## crates/ovd-core/src/barge_cost.rs
 
 check-name-masses-positive = masses positive
 check-masses-positive = mass-model inputs present
@@ -64,7 +64,7 @@ check-no-reliquefaction-in-scope = cargo system excludes reliquefaction and nitr
 check-name-fabrication-rates-are-estimates = fabrication rates are estimates
 check-fabrication-rates-are-estimates = fabrication/supply rates are user-supplied estimates; replace them with yard quotes before relying on the total
 
-## crates/ovcd-core/src/electric_energy.rs
+## crates/ovd-core/src/electric_energy.rs
 
 check-service-below-schijf = service { $service } kn stays below the Schijf limit { $limit } kn
 check-service-below-schijf-open-water = no confined limit (open water)
@@ -74,7 +74,7 @@ check-energy-positive = energy { $energy } kWh/km at service speed
 check-name-resistance-coeffs-first-order = resistance coeffs first order
 check-resistance-coeffs-first-order = confined-water resistance (residuary/Lackenby/blockage) is a first-order estimate (RS1) — ITTC-1957 friction is standard; anchor with a model test/CFD before class use.
 
-## crates/ovcd-core/src/gas_arrangement.rs
+## crates/ovd-core/src/gas_arrangement.rs
 
 check-name-tank-length-over-diameter = tank length over diameter
 check-tank-length-over-inner-diameter = tank length { $length } m / inner diameter { $diameter } m = { $ratio } <= { $max }
@@ -95,7 +95,7 @@ fit-refused-min-side-space = No tank fits across the beam with the minimum side 
 fit-refused-no-tank-at-cap = No tank fits at the diameter cap { $cap } m.
 fit-refused-cap-side-space = At the diameter cap { $cap } m the side space is { $side } m, under the IGC 2.4 minimum { $need } m.
 
-## crates/ovcd-core/src/gas_separation.rs
+## crates/ovd-core/src/gas_separation.rs
 
 check-name-aft-end-bulkhead-space = aft end bulkhead space
 check-aft-end-bulkhead-space = aft end-bulkhead space { $aft } m >= { $min } m ({ $tank_ends }, cl. 3.5.3)
@@ -108,14 +108,14 @@ check-name-fwd-end-bulkhead-space = fwd end bulkhead space
 check-fwd-end-bulkhead-space = forward end-bulkhead space { $fwd } m >= { $min } m ({ $tank_ends }, cl. 3.5.3)
 warn-separation-clauses = Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release.
 
-## crates/ovcd-core/src/gas_stability.rs
+## crates/ovd-core/src/gas_stability.rs
 
 stab-limit-concept-stage = Concept-stage: the hull's sections, first-order weight heights, no downflooding openings.
 stab-limit-no-wind-or-damage = No wind heel and no damage stability. Both are needed before approval: damage stability by ADN 9.3.1.15 and IGC 2.7, wind heel by the IS Code 2008 weather criterion (Part A 2.3).
 stab-limit-stern-block-mass = The self-propelled stern block's mass is not in the gas lightship, so KG and displacement leave it out; the true GM could be lower.
 stab-limit-weight-split = Weight split sums to { $split } t vs lightship { $lightship } t.
 
-## crates/ovcd-core/src/journey_derating.rs
+## crates/ovd-core/src/journey_derating.rs
 
 check-name-capacity-is-volume-bound = capacity is volume bound
 check-capacity-is-volume-bound = input capacity must be a feasible volume-bound design (not overloaded)
@@ -127,14 +127,14 @@ check-name-utilisation-reasonable = utilisation reasonable
 check-utilisation-reasonable = volume utilisation { $utilisation } >= floor { $floor }
 warn-journey-draft-bound = Draft-bound: shed { $shed } t of { $capacity } t volume capacity to float at T_max = { $t_max } m (full-load draft { $full_load_draft } m).
 
-## crates/ovcd-core/src/liquid_bulk/cost.rs
+## crates/ovd-core/src/liquid_bulk/cost.rs
 
 check-name-quantities-present = quantities present
 check-tank-quantities-present = cargo tank quantities present
 check-name-tank-items-are-lump-sums = tank items are lump sums
 check-tank-items-are-lump-sums = the cargo tank items are lump sums from the tank layout, not a bill of quantities
 
-## crates/ovcd-core/src/machinery.rs
+## crates/ovd-core/src/machinery.rs
 
 warn-machinery-battery-not-sized = The battery energy of the hybrid is not sized yet, so the battery room is not in the stern block.
 check-name-machinery-fits-beam = machinery fits beam
@@ -145,7 +145,7 @@ warn-machinery-power-not-sized = The installed power is not sized yet, so the en
 warn-machinery-no-engine = No engine of the table covers { $kw } kW per engine (the largest is 4,400 kW), so the engine room is not in the stern block.
 warn-propulsor-layout-offsets = The stern holds { $held } propulsor places for { $count } propulsors; the layout spreads the { $count } at { $pitch } m.
 
-## crates/ovcd-core/src/offsets.rs
+## crates/ovd-core/src/offsets.rs
 
 msg-offsets-not-finite = row { $row } of the offsets table holds a value that is not a number
 msg-offsets-too-few-stations = the offsets table needs at least 2 stations, not { $n }
@@ -155,7 +155,7 @@ msg-offsets-off-centre-line = station { $station } of the offsets table does not
 msg-offsets-negative-y = station { $station } of the offsets table has a point with y below 0
 msg-offsets-self-crossing = station { $station } of the offsets table crosses itself
 
-## crates/ovcd-core/src/resistance.rs
+## crates/ovd-core/src/resistance.rs
 
 check-name-lackenby-fit-subcritical = lackenby fit subcritical
 check-lackenby-fit-subcritical = depth Froude { $froude } at the service speed; the shallow-water fit holds below { $limit }, above it a fixed factor stands in
@@ -166,7 +166,7 @@ check-service-speed-fails-squat = { $environment }: at the service speed { $serv
 check-name-coefficients-are-first-order = coefficients are first order
 check-coefficients-are-first-order = Residuary Cr/Cf fit, Lackenby shallow-water, blockage and 1.02 form factor are uncalibrated first-order estimates (RS1) — ITTC-1957 friction is standard.
 
-## crates/ovcd-core/src/squat.rs
+## crates/ovd-core/src/squat.rs
 
 check-name-keel-clears-bed = keel clears bed
 check-keel-clears-bed = dynamic UKC { $ukc } m = static { $static_ukc } m - squat { $squat } m ({ $method }) at { $speed } kn
@@ -181,7 +181,7 @@ check-methods-agree-within-50pct = Barrass { $barrass } m vs ICORELS { $icorels 
 warn-squat-icorels-not-evaluated = ICORELS not evaluated: depth Froude { $froude } at or above 0.99
 warn-squat-open-water = no channel area given, so blockage is 0 and Barrass returns 0 — this is the OPEN-WATER case and squat is then ICORELS only
 
-## crates/ovcd-core/src/vessel_standards.rs
+## crates/ovd-core/src/vessel_standards.rs
 
 check-name-unique-ids = unique ids
 check-unique-ids = every key matches its standard_id
@@ -199,7 +199,7 @@ check-name-source-cited = source cited
 check-source-cited = every class cites its table
 check-source-cited-missing = no source: { $keys }
 
-## crates/ovcd-core/src/waves.rs
+## crates/ovd-core/src/waves.rs
 
 check-name-stawave1-short-wave-validity = stawave1 short wave validity
 check-stawave1-short-wave-validity = lambda/Lpp = { $ratio } (lambda { $wavelength } m on Lpp { $lpp } m). STAwave-1 assumes short waves, lambda/Lpp < 0.5; outside that it UNDER-predicts, and near lambda/Lpp = 1 it can do so by more than 2x
@@ -210,7 +210,7 @@ check-bow-length-supplied = L_BWL not given, assumed { $bow_length } m = 0.2 x L
 warn-waves-period-estimated = no wave period given; T_p estimated at { $tp } s from H_s, which sets only the validity check, not the resistance
 warn-waves-beam-seas-floor = beam-ish seas: this module returns a FLOOR, because drift, rudder and course-keeping loss is not modelled and it dominates off the bow
 
-## crates/ovcd-format/src/class_input.rs
+## crates/ovd-format/src/class_input.rs
 
 msg-class-scheme = `{ $input }` { $class } belongs to the scheme { $family }, not { $scheme }
 msg-class-none = the scheme { $scheme } has no class for a { $kind } Formation, so no class applies
@@ -219,14 +219,14 @@ msg-class-beyond = this length and beam are beyond the largest { $scheme } class
 msg-class-draught-above = `{ $input }` = { $value } is above the draught of class { $class } ({ $limit } m, the top of its range)
 msg-class-clearance-above = `{ $input }` = { $value } is above the lowest bridge clearance of class { $class } ({ $limit } m)
 
-## crates/ovcd-format/src/convoy.rs
+## crates/ovd-format/src/convoy.rs
 
 check-name-within-lock-length = within lock length
 check-lock-length = overall length { $length } m <= lock length { $limit } m
 check-name-within-lock-width = within lock width
 check-lock-width = overall beam { $width } m <= lock width { $limit } m
 
-## crates/ovcd-format/src/formation.rs
+## crates/ovd-format/src/formation.rs
 
 warn-formation-sizing-not-converged = The pusher sizing did not converge in { $passes } passes (the power moved by more than { $tol } %). The power shown is that of the last pass.
 note-tow-method-unverified = The tow's resistance is the sum of the resistances of its barge and of its tug as separate hulls by the single-hull method, times the Formation resistance allowance. The method is unverified. The hawser and its interaction are not modelled.
@@ -237,7 +237,7 @@ note-formation-service-margins = Service margins, shown and not used to size the
 warn-formation-blind-distance-lift = The tug's view over the barges needs { $needed } m of wheelhouse lift; the tug gives { $max_lift } m. The Blind Distance light is { $blind } m, more than { $limit } m (ES-TRIN 7.02(2)).
 warn-formation-blind-distance-hidden = The tug's view over the barges needs { $needed } m of wheelhouse lift; the tug gives { $max_lift } m. At that height the barges hide the water ahead (ES-TRIN 7.02(2): at most { $limit } m).
 
-## crates/ovcd-format/src/gas_fuel.rs
+## crates/ovd-format/src/gas_fuel.rs
 
 check-name-cargo-as-fuel = cargo as fuel
 check-cargo-as-fuel-lng = methane (LNG) vapour may fuel the gensets (IGC Code 16.1)
@@ -246,35 +246,35 @@ check-name-boil-off-within-gas-use = boil-off within gas use
 check-boil-off-within-gas-use = boil-off { $boil } kg/h <= gas use { $used } kg/h at the service speed
 check-boil-off-exceeds-gas-use = boil-off { $boil } kg/h > gas use { $used } kg/h at the service speed: the excess needs reliquefaction, pressure accumulation or thermal oxidation, as venting is not acceptable (IGC Code 7.1.1, 7.1.3)
 
-## crates/ovcd-format/src/offsets.rs
+## crates/ovd-format/src/offsets.rs
 
 msg-offsets-no-table = an offsets Hull Form needs its offsets table (`{ $input }`)
 msg-offsets-bad-row = row { $row } of the offsets table needs the numbers station_x_m, y_m and z_m
 msg-offsets-csv-header = an offsets CSV starts with the header { $header }
 msg-offsets-csv-line = line { $line } of the offsets CSV needs three numbers: station_x_m, y_m, z_m
 
-## crates/ovcd-format/src/openings.rs
+## crates/ovd-format/src/openings.rs
 
 msg-openings-bad-row = opening { $row } needs the numbers x_m, y_m and height_above_deck_m
 msg-opening-x = opening { $row }: x_m = { $value } is outside the hull (0 to { $limit } m)
 msg-opening-y = opening { $row }: y_m = { $value } is outside the breadth ({ $limit } m each side)
 msg-opening-height = opening { $row }: height_above_deck_m = { $value } is below the deck
 
-## crates/ovcd-format/src/run.rs
+## crates/ovd-format/src/run.rs
 
 msg-convoy-not-available = convoy results not yet available
 
-## crates/ovcd-format/src/session.rs
+## crates/ovd-format/src/session.rs
 
 msg-offsets-resampled = the offsets table has stations of unequal point counts: { $count } station(s) are resampled by arc length to { $points } points, with their own points kept
 
-## crates/ovcd-format/src/shipd.rs
+## crates/ovd-format/src/shipd.rs
 
 msg-shipd-no-parameters = a ShipD Hull Form needs its parameters (`{ $input }`)
 msg-shipd-missing = `{ $input }` needs the ShipD parameter { $name }
 msg-shipd-constraint = `{ $input }` fails ShipD constraint { $index } ({ $name })
 
-## crates/ovcd-format/src/simulate.rs
+## crates/ovd-format/src/simulate.rs
 
 warn-channel-no-bottom-width = The channel has a depth but no bottom width, so squat, the Schijf limiting speed and the blockage are not checked and the speed curves are for deep water only. The draught limit still uses the depth. Give the channel bottom width to check them.
 warn-fit-no-wing-tank = No wing ballast tank: the side space { $side } m is not more than the wing tank gap { $gap } m. For a wing tank, set `{ $input }` above { $gap } m.
@@ -285,7 +285,7 @@ name-governs-draught = draught — { $limit }
 check-feasible-arrangement = No arrangement passes every check on this hull. The closest one is shown. It fails: { $fails }.
 stab-limit-moulded-tanks = Ballast and consumables tanks are moulded volumes with no structure deduction; one tank per side and kind, and the consumables tank height is an estimate.
 
-## crates/ovcd-format/src/text_ids.rs
+## crates/ovd-format/src/text_ids.rs
 
 name-condition-laden = Laden
 name-condition-half-laden = Half laden
@@ -319,13 +319,14 @@ name-vessel-gas = Gas barge, IMO Type C tanks
 name-cargo-lightship-alone = Lightship alone exceeds the allowed draught.
 name-cargo-nothing-fits = Nothing fits: lengthen or widen the hull.
 
-## crates/ovcd-format/src/vdesign.rs
+## crates/ovd-format/src/vdesign.rs
 
 msg-file-not-json = the file is not JSON: { $error }
 msg-file-the-file = the file
 msg-file-duplicate-key = `{ $key }` appears twice in { $place }; a key may appear once
 msg-file-not-object = the file must hold a JSON object
 msg-file-format = the file needs `"format": "vdesign"`
+msg-file-before-ovd = this file was saved before the rename to OVD: it uses the Rule Set `{ $old }`, now `ovd`. OVD does not open files saved by 0.2.x; make the Design again in OVD
 msg-file-version-unsupported = format_version { $version } is not supported; this tool reads versions { $oldest } to { $newest }
 msg-file-version-missing = the file needs an integer `format_version`
 msg-file-engine-version = the file needs a non-empty string `engine_version`
@@ -362,7 +363,7 @@ msg-legacy-dome = this file has no `{ $input }`; it now holds { $value } m (mark
 msg-legacy-carriage = this file has no `{ $input }` for the LPG Cargo { $cargo }; it is read as { $condition } (marked default). The tank values the file lacks keep what the engine used before (design pressure, material, insulation, structure factor), so the results are unchanged; set the carriage condition and reset those inputs to take the defaults of that condition
 msg-legacy-fixed-one = this file has no `{ $input }`; it now holds the fixed value the engine used before it was an input (marked default), so the results are unchanged
 msg-legacy-fixed-many = this file has no { $inputs }; each now holds the fixed value the engine used before it was an input (marked default), so the results are unchanged
-msg-inputs-not-stored = inputs not stored in the file: { $inputs }. A saved Design holds every input as used, so a Defaults Profile edit cannot change it; run `ovcd fill` to write them in from the Defaults Profile, marked default
+msg-inputs-not-stored = inputs not stored in the file: { $inputs }. A saved Design holds every input as used, so a Defaults Profile edit cannot change it; run `ovd fill` to write them in from the Defaults Profile, marked default
 msg-profile-case-keyed = `default_by_{ $by }` for { $key }
 msg-profile-case-default = a `default`
 msg-profile-no-default = the Defaults Profile '{ $profile }' gives no default for `{ $input }` ({ $case } is missing)
@@ -378,11 +379,11 @@ msg-hull-form-not-built = `{ $input }` = { $value } is not built yet: the engine
 msg-parameter-set = `{ $input }` must be an object of named numbers, or null
 msg-offsets-table = `{ $input }` must be a list of rows with `station_x_m`, `y_m` and `z_m` in metres, or null
 msg-openings-list = `{ $input }` must be a list of openings with `x_m`, `y_m` and `height_above_deck_m` in metres, or null
-msg-scheme = `{ $input }` = { $value } is not a scheme with a Vessel Class that can define a vessel (see `ovcd schema`)
+msg-scheme = `{ $input }` = { $value } is not a scheme with a Vessel Class that can define a vessel (see `ovd schema`)
 msg-class-cannot-define = `{ $input }` = { $value } cannot define a vessel: class { $class } gives no length or beam, or its Formation ({ $formation }) is not one a Design has
-msg-class-unknown = `{ $input }` = { $value } is not a Vessel Class (see `ovcd schema`)
+msg-class-unknown = `{ $input }` = { $value } is not a Vessel Class (see `ovd schema`)
 msg-class-id = `{ $input }` must be a class id or null
-msg-rule-sets = `{ $input }` must be a list of Rule Sets, each with `id`, `version`, `hash` and `source` (`default` or `typed`), no set twice, and the `ovcd` set always in it
+msg-rule-sets = `{ $input }` must be a list of Rule Sets, each with `id`, `version`, `hash` and `source` (`default` or `typed`), no set twice, and the `ovd` set always in it
 msg-formation-object = `{ $input }` must be an object with a `kind`
 msg-formation-kind = `{ $input }` must be one of: { $choices }
 msg-formation-only-kind = `{ $input }`: a { $kind } holds only `kind`; `abreast` and `in_line` are for a pushed_convoy

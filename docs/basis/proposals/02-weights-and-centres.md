@@ -9,44 +9,44 @@ Each error gives the code location and the text it disagrees with.
 
 ### WC-E1. Default Cb is outside the range its own basis cites
 
-- **Code:** `crates/ovcd-format/src/builtin_profile.json:52`, `block_coefficient` default 0.85, used for every Hull
-  (`crates/ovcd-format/src/simulate.rs:667`).
+- **Code:** `crates/ovd-format/src/builtin_profile.json:52`, `block_coefficient` default 0.85, used for every Hull
+  (`crates/ovd-format/src/simulate.rs:667`).
 - **Cited source:** the same entry's basis says "calibrated box barges span 0.883 to 0.995".
   `calibration/factors.yaml` gives the fitted box-barge Cb as 0.928, and `calibration/README.md` ("Corrections
   applied") lists "Box-barge Cb = 0.928 on LOA" as applied. The harness uses 0.928
-  (`src/vessel_designer/calibration.py:161`); the app does not.
+  (`src/ovd/calibration.py:161`); the app does not.
 - **Effect:** large. For a box-hold barge, displacement at a given draught is 8.4 % low (0.85 / 0.928). The
   weight-bound cargo falls by more than that, because the lightship stays the same. The calibration bands
   describe the 0.928 runs, so they do not cover what a user sees with the default.
 
 ### WC-E2. Lightship and cost use two different steel weights
 
-- **Code:** lightship uses `steel_top_down` (`crates/ovcd-core/src/weights.rs:163`, `176`). The cost masses use
+- **Code:** lightship uses `steel_top_down` (`crates/ovd-core/src/weights.rs:163`, `176`). The cost masses use
   `hull_steel_total + wing_plate + weather_shield`, which is `steel_bottom_up`
-  (`crates/ovcd-format/src/cost.rs:76-78`).
+  (`crates/ovd-format/src/cost.rs:76-78`).
 - **Text it disagrees with:** the doc comment of `calculate_weights` (`weights.rs:42-43`) says hull steel "is
   estimated from plating areas and thicknesses, plus a structure factor". That is the bottom-up figure, which the
   lightship does not use. `models.rs:137` says piping is a fraction of "(hull + tank weight)"; the code uses the
   top-down steel.
-- **Effect:** large for cost (page 10). In the parity case (`crates/ovcd-core/tests/weights.rs:57-58`) the vessel
+- **Effect:** large for cost (page 10). In the parity case (`crates/ovd-core/tests/weights.rs:57-58`) the vessel
   floats 865.8 t of hull steel but is costed for 568.7 t, 34 % less.
 
 ### WC-E3. `stores_weight` is an input that does nothing
 
-- **Code:** `crates/ovcd-core/src/models.rs:139-140` documents `stores_weight` as "Diesel, fresh water,
+- **Code:** `crates/ovd-core/src/models.rs:139-140` documents `stores_weight` as "Diesel, fresh water,
   provisions (tonnes)", default 200 t (`models.rs:218`). `weights.rs:193-194` sets `stores` to 0 and says
   "Consumables are deadweight". No deadweight item carries them: deadweight is the cargo
   (`simulate.rs:797`, `1081`).
 - **Source:** IS Code 2008 (MSC.267(85)), Introduction 2.23, defines the lightship condition without
   consumables and stores. Part B 3.4.1.2 lists the cargo ship loading conditions with full stores and fuel, and
-  with 10 % remaining. OVCD puts the stores in neither the lightship nor the loading conditions.
+  with 10 % remaining. OVD puts the stores in neither the lightship nor the loading conditions.
 - **Effect:** small to medium. Cargo is high by the consumables mass. The draught at that cargo is low by the same
   mass. KG ignores them.
 
 ### WC-E4. Gas hull steel KG uses D, the steel mass uses D_m
 
 - **Code:** `steel_top_down` is a rate × LOA × B × D_m, where D_m can be above D (the wing plate level,
-  `weights.rs:157-162`). Its KG is 0.5 × D (`crates/ovcd-core/src/gas_stability.rs:715`).
+  `weights.rs:157-162`). Its KG is 0.5 × D (`crates/ovd-core/src/gas_stability.rs:715`).
 - **Text it disagrees with:** `weights.rs:152` says "Moulded depth = wing plate level". The KG item does not
   follow.
 - **Effect:** small, non-conservative. KG is low when the wing plate is above D. With the default wing tank height
@@ -54,12 +54,12 @@ Each error gives the code location and the text it disagrees with.
 
 ### WC-E5. Legacy KG and LCG items do not sum to the lightship
 
-- **Code:** `crates/ovcd-core/src/hydrostatics.rs:83`, `91`, `180`, `193` weigh `hull_steel_total` and
+- **Code:** `crates/ovd-core/src/hydrostatics.rs:83`, `91`, `180`, `193` weigh `hull_steel_total` and
   `tank_shells`. The lightship (`weights.rs:176`) uses `steel_top_down` and `tank_total` (shells plus internals).
   The wing plate, the weather shield and the tank internals have no centre.
 - **Text it disagrees with:** the `calculate_stability` comment says "weighted average of component centres"
   (`hydrostatics.rs:80`). The gas path checks the same sum (`gas_stability.rs:805`).
-- **Effect:** none on `simulate` results (parity interface only, `crates/ovcd-format/src/eval.rs:1544`, `1570`).
+- **Effect:** none on `simulate` results (parity interface only, `crates/ovd-format/src/eval.rs:1544`, `1570`).
   It matters if a caller uses the legacy chain for KG or trim.
 
 ## Gaps
@@ -92,7 +92,7 @@ barges are in `not_yet_runnable_cases` (`calibration/cases.yaml:1321`).
 
 No fuel, fresh water, stores, crew or ballast (WC-A35). Compare ABS Rules for Building and Classing Steel Barges
 (2024), 3-1-1/45: deadweight is the displacement at the summer load line, in water of specific gravity 1.025, less
-the lightweight. OVCD's deadweight is at the user's water density (1.0 by default) and at the governing draught.
+the lightweight. OVD's deadweight is at the user's water density (1.0 by default) and at the governing draught.
 The result name is the same; the meaning is narrower.
 
 ### WC-G6. No deck barge or pontoon model
@@ -102,9 +102,9 @@ deadweight 26 % high (`calibration/results.md`, summary). The app has no deck or
 
 ### WC-G7. Lightship KG is mid-depth, not deck level
 
-OVCD puts dry lightship KG at 0.5 × D (`barge_capacity.rs:704`) and gas hull steel at 0.5 × D. IS Code 2008
+OVD puts dry lightship KG at 0.5 × D (`barge_capacity.rs:704`) and gas hull steel at 0.5 × D. IS Code 2008
 (MSC.267(85)), Part B 8.6, says a pontoon need not be inclined if a conservative lightship KG is assumed, and that
-KG can be assumed at the main deck. OVCD has no option for that conservative value.
+KG can be assumed at the main deck. OVD has no option for that conservative value.
 
 ### WC-G8. Box-barge Cb fit depends on k
 
@@ -114,7 +114,7 @@ Cb. The two are not independent.
 ### WC-G9. Container k is unreachable
 
 `calibration/factors.yaml` has a container k (one case), but the app has no container hold
-(`crates/ovcd-format/src/run.rs:172-176`, `simulate.rs:193-203`).
+(`crates/ovd-format/src/run.rs:172-176`, `simulate.rs:193-203`).
 
 ### WC-G10. No weight margin
 

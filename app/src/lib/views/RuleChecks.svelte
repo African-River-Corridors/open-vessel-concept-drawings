@@ -104,7 +104,7 @@
               </td>
               <td data-testid="rule-cell-status">
                 {#if r.origin && r.origin !== "regulation" && r.origin !== "class"}
-                  <span class="status">{t("app-rules-ovcd-check")}</span>
+                  <span class="status">{t("app-rules-ovd-check")}</span>
                 {:else if r.origin}
                   <span class="status" class:unverified={r.rule_status !== "verified"}>{t(r.rule_status === "verified" ? "app-rules-verified" : "app-rules-unverified")}</span>
                 {/if}

@@ -1,6 +1,6 @@
 // Stand-in types for the wasm-bindgen output (app/wasm-pkg/, built by tools/build_web.sh, not in git),
 // so `npm run check` works before the WebAssembly build has run. The real .d.ts wins when it exists.
-declare module "*/wasm-pkg/ovcd_web.js" {
+declare module "*/wasm-pkg/ovd_web.js" {
   export class Session {
     constructor();
     snapshot(): string;

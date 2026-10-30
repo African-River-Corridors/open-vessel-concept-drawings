@@ -1,4 +1,4 @@
-# OVCD input labels, Simplified Chinese. Draft: machine-translated, for native review (locales/REVIEWING.md).
+# OVD input labels, Simplified Chinese. Draft: machine-translated, for native review (locales/REVIEWING.md).
 
 ## Groups
 

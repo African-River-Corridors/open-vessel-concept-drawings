@@ -14,7 +14,7 @@ ticket whose blockers are all closed, and no other. For each ticket:
    may revise the acceptance criteria.
 2. **Build.** Work in its own git worktree under `.claude/worktrees/t<n>`, on a branch
    `ticket/<n>-<slug>` cut from an up-to-date `origin/main`. Set one shared build folder for all the
-   worktrees of your lane, `CARGO_TARGET_DIR=$HOME/Dev/_cargo-target/ovcd-<lane>`, so a new worktree
+   worktrees of your lane, `CARGO_TARGET_DIR=$HOME/Dev/_cargo-target/ovd-<lane>`, so a new worktree
    reuses the compiled dependencies and a merged worktree can be removed without losing the build. Use
    one folder **per lane**, not one for all lanes: cargo locks its build folder, so lanes that share one
    wait for each other. Do not use sccache: its cache keys hold the absolute source path, so it gets no
@@ -77,7 +77,7 @@ Only `test` and `release-guard` are required. Keep the others from making a pull
 |---|---|---|
 | `ci.yml`: `test` (the `gate-*` jobs), `release-guard`, `drawing-crosscheck`, `app-e2e` | always | push to main, tags |
 | `web-parity.yml`: `web-parity` (a release gate) | never | only from `release.yml` (every release), or by hand |
-| `app-checks.yml`: `web-app` | only when `app/**`, `crates/ovcd-web/**`, `tools/build_web.sh` or `tools/web_parity.mjs` change | push to main on the same paths; every day |
+| `app-checks.yml`: `web-app` | only when `app/**`, `crates/ovd-web/**`, `tools/build_web.sh` or `tools/web_parity.mjs` change | push to main on the same paths; every day |
 | `app-checks.yml`: `app-linux`, `app-windows` | never | every day (07:17 UTC); on request (`workflow_dispatch`) |
 | `codeql.yml` | never | push to main; every Monday |
 | `website.yml` | only when `website/**`, `docs/**` or `*.md` change | push to main |
@@ -86,7 +86,7 @@ Only `test` and `release-guard` are required. Keep the others from making a pull
 A failed daily run of `app-checks.yml` opens an issue (or comments on the open one).
 WebAssembly parity is a release gate: `release.yml` calls `web-parity.yml`, so a release cannot ship with a
 mismatch. It left the pull request path because it never failed on a mismatch and it cost a web build on most
-pull requests. Start it by hand (`gh workflow run web-parity.yml`) for a change to `crates/ovcd-web/**`.
+pull requests. Start it by hand (`gh workflow run web-parity.yml`) for a change to `crates/ovd-web/**`.
 ## Changelog fragments
 
 A pull request never edits `CHANGELOG.md`: that file made every two open pull requests conflict (issue #560).
@@ -158,7 +158,7 @@ During development the app makes 0.2.x patch releases only. Version 0.3 is reser
 
 - **A calibration case outside its band** blocks a release unless that release's `CHANGELOG.md` entry names it
   and says why (`calibration/README.md`, "When a band blocks a release"). The `calibration-bands` job of
-  `release.yml` checks it; run `python -m vessel_designer.calibration --release-check <version>` before the bump.
+  `release.yml` checks it; run `python -m ovd.calibration --release-check <version>` before the bump.
 - **A version bump.** A merge to `main` that changes `version` in `pyproject.toml` publishes the
   pre-release `v<version>`, tagged at that commit. Bump the version in every place the version test
   names, run `python3 tools/changelog_collect.py` (it moves the fragments into `CHANGELOG.md`), and add a
@@ -170,10 +170,10 @@ During development the app makes 0.2.x patch releases only. Version 0.3 is reser
   pre-release named after the tag, with the `Unreleased` notes. It is for trying a build; the commit need
   not be on `main`. Delete old test releases by hand when they are no longer needed.
 - **Rule Set versions.** A version bump releases the Rule Set versions it ships. In the bump PR, add
-  each built-in set version that is not yet in `crates/ovcd-format/rules/RELEASED.json` (`ovcd rules
+  each built-in set version that is not yet in `crates/ovd-format/rules/RELEASED.json` (`ovd rules
   --released-entries` prints the entries with their content hashes). From then on the file of a
   listed version never changes: a change is a new version, patch, minor or major by its content hash
-  (spec 0004, "Version numbers"). The fast gate (`ovcd rules --provenance`) fails on a changed
+  (spec 0004, "Version numbers"). The fast gate (`ovd rules --provenance`) fails on a changed
   released file, a version number below its class, a rule id that changes its Measure or direction
   or comes back after it was dropped, and a regulation or class Rule with no paragraph. The release
   workflow fails a `v*` release whose built-in set versions are not all listed.

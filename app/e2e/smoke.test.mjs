@@ -1,6 +1,6 @@
 // End-to-end smoke tests (spec 0002, ticket 78): a few journeys on the built app, driven through
 // Tauri's WebDriver (`tauri-driver`). Run by `e2e/run.sh`, which starts the driver and sets
-// OVCD_TEST_DIALOG_DIR: a debug build answers its native dialogs from files in that folder, since
+// OVD_TEST_DIALOG_DIR: a debug build answers its native dialogs from files in that folder, since
 // WebDriver cannot click a native dialog (see `test_answer` in src-tauri/src/lib.rs).
 import { after, before, beforeEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
@@ -13,13 +13,13 @@ import { remote } from "webdriverio";
 const here = import.meta.dirname;
 // The engine version the app shows: read from the Tauri config, so a version bump needs no test edit.
 const appVersion = JSON.parse(fs.readFileSync(path.join(here, "..", "src-tauri", "tauri.conf.json"), "utf8")).version;
-const FIXTURES = path.resolve(here, "../../crates/ovcd-format/tests/fixtures");
-const APP = path.resolve(here, process.env.OVCD_APP_BINARY ?? "../../target/debug/ovcd-app");
-const DIALOGS = process.env.OVCD_TEST_DIALOG_DIR;
-assert.ok(DIALOGS, "OVCD_TEST_DIALOG_DIR must be set (run e2e/run.sh)");
-const CONFIG = process.env.OVCD_TEST_CONFIG_DIR;
-assert.ok(CONFIG, "OVCD_TEST_CONFIG_DIR must be set (run e2e/run.sh)");
-const WORK = fs.mkdtempSync(path.join(os.tmpdir(), "ovcd-e2e-work-"));
+const FIXTURES = path.resolve(here, "../../crates/ovd-format/tests/fixtures");
+const APP = path.resolve(here, process.env.OVD_APP_BINARY ?? "../../target/debug/ovd-app");
+const DIALOGS = process.env.OVD_TEST_DIALOG_DIR;
+assert.ok(DIALOGS, "OVD_TEST_DIALOG_DIR must be set (run e2e/run.sh)");
+const CONFIG = process.env.OVD_TEST_CONFIG_DIR;
+assert.ok(CONFIG, "OVD_TEST_CONFIG_DIR must be set (run e2e/run.sh)");
+const WORK = fs.mkdtempSync(path.join(os.tmpdir(), "ovd-e2e-work-"));
 
 const answer = (file, text) => fs.writeFileSync(path.join(DIALOGS, file), text);
 const forget = (file) => fs.rmSync(path.join(DIALOGS, file), { force: true });
@@ -84,7 +84,7 @@ async function type(label, text) {
   }
 }
 
-describe("OVCD app smoke tests", () => {
+describe("OVD app smoke tests", () => {
   before(async () => {
     browser = await remote({
       hostname: "127.0.0.1",
@@ -162,9 +162,9 @@ describe("OVCD app smoke tests", () => {
     assert.equal(await (await browser.$("[data-testid=engine-version]")).getText(), `Engine ${appVersion}`);
   });
 
-  it("gives the meshes of the open Design with the mesh hash of ovcd mesh --hash (issue #457)", async () => {
+  it("gives the meshes of the open Design with the mesh hash of ovd mesh --hash (issue #457)", async () => {
     const file = path.join(FIXTURES, "dry_bulk_box_hold.vdesign");
-    const native = execFileSync(process.env.OVCD_CLI, ["mesh", "--hash", file], { encoding: "utf8" }).split("\t")[1].trim();
+    const native = execFileSync(process.env.OVD_CLI, ["mesh", "--hash", file], { encoding: "utf8" }).split("\t")[1].trim();
     const got = await browser.execute(async () => {
       const invoke = window.__TAURI_INTERNALS__.invoke;
       try {
@@ -215,8 +215,8 @@ describe("OVCD app smoke tests", () => {
     return browser.execute((k) => document.querySelector(`[data-testid=slot-${k}] svg`).textContent, key);
   }
 
-  // Screenshots for review: when OVCD_E2E_SHOTS names a folder, save one per named point there.
-  const SHOTS = process.env.OVCD_E2E_SHOTS;
+  // Screenshots for review: when OVD_E2E_SHOTS names a folder, save one per named point there.
+  const SHOTS = process.env.OVD_E2E_SHOTS;
   async function shot(name) {
     if (!SHOTS) return;
     fs.mkdirSync(SHOTS, { recursive: true });
@@ -378,7 +378,7 @@ describe("OVCD app smoke tests", () => {
 
   it("hides and shows each side panel, and remembers the choice", async () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
-    const stored = () => browser.execute(() => localStorage.getItem("ovcd.panels"));
+    const stored = () => browser.execute(() => localStorage.getItem("ovd.panels"));
     // Both are shown by default.
     assert.ok(await toggle("Input", true).isExisting());
     assert.ok(await toggle("Outputs", true).isExisting());
@@ -409,7 +409,7 @@ describe("OVCD app smoke tests", () => {
   });
 
   it("falls back to both panels shown when the stored choice is unreadable", async () => {
-    await browser.execute(() => localStorage.setItem("ovcd.panels", "not json"));
+    await browser.execute(() => localStorage.setItem("ovd.panels", "not json"));
     await browser.refresh();
     await until("the app to draw again", async () => (await browser.$("header")).isExisting());
     assert.ok(await toggle("Input", true).isExisting());
@@ -547,7 +547,7 @@ describe("OVCD app smoke tests", () => {
   });
 
   // The Rule Trace (spec 0004, #276): one row per Rule per object, failures first. A minimum
-  // freeboard just under the hull depth leaves no cargo, so an OVCD Check fails and each table has
+  // freeboard just under the hull depth leaves no cargo, so an OVD Check fails and each table has
   // a failing row.
   const RANK = { fail: 0, warn: 1, pass: 2, note: 3, "not evaluated": 4, "not applicable": 5 };
   for (const [cargo, fixture, freeboard] of [["gas", "gas_igc_2g_exact.vdesign", "4.3"], ["dry-bulk", "dry_bulk_box_hold.vdesign", "3.4"]]) {

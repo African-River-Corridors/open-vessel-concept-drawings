@@ -10,12 +10,12 @@ worked example.
 
 ### E1. LCB of the stern rake is mirrored (legacy path)
 
-- **Code:** `crates/ovcd-core/src/hull.rs` `LCB`, lines 204-210, calls `rake_first_moment_volume` (lines 93-121) for
+- **Code:** `crates/ovd-core/src/hull.rs` `LCB`, lines 204-210, calls `rake_first_moment_volume` (lines 93-121) for
   the stern rake with `x_start = 0` and `toward_bow = true`. That function integrates a water depth `T − b·u` that is
   largest at `x_start`. At the stern the bottom is **highest** at `x = 0` and the water depth is largest at the
   forward end of the rake, `x = l_stern`.
 - **Source:** geometry. Worked example, the test hull `HullGeometry::new(60, 10, 4, 6, 2, 4, 1.5)` of
-  `crates/ovcd-core/tests/hull.rs`, at `T = 3 m`: stern rake volume 90 m³ (both ways). Correct first moment 200 m⁴,
+  `crates/ovd-core/tests/hull.rs`, at `T = 3 m`: stern rake volume 90 m³ (both ways). Correct first moment 200 m⁴,
   centroid 2.22 m from the stern. Code: 160 m⁴, centroid 1.78 m. LCB is too far aft.
 - **Effect:** none on the main path (rakes are zero there). Legacy `calculate_trim` gives too much bow-up trim for a
   hull with a stern rake. Small.
@@ -42,7 +42,7 @@ worked example.
 
 ### E4. Midship area uses Cb as the midship coefficient
 
-- **Code:** `crates/ovcd-core/src/resistance.rs:365-367` `midship_section_area = B × T × Cb`. Used in the Schijf
+- **Code:** `crates/ovd-core/src/resistance.rs:365-367` `midship_section_area = B × T × Cb`. Used in the Schijf
   limit (line 375) and the blockage term (line 411). `squat.rs:142` uses `B × T`.
 - **Source:** the midship coefficient is a different coefficient from the block coefficient (ES-TRIN 4.9 defines
   `Cb` on volume). No source in the repo gives `Am = Cb B T`.
@@ -91,7 +91,7 @@ worked example.
   10 % under). Picking a class always builds at the maximum.
 - **G9. Pushed convoys.** No hydrostatics per barge or per convoy yet (`run.rs:91`).
 - **G10. Sources not read.** Barrass II, ICORELS and the `Cb ≥ 0.3` validity floor have no source text in
-  `~/Dev/ovcd-rule-sources/`. They need a source before their labels can rise.
+  `~/Dev/ovd-rule-sources/`. They need a source before their labels can rise.
 - **G11. Glossary.** Missing terms: Block Coefficient (and its length basis), Draught, Length Overall, Length of
   Waterline, Freeboard. `GLOSSARY.md` defines Moulded Depth twice.
 

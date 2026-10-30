@@ -1,0 +1,18 @@
+[package]
+name = "ovd-core"
+description = "Pure calculation core: no_std + alloc, no I/O. Its modules mirror the Python core files one to one."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[features]
+serde = ["dep:serde"]
+
+# Only libm, an optional serde (spec 0001) and the rules kernel without its loader (`arc-rules`
+# with no features has no dependency). Every transcendental goes through libm.
+[dependencies]
+arc-rules.workspace = true
+libm = "0.2"
+serde = { version = "1", default-features = false, features = ["derive", "alloc"], optional = true }

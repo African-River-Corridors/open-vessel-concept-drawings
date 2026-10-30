@@ -1,7 +1,7 @@
 # Calibration
 
 `cases.yaml` holds real vessels (and published design points) with their sources.
-`python -m vessel_designer.calibration` runs them through the core and writes `results.md`.
+`python -m ovd.calibration` runs them through the core and writes `results.md`.
 The pass **measures**; it does not tune. Each correction is a separate change with its evidence.
 
 ## Calibration Bands
@@ -9,7 +9,7 @@ The pass **measures**; it does not tune. Each correction is a separate change wi
 `bands.yaml` gives each figure a band per confidence level (the `confidence` of the case):
 lightship ±15 / 20 / 30 % and deadweight ±7.5 / 10 / 15 % at high / medium / low. A case's band and its
 basis are therefore its figure plus its confidence. `results.md` shows each calibrated result against
-its band and marks cases outside it. `python -m vessel_designer.calibration --check` prints one
+its band and marks cases outside it. `python -m ovd.calibration --check` prints one
 `::warning` annotation per case outside its band; CI runs it. **A band miss is a warning, never a
 failure**, while the model is in development; a crash still fails. The errors of the first 11 cases
 are **in-sample**: the factors in `factors.yaml` were fitted to the same cases (the container factor to
@@ -33,7 +33,7 @@ A case whose figures disagree is `low` or is excluded from a fit with its reason
 ## When a band blocks a release
 
 A calibration case outside its band is a warning on every run (above). It **blocks a release** unless the
-CHANGELOG entry of that release explains it. `python -m vessel_designer.calibration --release-check <version>`
+CHANGELOG entry of that release explains it. `python -m ovd.calibration --release-check <version>`
 reads the `## <version>` section of `CHANGELOG.md` and fails when a case outside its band is neither named in
 that section nor already explained in its case file (`accepted_miss` for tank and propulsion cases,
 `exclude_from_fit_cb` for dry barge cases left out of the Cb fit). The `calibration-bands` job of `release.yml`
@@ -100,7 +100,7 @@ A band miss is a warning, never a failure; `--check` prints one annotation per t
 
 ## Tank barges (issue #335)
 
-`python -m vessel_designer.calibration` also runs every tank barge: the 41 `hold_type: tank` records of
+`python -m ovd.calibration` also runs every tank barge: the 41 `hold_type: tank` records of
 `cases.yaml` and the 12 reference vessels of `tank_barge_cases.yaml` (the vessels of
 `docs/research/crude-oil/03-design-practice.md` section 3 that have full data and were not yet in
 `cases.yaml`; the other four, ROB20, 004ROB05, ROB07 and 1635T, were). The model is the one of
@@ -172,5 +172,5 @@ tools/fit_tank_lightship.py` writes `tank_lightship.yaml`: k, the implied lights
 every record, in-sample and held out. The other records stay held out: run, compared, never fitted. A
 record gives a deadweight, not a lightship, so each lightship is implied with the box-barge block
 coefficient (an assumption), and k is an Estimate. The held-out error is large; it is reported, not
-tuned away. The Rust constants in `crates/ovcd-core/src/liquid_bulk/lightship.rs` equal the generated file,
+tuned away. The Rust constants in `crates/ovd-core/src/liquid_bulk/lightship.rs` equal the generated file,
 and a test keeps them equal.

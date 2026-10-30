@@ -5,7 +5,7 @@ and ADR 0018. Amended 2026-10-23 by ADR 0020 (the equilibrium solves stop at a t
 
 ## Problem Statement
 
-OVCD floats a box. The main path is a rectangular box `L × B × D` whose displacement is `Cb × L × B × T`
+OVD floats a box. The main path is a rectangular box `L × B × D` whose displacement is `Cb × L × B × T`
 with one fixed block coefficient. The legacy path is a raked box in closed form. Stability heels a
 prismatic box section. The Stern Forms of ADR 0017 correct the box in closed form. The drawn hull and
 the hydrostatic hull are not the same shape: the drawn bow rake is not in the hydrostatics. The
@@ -26,7 +26,7 @@ with one design-impact table. **0.3 ships at the end of phase 1.**
 **Phase 2: the Vessel Model, the 3D viewer and the exports.** The core assembles the Vessel Model (hull,
 decks, bulkheads, Spaces) and builds meshes from it. The desktop app and the web app draw them with
 three.js. The user turns layers on and off, moves a section plane, sees the waterline of each loading
-condition and clicks a Space to see its name, volume and centroid. OVCD exports glTF, a watertight STL
+condition and clicks a Space to see its name, volume and centroid. OVD exports glTF, a watertight STL
 or OBJ panel mesh and the offsets table as CSV.
 
 ## User Stories
@@ -63,7 +63,7 @@ or OBJ panel mesh and the offsets table as CSV.
 
 14. As a reviewer, I want the hydrostatics to be exact for a box and a raked box, with the closed forms
     as tests, so that I can trust the integration.
-15. As a reviewer, I want OVCD's hydrostatics checked against a published dataset of parametric hulls,
+15. As a reviewer, I want OVD's hydrostatics checked against a published dataset of parametric hulls,
     so that I can see how far they agree on shapes that are not boxes.
 16. As a reviewer, I want an offsets table as CSV, so that I can check the hull in my own tools.
 17. As a hydrodynamicist, I want a watertight panel mesh, so that I can run Capytaine or another solver
@@ -103,7 +103,7 @@ z up from the base line (the keel at the lowest point of the moulded hull). Metr
 metres, tonnes. Heel φ is positive to starboard (starboard goes down). Trim θ is positive by the bow (bow
 goes down), as #349 has it.
 
-### Modules (`ovcd-core`, all `no_std`, `libm` only)
+### Modules (`ovd-core`, all `no_std`, `libm` only)
 
 Each module has a small interface and plain structs in and out. None parses JSON.
 
@@ -259,7 +259,7 @@ The hull block is a new input group, **Hull Form**, in each Option:
   maintainer keeps a Cb input elsewhere.
 - **The Stern Form inputs of spec 0007 do not move.** They stay in their group and the generator reads
   them. No second input set (ADR 0017).
-- `ovcd schema` lists every new input with its group, unit, range, applies-to and default status.
+- `ovd schema` lists every new input with its group, unit, range, applies-to and default status.
   `shipd_parameters` and `hull_offsets` are the first object-valued inputs; the schema gives their shape.
 - The app's inputs panel gets the Hull Form group: a dropdown and the parameters of the chosen form.
   `shipd_parameters` shows as a collapsed table. `hull_offsets` shows its station count and an Import
@@ -270,7 +270,7 @@ The hull block is a new input group, **Hull Form**, in each Option:
 - **CSV**, one row per point, UTF-8, comma-separated, header `station_x_m,y_m,z_m`, the points of each
   station in order from the keel to the deck centre line, stations in ascending x. A blank line between
   stations is allowed. Metres. The same format is the phase 2 export.
-- **Import:** `ovcd hull import <file.csv> --option <name>` and an Import button in the app write the
+- **Import:** `ovd hull import <file.csv> --option <name>` and an Import button in the app write the
   table into `hull_offsets` and set `hull_form` to `offsets`. Checks, each with a message: at least two
   stations; x ascending; each half-section starts and ends on the centre line; y ≥ 0; no self-crossing;
   the same point count on every station. A table whose stations differ in count is **resampled**: each
@@ -293,12 +293,12 @@ https://doi.org/10.7910/DVN/MMGAUS, Harvard Dataverse, V1, licence CC0 1.0 (from
   dataset's `HullParameterizationOverview.pdf`; the constraint list is
   `HullParameterization_ConstraintsOverview.pdf`; the construction is in the dataset's
   `HullParameterization.py`. The GitHub repository of the authors has no licence.
-- **What OVCD does.** It writes its own generator in Rust, `shipd.rs`, from those **definitions**. It copies
+- **What OVD does.** It writes its own generator in Rust, `shipd.rs`, from those **definitions**. It copies
   no code, from either place. It is a Sections Table generator, not a waterline-stack mesher: each station
   is cut through the parametric surface at fixed heights.
 - **Parameters.** `shipd_parameters` holds the 45 terms under the dataset's header names, in the
   dataset's non-dimensional form. LOA, `Bd` and `Dd` are not stored there: they come from
-  `length_overall_m`, `beam_m` and `moulded_depth_m`. The dataset's x runs aft from the stem; OVCD's
+  `length_overall_m`, `beam_m` and `moulded_depth_m`. The dataset's x runs aft from the stem; OVD's
   runs forward from the aft end, so x = L − x_ShipD.
 - **Surface, in short** (the generator ticket holds the full definitions):
   - the midship section: a keel arc (radius `Rk`, which may be negative), a bottom line at deadrise `Beta`,
@@ -327,11 +327,11 @@ https://doi.org/10.7910/DVN/MMGAUS, Harvard Dataverse, V1, licence CC0 1.0 (from
   half-width is `Bbb` (`Bsb`) of the midship half-breadth. At each height below the design draught the
   waterline runs along the bulb to the half-width the hull's waterline reaches at the bulb's widest part,
   with a quartic fillet between: it matches value and slope at both ends and has no curvature at the bulb
-  end. The dataset's code writes that curvature row with `6 x^2` where the second derivative has `6 x`; OVCD
+  end. The dataset's code writes that curvature row with `6 x^2` where the second derivative has `6 x`; OVD
   writes the definition, and the benchmark report lists the hulls where the two differ. The stern bulb
   starts `Kappa_SB` of `Ls` along the stern taper (the code and its comment say `Ls`; the overview PDF says
   `Lb`). The constraint rows 36 to 48 follow the constraints PDF; the dataset's code has the sign of row 40
-  the other way round, and OVCD follows the PDF. A bulb needs a zero deadrise or a positive keel radius. The
+  the other way round, and OVD follows the PDF. A bulb needs a zero deadrise or a positive keel radius. The
   Set 1 sample passes the pass rule of #452 for most of its hulls; each hull outside is in the report.
 
 **Benchmark against the dataset.**
@@ -343,19 +343,19 @@ https://doi.org/10.7910/DVN/MMGAUS, Harvard Dataverse, V1, licence CC0 1.0 (from
   `SOURCE.md` that gives the citation, the CC0 licence, the files and the seed.
 - **Quantities.** At the dataset's ten draughts (T as a fraction of the depth): volume, waterplane area,
   LCB, LCF, the waterplane second moments `Ixx` and `Iyy`, and the waterline length. All are divided by
-  powers of LOA (LOA = 10 in every hull of the dataset), so OVCD runs each hull at L = 10 m.
+  powers of LOA (LOA = 10 in every hull of the dataset), so OVD runs each hull at L = 10 m.
 - **Not compared.** The dataset's vertical centre of buoyancy is not usable: its rows are identical to
   the LCB rows in the sets checked. Its wetted surface leaves out the surface slope, so it runs low on
-  sloped hulls. The wave resistance is outside phase 1. OVCD reports its own KB, wetted surface and
+  sloped hulls. The wave resistance is outside phase 1. OVD reports its own KB, wetted surface and
   coefficients beside the comparison, unchecked.
 - **Pass.** For at least 95 % of the sampled hulls: volume, waterplane area and waterline length within
   1 %; LCB and LCF within 0.5 % of LOA; `Ixx` and `Iyy` within 2 %. Every hull outside is listed in the
   report with its numbers. The dataset integrates waterline strips by the trapezoid rule, so part of any
   difference is theirs; the report says so. The tolerances are not loosened to make a hull pass: a
   failing hull is a finding.
-  (Amendment, 2026-10-23, #648.) The gate measures OVCD's shape the way the dataset measured its own
+  (Amendment, 2026-10-23, #648.) The gate measures OVD's shape the way the dataset measured its own
   (101 waterlines, 1000 points each, the trapezoid rule, interpolation between waterlines:
-  `shipd::dataset_measures`), so it compares the shape, not the integration rule; OVCD's own
+  `shipd::dataset_measures`), so it compares the shape, not the integration rule; OVD's own
   integration stays in the report for information. Every sampled hull must pass. The one exception is
   a hull listed in `calibration/shipd/artefacts.csv` with a cause where the dataset's code departs
   from the definitions (`stern_ellipse`, `bulb_crossing`); a test shows that it misses by the
@@ -434,7 +434,7 @@ pub struct Mesh {
 - **Waterline:** for each loading condition, the waterplane cut polygon (from `equilibrium`) as a flat
   mesh.
 - **Mesh hash:** SHA-256 of the f32 position bytes, the u32 index bytes (little-endian) and the group
-  table, per mesh, in a fixed order. `tools/web_parity.mjs` compares it between native (`ovcd mesh
+  table, per mesh, in a fixed order. `tools/web_parity.mjs` compares it between native (`ovd mesh
   --hash`) and the WebAssembly session. It is **not** in the results hash (ADR 0018). A mismatch fails
   the parity check as a results-hash mismatch does.
 
@@ -467,18 +467,18 @@ pub struct Mesh {
 
 | Export | Format | Holds | Command |
 |---|---|---|---|
-| View | glTF 2.0 binary (`.glb`) | one node per layer and per Space, named; colours as materials | `ovcd export --format gltf`, app menu |
-| Panel mesh | binary STL, or OBJ | the closed hull to the deck, outward normals, watertight; option `--below <condition>` clips it at that waterline and closes the lid | `ovcd export --format stl\|obj` |
-| Offsets | CSV | the Sections Table in the import format | `ovcd export --format offsets-csv` |
+| View | glTF 2.0 binary (`.glb`) | one node per layer and per Space, named; colours as materials | `ovd export --format gltf`, app menu |
+| Panel mesh | binary STL, or OBJ | the closed hull to the deck, outward normals, watertight; option `--below <condition>` clips it at that waterline and closes the lid | `ovd export --format stl\|obj` |
+| Offsets | CSV | the Sections Table in the import format | `ovd export --format offsets-csv` |
 
-- The writers live in `ovcd-format` (`export.rs`, new) and are called from the CLI, the shell and the web
+- The writers live in `ovd-format` (`export.rs`, new) and are called from the CLI, the shell and the web
   crate, so every surface writes the same bytes.
 - **Watertight test:** every edge is shared by exactly two triangles with opposite direction; the mesh
   volume by the divergence theorem matches the sections volume within the ruled-quad error (stated in the
   test); the glTF passes the Khronos glTF validator in CI.
 - **Capytaine:** a Python test, skipped when Capytaine is not installed, loads the STL with
   `--below <condition>` and checks that Capytaine reports the hull as closed and its displaced volume
-  within 1 % of OVCD's.
+  within 1 % of OVD's.
 - **Panel mesh and offsets (#461):** the STL and OBJ are in hull axes (x forward from the aft end, y to
   starboard, z up from the base line), metres, welded as f32 (vertices a nanometre apart are one point in a
   file). With `--below <condition>` the hull is cut at that condition's waterline (the trimmed plane of its
@@ -491,9 +491,9 @@ pub struct Mesh {
 
 A new **geometry builder lane** builds this spec. It owns, from the hand-over:
 
-- `crates/ovcd-core/src/hull.rs`, `hydrostatics.rs`, `stern_form.rs`;
+- `crates/ovd-core/src/hull.rs`, `hydrostatics.rs`, `stern_form.rs`;
 - the new `sections.rs`, `shipd.rs`, `offsets.rs`, `vessel_model.rs`, `mesh.rs`;
-- `crates/ovcd-format/src/export.rs` and the hull block in `vdesign.rs` (format version 3 stays with the
+- `crates/ovd-format/src/export.rs` and the hull block in `vdesign.rs` (format version 3 stays with the
   tank and stern lane: the geometry lane adds its group under their rule);
 - the 3D view component in `app/src/lib/views/`.
 
@@ -518,7 +518,7 @@ Every Measure that reads the draught, Cb or GZ moves with the switch-over and is
 ## Testing Decisions
 
 - **Through the interfaces:** `sections` is tested by its functions, not by its internals; each generator
-  by `generate`; the switch-over by `ovcd run` on the fixtures.
+  by `generate`; the switch-over by `ovd run` on the fixtures.
 - **Closed forms are the oracles:** the box (all angles), the raked box (upright, trimmed), the prism
   V-bottom and chine, and the Stern Forms, as in the Hull Forms table. Labels: `sourced - closed form,
   <form>`.
@@ -533,7 +533,7 @@ Every Measure that reads the draught, Cb or GZ moves with the switch-over and is
   "Fixed-number tests").
 - **Viewer:** an e2e test opens a fixture, shows the 3D view, toggles each layer, moves the section plane
   and clicks a Space; screenshots light and dark.
-- `ovcd-core` stays `no_std`; `bash tools/gates.sh` passes, WebAssembly build included.
+- `ovd-core` stays `no_std`; `bash tools/gates.sh` passes, WebAssembly build included.
 
 ## Out of Scope
 
@@ -571,7 +571,7 @@ Each later phase gets its own spec. In short:
 Taken with the maintainer, 2026-10-21:
 
 1. One engineering Vessel Model is the single source of truth for geometry; rendering is one view of it.
-2. ADR 0011 holds: OVCD owns the model and the concept-level analyses; companion projects do detailed
+2. ADR 0011 holds: OVD owns the model and the concept-level analyses; companion projects do detailed
    FE, CFD, seakeeping and ship-handling simulation, fed by open exports.
 3. A design twin now; an operational twin is a future direction only.
 4. Parametric layers: the sections table is the master surface; an arrangement layer of planes and boxes

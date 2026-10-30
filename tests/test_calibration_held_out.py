@@ -12,8 +12,8 @@ import re
 import pytest
 import yaml
 
-from vessel_designer import calibration
-from vessel_designer.calibration import (BANDS, CAL, assess, factors_yaml, fit_factors, _is_held_out,
+from ovd import calibration
+from ovd.calibration import (BANDS, CAL, assess, factors_yaml, fit_factors, _is_held_out,
                                          load_cases, report, run_barge, warnings_for)
 
 NOTE_SUGGESTS = {"fit", "hold out", "cross-check", "exclude"}
@@ -180,7 +180,7 @@ def test_the_fit_ignores_held_out_cases():
     assert any(_is_held_out(c) for c in cases) and any(not _is_held_out(c) for c in cases)
     in_sample = [c for c in cases if not _is_held_out(c)]
     assert fit_factors(in_sample) == fit_factors(cases)
-    from vessel_designer.calibration import _all_factors
+    from ovd.calibration import _all_factors
     assert factors_yaml(_all_factors(cases)) == (CAL / "factors.yaml").read_text(encoding="utf-8")
 
 

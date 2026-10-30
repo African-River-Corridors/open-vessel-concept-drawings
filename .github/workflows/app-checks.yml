@@ -15,14 +15,14 @@ on:
   pull_request:
     paths:
       - "app/**"
-      - "crates/ovcd-web/**"
+      - "crates/ovd-web/**"
       - "tools/build_web.sh"
       - "tools/web_parity.mjs"
   push:
     branches: ["main"]
     paths:
       - "app/**"
-      - "crates/ovcd-web/**"
+      - "crates/ovd-web/**"
       - "tools/build_web.sh"
       - "tools/web_parity.mjs"
       - ".github/workflows/app-checks.yml"
@@ -40,7 +40,7 @@ concurrency:
 jobs:
 
   # The web app (issue #246): the web build of the front end over the wasm Design session, in
-  # headless Chrome. The wasm-bindgen CLI is the version the ovcd-web crate pins.
+  # headless Chrome. The wasm-bindgen CLI is the version the ovd-web crate pins.
   web-app:
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -56,7 +56,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: The pinned wasm-bindgen version
         id: wb
-        run: echo "version=$(sed -n 's/^wasm-bindgen = "=\([0-9.]*\)".*/\1/p' crates/ovcd-web/Cargo.toml)" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(sed -n 's/^wasm-bindgen = "=\([0-9.]*\)".*/\1/p' crates/ovd-web/Cargo.toml)" >> "$GITHUB_OUTPUT"
       - name: wasm-bindgen CLI (cached)
         id: cli
         uses: actions/cache@v4
@@ -68,8 +68,8 @@ jobs:
         run: cargo install wasm-bindgen-cli --version "${{ steps.wb.outputs.version }}" --locked
       - name: Build the web package
         run: bash tools/build_web.sh
-      - name: Build ovcd
-        run: cargo build -p ovcd-cli
+      - name: Build ovd
+        run: cargo build -p ovd-cli
       - name: Front end (type check, desktop build, web build)
         working-directory: app
         run: |
@@ -80,7 +80,7 @@ jobs:
         working-directory: app
         env:
           # The smoke test saves each view in each language, light and dark, here (spec 0005).
-          OVCD_WEB_SHOTS: ${{ runner.temp }}/web-screenshots
+          OVD_WEB_SHOTS: ${{ runner.temp }}/web-screenshots
         run: bash e2e/run-web.sh
       - name: Upload the screenshots
         if: always()
@@ -118,8 +118,8 @@ jobs:
           npm run build
       - name: App crate (clippy, tests)
         run: |
-          cargo clippy -p ovcd-app --all-targets -- -D warnings
-          cargo test -p ovcd-app
+          cargo clippy -p ovd-app --all-targets -- -D warnings
+          cargo test -p ovd-app
 
   # The Windows build only has to compile: there is no installer yet.
   app-windows:
@@ -142,7 +142,7 @@ jobs:
           npm ci
           npm run build
       - name: Compile the app crate
-        run: cargo build -p ovcd-app
+        run: cargo build -p ovd-app
 
   # A failed daily run opens one issue, or adds a comment to the one that is open.
   daily-failure:

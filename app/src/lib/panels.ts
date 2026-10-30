@@ -5,7 +5,7 @@ export interface PanelChoice {
   outputs: boolean;
 }
 
-export const PANELS_KEY = "ovcd.panels";
+export const PANELS_KEY = "ovd.panels";
 const SHOWN: PanelChoice = { input: true, outputs: true };
 
 export function loadPanels(): PanelChoice {

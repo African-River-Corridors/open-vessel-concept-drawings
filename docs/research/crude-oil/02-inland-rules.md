@@ -1,4 +1,4 @@
-# OVCD crude oil — inland waterway rules for tank vessels and tank barges
+# OVD crude oil — inland waterway rules for tank vessels and tank barges
 
 Research note, 2026-10-20. Scope: crude oil (UN 1267, UN 3494) in inland tank vessels, tank
 barges and push-tow tank barges. Seagoing rules are in a separate note.
@@ -17,7 +17,7 @@ barges and push-tow tank barges. Seagoing rules are in a separate note.
 - Units: m, m³, kPa (gauge for tank pressures, absolute for vapour pressure, per ADN 1.2.1),
   m·rad.
 
-### Sources read (local paths under `~/Dev/ovcd-rule-sources/`)
+### Sources read (local paths under `~/Dev/ovd-rule-sources/`)
 
 | Source | Edition | File |
 |---|---|---|

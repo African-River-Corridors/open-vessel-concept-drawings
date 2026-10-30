@@ -5,7 +5,7 @@
     {
       "name": "A basis",
       "status": "results",
-      "results_hash": "2599c5bdb87d4125a094905ea945aafe2aaafcf3a62aa91b2788afed94505e41",
+      "results_hash": "97791882028f2131430d9b08981c971d94d79e9bfb526663fdb78901d86b1a07",
       "hash_status": "matches",
       "results": {
         "vessel": "Gas barge, IMO Type C tanks",
@@ -369,9 +369,8 @@
               ]
             ],
             "thruster_offsets_m": [
-              -3.2,
-              0.0,
-              3.2
+              -3.1350000000000002,
+              3.1350000000000002
             ],
             "thruster_room_length_m": 3.5,
             "container_x0_m": 7.699999999999999,
@@ -402,13 +401,13 @@
               {
                 "name": "thrusters_fit_beam",
                 "ok": true,
-                "message": "3 x 2.60 m thrusters need 10.20 m across a 29.00 m beam",
+                "message": "2 x 5.67 m thrusters need 13.14 m across a 29.00 m beam",
                 "severity": "error"
               },
               {
                 "name": "requested_thruster_count_fits",
                 "ok": true,
-                "message": "3 of 3 requested thrusters fit; 3 would need 10.20 m of 29.00 m beam",
+                "message": "2 of 2 requested thrusters fit; 2 would need 13.14 m of 29.00 m beam",
                 "severity": "warning"
               },
               {
@@ -544,10 +543,11 @@
             "diameter_m": 4.2,
             "axis_z_m": 2.1,
             "ducted": true,
+            "unit_power_kw": 858.5649813185031,
             "propulsors": [
               {
                 "x_m": 4.949999999999999,
-                "y_m": -1.6,
+                "y_m": -3.1350000000000002,
                 "z_m": 2.1,
                 "mass_item": "propulsors",
                 "mass_centre": {
@@ -570,7 +570,7 @@
               },
               {
                 "x_m": 4.949999999999999,
-                "y_m": 1.6,
+                "y_m": 3.1350000000000002,
                 "z_m": 2.1,
                 "mass_item": "propulsors",
                 "mass_centre": {
@@ -605,9 +605,7 @@
                 "kcg_m": 1.0
               }
             },
-            "warnings": [
-              "The stern holds 3 propulsor places for 2 propulsors; the layout spreads the 2 at 3.20 m."
-            ]
+            "warnings": []
           }
         },
         "arrangement": {
@@ -674,13 +672,13 @@
           {
             "name": "thrusters fit beam",
             "ok": true,
-            "message": "3 x 2.60 m thrusters need 10.20 m across a 29.00 m beam",
+            "message": "2 x 5.67 m thrusters need 13.14 m across a 29.00 m beam",
             "severity": "error"
           },
           {
             "name": "requested thruster count fits",
             "ok": true,
-            "message": "3 of 3 requested thrusters fit; 3 would need 10.20 m of 29.00 m beam",
+            "message": "2 of 2 requested thrusters fit; 2 would need 13.14 m of 29.00 m beam",
             "severity": "warning"
           },
           {
@@ -3841,17 +3839,17 @@
               }
             }
           },
-          "3 x 2.60 m thrusters need 10.20 m across a 29.00 m beam": {
+          "2 x 5.67 m thrusters need 13.14 m across a 29.00 m beam": {
             "id": "check-thrusters-fit-beam",
             "args": {
-              "count": 3,
+              "count": 2,
               "envelope": {
-                "num": "2.60",
-                "value": 2.6
+                "num": "5.67",
+                "value": 5.670000000000001
               },
               "needed": {
-                "num": "10.20",
-                "value": 10.2
+                "num": "13.14",
+                "value": 13.14
               },
               "beam": {
                 "num": "29.00",
@@ -3859,14 +3857,14 @@
               }
             }
           },
-          "3 of 3 requested thrusters fit; 3 would need 10.20 m of 29.00 m beam": {
+          "2 of 2 requested thrusters fit; 2 would need 13.14 m of 29.00 m beam": {
             "id": "check-requested-thruster-count-fits",
             "args": {
-              "fit": 3,
-              "requested": 3,
+              "fit": 2,
+              "requested": 2,
               "needed": {
-                "num": "10.20",
-                "value": 10.2
+                "num": "13.14",
+                "value": 13.14
               },
               "beam": {
                 "num": "29.00",
@@ -4423,7 +4421,7 @@
           "basis": "No calibration case covers the lightship of a gas barge: the build-up uses fixed factors."
         },
         "rule_trace": {
-          "scope": "Service Area coastal-and-river; Rule Sets igc-2g@2.0.0, is2008-a@2.0.0, lr-inland-gas@2.0.0, es-trin-2025@1.0.0, icll-freeboard@1.0.0, solas-v22@1.0.0, abs-barges@1.0.0, ovcd@2.1.0; only these Rule Sets were checked, not a statutory technical code. meets every evaluated blocking Rule; 4 blocking Rule(s) not evaluated: Survival after the assumed damage, Severe wind and rolling criterion (weather criterion), Capacity of each cargo tank within Table 4.3.1, Hull in the cargo area: one of the three designs the clause allows (Type G)",
+          "scope": "Service Area coastal-and-river; Rule Sets igc-2g@2.0.0, is2008-a@2.0.0, lr-inland-gas@2.0.0, es-trin-2025@1.0.0, icll-freeboard@1.0.0, solas-v22@1.0.0, abs-barges@1.0.0, ovd@3.0.0; only these Rule Sets were checked, not a statutory technical code. meets every evaluated blocking Rule; 4 blocking Rule(s) not evaluated: Survival after the assumed damage, Severe wind and rolling criterion (weather criterion), Capacity of each cargo tank within Table 4.3.1, Hull in the cargo area: one of the three designs the clause allows (Type G)",
           "rule_sets": [
             "igc-2g@2.0.0",
             "is2008-a@2.0.0",
@@ -4432,7 +4430,7 @@
             "icll-freeboard@1.0.0",
             "solas-v22@1.0.0",
             "abs-barges@1.0.0",
-            "ovcd@2.1.0"
+            "ovd@3.0.0"
           ],
           "service_area": "coastal-and-river",
           "warnings": [
@@ -6471,7 +6469,7 @@
               "rule_sets": [
                 "is2008-a@2.0.0"
               ],
-              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVCD adds is not one of them)",
+              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVD adds is not one of them)",
               "citation": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A, MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only, A.2.2.3",
               "origin": "regulation",
               "rule_status": "verified",
@@ -6501,7 +6499,7 @@
               "rule_sets": [
                 "is2008-a@2.0.0"
               ],
-              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVCD adds is not one of them)",
+              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVD adds is not one of them)",
               "citation": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A, MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only, A.2.2.3",
               "origin": "regulation",
               "rule_status": "verified",
@@ -6531,7 +6529,7 @@
               "rule_sets": [
                 "is2008-a@2.0.0"
               ],
-              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVCD adds is not one of them)",
+              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVD adds is not one of them)",
               "citation": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A, MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only, A.2.2.3",
               "origin": "regulation",
               "rule_status": "verified",
@@ -6561,7 +6559,7 @@
               "rule_sets": [
                 "is2008-a@2.0.0"
               ],
-              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVCD adds is not one of them)",
+              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVD adds is not one of them)",
               "citation": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A, MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only, A.2.2.3",
               "origin": "regulation",
               "rule_status": "verified",
@@ -6613,7 +6611,7 @@
               "outcome": "not applicable",
               "governing": false,
               "sizes": false,
-              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVCD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovcd/stability/light-angle-of-max-gz as a warning",
+              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovd/stability/light-angle-of-max-gz as a warning",
               "finding": "#498"
             },
             {
@@ -6643,7 +6641,7 @@
               "outcome": "not applicable",
               "governing": false,
               "sizes": false,
-              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVCD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovcd/stability/light-angle-of-max-gz as a warning",
+              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovd/stability/light-angle-of-max-gz as a warning",
               "finding": "#498"
             },
             {
@@ -6673,7 +6671,7 @@
               "outcome": "not applicable",
               "governing": false,
               "sizes": false,
-              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVCD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovcd/stability/light-angle-of-max-gz as a warning",
+              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovd/stability/light-angle-of-max-gz as a warning",
               "finding": "#498"
             },
             {
@@ -6703,7 +6701,7 @@
               "outcome": "not applicable",
               "governing": false,
               "sizes": false,
-              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVCD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovcd/stability/light-angle-of-max-gz as a warning",
+              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovd/stability/light-angle-of-max-gz as a warning",
               "finding": "#498"
             },
             {
@@ -7788,7 +7786,7 @@
               "outcome": "not applicable",
               "governing": false,
               "sizes": false,
-              "gap": "An approval item, not a calculation: ABS classes the tug and the barge as two separate vessels, so the tug and the barge are each submitted for class. OVCD runs the ATB as one Equivalent Hull for resistance and powering only; it does not assess either vessel against class",
+              "gap": "An approval item, not a calculation: ABS classes the tug and the barge as two separate vessels, so the tug and the barge are each submitted for class. OVD runs the ATB as one Equivalent Hull for resistance and powering only; it does not assess either vessel against class",
               "finding": "#363"
             },
             {
@@ -7818,13 +7816,13 @@
               "outcome": "not applicable",
               "governing": false,
               "sizes": false,
-              "gap": "An approval item, not a calculation: the analysis of the wing walls at the Notch, and of the structure of the tug and the barge in way of the connection, is submitted for review. OVCD has no structure model for it, and the connector loads (5-3-1/11.1) come from model tests or a multi-body analysis it does not do",
+              "gap": "An approval item, not a calculation: the analysis of the wing walls at the Notch, and of the structure of the tug and the barge in way of the connection, is submitted for review. OVD has no structure model for it, and the connector loads (5-3-1/11.1) come from model tests or a multi-body analysis it does not do",
               "finding": "#363"
             },
             {
-              "rule": "ovcd/capacity/cargo-positive",
+              "rule": "ovd/capacity/cargo-positive",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The hull carries some cargo",
               "citation": "",
@@ -7854,9 +7852,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/capacity/feasible-geometry",
+              "rule": "ovd/capacity/feasible-geometry",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The cargo space has a positive volume",
               "citation": "",
@@ -7886,9 +7884,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/capacity/cargo-zone-positive",
+              "rule": "ovd/capacity/cargo-zone-positive",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The cargo zone is longer than zero",
               "citation": "",
@@ -7918,9 +7916,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/capacity/air-draft-within-limit",
+              "rule": "ovd/capacity/air-draft-within-limit",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Light air draft (with ballast where carried) within the typed limit",
               "citation": "",
@@ -7950,9 +7948,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/loading/air-draft",
+              "rule": "ovd/loading/air-draft",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The air draft of each IS Code loading condition is within the typed limit (a failed condition only: a condition within the limit has no check)",
               "citation": "",
@@ -7982,9 +7980,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/loading/ballast-plan",
+              "rule": "ovd/loading/ballast-plan",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "A ballast plan meets every stability criterion in each ballast condition (a failed condition only: a condition with a plan has no check)",
               "citation": "",
@@ -8014,12 +8012,12 @@
               "finding": null
             },
             {
-              "rule": "ovcd/capacity/intact-gm",
+              "rule": "ovd/capacity/intact-gm",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "First-order hold GM at the reported cargo at least 0.15 m (an estimate, not a stability check)",
-              "citation": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A, MSC.267(85), adopted 4 December 2008 (origin of the value only; OVCD applies it as a tool limit to a first-order estimate), A.2.2.4",
+              "citation": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A, MSC.267(85), adopted 4 December 2008 (origin of the value only; OVD applies it as a tool limit to a first-order estimate), A.2.2.4",
               "origin": "tool-limit",
               "rule_status": "unverified",
               "method_status": "verified",
@@ -8046,9 +8044,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/gas-arrangement/feasible-arrangement",
+              "rule": "ovd/gas-arrangement/feasible-arrangement",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Some tank arrangement passes every check on this hull",
               "citation": "",
@@ -8078,12 +8076,12 @@
               "finding": null
             },
             {
-              "rule": "ovcd/gas-arrangement/tank-l-over-d",
+              "rule": "ovd/gas-arrangement/tank-l-over-d",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Tank length at most 7 inner shell diameters",
-              "citation": "ADN 2025, ECE/TRANS/351, 2025 (origin of the limit only; OVCD applies it as a tool limit), 9.3.1.11.1(b)",
+              "citation": "ADN 2025, ECE/TRANS/351, 2025 (origin of the limit only; OVD applies it as a tool limit), 9.3.1.11.1(b)",
               "origin": "tool-limit",
               "rule_status": "unverified",
               "method_status": "verified",
@@ -8110,9 +8108,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/thrusters-fit-beam",
+              "rule": "ovd/aft-block/thrusters-fit-beam",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The thrusters fit within the beam",
               "citation": "",
@@ -8142,9 +8140,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/thruster-count",
+              "rule": "ovd/aft-block/thruster-count",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The requested number of thrusters fits",
               "citation": "",
@@ -8174,9 +8172,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/containers-fit-beam",
+              "rule": "ovd/aft-block/containers-fit-beam",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The 40 ft units fit within the beam",
               "citation": "",
@@ -8206,9 +8204,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/units-in-one-row",
+              "rule": "ovd/aft-block/units-in-one-row",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The 40 ft units fit in one row",
               "citation": "",
@@ -8238,9 +8236,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/wheelhouse-fits-beam",
+              "rule": "ovd/aft-block/wheelhouse-fits-beam",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The wheelhouse fits within the beam",
               "citation": "",
@@ -8270,9 +8268,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/accom-beside-wheelhouse",
+              "rule": "ovd/aft-block/accom-beside-wheelhouse",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The accommodation units fit beside the wheelhouse",
               "citation": "",
@@ -8302,9 +8300,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/gensets-fit-beam",
+              "rule": "ovd/aft-block/gensets-fit-beam",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The gas gensets fit within the beam",
               "citation": "",
@@ -8334,9 +8332,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/gensets-under-deck",
+              "rule": "ovd/aft-block/gensets-under-deck",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The gas gensets fit under the deck with 1.0 m allowance (an estimate)",
               "citation": "",
@@ -8366,9 +8364,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/gensets-reserve",
+              "rule": "ovd/aft-block/gensets-reserve",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The gensets carry the load with one set in reserve",
               "citation": "",
@@ -8398,9 +8396,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/wheelhouse-sightline",
+              "rule": "ovd/aft-block/wheelhouse-sightline",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The wheelhouse eye sees over the cargo with the margin",
               "citation": "",
@@ -8430,9 +8428,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/squat/froude-depth",
+              "rule": "ovd/squat/froude-depth",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Depth Froude number below the squat method's range limit 0.7",
               "citation": "",
@@ -8462,9 +8460,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/squat/blockage",
+              "rule": "ovd/squat/blockage",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Blockage at most 0.35, the squat method's range",
               "citation": "",
@@ -8494,9 +8492,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/squat/keel-clears-bed",
+              "rule": "ovd/squat/keel-clears-bed",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The keel clears the bed at speed",
               "citation": "",
@@ -8526,9 +8524,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/squat/keel-margin",
+              "rule": "ovd/squat/keel-margin",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The keel clears the bed at speed with the safety margin",
               "citation": "",
@@ -8558,9 +8556,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/squat/methods-agree",
+              "rule": "ovd/squat/methods-agree",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The two squat methods agree within 50 %",
               "citation": "",
@@ -8590,9 +8588,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/waves/short-wave-validity",
+              "rule": "ovd/waves/short-wave-validity",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Wave length within the added-resistance method's range",
               "citation": "",
@@ -8622,9 +8620,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/waves/wave-height",
+              "rule": "ovd/waves/wave-height",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Significant wave height at most 3.0 m, the screening range",
               "citation": "",
@@ -8654,9 +8652,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/energy/service-below-schijf",
+              "rule": "ovd/energy/service-below-schijf",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Service speed within the Schijf limiting speed",
               "citation": "",
@@ -8686,9 +8684,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/capacity/not-overloaded",
+              "rule": "ovd/capacity/not-overloaded",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The full tank volume floats within the hull (information: it does not gate, #418)",
               "citation": "",
@@ -8718,9 +8716,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/capacity/freeboard",
+              "rule": "ovd/capacity/freeboard",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Freeboard at the full-volume draught at least the required freeboard (information: it does not gate, #418)",
               "citation": "",
@@ -8750,9 +8748,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/journey/volume-bound",
+              "rule": "ovd/journey/volume-bound",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The cargo is bound by the tank volume, not overloaded",
               "citation": "",
@@ -8782,9 +8780,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/journey/floats",
+              "rule": "ovd/journey/floats",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The payload the draught limit leaves is above zero",
               "citation": "",
@@ -8814,9 +8812,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/journey/ukc-consistent",
+              "rule": "ovd/journey/ukc-consistent",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The draught limit leaves room for the under-keel clearance",
               "citation": "",
@@ -8846,9 +8844,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/journey/utilisation",
+              "rule": "ovd/journey/utilisation",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The payload uses a reasonable share of the tank volume",
               "citation": "",
@@ -8878,9 +8876,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/gas-arrangement/freeboard-at-payload",
+              "rule": "ovd/gas-arrangement/freeboard-at-payload",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Freeboard at the carried draught at least the required freeboard",
               "citation": "",
@@ -8910,9 +8908,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/stability/assessed",
+              "rule": "ovd/stability/assessed",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The engine could assess the stability of every loading condition",
               "citation": "",
@@ -8942,9 +8940,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/waves/bow-length-supplied",
+              "rule": "ovd/waves/bow-length-supplied",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The bow length the wave method needs is given, not estimated",
               "citation": "",
@@ -8974,9 +8972,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/resistance/service-below-limiting",
+              "rule": "ovd/resistance/service-below-limiting",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Service speed at most 0.95 times the Schijf limiting speed, in each channel",
               "citation": "",
@@ -9006,9 +9004,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/resistance/blockage-in-range",
+              "rule": "ovd/resistance/blockage-in-range",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Channel blockage ratio between 0 and 1, in each channel",
               "citation": "",
@@ -9038,9 +9036,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/resistance/service-clears-squat",
+              "rule": "ovd/resistance/service-clears-squat",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "At the service speed the squat leaves the under-keel clearance, in each channel",
               "citation": "",
@@ -9070,9 +9068,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/resistance/lackenby-fit",
+              "rule": "ovd/resistance/lackenby-fit",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Depth Froude number below 0.95, where the shallow-water correction is used",
               "citation": "",
@@ -9102,9 +9100,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/resistance/first-order-coefficients",
+              "rule": "ovd/resistance/first-order-coefficients",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The resistance coefficients are uncalibrated first-order estimates",
               "citation": "",
@@ -9134,9 +9132,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/powering/installed-covers-design-speed",
+              "rule": "ovd/powering/installed-covers-design-speed",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The installed power gives at least the Design Speed in every environment",
               "citation": "",
@@ -9164,9 +9162,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/wheelhouse/lift-enough",
+              "rule": "ovd/wheelhouse/lift-enough",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The lift the Blind Distance needs is within the maximum lift of the wheelhouse",
               "citation": "",
@@ -9194,9 +9192,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/powering/shallow-water-validity",
+              "rule": "ovd/powering/shallow-water-validity",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The design channel is at least twice as deep as the loaded draught (h/T of 2.0 or more), where the shallow-water method is valid",
               "citation": "",
@@ -9224,9 +9222,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/propulsion/propeller-fits-stern",
+              "rule": "ovd/propulsion/propeller-fits-stern",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The propeller diameter is within the largest the Stern Form allows (D over D_max of 1 or less)",
               "citation": "",
@@ -9254,9 +9252,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/propulsion/immersion-light",
+              "rule": "ovd/propulsion/immersion-light",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The shaft axis is at least 0.76 diameters under the water at the lightest aft draught (0.71 for a ducted propeller): a guide, not a tunnel stern",
               "citation": "",
@@ -9284,9 +9282,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/propulsion/blade-load",
+              "rule": "ovd/propulsion/blade-load",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The delivered power of one unit at the Installed Power is at most 400 kW per m2 of disc (500 for a ducted propeller)",
               "citation": "",
@@ -9314,9 +9312,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/stability/light-angle-of-max-gz",
+              "rule": "ovd/stability/light-angle-of-max-gz",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The angle of maximum GZ is at least 25 degrees in a light condition with no ballast: a warning, with ballast to sail light, not a failure (the bilge emerges early on a wide, shallow hull)",
               "citation": "",
@@ -9344,9 +9342,9 @@
               "finding": "#498"
             },
             {
-              "rule": "ovcd/stability/light-angle-of-max-gz",
+              "rule": "ovd/stability/light-angle-of-max-gz",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The angle of maximum GZ is at least 25 degrees in a light condition with no ballast: a warning, with ballast to sail light, not a failure (the bilge emerges early on a wide, shallow hull)",
               "citation": "",
@@ -9374,9 +9372,9 @@
               "finding": "#498"
             },
             {
-              "rule": "ovcd/stability/light-angle-of-max-gz",
+              "rule": "ovd/stability/light-angle-of-max-gz",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The angle of maximum GZ is at least 25 degrees in a light condition with no ballast: a warning, with ballast to sail light, not a failure (the bilge emerges early on a wide, shallow hull)",
               "citation": "",
@@ -9404,9 +9402,9 @@
               "finding": "#498"
             },
             {
-              "rule": "ovcd/stability/light-angle-of-max-gz",
+              "rule": "ovd/stability/light-angle-of-max-gz",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The angle of maximum GZ is at least 25 degrees in a light condition with no ballast: a warning, with ballast to sail light, not a failure (the bilge emerges early on a wide, shallow hull)",
               "citation": "",
@@ -9457,13 +9455,51 @@
             ],
             "summary": "meets every evaluated blocking Rule; 4 blocking Rule(s) not evaluated: Survival after the assumed damage, Severe wind and rolling criterion (weather criterion), Capacity of each cargo tank within Table 4.3.1, Hull in the cargo area: one of the three designs the clause allows (Type G)"
           }
-        }
+        },
+        "spaces": [
+          {
+            "name": "CT1P",
+            "kind": "cargo_tank",
+            "side": "port",
+            "volume_m3": 3661.9359625113984,
+            "lcg_m": 46.444,
+            "tcg_m": -6.0,
+            "vcg_m": 7.1033333333333335
+          },
+          {
+            "name": "CT1S",
+            "kind": "cargo_tank",
+            "side": "starboard",
+            "volume_m3": 3661.9359625113984,
+            "lcg_m": 46.444,
+            "tcg_m": 6.0,
+            "vcg_m": 7.1033333333333335
+          },
+          {
+            "name": "CT2P",
+            "kind": "cargo_tank",
+            "side": "port",
+            "volume_m3": 3661.9359625113984,
+            "lcg_m": 96.348,
+            "tcg_m": -6.0,
+            "vcg_m": 7.1033333333333335
+          },
+          {
+            "name": "CT2S",
+            "kind": "cargo_tank",
+            "side": "starboard",
+            "volume_m3": 3661.9359625113984,
+            "lcg_m": 96.348,
+            "tcg_m": 6.0,
+            "vcg_m": 7.1033333333333335
+          }
+        ]
       }
     },
     {
       "name": "B profile",
       "status": "results",
-      "results_hash": "d252390d82ddb008e3b8a0ddd7ab512ce6ecab7bd620ad6b9bf1d74e04ce19b5",
+      "results_hash": "01ee0e58b9ab054621a743d7990c1aff53f651954a8b73578ac92b120e12333d",
       "hash_status": "matches",
       "results": {
         "vessel": "Gas barge, IMO Type C tanks",
@@ -9827,9 +9863,8 @@
               ]
             ],
             "thruster_offsets_m": [
-              -3.2,
-              0.0,
-              3.2
+              -3.1350000000000002,
+              3.1350000000000002
             ],
             "thruster_room_length_m": 3.5,
             "container_x0_m": 7.699999999999999,
@@ -9860,13 +9895,13 @@
               {
                 "name": "thrusters_fit_beam",
                 "ok": true,
-                "message": "3 x 2.60 m thrusters need 10.20 m across a 29.00 m beam",
+                "message": "2 x 5.67 m thrusters need 13.14 m across a 29.00 m beam",
                 "severity": "error"
               },
               {
                 "name": "requested_thruster_count_fits",
                 "ok": true,
-                "message": "3 of 3 requested thrusters fit; 3 would need 10.20 m of 29.00 m beam",
+                "message": "2 of 2 requested thrusters fit; 2 would need 13.14 m of 29.00 m beam",
                 "severity": "warning"
               },
               {
@@ -10002,10 +10037,11 @@
             "diameter_m": 4.2,
             "axis_z_m": 2.1,
             "ducted": true,
+            "unit_power_kw": 858.5649813185031,
             "propulsors": [
               {
                 "x_m": 4.949999999999999,
-                "y_m": -1.6,
+                "y_m": -3.1350000000000002,
                 "z_m": 2.1,
                 "mass_item": "propulsors",
                 "mass_centre": {
@@ -10028,7 +10064,7 @@
               },
               {
                 "x_m": 4.949999999999999,
-                "y_m": 1.6,
+                "y_m": 3.1350000000000002,
                 "z_m": 2.1,
                 "mass_item": "propulsors",
                 "mass_centre": {
@@ -10063,9 +10099,7 @@
                 "kcg_m": 1.0
               }
             },
-            "warnings": [
-              "The stern holds 3 propulsor places for 2 propulsors; the layout spreads the 2 at 3.20 m."
-            ]
+            "warnings": []
           }
         },
         "arrangement": {
@@ -10132,13 +10166,13 @@
           {
             "name": "thrusters fit beam",
             "ok": true,
-            "message": "3 x 2.60 m thrusters need 10.20 m across a 29.00 m beam",
+            "message": "2 x 5.67 m thrusters need 13.14 m across a 29.00 m beam",
             "severity": "error"
           },
           {
             "name": "requested thruster count fits",
             "ok": true,
-            "message": "3 of 3 requested thrusters fit; 3 would need 10.20 m of 29.00 m beam",
+            "message": "2 of 2 requested thrusters fit; 2 would need 13.14 m of 29.00 m beam",
             "severity": "warning"
           },
           {
@@ -13299,17 +13333,17 @@
               }
             }
           },
-          "3 x 2.60 m thrusters need 10.20 m across a 29.00 m beam": {
+          "2 x 5.67 m thrusters need 13.14 m across a 29.00 m beam": {
             "id": "check-thrusters-fit-beam",
             "args": {
-              "count": 3,
+              "count": 2,
               "envelope": {
-                "num": "2.60",
-                "value": 2.6
+                "num": "5.67",
+                "value": 5.670000000000001
               },
               "needed": {
-                "num": "10.20",
-                "value": 10.2
+                "num": "13.14",
+                "value": 13.14
               },
               "beam": {
                 "num": "29.00",
@@ -13317,14 +13351,14 @@
               }
             }
           },
-          "3 of 3 requested thrusters fit; 3 would need 10.20 m of 29.00 m beam": {
+          "2 of 2 requested thrusters fit; 2 would need 13.14 m of 29.00 m beam": {
             "id": "check-requested-thruster-count-fits",
             "args": {
-              "fit": 3,
-              "requested": 3,
+              "fit": 2,
+              "requested": 2,
               "needed": {
-                "num": "10.20",
-                "value": 10.2
+                "num": "13.14",
+                "value": 13.14
               },
               "beam": {
                 "num": "29.00",
@@ -13881,7 +13915,7 @@
           "basis": "No calibration case covers the lightship of a gas barge: the build-up uses fixed factors."
         },
         "rule_trace": {
-          "scope": "Service Area coastal-and-river; Rule Sets igc-2g@2.0.0, is2008-a@2.0.0, lr-inland-gas@2.0.0, es-trin-2025@1.0.0, icll-freeboard@1.0.0, solas-v22@1.0.0, abs-barges@1.0.0, ovcd@2.1.0; only these Rule Sets were checked, not a statutory technical code. meets every evaluated blocking Rule; 4 blocking Rule(s) not evaluated: Survival after the assumed damage, Severe wind and rolling criterion (weather criterion), Capacity of each cargo tank within Table 4.3.1, Hull in the cargo area: one of the three designs the clause allows (Type G)",
+          "scope": "Service Area coastal-and-river; Rule Sets igc-2g@2.0.0, is2008-a@2.0.0, lr-inland-gas@2.0.0, es-trin-2025@1.0.0, icll-freeboard@1.0.0, solas-v22@1.0.0, abs-barges@1.0.0, ovd@3.0.0; only these Rule Sets were checked, not a statutory technical code. meets every evaluated blocking Rule; 4 blocking Rule(s) not evaluated: Survival after the assumed damage, Severe wind and rolling criterion (weather criterion), Capacity of each cargo tank within Table 4.3.1, Hull in the cargo area: one of the three designs the clause allows (Type G)",
           "rule_sets": [
             "igc-2g@2.0.0",
             "is2008-a@2.0.0",
@@ -13890,7 +13924,7 @@
             "icll-freeboard@1.0.0",
             "solas-v22@1.0.0",
             "abs-barges@1.0.0",
-            "ovcd@2.1.0"
+            "ovd@3.0.0"
           ],
           "service_area": "coastal-and-river",
           "warnings": [
@@ -15929,7 +15963,7 @@
               "rule_sets": [
                 "is2008-a@2.0.0"
               ],
-              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVCD adds is not one of them)",
+              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVD adds is not one of them)",
               "citation": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A, MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only, A.2.2.3",
               "origin": "regulation",
               "rule_status": "verified",
@@ -15959,7 +15993,7 @@
               "rule_sets": [
                 "is2008-a@2.0.0"
               ],
-              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVCD adds is not one of them)",
+              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVD adds is not one of them)",
               "citation": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A, MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only, A.2.2.3",
               "origin": "regulation",
               "rule_status": "verified",
@@ -15989,7 +16023,7 @@
               "rule_sets": [
                 "is2008-a@2.0.0"
               ],
-              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVCD adds is not one of them)",
+              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVD adds is not one of them)",
               "citation": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A, MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only, A.2.2.3",
               "origin": "regulation",
               "rule_status": "verified",
@@ -16019,7 +16053,7 @@
               "rule_sets": [
                 "is2008-a@2.0.0"
               ],
-              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVCD adds is not one of them)",
+              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVD adds is not one of them)",
               "citation": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A, MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only, A.2.2.3",
               "origin": "regulation",
               "rule_status": "verified",
@@ -16071,7 +16105,7 @@
               "outcome": "not applicable",
               "governing": false,
               "sizes": false,
-              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVCD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovcd/stability/light-angle-of-max-gz as a warning",
+              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovd/stability/light-angle-of-max-gz as a warning",
               "finding": "#498"
             },
             {
@@ -16101,7 +16135,7 @@
               "outcome": "not applicable",
               "governing": false,
               "sizes": false,
-              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVCD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovcd/stability/light-angle-of-max-gz as a warning",
+              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovd/stability/light-angle-of-max-gz as a warning",
               "finding": "#498"
             },
             {
@@ -16131,7 +16165,7 @@
               "outcome": "not applicable",
               "governing": false,
               "sizes": false,
-              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVCD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovcd/stability/light-angle-of-max-gz as a warning",
+              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovd/stability/light-angle-of-max-gz as a warning",
               "finding": "#498"
             },
             {
@@ -16161,7 +16195,7 @@
               "outcome": "not applicable",
               "governing": false,
               "sizes": false,
-              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVCD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovcd/stability/light-angle-of-max-gz as a warning",
+              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovd/stability/light-angle-of-max-gz as a warning",
               "finding": "#498"
             },
             {
@@ -17246,7 +17280,7 @@
               "outcome": "not applicable",
               "governing": false,
               "sizes": false,
-              "gap": "An approval item, not a calculation: ABS classes the tug and the barge as two separate vessels, so the tug and the barge are each submitted for class. OVCD runs the ATB as one Equivalent Hull for resistance and powering only; it does not assess either vessel against class",
+              "gap": "An approval item, not a calculation: ABS classes the tug and the barge as two separate vessels, so the tug and the barge are each submitted for class. OVD runs the ATB as one Equivalent Hull for resistance and powering only; it does not assess either vessel against class",
               "finding": "#363"
             },
             {
@@ -17276,13 +17310,13 @@
               "outcome": "not applicable",
               "governing": false,
               "sizes": false,
-              "gap": "An approval item, not a calculation: the analysis of the wing walls at the Notch, and of the structure of the tug and the barge in way of the connection, is submitted for review. OVCD has no structure model for it, and the connector loads (5-3-1/11.1) come from model tests or a multi-body analysis it does not do",
+              "gap": "An approval item, not a calculation: the analysis of the wing walls at the Notch, and of the structure of the tug and the barge in way of the connection, is submitted for review. OVD has no structure model for it, and the connector loads (5-3-1/11.1) come from model tests or a multi-body analysis it does not do",
               "finding": "#363"
             },
             {
-              "rule": "ovcd/capacity/cargo-positive",
+              "rule": "ovd/capacity/cargo-positive",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The hull carries some cargo",
               "citation": "",
@@ -17312,9 +17346,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/capacity/feasible-geometry",
+              "rule": "ovd/capacity/feasible-geometry",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The cargo space has a positive volume",
               "citation": "",
@@ -17344,9 +17378,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/capacity/cargo-zone-positive",
+              "rule": "ovd/capacity/cargo-zone-positive",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The cargo zone is longer than zero",
               "citation": "",
@@ -17376,9 +17410,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/capacity/air-draft-within-limit",
+              "rule": "ovd/capacity/air-draft-within-limit",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Light air draft (with ballast where carried) within the typed limit",
               "citation": "",
@@ -17408,9 +17442,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/loading/air-draft",
+              "rule": "ovd/loading/air-draft",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The air draft of each IS Code loading condition is within the typed limit (a failed condition only: a condition within the limit has no check)",
               "citation": "",
@@ -17440,9 +17474,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/loading/ballast-plan",
+              "rule": "ovd/loading/ballast-plan",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "A ballast plan meets every stability criterion in each ballast condition (a failed condition only: a condition with a plan has no check)",
               "citation": "",
@@ -17472,12 +17506,12 @@
               "finding": null
             },
             {
-              "rule": "ovcd/capacity/intact-gm",
+              "rule": "ovd/capacity/intact-gm",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "First-order hold GM at the reported cargo at least 0.15 m (an estimate, not a stability check)",
-              "citation": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A, MSC.267(85), adopted 4 December 2008 (origin of the value only; OVCD applies it as a tool limit to a first-order estimate), A.2.2.4",
+              "citation": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A, MSC.267(85), adopted 4 December 2008 (origin of the value only; OVD applies it as a tool limit to a first-order estimate), A.2.2.4",
               "origin": "tool-limit",
               "rule_status": "unverified",
               "method_status": "verified",
@@ -17504,9 +17538,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/gas-arrangement/feasible-arrangement",
+              "rule": "ovd/gas-arrangement/feasible-arrangement",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Some tank arrangement passes every check on this hull",
               "citation": "",
@@ -17536,12 +17570,12 @@
               "finding": null
             },
             {
-              "rule": "ovcd/gas-arrangement/tank-l-over-d",
+              "rule": "ovd/gas-arrangement/tank-l-over-d",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Tank length at most 7 inner shell diameters",
-              "citation": "ADN 2025, ECE/TRANS/351, 2025 (origin of the limit only; OVCD applies it as a tool limit), 9.3.1.11.1(b)",
+              "citation": "ADN 2025, ECE/TRANS/351, 2025 (origin of the limit only; OVD applies it as a tool limit), 9.3.1.11.1(b)",
               "origin": "tool-limit",
               "rule_status": "unverified",
               "method_status": "verified",
@@ -17568,9 +17602,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/thrusters-fit-beam",
+              "rule": "ovd/aft-block/thrusters-fit-beam",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The thrusters fit within the beam",
               "citation": "",
@@ -17600,9 +17634,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/thruster-count",
+              "rule": "ovd/aft-block/thruster-count",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The requested number of thrusters fits",
               "citation": "",
@@ -17632,9 +17666,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/containers-fit-beam",
+              "rule": "ovd/aft-block/containers-fit-beam",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The 40 ft units fit within the beam",
               "citation": "",
@@ -17664,9 +17698,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/units-in-one-row",
+              "rule": "ovd/aft-block/units-in-one-row",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The 40 ft units fit in one row",
               "citation": "",
@@ -17696,9 +17730,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/wheelhouse-fits-beam",
+              "rule": "ovd/aft-block/wheelhouse-fits-beam",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The wheelhouse fits within the beam",
               "citation": "",
@@ -17728,9 +17762,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/accom-beside-wheelhouse",
+              "rule": "ovd/aft-block/accom-beside-wheelhouse",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The accommodation units fit beside the wheelhouse",
               "citation": "",
@@ -17760,9 +17794,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/gensets-fit-beam",
+              "rule": "ovd/aft-block/gensets-fit-beam",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The gas gensets fit within the beam",
               "citation": "",
@@ -17792,9 +17826,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/gensets-under-deck",
+              "rule": "ovd/aft-block/gensets-under-deck",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The gas gensets fit under the deck with 1.0 m allowance (an estimate)",
               "citation": "",
@@ -17824,9 +17858,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/gensets-reserve",
+              "rule": "ovd/aft-block/gensets-reserve",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The gensets carry the load with one set in reserve",
               "citation": "",
@@ -17856,9 +17890,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/wheelhouse-sightline",
+              "rule": "ovd/aft-block/wheelhouse-sightline",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The wheelhouse eye sees over the cargo with the margin",
               "citation": "",
@@ -17888,9 +17922,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/squat/froude-depth",
+              "rule": "ovd/squat/froude-depth",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Depth Froude number below the squat method's range limit 0.7",
               "citation": "",
@@ -17920,9 +17954,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/squat/blockage",
+              "rule": "ovd/squat/blockage",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Blockage at most 0.35, the squat method's range",
               "citation": "",
@@ -17952,9 +17986,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/squat/keel-clears-bed",
+              "rule": "ovd/squat/keel-clears-bed",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The keel clears the bed at speed",
               "citation": "",
@@ -17984,9 +18018,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/squat/keel-margin",
+              "rule": "ovd/squat/keel-margin",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The keel clears the bed at speed with the safety margin",
               "citation": "",
@@ -18016,9 +18050,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/squat/methods-agree",
+              "rule": "ovd/squat/methods-agree",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The two squat methods agree within 50 %",
               "citation": "",
@@ -18048,9 +18082,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/waves/short-wave-validity",
+              "rule": "ovd/waves/short-wave-validity",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Wave length within the added-resistance method's range",
               "citation": "",
@@ -18080,9 +18114,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/waves/wave-height",
+              "rule": "ovd/waves/wave-height",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Significant wave height at most 3.0 m, the screening range",
               "citation": "",
@@ -18112,9 +18146,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/energy/service-below-schijf",
+              "rule": "ovd/energy/service-below-schijf",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Service speed within the Schijf limiting speed",
               "citation": "",
@@ -18144,9 +18178,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/capacity/not-overloaded",
+              "rule": "ovd/capacity/not-overloaded",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The full tank volume floats within the hull (information: it does not gate, #418)",
               "citation": "",
@@ -18176,9 +18210,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/capacity/freeboard",
+              "rule": "ovd/capacity/freeboard",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Freeboard at the full-volume draught at least the required freeboard (information: it does not gate, #418)",
               "citation": "",
@@ -18208,9 +18242,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/journey/volume-bound",
+              "rule": "ovd/journey/volume-bound",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The cargo is bound by the tank volume, not overloaded",
               "citation": "",
@@ -18240,9 +18274,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/journey/floats",
+              "rule": "ovd/journey/floats",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The payload the draught limit leaves is above zero",
               "citation": "",
@@ -18272,9 +18306,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/journey/ukc-consistent",
+              "rule": "ovd/journey/ukc-consistent",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The draught limit leaves room for the under-keel clearance",
               "citation": "",
@@ -18304,9 +18338,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/journey/utilisation",
+              "rule": "ovd/journey/utilisation",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The payload uses a reasonable share of the tank volume",
               "citation": "",
@@ -18336,9 +18370,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/gas-arrangement/freeboard-at-payload",
+              "rule": "ovd/gas-arrangement/freeboard-at-payload",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Freeboard at the carried draught at least the required freeboard",
               "citation": "",
@@ -18368,9 +18402,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/stability/assessed",
+              "rule": "ovd/stability/assessed",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The engine could assess the stability of every loading condition",
               "citation": "",
@@ -18400,9 +18434,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/waves/bow-length-supplied",
+              "rule": "ovd/waves/bow-length-supplied",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The bow length the wave method needs is given, not estimated",
               "citation": "",
@@ -18432,9 +18466,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/resistance/service-below-limiting",
+              "rule": "ovd/resistance/service-below-limiting",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Service speed at most 0.95 times the Schijf limiting speed, in each channel",
               "citation": "",
@@ -18464,9 +18498,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/resistance/blockage-in-range",
+              "rule": "ovd/resistance/blockage-in-range",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Channel blockage ratio between 0 and 1, in each channel",
               "citation": "",
@@ -18496,9 +18530,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/resistance/service-clears-squat",
+              "rule": "ovd/resistance/service-clears-squat",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "At the service speed the squat leaves the under-keel clearance, in each channel",
               "citation": "",
@@ -18528,9 +18562,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/resistance/lackenby-fit",
+              "rule": "ovd/resistance/lackenby-fit",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Depth Froude number below 0.95, where the shallow-water correction is used",
               "citation": "",
@@ -18560,9 +18594,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/resistance/first-order-coefficients",
+              "rule": "ovd/resistance/first-order-coefficients",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The resistance coefficients are uncalibrated first-order estimates",
               "citation": "",
@@ -18592,9 +18626,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/powering/installed-covers-design-speed",
+              "rule": "ovd/powering/installed-covers-design-speed",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The installed power gives at least the Design Speed in every environment",
               "citation": "",
@@ -18622,9 +18656,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/wheelhouse/lift-enough",
+              "rule": "ovd/wheelhouse/lift-enough",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The lift the Blind Distance needs is within the maximum lift of the wheelhouse",
               "citation": "",
@@ -18652,9 +18686,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/powering/shallow-water-validity",
+              "rule": "ovd/powering/shallow-water-validity",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The design channel is at least twice as deep as the loaded draught (h/T of 2.0 or more), where the shallow-water method is valid",
               "citation": "",
@@ -18682,9 +18716,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/propulsion/propeller-fits-stern",
+              "rule": "ovd/propulsion/propeller-fits-stern",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The propeller diameter is within the largest the Stern Form allows (D over D_max of 1 or less)",
               "citation": "",
@@ -18712,9 +18746,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/propulsion/immersion-light",
+              "rule": "ovd/propulsion/immersion-light",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The shaft axis is at least 0.76 diameters under the water at the lightest aft draught (0.71 for a ducted propeller): a guide, not a tunnel stern",
               "citation": "",
@@ -18742,9 +18776,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/propulsion/blade-load",
+              "rule": "ovd/propulsion/blade-load",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The delivered power of one unit at the Installed Power is at most 400 kW per m2 of disc (500 for a ducted propeller)",
               "citation": "",
@@ -18772,9 +18806,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/stability/light-angle-of-max-gz",
+              "rule": "ovd/stability/light-angle-of-max-gz",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The angle of maximum GZ is at least 25 degrees in a light condition with no ballast: a warning, with ballast to sail light, not a failure (the bilge emerges early on a wide, shallow hull)",
               "citation": "",
@@ -18802,9 +18836,9 @@
               "finding": "#498"
             },
             {
-              "rule": "ovcd/stability/light-angle-of-max-gz",
+              "rule": "ovd/stability/light-angle-of-max-gz",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The angle of maximum GZ is at least 25 degrees in a light condition with no ballast: a warning, with ballast to sail light, not a failure (the bilge emerges early on a wide, shallow hull)",
               "citation": "",
@@ -18832,9 +18866,9 @@
               "finding": "#498"
             },
             {
-              "rule": "ovcd/stability/light-angle-of-max-gz",
+              "rule": "ovd/stability/light-angle-of-max-gz",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The angle of maximum GZ is at least 25 degrees in a light condition with no ballast: a warning, with ballast to sail light, not a failure (the bilge emerges early on a wide, shallow hull)",
               "citation": "",
@@ -18862,9 +18896,9 @@
               "finding": "#498"
             },
             {
-              "rule": "ovcd/stability/light-angle-of-max-gz",
+              "rule": "ovd/stability/light-angle-of-max-gz",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The angle of maximum GZ is at least 25 degrees in a light condition with no ballast: a warning, with ballast to sail light, not a failure (the bilge emerges early on a wide, shallow hull)",
               "citation": "",
@@ -18915,13 +18949,51 @@
             ],
             "summary": "meets every evaluated blocking Rule; 4 blocking Rule(s) not evaluated: Survival after the assumed damage, Severe wind and rolling criterion (weather criterion), Capacity of each cargo tank within Table 4.3.1, Hull in the cargo area: one of the three designs the clause allows (Type G)"
           }
-        }
+        },
+        "spaces": [
+          {
+            "name": "CT1P",
+            "kind": "cargo_tank",
+            "side": "port",
+            "volume_m3": 3691.195320111503,
+            "lcg_m": 46.219,
+            "tcg_m": -6.0,
+            "vcg_m": 7.1033333333333335
+          },
+          {
+            "name": "CT1S",
+            "kind": "cargo_tank",
+            "side": "starboard",
+            "volume_m3": 3691.195320111503,
+            "lcg_m": 46.219,
+            "tcg_m": 6.0,
+            "vcg_m": 7.1033333333333335
+          },
+          {
+            "name": "CT2P",
+            "kind": "cargo_tank",
+            "side": "port",
+            "volume_m3": 3691.195320111503,
+            "lcg_m": 96.473,
+            "tcg_m": -6.0,
+            "vcg_m": 7.1033333333333335
+          },
+          {
+            "name": "CT2S",
+            "kind": "cargo_tank",
+            "side": "starboard",
+            "volume_m3": 3691.195320111503,
+            "lcg_m": 96.473,
+            "tcg_m": 6.0,
+            "vcg_m": 7.1033333333333335
+          }
+        ]
       }
     },
     {
       "name": "C deep",
       "status": "results",
-      "results_hash": "d91e1510c0eab3349f5e5539f3452d0c0a3b1103f508540bdfad9f9d8882810e",
+      "results_hash": "9f8b3175e405c4671ceba57a067ab954084a989ab2b4dfcd9d42b451beb12d3c",
       "hash_status": "matches",
       "results": {
         "vessel": "Gas barge, IMO Type C tanks",
@@ -19285,9 +19357,8 @@
               ]
             ],
             "thruster_offsets_m": [
-              -3.2,
-              0.0,
-              3.2
+              -3.1350000000000002,
+              3.1350000000000002
             ],
             "thruster_room_length_m": 3.5,
             "container_x0_m": 7.699999999999999,
@@ -19318,13 +19389,13 @@
               {
                 "name": "thrusters_fit_beam",
                 "ok": true,
-                "message": "3 x 2.60 m thrusters need 10.20 m across a 29.00 m beam",
+                "message": "2 x 5.67 m thrusters need 13.14 m across a 29.00 m beam",
                 "severity": "error"
               },
               {
                 "name": "requested_thruster_count_fits",
                 "ok": true,
-                "message": "3 of 3 requested thrusters fit; 3 would need 10.20 m of 29.00 m beam",
+                "message": "2 of 2 requested thrusters fit; 2 would need 13.14 m of 29.00 m beam",
                 "severity": "warning"
               },
               {
@@ -19460,10 +19531,11 @@
             "diameter_m": 4.2,
             "axis_z_m": 2.1,
             "ducted": true,
+            "unit_power_kw": 1010.9492201541743,
             "propulsors": [
               {
                 "x_m": 4.949999999999999,
-                "y_m": -1.6,
+                "y_m": -3.1350000000000002,
                 "z_m": 2.1,
                 "mass_item": "propulsors",
                 "mass_centre": {
@@ -19486,7 +19558,7 @@
               },
               {
                 "x_m": 4.949999999999999,
-                "y_m": 1.6,
+                "y_m": 3.1350000000000002,
                 "z_m": 2.1,
                 "mass_item": "propulsors",
                 "mass_centre": {
@@ -19521,9 +19593,7 @@
                 "kcg_m": 1.0
               }
             },
-            "warnings": [
-              "The stern holds 3 propulsor places for 2 propulsors; the layout spreads the 2 at 3.20 m."
-            ]
+            "warnings": []
           }
         },
         "arrangement": {
@@ -19590,13 +19660,13 @@
           {
             "name": "thrusters fit beam",
             "ok": true,
-            "message": "3 x 2.60 m thrusters need 10.20 m across a 29.00 m beam",
+            "message": "2 x 5.67 m thrusters need 13.14 m across a 29.00 m beam",
             "severity": "error"
           },
           {
             "name": "requested thruster count fits",
             "ok": true,
-            "message": "3 of 3 requested thrusters fit; 3 would need 10.20 m of 29.00 m beam",
+            "message": "2 of 2 requested thrusters fit; 2 would need 13.14 m of 29.00 m beam",
             "severity": "warning"
           },
           {
@@ -22757,17 +22827,17 @@
               }
             }
           },
-          "3 x 2.60 m thrusters need 10.20 m across a 29.00 m beam": {
+          "2 x 5.67 m thrusters need 13.14 m across a 29.00 m beam": {
             "id": "check-thrusters-fit-beam",
             "args": {
-              "count": 3,
+              "count": 2,
               "envelope": {
-                "num": "2.60",
-                "value": 2.6
+                "num": "5.67",
+                "value": 5.670000000000001
               },
               "needed": {
-                "num": "10.20",
-                "value": 10.2
+                "num": "13.14",
+                "value": 13.14
               },
               "beam": {
                 "num": "29.00",
@@ -22775,14 +22845,14 @@
               }
             }
           },
-          "3 of 3 requested thrusters fit; 3 would need 10.20 m of 29.00 m beam": {
+          "2 of 2 requested thrusters fit; 2 would need 13.14 m of 29.00 m beam": {
             "id": "check-requested-thruster-count-fits",
             "args": {
-              "fit": 3,
-              "requested": 3,
+              "fit": 2,
+              "requested": 2,
               "needed": {
-                "num": "10.20",
-                "value": 10.2
+                "num": "13.14",
+                "value": 13.14
               },
               "beam": {
                 "num": "29.00",
@@ -23339,7 +23409,7 @@
           "basis": "No calibration case covers the lightship of a gas barge: the build-up uses fixed factors."
         },
         "rule_trace": {
-          "scope": "Service Area coastal-and-river; Rule Sets igc-2g@2.0.0, is2008-a@2.0.0, lr-inland-gas@2.0.0, es-trin-2025@1.0.0, icll-freeboard@1.0.0, solas-v22@1.0.0, abs-barges@1.0.0, ovcd@2.1.0; only these Rule Sets were checked, not a statutory technical code. meets every evaluated blocking Rule; 4 blocking Rule(s) not evaluated: Survival after the assumed damage, Severe wind and rolling criterion (weather criterion), Capacity of each cargo tank within Table 4.3.1, Hull in the cargo area: one of the three designs the clause allows (Type G)",
+          "scope": "Service Area coastal-and-river; Rule Sets igc-2g@2.0.0, is2008-a@2.0.0, lr-inland-gas@2.0.0, es-trin-2025@1.0.0, icll-freeboard@1.0.0, solas-v22@1.0.0, abs-barges@1.0.0, ovd@3.0.0; only these Rule Sets were checked, not a statutory technical code. meets every evaluated blocking Rule; 4 blocking Rule(s) not evaluated: Survival after the assumed damage, Severe wind and rolling criterion (weather criterion), Capacity of each cargo tank within Table 4.3.1, Hull in the cargo area: one of the three designs the clause allows (Type G)",
           "rule_sets": [
             "igc-2g@2.0.0",
             "is2008-a@2.0.0",
@@ -23348,7 +23418,7 @@
             "icll-freeboard@1.0.0",
             "solas-v22@1.0.0",
             "abs-barges@1.0.0",
-            "ovcd@2.1.0"
+            "ovd@3.0.0"
           ],
           "service_area": "coastal-and-river",
           "warnings": [
@@ -25387,7 +25457,7 @@
               "rule_sets": [
                 "is2008-a@2.0.0"
               ],
-              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVCD adds is not one of them)",
+              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVD adds is not one of them)",
               "citation": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A, MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only, A.2.2.3",
               "origin": "regulation",
               "rule_status": "verified",
@@ -25417,7 +25487,7 @@
               "rule_sets": [
                 "is2008-a@2.0.0"
               ],
-              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVCD adds is not one of them)",
+              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVD adds is not one of them)",
               "citation": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A, MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only, A.2.2.3",
               "origin": "regulation",
               "rule_status": "verified",
@@ -25447,7 +25517,7 @@
               "rule_sets": [
                 "is2008-a@2.0.0"
               ],
-              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVCD adds is not one of them)",
+              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVD adds is not one of them)",
               "citation": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A, MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only, A.2.2.3",
               "origin": "regulation",
               "rule_status": "verified",
@@ -25477,7 +25547,7 @@
               "rule_sets": [
                 "is2008-a@2.0.0"
               ],
-              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVCD adds is not one of them)",
+              "title": "Maximum righting lever at a heel of at least 25 degrees (applies to the conditions of Part A 2.1.1: the loading conditions of Part B 3.3 and 3.4; the \"Lightship, no ballast\" condition OVD adds is not one of them)",
               "citation": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A, MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only, A.2.2.3",
               "origin": "regulation",
               "rule_status": "verified",
@@ -25529,7 +25599,7 @@
               "outcome": "not applicable",
               "governing": false,
               "sizes": false,
-              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVCD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovcd/stability/light-angle-of-max-gz as a warning",
+              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovd/stability/light-angle-of-max-gz as a warning",
               "finding": "#498"
             },
             {
@@ -25559,7 +25629,7 @@
               "outcome": "not applicable",
               "governing": false,
               "sizes": false,
-              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVCD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovcd/stability/light-angle-of-max-gz as a warning",
+              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovd/stability/light-angle-of-max-gz as a warning",
               "finding": "#498"
             },
             {
@@ -25589,7 +25659,7 @@
               "outcome": "not applicable",
               "governing": false,
               "sizes": false,
-              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVCD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovcd/stability/light-angle-of-max-gz as a warning",
+              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovd/stability/light-angle-of-max-gz as a warning",
               "finding": "#498"
             },
             {
@@ -25619,7 +25689,7 @@
               "outcome": "not applicable",
               "governing": false,
               "sizes": false,
-              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVCD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovcd/stability/light-angle-of-max-gz as a warning",
+              "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovd/stability/light-angle-of-max-gz as a warning",
               "finding": "#498"
             },
             {
@@ -26704,7 +26774,7 @@
               "outcome": "not applicable",
               "governing": false,
               "sizes": false,
-              "gap": "An approval item, not a calculation: ABS classes the tug and the barge as two separate vessels, so the tug and the barge are each submitted for class. OVCD runs the ATB as one Equivalent Hull for resistance and powering only; it does not assess either vessel against class",
+              "gap": "An approval item, not a calculation: ABS classes the tug and the barge as two separate vessels, so the tug and the barge are each submitted for class. OVD runs the ATB as one Equivalent Hull for resistance and powering only; it does not assess either vessel against class",
               "finding": "#363"
             },
             {
@@ -26734,13 +26804,13 @@
               "outcome": "not applicable",
               "governing": false,
               "sizes": false,
-              "gap": "An approval item, not a calculation: the analysis of the wing walls at the Notch, and of the structure of the tug and the barge in way of the connection, is submitted for review. OVCD has no structure model for it, and the connector loads (5-3-1/11.1) come from model tests or a multi-body analysis it does not do",
+              "gap": "An approval item, not a calculation: the analysis of the wing walls at the Notch, and of the structure of the tug and the barge in way of the connection, is submitted for review. OVD has no structure model for it, and the connector loads (5-3-1/11.1) come from model tests or a multi-body analysis it does not do",
               "finding": "#363"
             },
             {
-              "rule": "ovcd/capacity/cargo-positive",
+              "rule": "ovd/capacity/cargo-positive",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The hull carries some cargo",
               "citation": "",
@@ -26770,9 +26840,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/capacity/feasible-geometry",
+              "rule": "ovd/capacity/feasible-geometry",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The cargo space has a positive volume",
               "citation": "",
@@ -26802,9 +26872,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/capacity/cargo-zone-positive",
+              "rule": "ovd/capacity/cargo-zone-positive",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The cargo zone is longer than zero",
               "citation": "",
@@ -26834,9 +26904,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/capacity/air-draft-within-limit",
+              "rule": "ovd/capacity/air-draft-within-limit",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Light air draft (with ballast where carried) within the typed limit",
               "citation": "",
@@ -26866,9 +26936,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/loading/air-draft",
+              "rule": "ovd/loading/air-draft",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The air draft of each IS Code loading condition is within the typed limit (a failed condition only: a condition within the limit has no check)",
               "citation": "",
@@ -26898,9 +26968,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/loading/ballast-plan",
+              "rule": "ovd/loading/ballast-plan",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "A ballast plan meets every stability criterion in each ballast condition (a failed condition only: a condition with a plan has no check)",
               "citation": "",
@@ -26930,12 +27000,12 @@
               "finding": null
             },
             {
-              "rule": "ovcd/capacity/intact-gm",
+              "rule": "ovd/capacity/intact-gm",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "First-order hold GM at the reported cargo at least 0.15 m (an estimate, not a stability check)",
-              "citation": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A, MSC.267(85), adopted 4 December 2008 (origin of the value only; OVCD applies it as a tool limit to a first-order estimate), A.2.2.4",
+              "citation": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A, MSC.267(85), adopted 4 December 2008 (origin of the value only; OVD applies it as a tool limit to a first-order estimate), A.2.2.4",
               "origin": "tool-limit",
               "rule_status": "unverified",
               "method_status": "verified",
@@ -26962,9 +27032,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/gas-arrangement/feasible-arrangement",
+              "rule": "ovd/gas-arrangement/feasible-arrangement",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Some tank arrangement passes every check on this hull",
               "citation": "",
@@ -26994,12 +27064,12 @@
               "finding": null
             },
             {
-              "rule": "ovcd/gas-arrangement/tank-l-over-d",
+              "rule": "ovd/gas-arrangement/tank-l-over-d",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Tank length at most 7 inner shell diameters",
-              "citation": "ADN 2025, ECE/TRANS/351, 2025 (origin of the limit only; OVCD applies it as a tool limit), 9.3.1.11.1(b)",
+              "citation": "ADN 2025, ECE/TRANS/351, 2025 (origin of the limit only; OVD applies it as a tool limit), 9.3.1.11.1(b)",
               "origin": "tool-limit",
               "rule_status": "unverified",
               "method_status": "verified",
@@ -27026,9 +27096,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/thrusters-fit-beam",
+              "rule": "ovd/aft-block/thrusters-fit-beam",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The thrusters fit within the beam",
               "citation": "",
@@ -27058,9 +27128,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/thruster-count",
+              "rule": "ovd/aft-block/thruster-count",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The requested number of thrusters fits",
               "citation": "",
@@ -27090,9 +27160,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/containers-fit-beam",
+              "rule": "ovd/aft-block/containers-fit-beam",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The 40 ft units fit within the beam",
               "citation": "",
@@ -27122,9 +27192,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/units-in-one-row",
+              "rule": "ovd/aft-block/units-in-one-row",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The 40 ft units fit in one row",
               "citation": "",
@@ -27154,9 +27224,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/wheelhouse-fits-beam",
+              "rule": "ovd/aft-block/wheelhouse-fits-beam",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The wheelhouse fits within the beam",
               "citation": "",
@@ -27186,9 +27256,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/accom-beside-wheelhouse",
+              "rule": "ovd/aft-block/accom-beside-wheelhouse",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The accommodation units fit beside the wheelhouse",
               "citation": "",
@@ -27218,9 +27288,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/gensets-fit-beam",
+              "rule": "ovd/aft-block/gensets-fit-beam",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The gas gensets fit within the beam",
               "citation": "",
@@ -27250,9 +27320,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/gensets-under-deck",
+              "rule": "ovd/aft-block/gensets-under-deck",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The gas gensets fit under the deck with 1.0 m allowance (an estimate)",
               "citation": "",
@@ -27282,9 +27352,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/gensets-reserve",
+              "rule": "ovd/aft-block/gensets-reserve",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The gensets carry the load with one set in reserve",
               "citation": "",
@@ -27314,9 +27384,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/aft-block/wheelhouse-sightline",
+              "rule": "ovd/aft-block/wheelhouse-sightline",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The wheelhouse eye sees over the cargo with the margin",
               "citation": "",
@@ -27346,9 +27416,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/squat/froude-depth",
+              "rule": "ovd/squat/froude-depth",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Depth Froude number below the squat method's range limit 0.7",
               "citation": "",
@@ -27378,9 +27448,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/squat/blockage",
+              "rule": "ovd/squat/blockage",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Blockage at most 0.35, the squat method's range",
               "citation": "",
@@ -27410,9 +27480,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/squat/keel-clears-bed",
+              "rule": "ovd/squat/keel-clears-bed",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The keel clears the bed at speed",
               "citation": "",
@@ -27442,9 +27512,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/squat/keel-margin",
+              "rule": "ovd/squat/keel-margin",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The keel clears the bed at speed with the safety margin",
               "citation": "",
@@ -27474,9 +27544,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/squat/methods-agree",
+              "rule": "ovd/squat/methods-agree",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The two squat methods agree within 50 %",
               "citation": "",
@@ -27506,9 +27576,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/waves/short-wave-validity",
+              "rule": "ovd/waves/short-wave-validity",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Wave length within the added-resistance method's range",
               "citation": "",
@@ -27538,9 +27608,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/waves/wave-height",
+              "rule": "ovd/waves/wave-height",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Significant wave height at most 3.0 m, the screening range",
               "citation": "",
@@ -27570,9 +27640,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/energy/service-below-schijf",
+              "rule": "ovd/energy/service-below-schijf",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Service speed within the Schijf limiting speed",
               "citation": "",
@@ -27602,9 +27672,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/capacity/not-overloaded",
+              "rule": "ovd/capacity/not-overloaded",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The full tank volume floats within the hull (information: it does not gate, #418)",
               "citation": "",
@@ -27634,9 +27704,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/capacity/freeboard",
+              "rule": "ovd/capacity/freeboard",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Freeboard at the full-volume draught at least the required freeboard (information: it does not gate, #418)",
               "citation": "",
@@ -27666,9 +27736,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/journey/volume-bound",
+              "rule": "ovd/journey/volume-bound",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The cargo is bound by the tank volume, not overloaded",
               "citation": "",
@@ -27698,9 +27768,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/journey/floats",
+              "rule": "ovd/journey/floats",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The payload the draught limit leaves is above zero",
               "citation": "",
@@ -27730,9 +27800,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/journey/ukc-consistent",
+              "rule": "ovd/journey/ukc-consistent",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The draught limit leaves room for the under-keel clearance",
               "citation": "",
@@ -27762,9 +27832,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/journey/utilisation",
+              "rule": "ovd/journey/utilisation",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The payload uses a reasonable share of the tank volume",
               "citation": "",
@@ -27794,9 +27864,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/gas-arrangement/freeboard-at-payload",
+              "rule": "ovd/gas-arrangement/freeboard-at-payload",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Freeboard at the carried draught at least the required freeboard",
               "citation": "",
@@ -27826,9 +27896,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/stability/assessed",
+              "rule": "ovd/stability/assessed",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The engine could assess the stability of every loading condition",
               "citation": "",
@@ -27858,9 +27928,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/waves/bow-length-supplied",
+              "rule": "ovd/waves/bow-length-supplied",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The bow length the wave method needs is given, not estimated",
               "citation": "",
@@ -27890,9 +27960,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/resistance/service-below-limiting",
+              "rule": "ovd/resistance/service-below-limiting",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Service speed at most 0.95 times the Schijf limiting speed, in each channel",
               "citation": "",
@@ -27922,9 +27992,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/resistance/blockage-in-range",
+              "rule": "ovd/resistance/blockage-in-range",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Channel blockage ratio between 0 and 1, in each channel",
               "citation": "",
@@ -27954,9 +28024,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/resistance/service-clears-squat",
+              "rule": "ovd/resistance/service-clears-squat",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "At the service speed the squat leaves the under-keel clearance, in each channel",
               "citation": "",
@@ -27986,9 +28056,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/resistance/lackenby-fit",
+              "rule": "ovd/resistance/lackenby-fit",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "Depth Froude number below 0.95, where the shallow-water correction is used",
               "citation": "",
@@ -28018,9 +28088,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/resistance/first-order-coefficients",
+              "rule": "ovd/resistance/first-order-coefficients",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The resistance coefficients are uncalibrated first-order estimates",
               "citation": "",
@@ -28050,9 +28120,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/powering/installed-covers-design-speed",
+              "rule": "ovd/powering/installed-covers-design-speed",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The installed power gives at least the Design Speed in every environment",
               "citation": "",
@@ -28080,9 +28150,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/wheelhouse/lift-enough",
+              "rule": "ovd/wheelhouse/lift-enough",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The lift the Blind Distance needs is within the maximum lift of the wheelhouse",
               "citation": "",
@@ -28110,9 +28180,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/powering/shallow-water-validity",
+              "rule": "ovd/powering/shallow-water-validity",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The design channel is at least twice as deep as the loaded draught (h/T of 2.0 or more), where the shallow-water method is valid",
               "citation": "",
@@ -28140,9 +28210,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/propulsion/propeller-fits-stern",
+              "rule": "ovd/propulsion/propeller-fits-stern",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The propeller diameter is within the largest the Stern Form allows (D over D_max of 1 or less)",
               "citation": "",
@@ -28170,9 +28240,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/propulsion/immersion-light",
+              "rule": "ovd/propulsion/immersion-light",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The shaft axis is at least 0.76 diameters under the water at the lightest aft draught (0.71 for a ducted propeller): a guide, not a tunnel stern",
               "citation": "",
@@ -28200,9 +28270,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/propulsion/blade-load",
+              "rule": "ovd/propulsion/blade-load",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The delivered power of one unit at the Installed Power is at most 400 kW per m2 of disc (500 for a ducted propeller)",
               "citation": "",
@@ -28230,9 +28300,9 @@
               "finding": null
             },
             {
-              "rule": "ovcd/stability/light-angle-of-max-gz",
+              "rule": "ovd/stability/light-angle-of-max-gz",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The angle of maximum GZ is at least 25 degrees in a light condition with no ballast: a warning, with ballast to sail light, not a failure (the bilge emerges early on a wide, shallow hull)",
               "citation": "",
@@ -28260,9 +28330,9 @@
               "finding": "#498"
             },
             {
-              "rule": "ovcd/stability/light-angle-of-max-gz",
+              "rule": "ovd/stability/light-angle-of-max-gz",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The angle of maximum GZ is at least 25 degrees in a light condition with no ballast: a warning, with ballast to sail light, not a failure (the bilge emerges early on a wide, shallow hull)",
               "citation": "",
@@ -28290,9 +28360,9 @@
               "finding": "#498"
             },
             {
-              "rule": "ovcd/stability/light-angle-of-max-gz",
+              "rule": "ovd/stability/light-angle-of-max-gz",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The angle of maximum GZ is at least 25 degrees in a light condition with no ballast: a warning, with ballast to sail light, not a failure (the bilge emerges early on a wide, shallow hull)",
               "citation": "",
@@ -28320,9 +28390,9 @@
               "finding": "#498"
             },
             {
-              "rule": "ovcd/stability/light-angle-of-max-gz",
+              "rule": "ovd/stability/light-angle-of-max-gz",
               "rule_sets": [
-                "ovcd@2.1.0"
+                "ovd@3.0.0"
               ],
               "title": "The angle of maximum GZ is at least 25 degrees in a light condition with no ballast: a warning, with ballast to sail light, not a failure (the bilge emerges early on a wide, shallow hull)",
               "citation": "",
@@ -28373,7 +28443,45 @@
             ],
             "summary": "meets every evaluated blocking Rule; 4 blocking Rule(s) not evaluated: Survival after the assumed damage, Severe wind and rolling criterion (weather criterion), Capacity of each cargo tank within Table 4.3.1, Hull in the cargo area: one of the three designs the clause allows (Type G)"
           }
-        }
+        },
+        "spaces": [
+          {
+            "name": "CT1P",
+            "kind": "cargo_tank",
+            "side": "port",
+            "volume_m3": 4053.4650738709515,
+            "lcg_m": 44.864000000000004,
+            "tcg_m": -6.5,
+            "vcg_m": 7.6033333333333335
+          },
+          {
+            "name": "CT1S",
+            "kind": "cargo_tank",
+            "side": "starboard",
+            "volume_m3": 4053.4650738709515,
+            "lcg_m": 44.864000000000004,
+            "tcg_m": 6.5,
+            "vcg_m": 7.6033333333333335
+          },
+          {
+            "name": "CT2P",
+            "kind": "cargo_tank",
+            "side": "port",
+            "volume_m3": 4053.4650738709515,
+            "lcg_m": 91.608,
+            "tcg_m": -6.5,
+            "vcg_m": 7.6033333333333335
+          },
+          {
+            "name": "CT2S",
+            "kind": "cargo_tank",
+            "side": "starboard",
+            "volume_m3": 4053.4650738709515,
+            "lcg_m": 91.608,
+            "tcg_m": 6.5,
+            "vcg_m": 7.6033333333333335
+          }
+        ]
       }
     }
   ]

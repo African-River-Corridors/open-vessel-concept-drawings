@@ -53,7 +53,7 @@ def test_the_rust_tests_run_in_every_partition_once():
 def test_every_step_of_the_script_names_a_group():
     steps = [l.split()[1] for l in GATES.splitlines() if l.startswith("step ")]
     groups = set(re.search(r'GROUPS_ALL="([^"]*)"', GATES).group(1).split())
-    assert len(steps) == 9 and set(steps) == groups
+    assert len(steps) == 10 and set(steps) == groups
 
 
 def test_the_required_checks_also_run_for_a_merge_group():

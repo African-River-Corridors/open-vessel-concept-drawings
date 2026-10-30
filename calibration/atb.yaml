@@ -3,7 +3,7 @@
 # the estimates marked below. The Aurora bollard pull (97 short tons at 4,560 hp) stays out: it is far
 # above every other tug (2.6 t / 100 kW) and probably copied from the Aveogan sheet
 # (docs/research/stern-and-tugs.md, 7.3).
-# The comparison is `crates/ovcd-format/tests/atb_powering.rs`, `the_atb_powering_against_the_reference_vessels`.
+# The comparison is `crates/ovd-format/tests/atb_powering.rs`, `the_atb_powering_against_the_reference_vessels`.
 atbs:
   - name: "Aveogan / Oliver Leavitt (AT-12842)"
     source: "vessels/crowley-atb-12842-40085 (research note sec. 10)"

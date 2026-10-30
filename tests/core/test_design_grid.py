@@ -1,8 +1,8 @@
 """Design-grid sweep: golden base point, two tanks along, no tank-length cap, monotonicity."""
 import math
 
-from vessel_designer.core import design_grid
-from vessel_designer.core.design_grid import sweep
+from ovd.core import design_grid
+from ovd.core.design_grid import sweep
 
 
 def test_base_point_regression_anchor():

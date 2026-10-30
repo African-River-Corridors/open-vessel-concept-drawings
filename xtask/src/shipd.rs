@@ -8,7 +8,7 @@
 //! comparison to `calibration/shipd/report.md`.
 
 use crate::{Result, root};
-use ovcd_core::shipd::{
+use ovd_core::shipd::{
     BENCHMARK, DESIGN, DRAUGHT_FRACTIONS, FilletRow, Measures, NAMES, Reading, Resolution,
     ShipdParameters, check, dataset_measures, measures, sections,
 };
@@ -389,7 +389,7 @@ fn misses(w: &[(f64, f64, f64, f64); 7]) -> String {
         .filter(|(_, x)| x.0 > 1.0 || x.0.is_nan())
         .map(|(q, x)| {
             format!(
-                "{} at T/Dd {:.2}: OVCD {:.6}, dataset {:.6} ({:.2} x the limit)",
+                "{} at T/Dd {:.2}: OVD {:.6}, dataset {:.6} ({:.2} x the limit)",
                 QUANTITIES[q], x.1, x.2, x.3, x.0
             )
         })
@@ -421,7 +421,7 @@ fn table(hulls: &[Hull], r: Resolution) -> Result<Table> {
                         draughts.push(x.1);
                         let _ = write!(
                             outside,
-                            " {} at T/Dd {:.2}: OVCD {:.6}, dataset {:.6} ({:.2} x the limit);",
+                            " {} at T/Dd {:.2}: OVD {:.6}, dataset {:.6} ({:.2} x the limit);",
                             QUANTITIES[q], x.1, x.2, x.3, x.0
                         );
                     }
@@ -499,7 +499,7 @@ fn fillet_section(hulls: &[Hull]) -> Result<String> {
     }
     let mut out = format!(
         "\n## The fillet row\n\nThe quartic fillet between a bulb and the hull has one curvature \
-         condition. OVCD writes it from the definition (no curvature at the bulb end). The dataset's \
+         condition. OVD writes it from the definition (no curvature at the bulb end). The dataset's \
          code writes `6 x^2` where the second derivative has `6 x`. Of the {n} bulb hulls, {moved} \
          differ in volume by more than 0.1 % between the two rows (largest {:.3} %); each is listed, \
          with whether it passes under each row.\n\n",
@@ -523,14 +523,14 @@ pub(crate) fn benchmark() -> Result {
     let mut report = String::from(
         "# ShipD benchmark\n\nWritten by `cargo run -p xtask -- shipd-benchmark` (issues #452, #453 and #648, \
          spec 0008 \"Benchmark against the dataset\"). The sample and its source are in `SOURCE.md`.\n\n\
-         The benchmark compares OVCD's ShipD-style hull with the dataset's measures at its ten draughts \
+         The benchmark compares OVD's ShipD-style hull with the dataset's measures at its ten draughts \
          (T/Dd 0.12 to 1.0), at L = 10 m. A hull passes when, at every draught, its volume, waterplane area \
          and waterline length are within 1 %, its LCB and LCF within 0.5 % of LOA, and its Ixx and Iyy \
          within 2 % of the dataset's. The tolerances are not loosened to make a hull pass.\n\n\
-         ## The gate: OVCD's shape, measured as the dataset measures\n\n\
+         ## The gate: OVD's shape, measured as the dataset measures\n\n\
          The dataset took its measures from 101 waterlines with 1000 points each, by the trapezoid rule, \
-         and interpolated between waterlines. The gate measures OVCD's shape the same way \
-         (`ovcd_core::shipd::dataset_measures`), so it compares the shape, not the integration rule. \
+         and interpolated between waterlines. The gate measures OVD's shape the same way \
+         (`ovd_core::shipd::dataset_measures`), so it compares the shape, not the integration rule. \
          Every hull must pass, except a hull listed in `artefacts.csv`: there the dataset's code departs \
          from the definitions, and the gate requires that reading that one place as the code does brings \
          the hull within the limits. Any other hull outside fails the gate.\n\n",
@@ -563,12 +563,12 @@ pub(crate) fn benchmark() -> Result {
     let (rows, outside, _) = table(&hulls, BENCHMARK)?;
     let _ = write!(
         report,
-        "\n## OVCD's own integration\n\nFor information: the same comparison with OVCD's own hydrostatics, \
+        "\n## OVD's own integration\n\nFor information: the same comparison with OVD's own hydrostatics, \
          its Sections Table cut at {} even stations plus the knuckles and the ends of each height's \
          waterline, and points at {} even heights plus the knuckle heights, integrated by Simpson's rule on \
          the ruled surface between sections (at T/Dd 1.0 a hair below the deck, where the closed section has \
          its deck). The hulls outside here are mostly at low draught, where the dataset's trapezoid rule over \
-         its first waterlines differs from OVCD's integral.\n\n{rows}\n",
+         its first waterlines differs from OVD's integral.\n\n{rows}\n",
         BENCHMARK.stations, BENCHMARK.levels
     );
     if outside.is_empty() {
@@ -583,7 +583,7 @@ pub(crate) fn benchmark() -> Result {
         report,
         "\n## At a Design's cut\n\nFor information: a Design's ShipD hull is cut more coarsely ({} \
          even stations and {} even height levels, no waterline-end stations), so its hydrostatics \
-         and GZ curves stay fast. At that cut OVCD's own integration gives:\n\n{rows}",
+         and GZ curves stay fast. At that cut OVD's own integration gives:\n\n{rows}",
         DESIGN.stations, DESIGN.levels
     );
     std::fs::write(dir.join("report.md"), &report).map_err(|e| e.to_string())?;

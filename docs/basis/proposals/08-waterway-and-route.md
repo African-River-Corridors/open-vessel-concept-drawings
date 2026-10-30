@@ -7,7 +7,7 @@ for the register (#121) after maintainer triage. Assumption ids (WR-Ann) refer t
 
 ### E1. The limiting speed formula does not match the Schijf limit (probable error, large, non-conservative)
 
-- **Code:** `crates/ovcd-core/src/resistance.rs`, `schijf_limiting_speed`, line 370:
+- **Code:** `crates/ovd-core/src/resistance.rs`, `schijf_limiting_speed`, line 370:
   F_nh,crit = √(2/3) · (1 − m)^(1/3). The doc comment calls it "Schijf (1949) critical speed".
 - **Problem:** with no blockage (m → 0) the critical speed in shallow water is √(g · h), so F_nh,crit must tend to
   1.0. The code gives 0.816. The closed form often quoted for Schijf is
@@ -21,7 +21,7 @@ for the register (#121) after maintainer triage. Assumption ids (WR-Ann) refer t
   | 0.30 | 0.725 | 0.365 |
 
   Above m ≈ 0.03 the code allows a higher speed than the closed form: about 60 % higher at m = 0.2.
-- **Source:** Schijf (1949) is not in `~/Dev/ovcd-rule-sources/`. I have not read it. The closed form above is
+- **Source:** Schijf (1949) is not in `~/Dev/ovd-rule-sources/`. I have not read it. The closed form above is
   from memory and needs a check against the source or PIANC guidance before it becomes a finding.
 - **Effect:** large on the channel service speed, the "channel" governs label and the 0.95 cap, where squat does
   not govern first (deep, narrow canals). None on cargo or draught.
@@ -66,7 +66,7 @@ for the register (#121) after maintainer triage. Assumption ids (WR-Ann) refer t
 - **Source:** ES-TRIN 2025/1, Art. 4.02(1): freeboard 150 mm for a flush deck vessel; Art. 4.01(1): safety
   clearance at least 300 mm; Art. 4.01(2): 500 mm for open holds. ICLL (Annex I as amended by MSC.143(77)),
   Reg. 28, Table 28.2: type B tabular freeboard 200 mm at 24 m, 300 mm at 36 m, 721 mm at 70 m, 1690 mm at 120 m.
-- **Problem:** 0.3 m matches the ES-TRIN safety clearance number, but OVCD measures it to the deck at side, which
+- **Problem:** 0.3 m matches the ES-TRIN safety clearance number, but OVD measures it to the deck at side, which
   is the ES-TRIN freeboard measure. Against ICLL it is far too small above 36 m.
 - **Effect:** none today; it decides whether the value is a "Sourced default" or an "Estimate" and what the
   coastal stack must change.
@@ -110,7 +110,7 @@ for the register (#121) after maintainer triage. Assumption ids (WR-Ann) refer t
 | C2 | Use B · T · C_m (C_m input, default near 1) for the limiting speed and the blockage term (E2); one blockage function for squat and resistance. | Small to medium on speed | 2 (with C1) |
 | C3 | Pass `required_freeboard_m` into the capacity inputs of the gas search, and decide whether `freeboard_ok` at full volume gates a de-rated candidate (E3). Show every gating check. | Medium on gas results with a tight cap | 3 |
 | C4 | Warn when a channel has a depth but no bottom width, and say no squat check ran (gap 4). | None; adds a warning | 4 |
-| C5 | Carry the squat and resistance validity checks into the `simulate` result and the Rule Trace as `ovcd` method-validity Rules (spec 0004 lists F_nh 0.7 and blockage 0.35) (gap 5). | None on values; new warnings | 5 (with #272) |
+| C5 | Carry the squat and resistance validity checks into the `simulate` result and the Rule Trace as `ovd` method-validity Rules (spec 0004 lists F_nh 0.7 and blockage 0.35) (gap 5). | None on values; new warnings | 5 (with #272) |
 | C6 | Remove or compute the old fields in E4 (`min_freeboard_ok`, `air_draft_ok`, `total_depth_required`), and drop the unused `underkeel_clearance` and `vertical_clearance`. | None | 6 |
 | C7 | Add the Service Area input and default stacks (#274, #275). | None until stacks diverge | 7 |
 | C8 | River stack: ES-TRIN 2025/1 Art. 4.01 and 4.02 as Rules (freeboard to deck, safety clearance to the lowest opening, 500 mm for open holds). Coastal stack: ICLL Reg. 28 Table 28.2 with Reg. 27(14). Then relabel `min_freeboard_m` (E5, gap 2). | Large for coastal hulls over about 36 m; small for river | 8 (after C7) |

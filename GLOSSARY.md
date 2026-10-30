@@ -1,4 +1,4 @@
-# vessel_designer
+# ovd
 
 Concept design of inland and coastal cargo vessels for feasibility studies: from a set of inputs, produce
 concept General Arrangements, characteristics, tonnage, power and cost — checked against real vessels.
@@ -389,7 +389,7 @@ The set of cases with known pass or fail verdicts that checks the Rule results.
 _Avoid_: test suite (on its own), validation set
 
 **False Pass**:
-A case the Evaluation Harness expects to fail that OVCD passes. The build allows none.
+A case the Evaluation Harness expects to fail that OVD passes. The build allows none.
 _Avoid_: missed failure
 
 **Design-impact Check**:
@@ -475,7 +475,7 @@ _Avoid_: air draft (that is the waterway's limit compared with it), clearance he
 **Rule**:
 One requirement about one Measure: its Criterion, the objects and Options it applies to, what happens
 if it is not met, and where it comes from. A Rule from a published rule book is sourced only when it is
-verified; an OVCD Check is a Rule with OVCD's own origin.
+verified; an OVD Check is a Rule with OVD's own origin.
 _Avoid_: check (on its own), regulation
 
 **Criterion**:
@@ -507,7 +507,7 @@ _Avoid_: checked, approved, validated
 **Rule Set**:
 A named, versioned group of Rules from one source edition (e.g. the IS Code 2008 Part A, or the IGC
 Code as amended for ship type 2G). A Design selects the Rule Sets it is checked against. Its version is
-OVCD's encoding of the edition, so one edition can have several versions; every released version is
+OVD's encoding of the edition, so one edition can have several versions; every released version is
 kept.
 _Avoid_: ruleset (one word), criteria set, code (on its own)
 
@@ -544,17 +544,17 @@ Air Draft is checked by `air draft within limit`.
 
 **Rules Kernel**:
 The domain-free part of the rules engine, the `arc-rules` crate: the Rule Set format and loader, the
-content hash, Applicability and the evaluator. It knows no vessel. OVCD declares its object types,
+content hash, Applicability and the evaluator. It knows no vessel. OVD declares its object types,
 Measures, inputs and formula shapes to it; another tool can declare its own.
 _Avoid_: rules library, rule core
 
 **Object-Scoped Input**:
 An input with one value per object, not one per Design (for a channel, the kind of each reach). An
-Applicability condition on it is read for each object a Rule tests. Every OVCD input is one per Option.
+Applicability condition on it is read for each object a Rule tests. Every OVD input is one per Option.
 _Avoid_: local input, per-object flag
 
-**OVCD Check**:
-A Rule that OVCD makes but no published rule book requires: physical feasibility (the draught is below
+**OVD Check**:
+A Rule that OVD makes but no published rule book requires: physical feasibility (the draught is below
 the depth), a method's validity range, or a limit of the tool. Shown in the Rule Trace with its origin,
 never as a published Rule.
 _Avoid_: design rule
@@ -592,7 +592,7 @@ _Avoid_: priority
 ### Languages
 
 **Display Language**:
-The language a user reads OVCD in. It is a choice of the person, never of the Design: it changes no
+The language a user reads OVD in. It is a choice of the person, never of the Design: it changes no
 input, no result and no saved file.
 _Avoid_: locale (in user text), Design language
 

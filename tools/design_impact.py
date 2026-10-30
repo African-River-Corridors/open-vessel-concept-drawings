@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Design-impact check: do designs move on this branch? (spec 0001, ticket 28)
 
-A fixed set of Designs (the calibration vessels plus a small sweep) is run through `ovcd` twice,
+A fixed set of Designs (the calibration vessels plus a small sweep) is run through `ovd` twice,
 once built from the base (the merge base with `origin/main`, or the parent commit when this is
-`main` itself) and once built from this tree: `ovcd fill`, then `ovcd run --json`. Nothing is
+`main` itself) and once built from this tree: `ovd fill`, then `ovd run --json`. Nothing is
 stored, so nothing goes stale. If every result is identical the report says "no design change".
 If anything moved, the report holds a before/after table.
 
@@ -39,6 +39,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import tomllib
 from pathlib import Path
 
 import yaml
@@ -52,7 +53,7 @@ OUT = ROOT / "target" / "design-impact"
 CHANGELOG = ROOT / "CHANGELOG.md"
 START, END = "<!-- design-impact:start -->", "<!-- design-impact:end -->"
 # Top-level results keys that are not results (drawing geometry, what a view marks). The results hash
-# leaves them out too: UNHASHED_KEYS in crates/ovcd-format/src/run.rs. tests/test_design_impact_unhashed_keys.py
+# leaves them out too: UNHASHED_KEYS in crates/ovd-format/src/run.rs. tests/test_design_impact_unhashed_keys.py
 # checks that the two lists agree.
 UNHASHED_KEYS = ("drawing", "stability_marks", "cost_masses", "cost", "text_ids", "rule_trace", "calibration", "damage", "marpol_damage", "oil_outflow", "fit_tried")
 
@@ -325,7 +326,7 @@ OPTIONAL_INPUT_CASES = (
      {"rule_sets": [
          {"id": "is2008-a", "version": "1.0.0", "source": "default",
           "hash": "cfab2d1cda90d0cfda8edbf0955082345cd30ef2d102c9840e8d4feab5297e37"},
-         {"id": "ovcd", "version": "2.1.0", "source": "default",
+         {"id": "ovd", "version": "3.0.0", "source": "default",
           "hash": "7daa76a269bcad107d2e87ca16df70669aa985aab05473296555b853124cce96"}]}),
     # The typed openings (issue #417), set to their defaults on a self-propelled gas barge. They feed
     # Rules (the Rule Trace is not hashed), not the results; the same results as leaving them out. A
@@ -560,14 +561,14 @@ def _shipd_bulb_hull(set_name: str, row: str):
     raise SystemExit(f"design_impact: no row {row} of {set_name} in calibration/shipd/sample.csv")
 
 
-# --- running ovcd -------------------------------------------------------------------------------
+# --- running ovd -------------------------------------------------------------------------------
 
 def run(cmd, **kw) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, capture_output=True, text=True, **kw)
 
 
 def fill_file(binary: Path, raw: Path, filled: Path) -> subprocess.CompletedProcess:
-    """`ovcd fill` of one case, as a new Design: an input added after the first files takes the
+    """`ovd fill` of one case, as a new Design: an input added after the first files takes the
     Defaults Profile value (`--as-new`, issue #292). Without it `fill` would give such an input the
     fixed value an old file gets, and a change to the profile could not show. A base from before the
     flag does not know it and fills as it always did."""
@@ -650,7 +651,7 @@ def save_cached(sha: str, digest: str, answers: dict[str, dict]) -> None:
 
 def run_all(binary: Path, case_set: dict[str, dict]) -> dict[str, dict]:
     """Every case through one binary. The cases run in parallel, each in its own folder: each is its
-    own `ovcd` process, so the answers do not depend on the order (issue #448: a gas Design on the
+    own `ovd` process, so the answers do not depend on the order (issue #448: a gas Design on the
     hull's sections takes up to seconds, so one at a time no longer fits the CI job)."""
     with tempfile.TemporaryDirectory() as t:
         def one(item: tuple[int, tuple[str, dict]]) -> dict:
@@ -801,19 +802,34 @@ def base_commit() -> tuple[str, bool]:
     return parent.stdout.strip(), False
 
 
+def cli_names(tree: Path) -> tuple[str, str]:
+    """(the CLI package, its binary) as `tree` names them in `crates/*-cli/Cargo.toml`. The base of
+    the rename PR (spec 0010) still has the old names, so they are read, not assumed. With no such
+    manifest (a stand-in tree in the tests) they are `ovd-cli` and `ovd`."""
+    manifests = sorted(tree.glob("crates/*-cli/Cargo.toml"))
+    if not manifests:
+        return "ovd-cli", "ovd"
+    if len(manifests) > 1:
+        raise SystemExit(f"design_impact: more than one crates/*-cli/Cargo.toml in {tree}")
+    m = tomllib.loads(manifests[0].read_text(encoding="utf-8"))
+    bins = m.get("bin") or [{"name": m["package"]["name"]}]
+    return m["package"]["name"], bins[0]["name"]
+
+
 def build(tree: Path, target: Path, fresh: bool = False) -> Path:
-    """Build `ovcd` in `tree` and return the binary that cargo says it built.
+    """Build `ovd` in `tree` and return the binary that cargo says it built.
 
     The path comes from cargo's own JSON messages, never from a guess about the target directory.
     `fresh` starts from an empty target directory, and then the binary must be newer than the start
-    of the build. The check fails when cargo reports no `ovcd` binary, or the file is missing or
+    of the build. The check fails when cargo reports no `ovd` binary, or the file is missing or
     is not under `target`: a leftover binary from another tree must never be measured.
     """
     if fresh:
         shutil.rmtree(target, ignore_errors=True)
     started = time.time()
     env = {**os.environ, "CARGO_TARGET_DIR": str(target)}
-    r = subprocess.run(["cargo", "build", "-q", "-p", "ovcd-cli", "--message-format=json-render-diagnostics"],
+    package, binary = cli_names(tree)
+    r = subprocess.run(["cargo", "build", "-q", "-p", package, "--message-format=json-render-diagnostics"],
                        cwd=tree, env=env, stdout=subprocess.PIPE, text=True)
     if r.returncode != 0:
         raise SystemExit(f"design_impact: cargo build failed in {tree}")
@@ -824,14 +840,14 @@ def build(tree: Path, target: Path, fresh: bool = False) -> Path:
         except ValueError:
             continue
         if (isinstance(msg, dict) and msg.get("reason") == "compiler-artifact" and msg.get("executable")
-                and msg.get("target", {}).get("name") == "ovcd" and "bin" in msg["target"].get("kind", [])):
+                and msg.get("target", {}).get("name") == binary and "bin" in msg["target"].get("kind", [])):
             exe = Path(msg["executable"])
     if exe is None:
-        raise SystemExit(f"design_impact: cargo built in {tree} but reported no `ovcd` binary")
+        raise SystemExit(f"design_impact: cargo built in {tree} but reported no `ovd` binary")
     if not exe.is_file():
         raise SystemExit(f"design_impact: cargo reported {exe} but the file is missing")
     if not exe.resolve().is_relative_to(target.resolve()):
-        raise SystemExit(f"design_impact: the `ovcd` binary {exe} is not under {target}")
+        raise SystemExit(f"design_impact: the `ovd` binary {exe} is not under {target}")
     if fresh and exe.stat().st_mtime < started - 2:
         raise SystemExit(f"design_impact: {exe} is older than this build (stale binary)")
     return exe

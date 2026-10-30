@@ -15,7 +15,7 @@ into a drawing document.
 
 ## Solution
 
-1. A new crate, **`ovcd-draw`**, implements the Drawing Format Standard in Rust: drawing document →
+1. A new crate, **`ovd-draw`**, implements the Drawing Format Standard in Rust: drawing document →
    normalised content → SVG, PDF and DXF. It passes the whole conformance suite.
 2. A **GA view builder** turns an Option's results into drawing documents for the side elevation, the
    plan and the midship section.
@@ -31,8 +31,8 @@ The calculation core is not touched, and no result changes.
 4. As the maintainer, I want the hold or the tanks drawn as the model has them (box hold, sloped hopper, or type C tanks with their arrangement), so that the views show the real Cargo Containment.
 5. As the maintainer, I want each view drawn at a standard scale that fits its frame, so that it reads as a drawing.
 6. As the maintainer, I want the app's drawings to follow the same standard as the agents' drawings, so that both look the same.
-7. As an agent, I want `ovcd draw <file.vdesign>` to write the views as SVG, PDF and DXF, so that I can make GA views without the app.
-8. As an agent, I want `ovcd draw --document` to print the drawing documents themselves, so that I can build them with the Python tool too.
+7. As an agent, I want `ovd draw <file.vdesign>` to write the views as SVG, PDF and DXF, so that I can make GA views without the app.
+8. As an agent, I want `ovd draw --document` to print the drawing documents themselves, so that I can build them with the Python tool too.
 9. As a developer, I want the Rust implementation checked against the standard's own conformance suite in CI, so that it cannot drift from the Python implementation.
 10. As a developer, I want the suite copied in at a pinned version of the standard, with a check that the copy is unchanged, so that a suite update is a deliberate change.
 11. As a developer, I want the drawing crate to have no file, clock or network access in its core, so that it can run in the web version later.
@@ -40,9 +40,9 @@ The calculation core is not touched, and no result changes.
 
 ## Implementation Decisions
 
-### The drawing crate `ovcd-draw`
+### The drawing crate `ovd-draw`
 - A workspace member and a default member. It depends on `serde_json` and pure-Rust libraries only;
-  it does not depend on `ovcd-core` or `ovcd-format`.
+  it does not depend on `ovd-core` or `ovd-format`.
 - Its core takes strings and values in and out: a drawing document (plus the data files the standard
   names: line styles, font width table, hatch patterns, symbol libraries, title block templates) in;
   normalised content or the list of errors out. Then SVG, PDF and DXF writers that take normalised
@@ -64,7 +64,7 @@ The calculation core is not touched, and no result changes.
 - Updating the copy is a separate, deliberate change.
 
 ### The GA view builder
-- A module in `ovcd-format` (it needs results and the Design session; it needs nothing from the
+- A module in `ovd-format` (it needs results and the Design session; it needs nothing from the
   drawing crate except the document format, which is JSON). For one Option it returns three drawing
   documents: side elevation, plan, typical section. Each document is one A3 landscape sheet with one
   viewport, status `concept`, and the ISO 7200 title block of the standard (title: the view; owner:
@@ -88,9 +88,9 @@ The calculation core is not touched, and no result changes.
   panel.
 
 ### The CLI
-- `ovcd draw <file.vdesign> --out <dir> [--option <name>]` writes, per Option and view, the drawing
+- `ovd draw <file.vdesign> --out <dir> [--option <name>]` writes, per Option and view, the drawing
   document, the normalised content, SVG, PDF and DXF.
-- `ovcd draw --document` prints the drawing documents only.
+- `ovd draw --document` prints the drawing documents only.
 
 ### The app
 - The main panel's three slots show the SVG of each view, made live from the Design session's
@@ -100,8 +100,8 @@ The calculation core is not touched, and no result changes.
 
 - **The seam is the conformance suite:** the crate passes every case and unit check. That is the main
   test, and it is the standard's own definition of a correct implementation.
-- **Cross-implementation check:** for each fixture Design, the drawing documents from `ovcd draw
-  --document` are run through the Python tool's `normalise` and through `ovcd-draw`; the normalised
+- **Cross-implementation check:** for each fixture Design, the drawing documents from `ovd draw
+  --document` are run through the Python tool's `normalise` and through `ovd-draw`; the normalised
   content must be equal. This runs in CI where Python is available; the plain Rust tests need no
   Python.
 - **GA view builder tests:** for each fixture Design, every drawing document validates against the
@@ -125,5 +125,5 @@ The calculation core is not touched, and no result changes.
 - **Tickets, in order:** (1) crate skeleton, vendored suite with hash check, sheet, viewports and core
   entities, the runner; (2) text and font, hatch marks, dimensions and leaders, symbols, title block
   and register: all 194 cases pass; (3) SVG and PDF writers; (4) DXF writer with paper space;
-  (5) GA view builder and `ovcd draw`; (6) ticket #79: the views in the app.
+  (5) GA view builder and `ovd draw`; (6) ticket #79: the views in the app.
 - Tickets 3 and 4 can run in either order after 2. Ticket 5 needs 1 and 2; ticket 6 needs 3 and 5.

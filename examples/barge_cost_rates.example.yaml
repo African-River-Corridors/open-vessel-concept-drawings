@@ -1,10 +1,10 @@
 # Illustrative rates for the example only — not market quotes; supply your own.
 #
-# Fabrication and supply rates for vessel_designer.core.barge_cost. Every number here is a
+# Fabrication and supply rates for ovd.core.barge_cost. Every number here is a
 # round placeholder chosen to make the example run. Do not use it for a budget or a bid.
 # Copy this file, put in rates from your own yard quotes, and pass it in:
 #
-#     from vessel_designer.core.barge_cost import BargeCostInputs, compute
+#     from ovd.core.barge_cost import BargeCostInputs, compute
 #     result = compute(BargeCostInputs(), rates="my_rates.yaml")
 #
 # Units: "_rate" is currency per tonne of the matching mass unless stated; "_lump" is per

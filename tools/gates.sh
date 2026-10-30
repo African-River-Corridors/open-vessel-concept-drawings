@@ -8,16 +8,17 @@
 #
 # Steps:
 #   1. cargo fmt --check
-#   2. clippy, warnings as errors (includes the banned-maths rule: crates/ovcd-core/clippy.toml and
-#      crates/ovcd-format/clippy.toml, which hold the same list)
-#   3. clippy on ovcd-py, warnings as errors (not a default member, so step 2 skips it; it needs
+#   1a. the old-name gate: the name before OVD only in the history (tools/old_name_gate.py, spec 0010)
+#   2. clippy, warnings as errors (includes the banned-maths rule: crates/ovd-core/clippy.toml and
+#      crates/ovd-format/clippy.toml, which hold the same list)
+#   3. clippy on ovd-py, warnings as errors (not a default member, so step 2 skips it; it needs
 #      Python only to configure PyO3, and clippy does not link, so the step needs no libpython)
 #   4. cargo test, with Python made unusable, to prove the Rust loop needs no Python: cargo-nextest
 #      with the profile GATES_NEXTEST_PROFILE (default `pr`; `nightly` runs every test, see
 #      .config/nextest.toml), then the doctests, which nextest does not run (issue #481)
 #   4a. the Rule Set gate: released versions unchanged, version classes, rule ids, provenance
-#       (`ovcd rules --provenance`; it prints the unverified blocking Rules of each set)
-#   5. the WebAssembly build of ovcd-core and ovcd-web (ovcd-web builds the pinned otd crate too)
+#       (`ovd rules --provenance`; it prints the unverified blocking Rules of each set)
+#   5. the WebAssembly build of ovd-core and ovd-web (ovd-web builds the pinned otd crate too)
 #   6. the design-impact check (before/after on main; fails only if a change is missing from
 #      CHANGELOG.md)
 #   6a. the stored results hashes of the fixture designs (tools/check_fixture_hashes.py)
@@ -25,7 +26,7 @@
 #      the tests marked `slow`; `nightly` runs them too. docs/agents/slow-tests.md lists every test
 #      the `pr` profile leaves out.
 #
-# OVCD_PYTHON picks the Python for steps 3, 6 and 7 (default python3).
+# OVD_PYTHON picks the Python for steps 3, 6 and 7 (default python3).
 # GATES_NEXTEST_PROFILE picks `pr` (default) or `nightly`.
 #
 # CI runs the steps in parallel jobs (issue #561). GATES_STEPS is a comma list of step groups: `lint`
@@ -48,10 +49,10 @@ need() {
 # new tool (tests/test_gates_fail_closed.py lists them too).
 need dirname
 cd "$(dirname "$0")/.."
-PY="${OVCD_PYTHON:-python3}"
+PY="${OVD_PYTHON:-python3}"
 WASM_TARGET="wasm32-unknown-unknown"
 PROFILE="${GATES_NEXTEST_PROFILE:-pr}"
-EXPECTED_STEPS=9
+EXPECTED_STEPS=10
 steps_run=0
 steps_wanted=0
 GROUPS_ALL="lint rust rules impact pytest"
@@ -117,11 +118,11 @@ cargo_test_without_python() {
   # so without it a failing cargo test would fall through and the step would report ok.
   local part=()
   [ -z "$PARTITION" ] || part=(--partition "hash:$PARTITION")
-  PATH="$shims:$PATH" OVCD_PYTHON="$shims/python3" \
+  PATH="$shims:$PATH" OVD_PYTHON="$shims/python3" \
     cargo nextest run --profile "$PROFILE" --all-features --no-tests=fail ${part[@]+"${part[@]}"} || return 1
   # The doctests are not partitioned: they run once, with the first partition.
   case "$PARTITION" in
-    "" | 1/*) PATH="$shims:$PATH" OVCD_PYTHON="$shims/python3" cargo test --doc --all-features || return 1 ;;
+    "" | 1/*) PATH="$shims:$PATH" OVD_PYTHON="$shims/python3" cargo test --doc --all-features || return 1 ;;
   esac
   if [ -e "$marker" ]; then
     echo "gates: cargo test called Python:" >&2
@@ -132,20 +133,21 @@ cargo_test_without_python() {
 
 # The stored results hashes of the fixture designs match what the code gives. The release gate
 # also runs this check on Windows, macOS and WebAssembly; here it runs on the PR runner, with a debug build
-# of `ovcd`, so a wrong stored hash cannot reach main, alone or together with another pull request.
+# of `ovd`, so a wrong stored hash cannot reach main, alone or together with another pull request.
 fixture_hashes() {
-  cargo build -q -p ovcd-cli || return 1
+  cargo build -q -p ovd-cli || return 1
   local target
   target="$(cargo metadata --format-version 1 --no-deps | "$PY" -c 'import json,sys; print(json.load(sys.stdin)["target_directory"])')" || return 1
-  "$PY" tools/check_fixture_hashes.py "$target/debug/ovcd"
+  "$PY" tools/check_fixture_hashes.py "$target/debug/ovd"
 }
 
 step lint "cargo fmt --check" cargo fmt --all --check
+step lint "old-name gate" "$PY" tools/old_name_gate.py
 step lint "clippy -D warnings" cargo clippy --all-targets --all-features -- -D warnings
-step lint "clippy ovcd-py -D warnings" env PYO3_PYTHON="$PY" cargo clippy -p ovcd-py --all-targets --all-features -- -D warnings
+step lint "clippy ovd-py -D warnings" env PYO3_PYTHON="$PY" cargo clippy -p ovd-py --all-targets --all-features -- -D warnings
 step rust "cargo test (no Python)" cargo_test_without_python
-step rules "Rule Set gate" cargo run -q -p ovcd-cli -- rules --provenance
-step rules "WebAssembly build of ovcd-core and ovcd-web" cargo build -p ovcd-core -p ovcd-web --all-features --target "$WASM_TARGET"
+step rules "Rule Set gate" cargo run -q -p ovd-cli -- rules --provenance
+step rules "WebAssembly build of ovd-core and ovd-web" cargo build -p ovd-core -p ovd-web --all-features --target "$WASM_TARGET"
 step impact "fixture results hashes" fixture_hashes
 step impact "design impact" "$PY" tools/design_impact.py gate
 step pytest "pytest" "$PY" -m pytest -q -n auto ${PYTEST_SELECT[@]+"${PYTEST_SELECT[@]}"}

@@ -1,6 +1,6 @@
 name: Publish to PyPI
 
-# Publishes vessel-designer to PyPI when a `v*` tag is pushed (issue #1).
+# Publishes open-vessel-designer to PyPI when a `v*` tag is pushed (issue #1).
 # Trusted publishing only: PyPI trusts this workflow file and the `pypi` environment, so there is NO token
 # or secret. The `pypi` environment needs the maintainer to approve, and allows `v*` tags only.
 #

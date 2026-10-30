@@ -1,6 +1,6 @@
 # The input schema's labels, choices and group names (spec 0005).
-# Written by crates/ovcd-format/tests/i18n_inputs.rs from the schema. Do not edit: change the
-# label in the Rust source and run `OVCD_WRITE_TEXT=1 cargo test -p ovcd-format --test i18n_inputs`.
+# Written by crates/ovd-format/tests/i18n_inputs.rs from the schema. Do not edit: change the
+# label in the Rust source and run `OVD_WRITE_TEXT=1 cargo test -p ovd-format --test i18n_inputs`.
 
 ## Groups
 

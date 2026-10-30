@@ -23,7 +23,7 @@ export const LANGUAGES: Language[] = [
 const SOURCE = LANGUAGES[0];
 
 /** Where the choice is kept, per user. It is never saved in a Design and never sent to Rust. */
-export const LANGUAGE_KEY = "ovcd.language";
+export const LANGUAGE_KEY = "ovd.language";
 
 // Every .ftl file of the Text Library, built into the bundle: the web app needs no fetch.
 const FILES = import.meta.glob("../../../locales/*/*.ftl", { query: "?raw", import: "default", eager: true }) as Record<
@@ -107,7 +107,7 @@ export function t(id: string, args?: Record<string, FluentVariable>): string {
   return format(BUNDLES.get(state.language.tag), id, args) ?? format(BUNDLES.get(SOURCE.tag), id, args) ?? id;
 }
 
-/** One argument of an engine message, as the engine sends it (ovcd-core `text::Arg`). */
+/** One argument of an engine message, as the engine sends it (ovd-core `text::Arg`). */
 export type EngineArg = string | number | { num: string; value: number } | { cite: string } | { input: string } | EngineMsg;
 /** A Message Id with its arguments, as the engine sends it beside its English (ADR 0015). */
 export interface EngineMsg {
@@ -145,7 +145,7 @@ export function checkName(name: string, ids?: TextIds | null): string {
   return engineLabel(`check-name-${slug(name)}`, name);
 }
 
-/** A Message Id piece from an English name or a key, as `crates/ovcd-format/tests/i18n_inputs.rs` makes it. */
+/** A Message Id piece from an English name or a key, as `crates/ovd-format/tests/i18n_inputs.rs` makes it. */
 export function slug(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }

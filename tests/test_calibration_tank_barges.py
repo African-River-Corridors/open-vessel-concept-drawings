@@ -10,7 +10,7 @@ import re
 import pytest
 import yaml
 
-from vessel_designer.calibration import (CAL, _assess_tank_barges, _load_tank_barge_bands,
+from ovd.calibration import (CAL, _assess_tank_barges, _load_tank_barge_bands,
                                          _load_tank_barge_cases, _load_tank_lightship, _tank_barge_rows,
                                          _tank_barge_warnings_for, fit_factors, load_cases, pct, report,
                                          _run_tank_barge, _tank_barge_records, _tank_outfit_t)

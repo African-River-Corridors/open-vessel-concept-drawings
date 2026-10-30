@@ -4,7 +4,7 @@ Not published. Companion to `docs/basis/04-type-c-tanks.md`. Ids `TC-A..` refer 
 page. Items already in hand are not repeated: #313 (S690QL1 stress), #314 (2:1 head area), #315 (LPG density and
 loading limit), #316 (dome default), #317 (minimum design pressure, steel by temperature, tank weight calibration).
 "Derived" means arithmetic on cited inputs, not a source statement. IGC = MSC.370(93), held at
-`~/Dev/ovcd-rule-sources/igc/MSC.370-93.txt`.
+`~/Dev/ovd-rule-sources/igc/MSC.370-93.txt`.
 
 ## Errors
 
@@ -51,7 +51,7 @@ Effect: none on numbers.
 
 ## Gaps
 
-What a gas containment engineer would expect that OVCD does not do.
+What a gas containment engineer would expect that OVD does not do.
 
 **G1. Head type is not a Design input (TC-A06).** Every Design gets hemispherical heads. Hemispherical heads are
 half the shell thickness and as long as the radius, so tanks are light at the ends and short in the cylinder. Built

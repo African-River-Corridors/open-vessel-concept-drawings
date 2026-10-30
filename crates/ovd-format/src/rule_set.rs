@@ -1,0 +1,256 @@
+//! OVD's Rule Sets (spec 0004, "Rule Set (data)" and "Loading at run time"; ADR 0013, ADR 0019):
+//! the built-in sets, the vocabulary OVD gives the loader of the `arc-rules` kernel, and the
+//! released-versions and provenance gate.
+//!
+//! The loader, the content hash, the library and the selection checks are the kernel's
+//! ([`arc_rules::load`]). The schema beside the files (`rules/rule-set.schema.json`, the same file as
+//! the kernel's) says the same as the loader: a file the schema refuses, the loader refuses too.
+
+use crate::trace::{applicability_values, measure_info};
+use arc_rules::domain::{Domain, FormulaShape, InputDef, InputScope, MeasureInfo};
+pub use arc_rules::load::{
+    ACCESS, Loaded, ROLES, Released, SCHEMA, Selection, VersionClass, canonical_json,
+    check_released, check_versions, content_hash, content_json, describe, is_rule_id, released,
+    rule_content_json, version_class,
+};
+use ovd_core::rule_trace::{FORMULA_SHAPES, ObjectType};
+use ovd_core::rules::{Consequence, Rule};
+
+/// The built-in Rule Sets: `(path, text)`, one file per set version, embedded so that every binary
+/// and the WebAssembly build carry them.
+const BUILT_IN: &[(&str, &str)] = &[
+    (
+        "rules/is2008-a/1.0.0.json",
+        include_str!("../rules/is2008-a/1.0.0.json"),
+    ),
+    (
+        "rules/is2008-a/2.0.0.json",
+        include_str!("../rules/is2008-a/2.0.0.json"),
+    ),
+    (
+        "rules/adn-tank/1.0.0.json",
+        include_str!("../rules/adn-tank/1.0.0.json"),
+    ),
+    (
+        "rules/marpol-i/1.0.0.json",
+        include_str!("../rules/marpol-i/1.0.0.json"),
+    ),
+    (
+        "rules/normam-202/1.0.0.json",
+        include_str!("../rules/normam-202/1.0.0.json"),
+    ),
+    (
+        "rules/es-trin-2025/1.0.0.json",
+        include_str!("../rules/es-trin-2025/1.0.0.json"),
+    ),
+    (
+        "rules/icll-freeboard/1.0.0.json",
+        include_str!("../rules/icll-freeboard/1.0.0.json"),
+    ),
+    (
+        "rules/icll-freeboard/2.0.0.json",
+        include_str!("../rules/icll-freeboard/2.0.0.json"),
+    ),
+    (
+        "rules/rheinschpv/1.0.0.json",
+        include_str!("../rules/rheinschpv/1.0.0.json"),
+    ),
+    (
+        "rules/solas-v22/1.0.0.json",
+        include_str!("../rules/solas-v22/1.0.0.json"),
+    ),
+    (
+        "rules/abs-barges/1.0.0.json",
+        include_str!("../rules/abs-barges/1.0.0.json"),
+    ),
+    (
+        "rules/igc-2g/1.0.0.json",
+        include_str!("../rules/igc-2g/1.0.0.json"),
+    ),
+    (
+        "rules/igc-2g/1.1.0.json",
+        include_str!("../rules/igc-2g/1.1.0.json"),
+    ),
+    (
+        "rules/igc-2g/2.0.0.json",
+        include_str!("../rules/igc-2g/2.0.0.json"),
+    ),
+    (
+        "rules/lr-inland-gas/1.0.0.json",
+        include_str!("../rules/lr-inland-gas/1.0.0.json"),
+    ),
+    (
+        "rules/lr-inland-gas/1.1.0.json",
+        include_str!("../rules/lr-inland-gas/1.1.0.json"),
+    ),
+    (
+        "rules/lr-inland-gas/2.0.0.json",
+        include_str!("../rules/lr-inland-gas/2.0.0.json"),
+    ),
+    (
+        "rules/ovd/3.0.0.json",
+        include_str!("../rules/ovd/3.0.0.json"),
+    ),
+];
+
+/// What OVD declares to the kernel's loader: its Measure registry (`ovd rules --measures`), the
+/// inputs an Applicability may name (each one value per Option), and its formula shapes.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct Ovd;
+
+impl Domain for Ovd {
+    fn measure(&self, id: &str) -> Option<MeasureInfo> {
+        measure_info(id)
+    }
+
+    fn input(&self, name: &str) -> Option<InputDef> {
+        // Issue #498: the kind of a loading condition is read for each condition.
+        if name == "loading_condition_kind" {
+            return Some(InputDef {
+                values: ovd_core::measured::LOADING_CONDITION_KINDS
+                    .iter()
+                    .map(|v| v.to_string())
+                    .collect(),
+                scope: InputScope::Object,
+            });
+        }
+        applicability_values(name).map(|values| InputDef {
+            values,
+            scope: InputScope::Design,
+        })
+    }
+
+    fn shapes(&self) -> &[FormulaShape] {
+        FORMULA_SHAPES
+    }
+
+    fn design_object(&self) -> &str {
+        ObjectType::Option.key()
+    }
+
+    fn measure_list_hint(&self) -> Option<&str> {
+        Some("`ovd rules --measures` lists them")
+    }
+}
+
+/// Read one Rule Set file against OVD's vocabulary ([`arc_rules::load::load`]).
+pub fn load(text: &str) -> Result<Loaded, String> {
+    arc_rules::load::load(text, &Ovd)
+}
+
+/// The Rule Sets known to a run: the built-in sets first, then each loaded file in order. The
+/// kernel's library ([`arc_rules::load::Library`]), loading against OVD's vocabulary.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct Library(arc_rules::load::Library);
+
+impl std::ops::Deref for Library {
+    type Target = arc_rules::load::Library;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for Library {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl Library {
+    /// The built-in sets only.
+    pub fn built_in() -> Library {
+        let mut lib = Library::default();
+        for (path, text) in BUILT_IN {
+            let loaded = load(text).unwrap_or_else(|e| panic!("built-in Rule Set {path}: {e}"));
+            lib.add(loaded)
+                .unwrap_or_else(|e| panic!("built-in Rule Set {path}: {e}"));
+        }
+        lib.check()
+            .unwrap_or_else(|e| panic!("built-in Rule Sets: {e}"));
+        lib
+    }
+
+    /// Load a file's text and add it. Returns the set's `id@version`.
+    pub fn add_text(&mut self, text: &str) -> Result<String, String> {
+        self.0.add_text(text, &Ovd)
+    }
+}
+
+/// The built-in sets, parsed once: the reader of a file (`vdesign`) needs their versions and hashes
+/// for the default `rule_sets` of an Option.
+pub fn built_in() -> &'static Library {
+    static BUILT_IN_LIBRARY: std::sync::OnceLock<Library> = std::sync::OnceLock::new();
+    BUILT_IN_LIBRARY.get_or_init(Library::built_in)
+}
+
+/// Whether version `a` is higher than version `b` (both `major.minor.patch`).
+pub fn is_newer(a: &str, b: &str) -> bool {
+    let key = |v: &str| {
+        let mut it = v.split('.').map(|p| p.parse::<u64>().unwrap_or(0));
+        (
+            it.next().unwrap_or(0),
+            it.next().unwrap_or(0),
+            it.next().unwrap_or(0),
+        )
+    };
+    key(a) > key(b)
+}
+
+// --- released versions and provenance (#273) ----------------------------------------------------
+
+/// The list of released Rule Set versions: `{id, version, hash}` each. A version is released when a
+/// tagged release ships it (`docs/agents/build-process.md`). A listed file never changes.
+pub const RELEASED: &str = include_str!("../rules/RELEASED.json");
+
+/// The provenance gate: a Rule of a published origin (`regulation`, `class`, `guideline`,
+/// `national-practice`) with no paragraph is an error (the loader
+/// refuses one too; the gate checks every set again). The report lists, per set, the blocking Rules
+/// that are not verified: a notice, never a failure.
+pub fn provenance(lib: &Library) -> (Vec<String>, String) {
+    let mut errors = Vec::new();
+    let mut report = String::new();
+    for s in lib.sets() {
+        for r in &s.rules {
+            if r.origin.is_published() && r.source.locator.trim().is_empty() {
+                errors.push(format!(
+                    "{}: `{}` Rule `{}` cites no paragraph",
+                    s.key(),
+                    r.origin.key(),
+                    r.id
+                ));
+            }
+        }
+        let blocking: Vec<&Rule> = s
+            .rules
+            .iter()
+            .filter(|r| r.consequence == Consequence::Block && r.verified.is_none())
+            .collect();
+        // OVD Checks are never verified; the published Rules are named.
+        let published: Vec<&str> = blocking
+            .iter()
+            .filter(|r| r.origin.is_published())
+            .map(|r| r.id.as_str())
+            .collect();
+        report.push_str(&format!(
+            "{}: {} blocking Rule(s) unverified ({} OVD Checks){}{}\n",
+            s.key(),
+            blocking.len(),
+            blocking.len() - published.len(),
+            if published.is_empty() { "" } else { ": " },
+            published.join(", ")
+        ));
+    }
+    (errors, report)
+}
+
+/// Every check of the CI gate: released versions, version classes and rule ids, provenance.
+pub fn gate(lib: &Library) -> (Vec<String>, String) {
+    let mut errors = match released(RELEASED) {
+        Ok(list) => check_released(lib, &list),
+        Err(e) => vec![e],
+    };
+    errors.extend(check_versions(lib));
+    let (more, report) = provenance(lib);
+    errors.extend(more);
+    (errors, report)
+}

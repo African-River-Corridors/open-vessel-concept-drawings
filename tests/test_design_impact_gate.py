@@ -1,7 +1,7 @@
 """The design-impact gate, end to end, on a small fixture repository (ticket 145).
 
 The fixture is a real git repository that holds a copy of tools/design_impact.py and the
-calibration files (the two cases files and the ShipD sample). A stand-in `cargo` (a shell script on PATH) "builds" a stand-in `ovcd` whose result
+calibration files (the two cases files and the ShipD sample). A stand-in `cargo` (a shell script on PATH) "builds" a stand-in `ovd` whose result
 comes from `factor.txt` in the tree it was built from, so a branch can move results or break the build
 without a compiler. The tests run `python tools/design_impact.py gate` in the fixture and look at the
 exit code and what it says.
@@ -17,10 +17,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 FAKE_CARGO = textwrap.dedent('''\
     #!/bin/sh
-    # stand-in for `cargo build -p ovcd-cli`, run in the tree to build
+    # stand-in for `cargo build -p ovd-cli`, run in the tree to build
     if [ -e BREAK_BUILD ]; then echo "error: could not compile" >&2; exit 101; fi
     mkdir -p "$CARGO_TARGET_DIR/debug"
-    exe="$CARGO_TARGET_DIR/debug/ovcd"
+    exe="$CARGO_TARGET_DIR/debug/ovd"
     factor=$(cat factor.txt)
     extra=$(cat extra.txt 2>/dev/null || echo 0)
     cat > "$exe" <<EOS
@@ -31,7 +31,7 @@ FAKE_CARGO = textwrap.dedent('''\
     esac
     EOS
     chmod +x "$exe"
-    printf '{"reason":"compiler-artifact","executable":"%s","target":{"name":"ovcd","kind":["bin"]}}\\n' "$exe"
+    printf '{"reason":"compiler-artifact","executable":"%s","target":{"name":"ovd","kind":["bin"]}}\\n' "$exe"
 ''')
 
 

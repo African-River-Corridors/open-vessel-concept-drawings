@@ -3,7 +3,7 @@
 // window, blocked site data): then the theme is Dark.
 export type ThemeChoice = "auto" | "light" | "dark";
 
-export const THEME_KEY = "ovcd.theme";
+export const THEME_KEY = "ovd.theme";
 export const DEFAULT_THEME: ThemeChoice = "dark";
 const CHOICES: readonly ThemeChoice[] = ["auto", "light", "dark"];
 

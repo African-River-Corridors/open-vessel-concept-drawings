@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "OVCD",
+  "productName": "OVD",
   "version": "0.2.4",
-  "identifier": "org.africanrivercorridors.ovcd",
+  "identifier": "org.africanrivercorridors.ovd",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "OVCD",
+        "title": "OVD",
         "width": 1280,
         "height": 800,
         "minWidth": 720,
@@ -36,13 +36,13 @@
     "fileAssociations": [
       {
         "ext": ["vdesign"],
-        "name": "OVCD Design",
-        "description": "OVCD Design",
+        "name": "OVD Design",
+        "description": "OVD Design",
         "role": "Editor",
         "rank": "Owner",
         "mimeType": "application/json",
         "exportedType": {
-          "identifier": "org.africanrivercorridors.ovcd.vdesign",
+          "identifier": "org.africanrivercorridors.ovd.vdesign",
           "conformsTo": ["public.json"]
         }
       }

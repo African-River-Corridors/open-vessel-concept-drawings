@@ -1,7 +1,7 @@
 # The declared inputs of the tank-barge lightship method (issue #330, spec 0006 section 3.3).
 # Hand-written. `python3 tools/fit_tank_lightship.py` reads this file, `cases.yaml` and `factors.yaml`
 # and writes `tank_lightship.yaml` (generated, do not edit). The Rust constants in
-# `crates/ovcd-core/src/liquid_bulk/lightship.rs` equal the generated values; a test keeps them equal.
+# `crates/ovd-core/src/liquid_bulk/lightship.rs` equal the generated values; a test keeps them equal.
 #
 # The method: lightship = k x LOA x B x D  +  outfit.
 #   k is fitted on the declared subset below. A case gives a published deadweight at a draught, not a

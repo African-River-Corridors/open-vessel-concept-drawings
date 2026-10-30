@@ -1,10 +1,10 @@
 # Reviewing a translation
 
-Thank you for helping. This guide is for a native speaker who reviews OVCD's text in their own
+Thank you for helping. This guide is for a native speaker who reviews OVD's text in their own
 language. You do not need to read code. You need a GitHub account, a text editor, Python 3 and
 some knowledge of ships or boats. Marine knowledge matters most for the technical words.
 
-OVCD is a concept design tool. It is never used for approval. Clear words help a designer read a
+OVD is a concept design tool. It is never used for approval. Clear words help a designer read a
 result correctly, so your review makes the tool safer to use.
 
 ## What is here
@@ -47,10 +47,10 @@ app-save = Guardar
   `` `{ $input }` ``, the app shows the name of an input there, in your language. Write the
   placeholder without the backticks: `{ $input } debe ser un número`.
 - **Keep other backticks.** A word in backticks that is not a placeholder, such as
-  `` `results_hash` `` or `` `ovcd fill` ``, is a file key or a command. Keep it as it is.
+  `` `results_hash` `` or `` `ovd fill` ``, is a file key or a command. Keep it as it is.
 - **Keep units and symbols as they are:** m, t, kn, kW, MPa, °, GM, GZ, KG, UKC.
 - **Do not translate** rule ids, clause numbers or quoted rule text (for example "IGC 2.4.1.1"),
-  names in capitals that the English keeps (OVCD, IMO, IGC, CEMT), or words with underscores
+  names in capitals that the English keeps (OVD, IMO, IGC, CEMT), or words with underscores
   (`raked_box`, `pushed_convoy`): those are identifiers.
 - **Numbers** arrive already written. The app gives them your language's decimal sign. Do not
   write numbers yourself.
@@ -130,7 +130,7 @@ Review those messages again when you can.
 Pick your language in the header of the app, beside the Light and Dark buttons. The app keeps the
 choice. To see your own changes before a release, run the desktop app from the source (see "Run
 the desktop app" in the main `README.md`). The web version at
-[africanrivercorridors.com/ovcd/app](https://www.africanrivercorridors.com/ovcd/app) shows a
+[africanrivercorridors.com/ovd/app](https://www.africanrivercorridors.com/ovd/app) shows a
 language once a release includes it.
 
 Look for text that is cut off or that overflows a button, a tab or a table. Long Spanish and

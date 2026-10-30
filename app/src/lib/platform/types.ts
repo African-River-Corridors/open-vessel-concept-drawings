@@ -1,5 +1,5 @@
 // The platform interface: every call the front end makes to the Rust side, and the file actions.
-// Two implementations: Tauri (desktop) and Web (the ovcd-web WebAssembly session). Neither holds
+// Two implementations: Tauri (desktop) and Web (the ovd-web WebAssembly session). Neither holds
 // any calculation, validation or default logic.
 import type { Evaluation, Schema, Snapshot } from "../api";
 

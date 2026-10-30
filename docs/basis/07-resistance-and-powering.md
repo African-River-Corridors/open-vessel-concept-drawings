@@ -4,19 +4,19 @@
 >
 > Code state: written against `main` at commit `f6d446c` (2026-10-20).
 
-**For:** Hydrodynamicist, marine engineer  ·  **Code:** `crates/ovcd-core/src/resistance.rs`,
+**For:** Hydrodynamicist, marine engineer  ·  **Code:** `crates/ovd-core/src/resistance.rs`,
 `electric_energy.rs`, `aft_arrangement.rs`, `squat.rs` (speed limit only), `waves.rs` (added resistance only);
-`crates/ovcd-format/src/simulate.rs` (the app path), `run.rs`  ·  **Rule Sets:** none. No Rule in any Rule Set
+`crates/ovd-format/src/simulate.rs` (the app path), `run.rs`  ·  **Rule Sets:** none. No Rule in any Rule Set
 tests resistance or power. The methods have `method_status` unverified (spec 0004, "Measure (code)").
 
-In the tables, a bare file name such as `resistance.rs:330` is in `crates/ovcd-core/src/`. `simulate.rs` and
-`run.rs` are in `crates/ovcd-format/src/`. Line numbers are for the tree this page was written from.
+In the tables, a bare file name such as `resistance.rs:330` is in `crates/ovd-core/src/`. `simulate.rs` and
+`run.rs` are in `crates/ovd-format/src/`. Line numbers are for the tree this page was written from.
 
-## What OVCD computes here
+## What OVD computes here
 
-OVCD has two paths. They do not give the same outputs.
+OVD has two paths. They do not give the same outputs.
 
-**The app and `ovcd run` (a saved Design).** For each Option with one Hull, `simulate` gives `curves`: one
+**The app and `ovd run` (a saved Design).** For each Option with one Hull, `simulate` gives `curves`: one
 list per environment ("Channel" if the Option has a channel depth and bottom width, and always "Deep water").
 Each list has:
 
@@ -95,12 +95,12 @@ path also gives:
     Page 05 and page 02 cover the layout and the weights.
 15. **Gas-fuelled stern (API only).** With `propulsion = "gas_fuelled"` the block has no battery units. It
     gets an engine room with gas gensets abreast and a GVU room forward of it. If the caller gives an
-    electrical load, OVCD picks the set and count from an 8-set catalogue so that N − 1 sets carry the load,
+    electrical load, OVD picks the set and count from an 8-set catalogue so that N − 1 sets carry the load,
     with N ≥ 2 and the least installed kWe (`aft_arrangement.rs:223-246`). Fuel is assumed to come from the
     cargo boil-off; there is no fuel tank and no boil-off balance (`aft_arrangement.rs:940-946`). The app
     cannot select this option: `simulate` never sets `propulsion` (`barge_capacity.rs:760-762` reads it, and
     only `eval.rs:395-411` writes it).
-16. **Push-tow and tug-barge systems.** OVCD does not compute convoy, tow or ATB resistance or power. A
+16. **Push-tow and tug-barge systems.** OVD does not compute convoy, tow or ATB resistance or power. A
     pushed convoy has no results; a pushed barge is the barge hull alone (`run.rs:9-11`, `88-91`). The tug
     length, beam and notch depth in `models.rs:223-225` are for drawings only. `calibration/pushers.yaml`
     holds 10 published pushers; no code reads it yet.
@@ -191,7 +191,7 @@ path also gives:
 
 ## Inputs the user can change
 
-In the app and `.vdesign` file (Defaults Profile, `crates/ovcd-format/src/builtin_profile.json`):
+In the app and `.vdesign` file (Defaults Profile, `crates/ovd-format/src/builtin_profile.json`):
 
 | Input | Default | Unit | Where the default comes from |
 |---|---|---|---|
@@ -225,7 +225,7 @@ trips per year), and `propulsion`, `electrical_load_kwe` and the genset fields.
 - **No margins.** No sea margin, engine load limit, transmission or electrical losses, or hotel load.
 - **One fuel model.** Diesel at a fixed SFC. No gas fuel consumption, boil-off balance or energy per trip
   for the gas-fuelled option.
-- **Validity ranges are not checked as OVCD Checks for resistance.** The residuary fit, the depth term and
+- **Validity ranges are not checked as OVD Checks for resistance.** The residuary fit, the depth term and
   the blockage term have no stated Fn, Fnh, n, L/B, B/T or Cb range. The code gives one standing warning
   (`resistance.rs:729-736`).
 - **The limiting-speed formula does not match the one-dimensional Schijf solution.** see the triage tickets.
@@ -233,11 +233,11 @@ trips per year), and `propulsion`, `electrical_load_kwe` and the genset fields.
 
 ## Evidence
 
-- **Parity tests only.** `crates/ovcd-core/tests/resistance.rs`, `electric_energy.rs` and
+- **Parity tests only.** `crates/ovd-core/tests/resistance.rs`, `electric_energy.rs` and
   `gas_fuelled_stern.rs`, and `tests/core/test_resistance.py`, check that the Rust port gives the same
   numbers as the Python engine. They do not check the physics.
 - **Calibration, design points.** `calibration/results.md` section 3 compares installed power of 14 Yangtze
-  motor-vessel design points with OVCD's deep-water delivered power. The ratio is 1.72 to 2.11. These points
+  motor-vessel design points with OVD's deep-water delivered power. The ratio is 1.72 to 2.11. These points
   are model output of the source, not built ships (`calibration/README.md`, finding 3). A normal margin gives
   about 1.4; the gap is shallow water, under-predicted resistance, or both (finding 4). The note for that run
   says Lwl = 0.97 × LOA; the app uses Lwl = LOA.
@@ -249,7 +249,7 @@ trips per year), and `propulsion`, `electrical_load_kwe` and the genset fields.
 ## Questions for reviewers
 
 1. Is the ITTC 1957 line with no form factor (1 + k = 1) acceptable for full, blunt inland hulls at
-   Cb 0.85-0.99, or should OVCD add (1 + k) and a roughness allowance?
+   Cb 0.85-0.99, or should OVD add (1 + k) and a roughness allowance?
 2. Where do the residuary ratios 0.10, 2.5 × (Fn − 0.10)^1.5 and 0.15 + 8(Fn − 0.20)² come from? Is a
    ratio of Cr to Cf, which makes Cr depend on Reynolds number, a fair form for a barge?
 3. The limiting speed uses √(2/3)(1 − n)^(1/3). Is that from Schijf (1949), and with which depth (full or
@@ -258,9 +258,9 @@ trips per year), and `propulsion`, `electrical_load_kwe` and the genset fields.
 5. Is δ = 1.4(T/h)^1.5 Fnh^2.5 a fair stand-in for Lackenby (1963)? Does that paper give a resistance
    factor or a speed loss? Is it right to add the blockage term β = 2 n Fnh² on top of it?
 6. Is η_D = 0.45 a fair default for a ducted or azimuth-thruster inland vessel, in deep and in shallow water?
-7. Which margins should OVCD report between delivered and installed power (sea margin, engine load, losses)?
+7. Which margins should OVD report between delivered and installed power (sea margin, engine load, losses)?
 8. What method would you use first for a pushed convoy: a convoy resistance series, or a per-barge sum with
    a formation factor? Which published data would you check it against?
-9. For the gas-fuelled option, what boil-off rate and gas consumption should OVCD use to check that boil-off
+9. For the gas-fuelled option, what boil-off rate and gas consumption should OVD use to check that boil-off
    covers the fuel demand?
-10. Is SFC = 195 g/kWh at every load acceptable for concept fuel figures, or should OVCD use a part-load curve?
+10. Is SFC = 195 g/kWh at every load acceptable for concept fuel figures, or should OVD use a part-load curve?

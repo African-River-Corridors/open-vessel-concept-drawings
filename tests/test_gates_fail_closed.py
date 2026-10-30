@@ -43,7 +43,7 @@ def _gates(env_path: str, **extra) -> subprocess.CompletedProcess:
 
 def test_gates_fail_when_cargo_is_missing(tmp_path):
     path = _path_with_only(tmp_path, GATES_TOOLS)
-    result = _gates(path, OVCD_PYTHON=sys.executable)
+    result = _gates(path, OVD_PYTHON=sys.executable)
     assert result.returncode != 0
     assert "required tool 'cargo' is not on PATH" in result.stderr
     assert "gates: ok:" not in result.stdout
@@ -51,7 +51,7 @@ def test_gates_fail_when_cargo_is_missing(tmp_path):
 
 def test_gates_fail_when_python_is_missing(tmp_path):
     path = _path_with_only(tmp_path, GATES_TOOLS, stubs=("cargo", "rustc"))
-    result = _gates(path, OVCD_PYTHON="no-such-python")
+    result = _gates(path, OVD_PYTHON="no-such-python")
     assert result.returncode != 0
     assert "required tool 'no-such-python' is not on PATH" in result.stderr
     assert "gates: ok:" not in result.stdout
@@ -71,7 +71,7 @@ def test_gates_fail_when_cargo_test_fails(tmp_path):
     (bin_dir / "rustc").write_text(f'#!/bin/sh\necho "{libdir}"\n')
     for stub in ("cargo", "rustc"):
         (bin_dir / stub).chmod(0o755)
-    result = _gates(path, OVCD_PYTHON=sys.executable)
+    result = _gates(path, OVD_PYTHON=sys.executable)
     assert result.returncode != 0
     assert "gates: FAIL: cargo test (no Python)" in result.stderr
     assert "gates: ok: cargo test (no Python)" not in result.stdout
@@ -91,7 +91,7 @@ def test_gates_fail_when_cargo_nextest_is_missing(tmp_path):
     (bin_dir / "rustc").write_text(f'#!/bin/sh\necho "{libdir}"\n')
     for stub in ("cargo", "rustc"):
         (bin_dir / stub).chmod(0o755)
-    result = _gates(path, OVCD_PYTHON=sys.executable)
+    result = _gates(path, OVD_PYTHON=sys.executable)
     assert result.returncode != 0
     assert "cargo-nextest is not installed" in result.stderr
     assert "gates: ok:" not in result.stdout
@@ -112,7 +112,7 @@ def test_gates_fail_when_any_tool_they_call_is_missing(tmp_path, missing):
     )
     for stub in ("cargo", "rustc", "py-stub"):
         (bin_dir / stub).chmod(0o755)
-    result = _gates(path, OVCD_PYTHON=str(bin_dir / "py-stub"))
+    result = _gates(path, OVD_PYTHON=str(bin_dir / "py-stub"))
     assert result.returncode != 0
     assert f"required tool '{missing}' is not on PATH" in result.stderr
     assert "gates: ok:" not in result.stdout
@@ -161,7 +161,7 @@ def _gates_on_copy(copy: Path, rel: str, addition: str) -> subprocess.CompletedP
         # The CI job that runs this test sets GATES_STEPS and GATES_PARTITION for itself (issue #561):
         # the gate on the copy must run in full.
         env = {k: v for k, v in os.environ.items() if k not in ("GATES_STEPS", "GATES_PARTITION")}
-        env.update({"OVCD_PYTHON": sys.executable,
+        env.update({"OVD_PYTHON": sys.executable,
                     "CARGO_TARGET_DIR": os.environ.get("CARGO_TARGET_DIR", str(ROOT / "target"))})
         return subprocess.run([shutil.which("bash"), str(copy / "tools" / "gates.sh")], cwd=copy, env=env,
                               capture_output=True, text=True, timeout=1500)
@@ -170,7 +170,7 @@ def _gates_on_copy(copy: Path, rel: str, addition: str) -> subprocess.CompletedP
 
 
 def test_a_banned_maths_call_in_simulate_fails_the_gate(repo_copy):
-    r = _gates_on_copy(repo_copy, "crates/ovcd-format/src/simulate.rs", BANNED_CALL)
+    r = _gates_on_copy(repo_copy, "crates/ovd-format/src/simulate.rs", BANNED_CALL)
     assert r.returncode != 0
     assert "gates: ok: cargo fmt --check" in r.stdout            # the line is well formatted ...
     assert "gates: FAIL: clippy -D warnings" in r.stderr         # ... and stopped by the lint
@@ -180,17 +180,17 @@ def test_a_banned_maths_call_in_simulate_fails_the_gate(repo_copy):
     assert "gates: ok: cargo test" not in r.stdout
 
 
-def test_a_clippy_warning_in_ovcd_py_fails_the_gate(repo_copy):
-    r = _gates_on_copy(repo_copy, "crates/ovcd-py/src/lib.rs", CLIPPY_WARNING)
+def test_a_clippy_warning_in_ovd_py_fails_the_gate(repo_copy):
+    r = _gates_on_copy(repo_copy, "crates/ovd-py/src/lib.rs", CLIPPY_WARNING)
     assert r.returncode != 0
     assert "gates: ok: clippy -D warnings" in r.stdout           # the default members are clean ...
-    assert "gates: FAIL: clippy ovcd-py -D warnings" in r.stderr  # ... the bindings are not
+    assert "gates: FAIL: clippy ovd-py -D warnings" in r.stderr  # ... the bindings are not
     assert "gates: ok: cargo test" not in r.stdout
 
 
-def test_the_gate_lints_ovcd_py_and_counts_the_step():
+def test_the_gate_lints_ovd_py_and_counts_the_step():
     text = GATES.read_text(encoding="utf-8")
-    assert 'step lint "clippy ovcd-py -D warnings"' in text and "-p ovcd-py" in text
+    assert 'step lint "clippy ovd-py -D warnings"' in text and "-p ovd-py" in text
     steps = [line for line in text.splitlines() if line.startswith("step ")]
     assert f"EXPECTED_STEPS={len(steps)}" in text
 
@@ -208,7 +208,7 @@ def _stub_gates(tmp_path, **env):
     (bin_dir / "py-stub").write_text("#!/bin/sh\nexit 0\n")
     for stub in ("cargo", "rustc", "py-stub"):
         (bin_dir / stub).chmod(0o755)
-    return _gates(path, OVCD_PYTHON=str(bin_dir / "py-stub"), **env)
+    return _gates(path, OVD_PYTHON=str(bin_dir / "py-stub"), **env)
 
 
 def test_a_group_name_that_is_not_a_group_fails_before_any_step(tmp_path):
@@ -230,14 +230,14 @@ def test_a_named_group_runs_all_its_steps_and_no_others(tmp_path):
     """Label: property"""
     r = _stub_gates(tmp_path, GATES_STEPS="lint")
     assert r.returncode == 0, r.stderr
-    assert r.stdout.count("gates: ok:") == 3
+    assert r.stdout.count("gates: ok:") == 4
     assert "gates: ok: pytest" not in r.stdout
-    assert "the 3 steps of lint passed" in r.stdout
+    assert "the 4 steps of lint passed" in r.stdout
 
 
 def test_the_whole_gate_still_counts_every_step(tmp_path):
     """Label: property"""
     r = _stub_gates(tmp_path)
     assert r.returncode == 0, r.stderr
-    assert r.stdout.count("gates: ok:") == 9
-    assert "all 9 steps passed" in r.stdout
+    assert r.stdout.count("gates: ok:") == 10
+    assert "all 10 steps passed" in r.stdout

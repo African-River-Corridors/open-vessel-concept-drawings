@@ -2,17 +2,17 @@
 """Calibrate the pushed Formation allowance against published pushers (issue #359, part 2).
 
 Each case of `calibration/formation_cases.yaml` is built as a pushed-convoy Design, run with
-`ovcd run --json`, and its modelled pusher power (`formation.tug.installed_power_kw`) is compared
+`ovd run --json`, and its modelled pusher power (`formation.tug.installed_power_kw`) is compared
 with the published installed power. The in-sample cases fit `formation_resistance_allowance`, the
 ratio of the Formation's resistance to that of its Equivalent Hull, so that the modelled powers sit
 on the published ones (least squares on the log of the ratio). A held-out case is run and banded,
 never fitted. Bands: `calibration/bands.yaml`, `installed_power_kw`. A band miss is a warning, never
 a failure.
 
-    python3 tools/formation_calibration.py <path to ovcd>            print the report
-    python3 tools/formation_calibration.py <path to ovcd> --write    write calibration/formation_results.md
+    python3 tools/formation_calibration.py <path to ovd>            print the report
+    python3 tools/formation_calibration.py <path to ovd> --write    write calibration/formation_results.md
                                                                      and calibration/formation_factors.yaml
-    python3 tools/formation_calibration.py <path to ovcd> --check    fail if the written files are stale
+    python3 tools/formation_calibration.py <path to ovd> --check    fail if the written files are stale
 
 The fit is an Estimate: the sources print no convoy speed for most pushers, so every case says which
 figures are published and which are assumed.
@@ -29,7 +29,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 CAL = ROOT / "calibration"
-BASE = ROOT / "crates/ovcd-format/tests/fixtures/pushed_convoy.vdesign"
+BASE = ROOT / "crates/ovd-format/tests/fixtures/pushed_convoy.vdesign"
 BASE_KEYS = ("tug_included", "tug_design_speed_kn")
 
 
@@ -37,7 +37,7 @@ def typed(inputs: dict, key: str, value) -> None:
     inputs[key] = {"value": value, "source": "typed"}
 
 
-def run_case(ovcd: Path, base: dict, c: dict, draught: float, allowance: float) -> dict:
+def run_case(ovd: Path, base: dict, c: dict, draught: float, allowance: float) -> dict:
     """The `formation` and `convoy` blocks of one case at a draught and an allowance."""
     d = copy.deepcopy(base)
     i = d["options"][0]["inputs"]
@@ -53,36 +53,36 @@ def run_case(ovcd: Path, base: dict, c: dict, draught: float, allowance: float) 
     with tempfile.TemporaryDirectory() as tmp:
         f = Path(tmp) / "case.vdesign"
         f.write_text(json.dumps(d))
-        r = subprocess.run([str(ovcd), "run", "--json", str(f)], capture_output=True, text=True)
+        r = subprocess.run([str(ovd), "run", "--json", str(f)], capture_output=True, text=True)
     if r.returncode != 0:
-        sys.exit(f"ovcd failed on {c['id']}: {r.stderr[-400:]}")
+        sys.exit(f"ovd failed on {c['id']}: {r.stderr[-400:]}")
     res = json.loads(r.stdout)["options"][0]["results"]
     return {"formation": res["formation"], "convoy": res["convoy"]}
 
 
-def draught_of(ovcd: Path, base: dict, c: dict) -> float:
+def draught_of(ovd: Path, base: dict, c: dict) -> float:
     """The loaded draught: given, or the one at which one barge carries `dwt_t_per_barge`."""
     if "draught_m" in c:
         return float(c["draught_m"])
     lo, hi = 0.5, c["barge"]["depth_m"] - 0.3
     for _ in range(40):
         mid = (lo + hi) / 2
-        dwt = run_case(ovcd, base, c, mid, 1.0)["convoy"]["barge"]["deadweight_t"]
+        dwt = run_case(ovd, base, c, mid, 1.0)["convoy"]["barge"]["deadweight_t"]
         lo, hi = (mid, hi) if dwt < c["dwt_t_per_barge"] else (lo, mid)
         if hi - lo < 0.002:
             break
     return round((lo + hi) / 2, 3)
 
 
-def model_power(ovcd, base, c, draught, allowance) -> float:
-    return run_case(ovcd, base, c, draught, allowance)["formation"]["tug"]["installed_power_kw"]
+def model_power(ovd, base, c, draught, allowance) -> float:
+    return run_case(ovd, base, c, draught, allowance)["formation"]["tug"]["installed_power_kw"]
 
 
-def fit_allowance(ovcd, base, cases, draughts) -> float:
+def fit_allowance(ovd, base, cases, draughts) -> float:
     """The allowance that minimises the squared log error of the in-sample powers (golden section)."""
     def cost(log_a):
         a = math.exp(log_a)
-        return sum(math.log(model_power(ovcd, base, c, draughts[c["id"]], a)
+        return sum(math.log(model_power(ovd, base, c, draughts[c["id"]], a)
                             / c["observed"]["installed_power_kw"]) ** 2 for c in cases)
     lo, hi, g = math.log(0.5), math.log(4.0), (math.sqrt(5) - 1) / 2
     x1, x2 = hi - g * (hi - lo), lo + g * (hi - lo)
@@ -108,18 +108,18 @@ def basis_text(rows: list[dict], n: int) -> str:
             f"held-out miss: {', '.join(held) if held else 'none'}.")
 
 
-def build(ovcd: Path) -> tuple[str, str]:
+def build(ovd: Path) -> tuple[str, str]:
     data = yaml.safe_load((CAL / "formation_cases.yaml").read_text(encoding="utf-8"))
     band = yaml.safe_load((CAL / "bands.yaml").read_text(encoding="utf-8"))["bands"]["installed_power_kw"]
     base = json.loads(BASE.read_text(encoding="utf-8"))
     cases = data["formation_case"]
-    draughts = {c["id"]: draught_of(ovcd, base, c) for c in cases}
+    draughts = {c["id"]: draught_of(ovd, base, c) for c in cases}
     fit = [c for c in cases if not c.get("held_out")]
-    allowance = fit_allowance(ovcd, base, fit, draughts)
+    allowance = fit_allowance(ovd, base, fit, draughts)
     rows = []
     for c in cases:
-        r = run_case(ovcd, base, c, draughts[c["id"]], allowance)
-        r0 = run_case(ovcd, base, c, draughts[c["id"]], 1.0)
+        r = run_case(ovd, base, c, draughts[c["id"]], allowance)
+        r0 = run_case(ovd, base, c, draughts[c["id"]], 1.0)
         obs = c["observed"]["installed_power_kw"]
         model = r["formation"]["tug"]["installed_power_kw"]
         err = 100.0 * (model / obs - 1.0)
@@ -129,7 +129,7 @@ def build(ovcd: Path) -> tuple[str, str]:
                      "inside": abs(err) <= lim, "converged": r["formation"]["sizing"]["converged"],
                      "pusher_length": r["formation"]["tug"]["length_m"]})
     md = ["# Formation calibration (issue #359, part 2)", "",
-          "GENERATED by `python3 tools/formation_calibration.py <ovcd> --write` from "
+          "GENERATED by `python3 tools/formation_calibration.py <ovd> --write` from "
           "`calibration/formation_cases.yaml`. Do not edit.", "",
           "A published pusher with a published convoy is run as a pushed convoy, and the installed power of the "
           "pusher the Formation loop sizes is compared with the published installed power (band "
@@ -181,7 +181,7 @@ def main(argv: list[str]) -> int:
             print("formation_calibration: stale:", ", ".join(stale))
             return 1
         # The Defaults Profile takes the fitted allowance for a pushed barge and a pushed convoy.
-        profile = (ROOT / "crates/ovcd-format/src/builtin_profile.json").read_text(encoding="utf-8")
+        profile = (ROOT / "crates/ovd-format/src/builtin_profile.json").read_text(encoding="utf-8")
         entry = json.loads(profile)
         found = []
         def walk(x):

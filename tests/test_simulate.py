@@ -1,5 +1,5 @@
 """The web simulator's gas path goes through the arrangement search and hits the benchmarks."""
-from vessel_designer.simulate import simulate
+from ovd.simulate import simulate
 
 # `max_tank_od_m` is the 12 m tank diameter cap of 0.1.0: it is an input, 16 m by default, since
 # issue #175. The snapshots below were printed by 0.1.0, so they set it.

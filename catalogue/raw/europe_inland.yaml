@@ -229,7 +229,7 @@ classes:
   teu: null
   n_abreast: 1
   n_in_line: 1
-  source: 'ECMT Resolution 92/2 (CEMT/CM(92)6/FINAL) Table 1, read from scan p3: https://www.itf-oecd.org/sites/default/files/docs/wat19922e.pdf (via web.archive.org); vessel_designer core/vessel_standards.py
+  source: 'ECMT Resolution 92/2 (CEMT/CM(92)6/FINAL) Table 1, read from scan p3: https://www.itf-oecd.org/sites/default/files/docs/wat19922e.pdf (via web.archive.org); ovd core/vessel_standards.py
     (PIANC WG141 Table 2.1 p15)'
   confidence: high
   notes: '''Johann Welker'' (Rhine-Herne/Europaschiff). Bridge 5.25 (2-tier containers) or 7.00 (3-tier).'
@@ -284,7 +284,7 @@ classes:
   teu: null
   n_abreast: 1
   n_in_line: 1
-  source: 'ECMT Resolution 92/2 (CEMT/CM(92)6/FINAL) Table 1, read from scan p3: https://www.itf-oecd.org/sites/default/files/docs/wat19922e.pdf (via web.archive.org); vessel_designer core/vessel_standards.py
+  source: 'ECMT Resolution 92/2 (CEMT/CM(92)6/FINAL) Table 1, read from scan p3: https://www.itf-oecd.org/sites/default/files/docs/wat19922e.pdf (via web.archive.org); ovd core/vessel_standards.py
     (PIANC WG141 Table 2.1 p15)'
   confidence: high
   notes: '''Large Rhine vessels''. CONFLICT: ECMT scan gives motor-vessel draught 2.50-2.80 m; an earlier transcription (from WG141) carries 2.5-4.5, which is the CONVOY column. Bridge 5.25 / 7.00 / 9.10
@@ -399,7 +399,7 @@ classes:
   teu: null
   n_abreast: 1
   n_in_line: 2
-  source: 'ECMT Resolution 92/2 (CEMT/CM(92)6/FINAL) Table 1, read from scan p3: https://www.itf-oecd.org/sites/default/files/docs/wat19922e.pdf (via web.archive.org); vessel_designer core/vessel_standards.py
+  source: 'ECMT Resolution 92/2 (CEMT/CM(92)6/FINAL) Table 1, read from scan p3: https://www.itf-oecd.org/sites/default/files/docs/wat19922e.pdf (via web.archive.org); ovd core/vessel_standards.py
     (PIANC WG141 Table 2.1 p15)'
   confidence: high
   notes: 2 barges in line. ECMT recommends Vb as minimum for international waterways, min draught 2.80 m, bridge 7.00 m.
@@ -446,7 +446,7 @@ classes:
   teu: null
   n_abreast: 2
   n_in_line: 1
-  source: 'ECMT Resolution 92/2 (CEMT/CM(92)6/FINAL) Table 1, read from scan p3: https://www.itf-oecd.org/sites/default/files/docs/wat19922e.pdf (via web.archive.org); vessel_designer core/vessel_standards.py
+  source: 'ECMT Resolution 92/2 (CEMT/CM(92)6/FINAL) Table 1, read from scan p3: https://www.itf-oecd.org/sites/default/files/docs/wat19922e.pdf (via web.archive.org); ovd core/vessel_standards.py
     (PIANC WG141 Table 2.1 p15)'
   confidence: high
   notes: ''
@@ -1960,7 +1960,7 @@ classes:
   teu: null
   n_abreast: 1
   n_in_line: 1
-  source: Rijkswaterstaat, Richtlijnen Vaarwegen 2017 Table 8 (p24-25), https://open.rws.nl/publish/pages/33348/richtlijnen_vaarwegen_2017_def.pdf; vessel_designer core/vessel_standards.py (PIANC
+  source: Rijkswaterstaat, Richtlijnen Vaarwegen 2017 Table 8 (p24-25), https://open.rws.nl/publish/pages/33348/richtlijnen_vaarwegen_2017_def.pdf; ovd core/vessel_standards.py (PIANC
     WG141 Table 2.1 p15) (CEMT_VIa_motor_NL2011)
   confidence: high
   notes: Alias of RWS-M12; CEMT VIa motor in RVW/NL-2011. Kept so the tool resolves legacy names.

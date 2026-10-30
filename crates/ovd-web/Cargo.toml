@@ -1,0 +1,21 @@
+[package]
+name = "ovd-web"
+description = "The Design session in the browser: a thin wasm-bindgen layer over ovd-shell and ovd-draw."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+ovd-format.workspace = true
+ovd-draw.workspace = true
+ovd-shell.workspace = true
+serde_json.workspace = true
+# Exact pin: the wasm-bindgen CLI that makes the JS glue must be the same version
+# (tools/build_web.sh checks it, and so does CI).
+wasm-bindgen = "=0.2.129"

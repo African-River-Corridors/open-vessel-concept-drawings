@@ -201,12 +201,12 @@ def modules_that_read_the_checkout() -> set:
     one at import. From a wheel that path is in site-packages, so the import fails and a test that
     imports the module can run only in a checkout. A module that reads only when called (issue #217)
     can be imported; its tests give it the folder they need."""
-    src = ROOT / "src" / "vessel_designer"
+    src = ROOT / "src" / "ovd"
     found = set()
     for p in src.rglob("*.py"):
         text = p.read_text(encoding="utf-8")
         if "parents[2]" in text and reads_files_at_import(text):
-            found.add("vessel_designer." + ".".join(p.relative_to(src).with_suffix("").parts))
+            found.add("ovd." + ".".join(p.relative_to(src).with_suffix("").parts))
     return found
 
 
@@ -284,7 +284,7 @@ def test_the_wheel_check_guard_sees_what_a_test_reads():
     assert not reads_files_at_import('if __name__ == "__main__":\n    open("a").read()')
     assert not reads_files_at_import('class A:\n    def a(self):\n        return open("a").read()')
     # The calibration module reads its folder only when used, so tests that import it run from a wheel.
-    assert "vessel_designer.calibration" not in modules_that_read_the_checkout()
+    assert "ovd.calibration" not in modules_that_read_the_checkout()
     assert "checkout" not in repo_folders_read(tests / "test_calibration_held_out.py")
     # The package walk sits in a helper; it counts while a test that calls the helper runs.
     assert "CHANGELOG.md" in repo_folders_read(tests / "test_public_api.py")

@@ -1,4 +1,4 @@
-# OVCD app text, Simplified Chinese. Draft: machine-translated, for native review (locales/REVIEWING.md).
+# OVD app text, Simplified Chinese. Draft: machine-translated, for native review (locales/REVIEWING.md).
 
 ## Header
 
@@ -103,11 +103,11 @@ app-notice-licence = 许可证
 # status: draft
 app-notice-scope = 概念设计。结果未经验证。
 # status: draft
-app-notice-tool = OVCD 是一款概念设计工具。
+app-notice-tool = OVD 是一款概念设计工具。
 # status: draft
 app-notice-unverified = 其结果未经验证。已知的工程问题正在审查中。
 # status: draft
-app-notice-warranty = 不提供任何担保。OVCD 以 Apache License 2.0 开源。
+app-notice-warranty = 不提供任何担保。OVD 以 Apache License 2.0 开源。
 # status: draft
 app-notice-accept = 我已了解
 
@@ -501,7 +501,7 @@ app-cost-item-wheelhouse-accommodation = 驾驶室与居住舱室
 ## The splash screen
 
 # status: draft
-app-splash-starting = OVCD 正在启动
+app-splash-starting = OVD 正在启动
 # status: draft
 app-splash-tagline = 一款用于内河与沿海船舶{ $design }的开放工具。
 # status: draft

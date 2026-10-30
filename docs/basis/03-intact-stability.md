@@ -5,16 +5,16 @@
 > Code state: written against `main` at commit `f6d446c` (2026-10-20). The hull, draught, GM and GZ text follows
 > issue #448 (hydrostatics and GZ from the Sections Table); its line references are to that change.
 
-**For:** stability specialist  ·  **Code:** `crates/ovcd-core/src/gas_stability.rs`, `box_stability.rs`,
+**For:** stability specialist  ·  **Code:** `crates/ovd-core/src/gas_stability.rs`, `box_stability.rs`,
 `loading_conditions.rs`, `sections.rs` (free-trim GZ), `hydrostatics.rs` (`Hull`, and the legacy API),
 `barge_capacity.rs` (`bulk_gm`), `gas_arrangement.rs` (stability checks)  ·  **Rule Sets:** none loaded yet. The
 six IS Code 2008 Part A 2.2 criteria are constants in code with citations. Spec 0004 plans them as the Rule Set
 `is2008-a`.
 
-OVCD is a concept tool (ADR 0011). This page says what the stability calculation does today. It is not a stability
+OVD is a concept tool (ADR 0011). This page says what the stability calculation does today. It is not a stability
 booklet and it gives no verdict that an Administration or class can use.
 
-## What OVCD computes here
+## What OVD computes here
 
 For a **gas Cargo in Type C tanks** (`results.stability` in a `simulate` result, and the "Intact stability" view):
 
@@ -30,7 +30,7 @@ For a **gas Cargo in Type C tanks** (`results.stability` in a `simulate` result,
 For a **dry bulk Cargo** (work in development):
 
 - One number, `gm_m`: a first-order transverse GM at full load, and one advisory check `gm_positive`.
-- No GZ curve, no criteria and no `results.stability` object (`crates/ovcd-format/tests/stability_curves.rs`).
+- No GZ curve, no criteria and no `results.stability` object (`crates/ovd-format/tests/stability_curves.rs`).
 
 ## How it works today
 
@@ -53,27 +53,27 @@ IS Code loading conditions (next section). Any other Option uses `assess`. Both 
 3. **Loading conditions** (`gas_stability.rs:723`). Laden = payload; Half laden = 0.5 × payload; Light = no cargo.
    The cargo is spread equally over all tanks. *Fixed in code.*
 4. **Fill and cargo KG** (`gas_stability.rs:728`, `segment_fill` at `gas_stability.rs:278`). Fill fraction
-   f = cargo / (ρ_cargo × V). OVCD treats f as the fraction of the circular cross-section area of the inner
+   f = cargo / (ρ_cargo × V). OVD treats f as the fraction of the circular cross-section area of the inner
    shell. It finds the segment angle θ from f = (θ − sin θ) / (2π) by an 80-step bisection. The liquid height is
    h = r (1 − cos(θ/2)), and the liquid centroid is r − 4 r sin³(θ/2) / (3 (θ − sin θ)) above the inner bottom.
    The inner bottom is the outer tank bottom plus (OD/2 − r_in). *Method* (circular-segment geometry), with the
    fill applied to the heads as if they were cylinder: *Estimate*.
 5. **Displacement, KG, draught** (`gas_stability.rs:316-385`). Δ = Σ masses. KG = Σ (m × z) / Δ. LCG = Σ (m × x) / Δ.
    The draught comes from the hull's sections (area 01). *Method.*
-   - With the stern block in the lightship, OVCD has the masses along the hull. The hull floats at free trim, with
+   - With the stern block in the lightship, OVD has the masses along the hull. The hull floats at free trim, with
      G at (LCG, 0, KG) (`Hull::float`). T is the draught at mid-length.
    - Without it, the hull floats level at the draught for Δ, and G is put over the centre of buoyancy.
    - If no trim within ±10° balances the hull, the condition keeps its level draught. It gets one failed criterion
-     "Trim within the solver's range" and no curve (`gas_stability.rs:339-362`). *OVCD Check, Fixed in code.*
+     "Trim within the solver's range" and no curve (`gas_stability.rs:339-362`). *OVD Check, Fixed in code.*
    - If Δ / ρ needs the whole hull volume, T = D. If T ≥ D, the condition gets one failed check "Floats with
-     freeboard" and no curve (`gas_stability.rs:386-414`). *OVCD Check, Fixed in code.*
+     freeboard" and no curve (`gas_stability.rs:386-414`). *OVD Check, Fixed in code.*
 6. **GM solid** (`gas_stability.rs:417`). GM = KM_T − KG, with KM_T = KB + BM_T of the upright, level cut of the
    sections at T (`sections::upright`). *Method.*
 7. **Free surface** (`gas_stability.rs:776`). The free surface of each tank is a rectangle: the chord
    c = 2 √(r² − (r − h)²) wide, the cylinder length long. i = n × L_cyl × c³ / 12. FSC = ρ_cargo × i / Δ, in metres
    of GM. No free surface at f = 0 or f ≥ 1. GM fluid = GM solid − FSC. *Method* (IS Code Part B 3.1.8 form).
 8. **GZ curve** (`hull_condition`, `box_stability.rs:476`; `sections::gz_curve`, `sections.rs:976`). For each heel
-   angle 0° to 60° in 1° steps, OVCD finds the free-trim floating position of the whole hull
+   angle 0° to 60° in 1° steps, OVD finds the free-trim floating position of the whole hull
    (`sections::equilibrium`, `sections.rs:891`). The inner solve finds the waterplane height for the volume Δ / ρ
    (Illinois secant method, 16 steps). The outer solve finds the trim that puts B and G on one vertical in the
    fore-and-aft plane (12 steps, within ±10°). Each section is clipped by the waterplane and integrated exactly
@@ -87,11 +87,11 @@ IS Code loading conditions (next section). Any other Option uses `assess`. Both 
 10. **Criteria** (`criteria`, `gas_stability.rs:430`). Six comparisons `value ≥ limit`, no tolerance, cited to
     "IMO IS Code 2008, Part A 2.2.n". See rows IS-A30 to IS-A35. *Rule (unverified).*
 11. **Use.** `simulate` runs `assess` only when the payload is above zero and the result has a gas basis
-    (`crates/ovcd-format/src/simulate.rs:1009`). `fit` makes one error-severity check per condition
+    (`crates/ovd-format/src/simulate.rs:1009`). `fit` makes one error-severity check per condition
     (`stability_check`, `gas_arrangement.rs:318`); if the assessment raises an error, it makes one failed check
     "Stability — not assessed" (`gas_arrangement.rs:373`). The criteria set is always `IS_CODE_2008`, whatever
     ruleset the Option names (`criteria_set_for`, `gas_stability.rs:504`).
-12. **Speed.** A GZ curve on the sections costs about 8 ms (raked bow only) to 200 ms (tunnel stern) natively. OVCD
+12. **Speed.** A GZ curve on the sections costs about 8 ms (raked bow only) to 200 ms (tunnel stern) natively. OVD
     builds a curve only where a criterion needs it. The automatic ballast plan first screens each trial on the
     criteria known before the curve: the air draft, the fluid GM (0.15 m) and the freeboard
     (`loading_conditions.rs:294-328`, `:510-523`). A trial that fails one gets no curve. A trial that passes them gets its
@@ -117,12 +117,12 @@ with "Trim within the solver's range". *Method.*
 4. Check `gm_positive`: GM ≥ 0.15 m, severity "warning" (does not gate), plus a warning that the method is first
    order and does not model cargo shift (`barge_capacity.rs:1004`, `barge_capacity.rs:814`). It runs only when the
    draught is above zero and the hull is not overloaded. *Fixed in code.*
-   Since #415 a Design's results carry the check `intact gm at reported cargo` instead: the same first-order GM at the cargo and draught the Design reports, in every dry bulk Option (Rule `ovcd/capacity/intact-gm`, `ovcd` 2.0.0).
+   Since #415 a Design's results carry the check `intact gm at reported cargo` instead: the same first-order GM at the cargo and draught the Design reports, in every dry bulk Option (Rule `ovd/capacity/intact-gm`, `ovd` 2.0.0).
 
 ### Legacy API (`hydrostatics::calculate_stability`, `hydrostatics.rs:96`)
 
 A port of the original engine's GM function. Only the Python API `hydrostatics.calculate_stability` and
-`ovcd_format::eval` call it; `simulate` and `fit` do not. Since #448 it takes KB and BM from the sections of the
+`ovd_format::eval` call it; `simulate` and `fit` do not. Since #448 it takes KB and BM from the sections of the
 raked box, and the displacement is ρ∇: Cb no longer counts twice. It differs from `gas_stability` (cargo KG at the
 tank centre, a stores item, the fill read as a height fraction). See the triage tickets.
 
@@ -171,7 +171,7 @@ tank centre, a stores item, the fill read as a height fraction). See the triage 
 | IS-A39 | Deck-edge angle | atan(2 (D − T)/B), T at mid-length, reported only | Method | Upright box geometry | `box_stability.rs:500` | — |
 | IS-A40 | Area 0–27° | Computed and reported; no criterion | Fixed in code | Left from the removed ADN set (#175) | `gas_stability.rs:626` | None (no use) |
 | IS-A41 | Governing condition | Lowest GM fluid, first of equal | Fixed in code | Display choice; not the smallest Margin | `governing`, `gas_stability.rs:396` | None on pass or fail |
-| IS-A42 | Condition that does not float | Δ / ρ needs the whole hull, or T ≥ D: one failed check "Floats with freeboard", no curve | Fixed in code | OVCD Check (physical feasibility) | `gas_stability.rs:329`, `:386-414` | — |
+| IS-A42 | Condition that does not float | Δ / ρ needs the whole hull, or T ≥ D: one failed check "Floats with freeboard", no curve | Fixed in code | OVD Check (physical feasibility) | `gas_stability.rs:329`, `:386-414` | — |
 | IS-A43 | Criteria set | Always `IS_CODE_2008` | Fixed in code | Both IGC rulesets use the IS Code intact criteria | `criteria_set_for`, `gas_stability.rs:504` | — |
 | IS-A44 | When stability runs | Payload > 0 and gas basis present | Fixed in code | — | `simulate.rs:1009`, `gas_arrangement.rs:355` | No stability for an empty result |
 | IS-A45 | Gating | Each condition check has severity "error": it gates `fit`; an assessment error is one failed check | Fixed in code | Design change #264 | `gas_arrangement.rs:318`, `:369` | — |
@@ -186,7 +186,7 @@ tank centre, a stores item, the fill read as a height fraction). See the triage 
 | IS-A54 | Legacy cargo KG | Tank centre for any fill | Fixed in code | Port | `hydrostatics.rs:94` | Conservative below full |
 | IS-A55 | Legacy stores KG | Double bottom/2, or 0.25 D if no double bottom | Fixed in code | Port | `hydrostatics.rs:106` | Unknown (stores mass is 0) |
 | IS-A56 | Legacy free surface fill | `fill_ratio` read as a fraction of the diameter | Fixed in code | Port | `tanks.rs:280` | Unknown; differs from IS-A19 |
-| IS-A57 | Trim limit | No free-trim balance within ±10°, upright or at any heel: one failed criterion "Trim within the solver's range", no curve, level draught | Fixed in code (OVCD Check) | An end would go under before 10° on these hulls | `box_stability.rs:462-470`, `:484-496`; `gas_stability.rs:339-362`; `loading_conditions.rs:461-494` | Conservative: the condition fails |
+| IS-A57 | Trim limit | No free-trim balance within ±10°, upright or at any heel: one failed criterion "Trim within the solver's range", no curve, level draught | Fixed in code (OVD Check) | An end would go under before 10° on these hulls | `box_stability.rs:462-470`, `:484-496`; `gas_stability.rs:339-362`; `loading_conditions.rs:461-494` | Conservative: the condition fails |
 | IS-A58 | Curves built only where needed | The ballast plan screens each trial on the air draft, the fluid GM (0.15 m) and the freeboard before its GZ curve | Fixed in code | Speed (#448). A trial that fails one is not ok whatever its curve | `loading_conditions.rs:294-328`, `:510-523` | None: the reported plan is worked in full |
 
 ## Inputs the user can change
@@ -204,7 +204,7 @@ Form) reaches it through the sections (area 01). `block_coefficient` is no longe
 
 ## Limits and known findings
 
-- **Down-flooding angle (#282).** OVCD has no openings, so the 0–40° and 30–40° areas always run to 40°.
+- **Down-flooding angle (#282).** OVD has no openings, so the 0–40° and 30–40° areas always run to 40°.
   Part A 2.2.1 runs them to the down-flooding angle if that is less. Spec 0004 links both Rules to this finding.
 - **Weather criterion.** Part A 2.3 is not evaluated. Spec 0004 plans it as a `not evaluated` row until the wind
   heeling lever exists (roadmap phase 1).
@@ -215,7 +215,7 @@ Form) reaches it through the sections (area 01). `block_coefficient` is no longe
   the Stern Form, and the bilge radius, sheer and camber when set (#449, 0 by default). No buoyancy above the deck
   (coamings, domes).
 - **Trim limit.** The free-trim search stays within ±10°. A condition that needs more fails, with no curve.
-- **Speed.** A GZ curve on a tunnel stern takes about 200 ms natively. OVCD builds curves only where a criterion
+- **Speed.** A GZ curve on a tunnel stern takes about 200 ms natively. OVD builds curves only where a criterion
   needs them.
 - **Free surface.** Cargo tanks only, cylinder part only.
 - **Dry bulk.** Work in development: one first-order GM at full load, advisory only. Spec 0004 lists the
@@ -237,12 +237,12 @@ Form) reaches it through the sections (area 01). `block_coefficient` is no longe
   is not yet re-run against the sections.
 - **`tests/test_evaluation_oracle.py`**: the oracle against closed forms (GM, wall-sided GZ) and
   `box_condition` against `assess`.
-- **`crates/ovcd-core/tests/sections_equilibrium.rs`**: the free-trim GZ of a box equals `box_gz` at every angle;
+- **`crates/ovd-core/tests/sections_equilibrium.rs`**: the free-trim GZ of a box equals `box_gz` at every angle;
   the free surface term; the wall-sided formula; a symmetric hull with LCG at mid-length floats level; a trim beyond
   10° is an error.
-- **Unit and seam tests**: `crates/ovcd-core/tests/gas_stability.rs` (31 tests, values from the original Python),
-  `crates/ovcd-core/tests/box_condition.rs` (4), `crates/ovcd-core/tests/gas_arrangement_feasible.rs` (7, the
-  search keeps only arrangements that pass), `crates/ovcd-format/tests/stability_curves.rs` (5), and
+- **Unit and seam tests**: `crates/ovd-core/tests/gas_stability.rs` (31 tests, values from the original Python),
+  `crates/ovd-core/tests/box_condition.rs` (4), `crates/ovd-core/tests/gas_arrangement_feasible.rs` (7, the
+  search keeps only arrangements that pass), `crates/ovd-format/tests/stability_curves.rs` (5), and
   `every_is_code_criterion_passes_at_exactly_its_limit` in `gas_stability.rs`.
 - **Calibration**: no calibration case holds a published KG, GM or GZ. The stability results have no check
   against a real vessel.
@@ -257,7 +257,7 @@ Form) reaches it through the sections (area 01). `block_coefficient` is no longe
    acceptable at concept stage?
 4. Which loading conditions should a concept gas barge check: the Part B 3.4.1.2 departure and arrival set, the
    IGC 2.2.2 loading stages, a one-tank-slack case? Is Half laden at equal fill a fair worst case for free surface?
-5. For wide, shallow barges the angle of maximum GZ is often below 25° (Part A 2.2.3). Should OVCD offer the
+5. For wide, shallow barges the angle of maximum GZ is often below 25° (Part A 2.2.3). Should OVD offer the
    Part B 2.2 pontoon criteria, or an inland set, as the default for river-only barges?
 6. Without openings data, what default down-flooding angle, if any, should a concept assume for a gas barge
    (for example the deck-edge angle, or a vent height above deck)?

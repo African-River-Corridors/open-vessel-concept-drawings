@@ -1,5 +1,5 @@
-// A tiny static server that behaves like the live site: the page is at /ovcd/app (no slash) and its
-// files are under /ovcd/app-files/. Serves .wasm as application/wasm.
+// A tiny static server that behaves like the live site: the page is at /ovd/app (no slash) and its
+// files are under /ovd/app-files/. Serves .wasm as application/wasm.
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
@@ -17,9 +17,9 @@ export function serve(dir, port = 0) {
   const server = http.createServer((req, res) => {
     const url = new URL(req.url, "http://localhost").pathname;
     let file = null;
-    if (url === "/ovcd/app") file = path.join(dir, "index.html");
-    else if (url.startsWith("/ovcd/app-files/")) {
-      const rel = path.normalize(url.slice("/ovcd/app-files/".length));
+    if (url === "/ovd/app") file = path.join(dir, "index.html");
+    else if (url.startsWith("/ovd/app-files/")) {
+      const rel = path.normalize(url.slice("/ovd/app-files/".length));
       if (!rel.startsWith("..")) file = path.join(dir, rel);
     }
     if (!file || !fs.existsSync(file) || !fs.statSync(file).isFile()) {

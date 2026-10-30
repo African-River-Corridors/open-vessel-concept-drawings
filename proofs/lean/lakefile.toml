@@ -1,9 +1,9 @@
-name = "ovcd_rules"
-defaultTargets = ["OvcdRules", "ovcd-rules-oracle"]
+name = "ovd_rules"
+defaultTargets = ["OvdRules", "ovd-rules-oracle"]
 
 [[lean_lib]]
-name = "OvcdRules"
+name = "OvdRules"
 
 [[lean_exe]]
-name = "ovcd-rules-oracle"
+name = "ovd-rules-oracle"
 root = "Oracle"

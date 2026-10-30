@@ -8,14 +8,14 @@ assumptions table on that page.
 Places where the code disagrees with itself, with its own labels or with what it tells the user.
 
 **E1. Two steel masses in one Option.** The hull steel line prices the bottom-up steel (hull steel total + wing
-plate + weather shield; `crates/ovcd-format/src/cost.rs` lines 76-78, `crates/ovcd-core/src/barge_cost.rs`
+plate + weather shield; `crates/ovd-format/src/cost.rs` lines 76-78, `crates/ovd-core/src/barge_cost.rs`
 line 349). The lightship uses the top-down steel, 0.10 t/m³ × moulded volume
-(`crates/ovcd-core/src/weights.rs` lines 163 and 176). The piping and outfitting masses are fractions of the
+(`crates/ovd-core/src/weights.rs` lines 163 and 176). The piping and outfitting masses are fractions of the
 top-down steel (lines 170, 173). So the budget and the displacement rest on different steel. The difference is
 `steel_delta` (line 167), which the budget does not show. Effect: large, sign unknown per design.
 
 **E2. The basis line never changes.** The view always shows "Example rates — replace with yours."
-(`crates/ovcd-format/src/vdesign.rs` line 241; `app/src/lib/views/CapitalBudget.svelte` line 66), and the
+(`crates/ovd-format/src/vdesign.rs` line 241; `app/src/lib/views/CapitalBudget.svelte` line 66), and the
 `fabrication_rates_are_estimates` note always shows (`barge_cost.rs` lines 392-398). After a user enters yard
 quotes, the view still calls them example rates. Effect: none on numbers; misleads the reader.
 
@@ -38,7 +38,7 @@ a pusher tug in its budget. Effect: large for those Formations (tug subtotal 1,3
 
 ## Gaps
 
-What a cost engineer would expect that OVCD does not do.
+What a cost engineer would expect that OVD does not do.
 
 - **G1. No bill of quantities.** The BOQ view is a placeholder (`app/src/lib/MainPanel.svelte` lines 160-163).
   The capital budget shows amounts only, not quantity, unit and rate per line.

@@ -145,7 +145,7 @@ structure. This spec keeps the first rule and adds a fourth layer:
   behind the hull's centre plane (farther from the camera). The same check in the plan view asserts port is
   on the left with the bow up.
 
-### Model changes (`ovcd-core`, all `no_std`)
+### Model changes (`ovd-core`, all `no_std`)
 
 | Module | Change | Holds |
 |---|---|---|
@@ -194,7 +194,7 @@ stays a Space, named in the view "Hold space (around tanks)" (IGC term).
 - Tessellation: cylinders and nozzles 48 segments round; heads 12 rings; domes 24 segments; constants in
   `mesh.rs`.
 - Every new mesh is closed, welded and outward-facing, so the spec 0008 edge test applies unchanged.
-- The mesh hash (`ovcd mesh --hash`) covers the new groups and stays outside the results hash.
+- The mesh hash (`ovd mesh --hash`) covers the new groups and stays outside the results hash.
 
 ### The 3D view (`app/src/lib/views/Model3D.svelte`, `model3d.ts`)
 
@@ -314,7 +314,7 @@ Each geometric test compares the mesh with an oracle that does not share its con
   fixture. Meshes and `drawing.*` are outside the results hash. The one results change is the added
   rows of the tank Spaces in the Spaces table (D1); the design-impact table of that ticket must list
   only added rows, and the ticket fails if any existing row changes.
-- `ovcd-core` stays `no_std`; `bash tools/gates.sh` passes, WebAssembly build included.
+- `ovd-core` stays `no_std`; `bash tools/gates.sh` passes, WebAssembly build included.
 
 ## Out of Scope
 

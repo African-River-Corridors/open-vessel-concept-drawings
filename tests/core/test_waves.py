@@ -4,7 +4,7 @@ Run with pytest: python -m pytest tests/core/test_waves.py
 """
 import math
 
-from vessel_designer.core.waves import (
+from ovd.core.waves import (
     GRAVITY,
     LAMBDA_OVER_LPP_MAX,
     WaveResistanceInputs,

@@ -6,7 +6,7 @@ value of the default moulded-depth rule beside it (issue #120).
     python3 tools/gen_depth_rule.py --check  # exit 1 if the file is out of date
 
 Moulded depth is keel to main deck at the side. The rule is in the built-in Defaults Profile
-(`crates/ovcd-format/src/builtin_profile.json`, `depth_to_beam_ratio`): D = ratio x B, by Cargo
+(`crates/ovd-format/src/builtin_profile.json`, `depth_to_beam_ratio`): D = ratio x B, by Cargo
 group. This script reads the ratios from that file and the vessels from
 `catalogue/reference_vessels.yaml`, so the table cannot say anything the data does not.
 
@@ -34,7 +34,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "catalogue" / "depth_rule.md"
-PROFILE = ROOT / "crates" / "ovcd-format" / "src" / "builtin_profile.json"
+PROFILE = ROOT / "crates" / "ovd-format" / "src" / "builtin_profile.json"
 VESSELS = ROOT / "catalogue" / "reference_vessels.yaml"
 CLASSES = ROOT / "catalogue" / "vessel_classes.yaml"
 

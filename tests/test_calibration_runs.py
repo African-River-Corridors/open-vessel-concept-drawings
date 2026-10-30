@@ -4,8 +4,8 @@ It must never write into the repository: its outputs go to a folder the caller n
 """
 import yaml
 
-from vessel_designer import calibration
-from vessel_designer.calibration import CAL, report
+from ovd import calibration
+from ovd.calibration import CAL, report
 
 
 def _snapshot(folder):
@@ -55,7 +55,7 @@ import sys
 
 import pytest
 
-from vessel_designer.calibration import (BANDS, assess, github_warning, load_cases, warnings_for)
+from ovd.calibration import (BANDS, assess, github_warning, load_cases, warnings_for)
 
 CONFIDENCES = ("high", "medium", "low")
 
@@ -130,10 +130,10 @@ def test_a_warning_annotation_cannot_be_broken_by_its_text():
 def test_the_check_prints_warnings_and_still_exits_zero():
     """Label: property
     """
-    out = subprocess.run([sys.executable, "-m", "vessel_designer.calibration", "--check"],
+    out = subprocess.run([sys.executable, "-m", "ovd.calibration", "--check"],
                          capture_output=True, text=True)
     assert out.returncode == 0, out.stderr
-    from vessel_designer.calibration import (_assess_installed_power, _assess_propulsion, _assess_tank_barges,
+    from ovd.calibration import (_assess_installed_power, _assess_propulsion, _assess_tank_barges,
                                              _assess_tanks)
     # One annotation for each result outside its band: the barge, tank (issue #292), tank barge (issue
     # #335), bollard pull (issue #351) and installed power (issue #353) results.
@@ -147,7 +147,7 @@ def test_the_check_fails_on_a_crash_not_on_a_band_miss(tmp_path, monkeypatch):
     broken = tmp_path / "bad"
     (broken / "calibration").mkdir(parents=True)
     out = subprocess.run([sys.executable, "-c",
-                          "import vessel_designer.calibration as c, pathlib; "
+                          "import ovd.calibration as c, pathlib; "
                           f"c.CAL = pathlib.Path({str(broken / 'calibration')!r}); c.main_check()"],
                          capture_output=True, text=True)
     assert out.returncode != 0
@@ -158,7 +158,7 @@ def test_the_ci_runs_the_check_without_letting_a_band_miss_fail_the_build():
     """
     from pathlib import Path
     ci = (Path(__file__).resolve().parents[1] / ".github/workflows/ci.yml").read_text(encoding="utf-8")
-    assert "python -m vessel_designer.calibration --check" in ci
+    assert "python -m ovd.calibration --check" in ci
 
 
 def _stale_files(fresh, committed):
@@ -170,14 +170,14 @@ def _stale_files(fresh, committed):
 def test_the_committed_results_and_factors_are_what_the_harness_writes(tmp_path, capsys):
     """calibration/results.md and factors.yaml are generated: a change to a case, a band or the
     engine that moves them must commit them again (issue #431). Run
-    `python -m vessel_designer.calibration` to write them.
+    `python -m ovd.calibration` to write them.
 
     Label: property
     """
     calibration.main(tmp_path)
     capsys.readouterr()
     stale = _stale_files(tmp_path, CAL)
-    assert not stale, f"calibration/{stale} is stale: run `python -m vessel_designer.calibration` and commit it"
+    assert not stale, f"calibration/{stale} is stale: run `python -m ovd.calibration` and commit it"
 
 
 def test_the_freshness_check_fails_on_a_stale_copy(tmp_path, capsys):
@@ -219,7 +219,7 @@ def test_a_case_outside_its_band_blocks_a_release_unless_the_changelog_names_it(
 
     Label: property
     """
-    from vessel_designer.calibration import assess, _release_problems
+    from ovd.calibration import assess, _release_problems
     out = [b for b in assess() if not b.inside and not b.excluded]
     assert out, "the test needs a dry barge case outside its band"
     case = out[0].case
@@ -235,7 +235,7 @@ def test_a_case_outside_its_band_blocks_a_release_unless_the_changelog_names_it(
 def test_a_miss_the_case_file_already_explains_does_not_block_a_release():
     """Label: property
     """
-    from vessel_designer.calibration import _accepted_misses, _release_problems
+    from ovd.calibration import _accepted_misses, _release_problems
     accepted = _accepted_misses()
     assert accepted, "the tank cases hold accepted misses"
     text = "# Changelog\n\n## 9.9.9 (2026-10-30)\n\n- nothing\n"

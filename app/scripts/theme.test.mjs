@@ -41,10 +41,10 @@ test("load: junk in storage is dark", () => {
   assert.equal(loadTheme(), "dark");
 });
 
-test("save: writes the choice under ovcd.theme", () => {
+test("save: writes the choice under ovd.theme", () => {
   globalThis.localStorage = fakeStorage();
   saveTheme("dark");
-  assert.equal(globalThis.localStorage.data["ovcd.theme"], "dark");
+  assert.equal(globalThis.localStorage.data["ovd.theme"], "dark");
   assert.equal(loadTheme(), "dark");
 });
 

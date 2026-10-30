@@ -1,10 +1,10 @@
-"""MkDocs hooks for the OVCD docs.
+"""MkDocs hooks for the OVD docs.
 
 on_config: expands a nav entry "adr/" or "specs/" into every page in that folder, so a new ADR or
 spec shows up without editing mkdocs.yml.
 
-on_post_page: makes every relative URL an absolute, clean /ovcd/docs/... path. The ARC site
-serves the docs at /ovcd/docs with no trailing slash, where a relative URL would resolve against
+on_post_page: makes every relative URL an absolute, clean /ovd/docs/... path. The ARC site
+serves the docs at /ovd/docs with no trailing slash, where a relative URL would resolve against
 the wrong folder. Clean means no ".html": the ARC site redirects ".html" URLs, and GitHub Pages
 serves page.html for /page.
 """
@@ -14,7 +14,7 @@ import re
 from pathlib import Path
 from urllib.parse import urljoin, urlsplit
 
-PREFIX = "/ovcd/docs/"
+PREFIX = "/ovd/docs/"
 ATTR = re.compile(r'\b(href|src)="([^"]*)"')
 CONFIG = re.compile(r'(<script id="__config" type="application/json">)(.*?)(</script>)', re.S)
 
@@ -34,7 +34,7 @@ def on_config(config):
 
 
 def clean(path: str) -> str:
-    """'/ovcd/docs/adr/x.html#a' -> '/ovcd/docs/adr/x#a'; the docs home -> '/ovcd/docs'."""
+    """'/ovd/docs/adr/x.html#a' -> '/ovd/docs/adr/x#a'; the docs home -> '/ovd/docs'."""
     parts = urlsplit(path)
     p = parts.path
     if p.endswith("/index.html"):

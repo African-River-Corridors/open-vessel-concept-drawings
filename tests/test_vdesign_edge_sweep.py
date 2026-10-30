@@ -1,4 +1,4 @@
-"""Validation is the only guard (issues #24, #41): a file `ovcd validate` passes with 0 errors never
+"""Validation is the only guard (issues #24, #41): a file `ovd validate` passes with 0 errors never
 makes `simulate` raise, return an error value, or return a physically impossible
 result (a negative cargo mass, cargo volume, draught, displacement, or hold width or height).
 
@@ -7,7 +7,7 @@ Label: property
 The sweep is seeded, so it is the same every run. It writes one Design whose Options sit at the
 hard-range edges of the built-in Defaults Profile, just inside and just outside them, at the soft
 edges and in between, and at the cross-check boundaries (channel depth equal to its clearance,
-freeboard just below the moulded depth). It runs the real `ovcd validate` on the file and feeds every
+freeboard just below the moulded depth). It runs the real `ovd validate` on the file and feeds every
 Option with 0 errors to `simulate` (the Rust-backed package). None may raise, return
 `{"error": ...}`, or return a negative result.
 
@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from vessel_designer.simulate import simulate
+from ovd.simulate import simulate
 
 ROOT = Path(__file__).resolve().parents[1]
 SEED = 24
@@ -86,14 +86,14 @@ def to_simulate(inputs: dict) -> dict:
 
 
 @pytest.fixture(scope="module")
-def ovcd() -> str:
-    """Build the `ovcd` binary and return its path."""
+def ovd() -> str:
+    """Build the `ovd` binary and return its path."""
     out = subprocess.run(
-        ["cargo", "build", "-q", "-p", "ovcd-cli", "--bin", "ovcd", "--message-format=json"],
+        ["cargo", "build", "-q", "-p", "ovd-cli", "--bin", "ovd", "--message-format=json"],
         cwd=ROOT, check=True, capture_output=True, text=True).stdout
     exes = [m["executable"] for m in map(json.loads, out.splitlines())
             if m.get("reason") == "compiler-artifact" and m.get("executable")]
-    assert exes, "cargo built no ovcd binary"
+    assert exes, "cargo built no ovd binary"
     return exes[-1]
 
 
@@ -233,15 +233,15 @@ def test_the_impossible_result_check_catches_an_error_value_and_a_negative():
     assert any(f.startswith("hold_top_width_m = -") for f in found), found
 
 
-def test_every_option_validate_passes_runs_in_simulate(ovcd, tmp_path):
-    profile = json.loads(subprocess.run([ovcd, "profile"], check=True, capture_output=True,
+def test_every_option_validate_passes_runs_in_simulate(ovd, tmp_path):
+    profile = json.loads(subprocess.run([ovd, "profile"], check=True, capture_output=True,
                                         text=True).stdout)
     options = sweep_options(profile)
     design = {"format": "vdesign", "format_version": 1, "engine_version": "0.1.0",
               "options": options}
     path = tmp_path / "sweep.vdesign"
     path.write_text(json.dumps(design), encoding="utf-8")
-    out = subprocess.run([ovcd, "validate", str(path)], capture_output=True, text=True)
+    out = subprocess.run([ovd, "validate", str(path)], capture_output=True, text=True)
     refused = set(re.findall(r"^error: Option '(\w+)':", out.stdout, re.M))
     assert out.returncode in (0, 1), out.stdout + out.stderr
 

@@ -5,7 +5,7 @@ Status: **agreed with the maintainer, 2026-10-20.** Decision record: ADR 0017. I
 
 ## Problem Statement
 
-A self-propelled hull in OVCD has one stern block: up to three azimuth thrusters, 40 ft battery and
+A self-propelled hull in OVD has one stern block: up to three azimuth thrusters, 40 ft battery and
 accommodation units on deck and a lifting wheelhouse. Layout values set its length; no power, thrust or
 energy value sets anything. It has no mass in the lightship, so cargo and draught are too high and the
 light air draft is wrong. Every result floats on an even keel. One propulsive efficiency, 0.45, serves a
@@ -16,7 +16,7 @@ as the maintainer decided on #264. The drawings show a square stern and circles 
 thrusters.
 
 Designers choose the stern form, the drive and the power source early, and size the tug with the barge.
-OVCD cannot compare those choices today.
+OVD cannot compare those choices today.
 
 ## Solution
 
@@ -32,7 +32,7 @@ and, for a Formation, the **Tug**. Each is an input with a few parameters. From 
 - the wheelhouse height that the sightline Rule needs, and the air draft with the wheelhouse lowered;
 - for a convoy, tow or ATB, a sized tug and the power of the whole Formation, as one equivalent hull.
 
-New Rules from ES-TRIN 2025/1, SOLAS V/22 and the Rhine police regulations, and new OVCD Checks, go
+New Rules from ES-TRIN 2025/1, SOLAS V/22 and the Rhine police regulations, and new OVD Checks, go
 into the rules engine (spec 0004). Old files keep today's arrangement and today's numbers.
 
 ## User Stories
@@ -44,13 +44,13 @@ into the rules engine (spec 0004). Old files keep today's arrangement and today'
    jets, and how many, so that I can compare drives on one hull.
 3. As a designer, I want to pick diesel-mechanical, diesel-electric, battery-hybrid, battery-electric
    or gas-fuelled gensets, so that the engine room, the mass and the fuel or energy follow the choice.
-4. As a designer, I want OVCD to size the installed power for my design speed, or to give the speed for
+4. As a designer, I want OVD to size the installed power for my design speed, or to give the speed for
    a power I type, so that I can see the trade.
 5. As a designer, I want the stern block to weigh what it should and to trim the vessel, so that cargo,
    draught, propeller immersion and air draft are honest.
 6. As a designer, I want the wheelhouse raised just enough to meet the sightline Rule and lowered for
    the air draft, so that I see both numbers.
-7. As a designer of a convoy, I want OVCD to size the pusher and give the convoy's power and speed, so
+7. As a designer of a convoy, I want OVD to size the pusher and give the convoy's power and speed, so
    that I can choose the number of barges.
 8. As a designer of an ATB, I want the barge notch and the tug sized together, so that the pair is
    consistent.
@@ -82,7 +82,7 @@ New glossary terms (in `GLOSSARY.md`): **Stern Block**, **Stern Form**, **Propul
 Source**, **Installed Power**, **Design Speed**, **Bollard Pull**, **Tug**, **Articulated Tug-Barge
 (ATB)**, **Notch**, **Equivalent Hull**, **Blind Distance**, **Fixed Height**.
 
-### Modules (ovcd-core, all `no_std`)
+### Modules (ovd-core, all `no_std`)
 
 Each module has one entry function and plain structs in and out, so a test drives it through its
 interface. None parses JSON.
@@ -107,7 +107,7 @@ All new inputs go into format version 3 (ADR 0007), which #274 opens and the ADR
 shares. Whichever ticket lands first opens version 3; if a release has already shipped version 3 when a
 ticket here lands, the builder stops and asks the maintainer. Each input has a **legacy value**: the
 value that reproduces today's result exactly, given to a file that lacks the input (the table of fixed
-values in `vdesign.rs`, marked `default`, one warning per Option). A session and `ovcd fill --as-new`
+values in `vdesign.rs`, marked `default`, one warning per Option). A session and `ovd fill --as-new`
 use the Defaults Profile value instead.
 
 "By phase" means a default keyed by Cargo phase (`KEYED_DEFAULTS`), as the battery unit count is today:
@@ -185,7 +185,7 @@ the `atb` and `towed_barge` Vessel Classes pickable (`vessel_classes.rs` `format
 - **Largest propeller:** D_max = `k_D` × design draught, with `k_D` 0.80 under a tunnel (estimate: the
   research's inland data run 0.57–0.93) and 0.65 at an open transom or pram stern (sourced: MAN, seagoing,
   "d/D < approximately 0.65"). An azimuth unit below a transom: D_max from the same 0.65 rule. A typed D
-  above D_max is used and fails the OVCD Check "propeller fits the stern". Under a tunnel, D_max is also
+  above D_max is used and fails the OVD Check "propeller fits the stern". Under a tunnel, D_max is also
   capped so the tunnels fit (maintainer decision on #350): a tunnel of radius D with its crown 0.10 D above
   the tip is 2D·√0.99 wide at the base, so side by side the tunnels may meet but not overlap, and the
   outer ones stay inside the beam. With no typed D, the default is D_max, capped at the largest unit of
@@ -224,7 +224,7 @@ the `atb` and `towed_barge` Vessel Classes pickable (`vessel_classes.rs` `format
 
   The ASD 2312 / ASD 2811 pair (same power, 2.8 m and 2.4 m propellers, 70 t and 60 t) must come out in
   the right order and within 10 %.
-- **Blade load.** P_D per unit / A ≤ 400 kW/m² open, 500 kW/m² ducted (Veth rating basis): an OVCD Check,
+- **Blade load.** P_D per unit / A ≤ 400 kW/m² open, 500 kW/m² ducted (Veth rating basis): an OVD Check,
   warn.
 - **Pump jet.** A pump jet uses the same disc with D = its inlet diameter and its own κ. The inlet
   diameter is an input; its default comes from a table by power that the builder reads from the maker's
@@ -364,21 +364,21 @@ New Rule Sets, each a draft until its Rules are verified by a second reader (`do
 | `rheinschpv` (family `rheinschpv`, Rhine Police Regulations §1.07) | none (optional) | `rheinschpv/1.07(2)/blind-zone-laden`: Blind Distance (laden) ≤ 350 m, block when selected. |
 | `abs-barges` notes for ATB (family `abs-barges`, 2024) | `coastal-and-river`, ATB only | `abs-barges/5-3-1.1.3/two-vessels` and `abs-barges/5-3-1.11.3/notch-wing-walls`: notes (approval items). Built in #363: the first is paragraph 1.3 (the tug and the barge are classed as two vessels), the second 11.3 (the barge's wing walls at a notch need an analysis with torsional shear). |
 
-OVCD Checks (set `ovcd`):
+OVD Checks (set `ovd`):
 
 | Rule id | Measure and limit | Consequence | Origin |
 |---|---|---|---|
-| `ovcd/propulsion/propeller-fits-stern` | D ≤ D_max of the Stern Form | warn | method-validity |
-| `ovcd/propulsion/immersion-light` | shaft-axis submergence at the light aft draught ≥ 0.76·D open, 0.71·D ducted; not for a tunnel stern | warn | method-validity (Beveridge 1971, a guide) |
-| `ovcd/propulsion/blade-load` | P_D per disc area ≤ 400 kW/m² open, 500 ducted | warn | method-validity (Veth rating basis) |
-| `ovcd/powering/installed-covers-design-speed` | P_B ≥ power needed at the Design Speed | block | physical |
-| `ovcd/powering/shallow-water-validity` | h/T ≥ 2.0 in the design channel | warn | method-validity (Zhang 2023, Raven limit) |
-| `ovcd/machinery/fits-under-deck` | engine or genset height + 1.0 m ≤ depth (today's genset check, all engines) | warn | physical |
-| `ovcd/machinery/fits-beam` | engines or gensets abreast fit the beam | block | physical |
-| `ovcd/formation/tug-proportions` | tug ratios inside the calibrated range | warn | method-validity |
-| `ovcd/wheelhouse/lift-enough` | lift needed ≤ maximum lift | block | physical |
+| `ovd/propulsion/propeller-fits-stern` | D ≤ D_max of the Stern Form | warn | method-validity |
+| `ovd/propulsion/immersion-light` | shaft-axis submergence at the light aft draught ≥ 0.76·D open, 0.71·D ducted; not for a tunnel stern | warn | method-validity (Beveridge 1971, a guide) |
+| `ovd/propulsion/blade-load` | P_D per disc area ≤ 400 kW/m² open, 500 ducted | warn | method-validity (Veth rating basis) |
+| `ovd/powering/installed-covers-design-speed` | P_B ≥ power needed at the Design Speed | block | physical |
+| `ovd/powering/shallow-water-validity` | h/T ≥ 2.0 in the design channel | warn | method-validity (Zhang 2023, Raven limit) |
+| `ovd/machinery/fits-under-deck` | engine or genset height + 1.0 m ≤ depth (today's genset check, all engines) | warn | physical |
+| `ovd/machinery/fits-beam` | engines or gensets abreast fit the beam | block | physical |
+| `ovd/formation/tug-proportions` | tug ratios inside the calibrated range | warn | method-validity |
+| `ovd/wheelhouse/lift-enough` | lift needed ≤ maximum lift | block | physical |
 
-The existing aft-block checks become `ovcd` Rules in #272 as planned.
+The existing aft-block checks become `ovd` Rules in #272 as planned.
 
 **Measures** added to the registry (#269): `wheelhouse.blind_distance(condition)`,
 `powering.speed_through_water_kmh(condition, environment)`, `propulsion.redundancy_28_04` (bool),
@@ -406,7 +406,7 @@ enumerated inputs (spec 0004 allows any enumerated input the schema names).
 - The design-impact check must show no change for every existing fixture, except the #264 `fit` change,
   which is listed.
 
-### Drawings (`ovcd-format` `ga.rs`, `ovcd-draw`)
+### Drawings (`ovd-format` `ga.rs`, `ovd-draw`)
 
 - **Side elevation:** the stern outline of the Stern Form (rake, pram curve, tunnel crown as a hidden
   line with the skirt); propellers as a disc outline with the shaft line (centre line) to the gearbox;
@@ -423,7 +423,7 @@ enumerated inputs (spec 0004 allows any enumerated input the schema names).
   the tug in plan with overall dimensions and coupling points, and the profile sightline over the convoy.
   The tug gets its own GA (it is a Hull).
 - New symbols (propeller, nozzle, rudder, azimuth unit, Voith Schneider unit, pump-jet inlet, coupler)
-  go into the Drawing Format Standard symbol library first (ADR 0009), then into `ovcd-draw`.
+  go into the Drawing Format Standard symbol library first (ADR 0009), then into `ovd-draw`.
 - Labels go into the Text Library (spec 0005, #310).
 
 ### App
@@ -451,7 +451,7 @@ the input labels and choices follow the app UI strings of #308. The catalogue ch
 - **Calibration** as above, with held-out cases reported in the PR body.
 - **Rules:** evaluation cases per rule id; the loader refuses each new set file with a broken field.
 - **Drawings:** the conformance tests of spec 0003 for the new entities and views.
-- `ovcd-core` stays `no_std`; the WebAssembly build runs in the gate.
+- `ovd-core` stays `no_std`; the WebAssembly build runs in the gate.
 
 ## Out of Scope
 
@@ -499,7 +499,7 @@ blockers are all closed (`docs/agents/build-process.md`).
 6. #352 machinery space and stern block layout by Power Source (blocked by #348, #350, #351)
 7. #353 installed power, transmission and service speed in the app (blocked by #351, #352)
 8. #354 wheelhouse Blind Distance and lift; the sightline blocks fit (blocked by #349)
-9. #355 Rule Sets es-trin-2025, solas-v22, rheinschpv and the new OVCD Checks (blocked by #353, #354, #269, #272, #275)
+9. #355 Rule Sets es-trin-2025, solas-v22, rheinschpv and the new OVD Checks (blocked by #353, #354, #269, #272, #275)
 10. #356 drawings of the stern: form, propulsors, rudders, engine room, raised wheelhouse, stern section (blocked by #350, #352, #354)
 
 **Wave 2: pusher, convoy and tow**

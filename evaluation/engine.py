@@ -8,8 +8,8 @@ public API: the harness is the only caller.
 """
 from __future__ import annotations
 
-from vessel_designer._bridge import _raise, call, raw
-from vessel_designer.core.gas_stability import Condition
+from ovd._bridge import _raise, call, raw
+from ovd.core.gas_stability import Condition
 
 #: The sets the harness selects when a run names none.
 DEFAULT_SELECT = ("is2008-a@1.0.0",)

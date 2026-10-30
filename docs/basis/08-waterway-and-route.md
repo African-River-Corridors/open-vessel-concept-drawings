@@ -4,18 +4,18 @@
 >
 > Code state: written against `main` at commit `f6d446c` (2026-10-20).
 
-**For:** Inland waterway engineer  ·  **Code:** `crates/ovcd-core/src/squat.rs`, `waves.rs`,
+**For:** Inland waterway engineer  ·  **Code:** `crates/ovd-core/src/squat.rs`, `waves.rs`,
 `journey_derating.rs`, `barge_capacity.rs`, `gas_arrangement.rs`, `resistance.rs` (channel parts),
-`vessel_classes.rs`; `crates/ovcd-format/src/simulate.rs`, `run.rs`, `class_input.rs`, `builtin_profile.json`
-·  **Rule Sets:** none yet. Every check on this page is an OVCD Check or an unverified method.
+`vessel_classes.rs`; `crates/ovd-format/src/simulate.rs`, `run.rs`, `class_input.rs`, `builtin_profile.json`
+·  **Rule Sets:** none yet. Every check on this page is an OVD Check or an unverified method.
 
-This page tells you how OVCD handles the water a vessel operates in: where it operates (Service Area), how deep
+This page tells you how OVD handles the water a vessel operates in: where it operates (Service Area), how deep
 it may float, how high it may stand, how much it squats, what waves add, and how much freeboard it keeps. Every
 statement points to the code that does it. Proposed changes are in a separate file, not here.
 
-## What OVCD computes here
+## What OVD computes here
 
-For one Option (the `simulate` path, `crates/ovcd-format/src/simulate.rs`):
+For one Option (the `simulate` path, `crates/ovd-format/src/simulate.rs`):
 
 - `draught_max_m`: the draught cap, the least of the hull limit, the typed draught limit and the channel limit.
 - `governs`: what limits the cargo, the hold or tank volume or the draught cap (with the name of the limit).
@@ -28,7 +28,7 @@ For one Option (the `simulate` path, `crates/ovcd-format/src/simulate.rs`):
 - `curves`: speed against power for "Deep water" and, when the channel has a depth and a bottom width, "Channel".
   Each point shows `squat_m` and `squat_limited`. Each curve shows `limiting_speed_kn` (Schijf) and `blockage`.
 
-Through the evaluation API only (`crates/ovcd-format/src/eval.rs`, not from a Design):
+Through the evaluation API only (`crates/ovd-format/src/eval.rs`, not from a Design):
 
 - `squat.compute`: squat by two methods, static and dynamic under-keel clearance, and the method checks.
 - `squat.max_speed_for_ukc`: the highest speed that keeps a margin under the keel.
@@ -53,7 +53,7 @@ Through the evaluation API only (`crates/ovcd-format/src/eval.rs`, not from a De
 1. A route is **one channel section** with one depth, one bottom width, one bank slope, one current and one water
    density. There is no list of legs, no water level series, no locks and no bends. Inputs:
    `channel_depth_m`, `channel_under_keel_clearance_m`, `channel_bottom_width_m`, `channel_bank_slope`,
-   `channel_current_kn`, `water_density_t_per_m3` (`crates/ovcd-format/src/run.rs`, `simulate_params_of`).
+   `channel_current_kn`, `water_density_t_per_m3` (`crates/ovd-format/src/run.rs`, `simulate_params_of`).
 2. The channel is a trapezoid. Surface width b_s = b + 2 · n · h, with b the bottom width, n the bank slope
    (H:V) and h the depth (`simulate.rs`, `env`, line 211). Section area A_c = (b + b_s) / 2 · h
    (`resistance.rs`, `channel_cross_section`, line 360). Label: **Method**.
@@ -226,7 +226,7 @@ Through the evaluation API only (`crates/ovcd-format/src/eval.rs`, not from a De
 | WR-A33 | Shallow-water factor | 1 + 1.4 (T/h)^1.5 F_nh^2.5 + 2 m F_nh²; 5.0 at F_nh ≥ 0.95 | Method | Code: "uncalibrated first-order" | `resistance.rs` l.386; page 07 | Unknown |
 | WR-A34 | STAwave-1 | R_AW = ρ g H_s² B √(B/L_BWL) / 16 | Method | ITTC, per code notes; not in the library | `waves.rs` l.119 | Non-conservative for λ/L_pp ≥ 0.5 (code says so) |
 | WR-A35 | Bow length | L_BWL = 0.2 · L_pp | Estimate | Code: blunt barge bow | `waves.rs` l.108 | Conservative (per code text) |
-| WR-A36 | Heading factor | cos² μ; 0 abeam | Fixed in code | OVCD's own screening treatment | `waves.rs` l.122–126 | Non-conservative off the bow (code calls it a floor) |
+| WR-A36 | Heading factor | cos² μ; 0 abeam | Fixed in code | OVD's own screening treatment | `waves.rs` l.122–126 | Non-conservative off the bow (code calls it a floor) |
 | WR-A37 | Peak period | T_p = 4.0 · √H_s | Estimate | Code: fetch-limited sea | `waves.rs` `peak_period` l.94 | Validity check only |
 | WR-A38 | Wavelength | Deep water, λ = g T²/(2π) | Fixed in code | Linear wave theory | `waves.rs` l.130 | Validity check passes too easily in shallow water |
 | WR-A39 | STAwave-1 validity | λ/L_pp < 0.5 (warning) | Method | ITTC, per code notes | `waves.rs` `LAMBDA_OVER_LPP_MAX` l.20 | Unknown |
@@ -246,7 +246,7 @@ Through the evaluation API only (`crates/ovcd-format/src/eval.rs`, not from a De
 | WR-A53 | Freeboard definition | D − T at the side; no sheer, camber, trim | Method | Box hull | `barge_capacity.rs` l.906 | Unknown; real rules measure differently |
 | WR-A54 | Minimum freeboard | 0.3 m | Estimate | No source; profile basis only "less than depth" | Profile `min_freeboard_m`; `barge_capacity.rs` l.210; `gas_arrangement.rs` l.56; `simulate.rs` l.682, 845 | Conservative against ES-TRIN 4.02(1) (150 mm); non-conservative against ICLL Table 28.2 for L > 36 m |
 | WR-A55 | `freeboard_ok` | Freeboard ≥ required at volume full load (error) | Fixed in code | Design choice | `barge_capacity.rs` l.941 | Over-strict in the gas search (fixed 0.3 m) |
-| WR-A56 | `freeboard_at_payload` | D − T_carried + 1e-9 ≥ required (error) | Fixed in code | OVCD Check | `gas_arrangement.rs` l.297–313 | Correct form |
+| WR-A56 | `freeboard_at_payload` | D − T_carried + 1e-9 ≥ required (error) | Fixed in code | OVD Check | `gas_arrangement.rs` l.297–313 | Correct form |
 | WR-A57 | Freeboard input limits | < D (hard); ≤ 7.0 m with depth search (hard) | Fixed in code | Physical limit | `vdesign.rs` near l.2721, 2768 | None |
 | WR-A58 | De-rating cap | T_max = max(0, design depth − UKC) | Method | Design choice | `journey_derating.rs` l.112 | Correct form |
 | WR-A59 | De-rated payload | min(capacity, C_b V_box(min(T_max, D)) ρ − LS), ≥ 0 | Method | Same box hydrostatics as capacity | `journey_derating.rs` l.122–131 | Unknown; inherits page 01 |
@@ -260,7 +260,7 @@ Through the evaluation API only (`crates/ovcd-format/src/eval.rs`, not from a De
 
 ## Inputs the user can change
 
-All from `crates/ovcd-format/src/builtin_profile.json` unless stated.
+All from `crates/ovd-format/src/builtin_profile.json` unless stated.
 
 | Input | Default | Unit | Range (hard / soft) | Where the default comes from |
 |---|---|---|---|---|
@@ -284,13 +284,13 @@ All from `crates/ovcd-format/src/builtin_profile.json` unless stated.
 - No Service Area in the code. The spec defines it; the engine does not read it (#275, #274).
 - One channel section per Option. No route legs, no water levels, no locks, no bends, no tidal windows.
 - Squat: no trim split (bow and stern), no bank effect, no passing ships, no heel in bends, no squat in the light
-  condition. The Python notes say so (`src/vessel_designer/core/squat.py`).
+  condition. The Python notes say so (`src/ovd/core/squat.py`).
 - Squat does not lower the draught cap. The static clearance sets the cap; squat only limits the speed.
 - With a channel depth and no bottom width, no squat runs at all, and no warning says so.
 - The squat and resistance validity checks (F_nh 0.70, blockage 0.35, Schijf 0.95, blockage 0 to 1) do not reach
   the Design result. The `simulate` curves show values only.
 - Waves and wind do not reach a Design. STAwave-1 is for head seas and short waves only.
-- Freeboard has no rule. 0.3 m is an OVCD default. ES-TRIN Chapter 4 and ICLL are target sets in spec 0004.
+- Freeboard has no rule. 0.3 m is an OVD default. ES-TRIN Chapter 4 and ICLL are target sets in spec 0004.
 - Air draft has no clearance margin and no water level allowance. Deck cargo and container tiers are not in the
   top point.
 - Old result fields in the GA payload say "ok" without a check (WR-A66).
@@ -299,16 +299,16 @@ All from `crates/ovcd-format/src/builtin_profile.json` unless stated.
 
 ## Evidence
 
-- `crates/ovcd-core/tests/squat.rs`: 10 tests. Expected values are what the original Python printed (parity),
+- `crates/ovd-core/tests/squat.rs`: 10 tests. Expected values are what the original Python printed (parity),
   for example a CN II motor vessel, 87.3 × 14.8 × 4.4 m, in a 4.8 m channel of 209.5 m²: Barrass 0.69 m and
   ICORELS 0.34 m at 6 kn. They prove the port, not the method.
-- `crates/ovcd-core/tests/waves.rs`: 4 tests, Python parity (for example 8.56 kN at H_s 1 m, B 14.8 m,
+- `crates/ovd-core/tests/waves.rs`: 4 tests, Python parity (for example 8.56 kN at H_s 1 m, B 14.8 m,
   L_pp 87.3 m).
-- `crates/ovcd-core/tests/journey_derating.rs`: 10 tests (draft-bound, volume-bound, floats nothing, input
+- `crates/ovd-core/tests/journey_derating.rs`: 10 tests (draft-bound, volume-bound, floats nothing, input
   refusals, water density).
-- `crates/ovcd-core/tests/resistance.rs`: 28 tests, among them channel governs, blockage checks, wave heading,
+- `crates/ovd-core/tests/resistance.rs`: 28 tests, among them channel governs, blockage checks, wave heading,
   squat margin edge, current.
-- `crates/ovcd-format/tests/environment_inputs.rs` (7) and `vessel_class.rs` (23): input mapping and class limits.
+- `crates/ovd-format/tests/environment_inputs.rs` (7) and `vessel_class.rs` (23): input mapping and class limits.
 - `calibration/results.md`, section 4: deadweight at the stated draught. Box barges out of sample: 30 of 30
   inside the band, mean absolute error 4.1 %. This backs the draught-to-deadweight step that the draught cap uses.
 - No squat, wave, limiting-speed or air-draft result is checked against measured data or an independent
@@ -327,8 +327,8 @@ All from `crates/ovcd-format/src/builtin_profile.json` unless stated.
 6. Should the limiting speed use the midship area B · T · C_m, not B · T · C_b?
 7. Should squat reduce the draught cap (cap = depth − UKC − squat at the service speed), or is a speed limit enough
    for concept design?
-8. For a Vessel Class, is the top of the CEMT draught range a fair draught limit, or should OVCD take the bottom?
-9. Do the CEMT air-draft values already hold a safety clearance under the bridge? If not, what margin should OVCD
+8. For a Vessel Class, is the top of the CEMT draught range a fair draught limit, or should OVD take the bottom?
+9. Do the CEMT air-draft values already hold a safety clearance under the bridge? If not, what margin should OVD
    add, and at which water level?
 10. For river-only service, should the minimum freeboard follow ES-TRIN 2025/1 Art. 4.02 (150 mm for a flush deck)
     and the safety clearance Art. 4.01 (300 mm, 500 mm for open holds)?

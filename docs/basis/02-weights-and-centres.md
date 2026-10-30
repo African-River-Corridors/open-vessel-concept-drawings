@@ -4,12 +4,12 @@
 >
 > Code state: written against `main` at commit `f6d446c` (2026-10-20).
 
-**For:** naval architect, weight engineer  ·  **Code:** `crates/ovcd-core/src/weights.rs`, `barge_capacity.rs`,
+**For:** naval architect, weight engineer  ·  **Code:** `crates/ovd-core/src/weights.rs`, `barge_capacity.rs`,
 `gas_stability.rs` (weight split), `hydrostatics.rs` (legacy centres), `models.rs`, `aft_arrangement.rs`;
-`crates/ovcd-format/src/simulate.rs`, `builtin_profile.json`; `calibration/`  ·  **Rule Sets:** none. No Rule
+`crates/ovd-format/src/simulate.rs`, `builtin_profile.json`; `calibration/`  ·  **Rule Sets:** none. No Rule
 in this area. Every weight and centre is a method, an estimate or a value fixed in code.
 
-## What OVCD computes here
+## What OVD computes here
 
 - **Lightship** (`lightship_t`), in tonnes, for three Hulls: the gas barge with IMO Type C tanks, the box-hold dry
   bulk barge and the sloped-hopper dry bulk barge.
@@ -21,17 +21,17 @@ in this area. Every weight and centre is a method, an estimate or a value fixed 
 - **Calibration factors** for dry barges: the lightship factor k (t/m³ of L·B·D) per hold type and the box-barge
   block coefficient, fitted from Reference Vessels.
 
-OVCD gives no longitudinal or transverse centre of gravity in the main result. See "Limits".
+OVD gives no longitudinal or transverse centre of gravity in the main result. See "Limits".
 
 ## How it works today
 
 ### 1. Gas barge lightship
 
-The gas branch (`gas_volumetric`, `crates/ovcd-core/src/barge_capacity.rs:474`) builds a `BargeInputs` from the
+The gas branch (`gas_volumetric`, `crates/ovd-core/src/barge_capacity.rs:474`) builds a `BargeInputs` from the
 dataclass defaults (`models.rs:166`), sets the tank and arrangement inputs, and calls `calculate_weights`
 (`barge_capacity.rs:571`) on a box hull with no rakes (`barge_capacity.rs:570`).
 
-`calculate_weights` (`crates/ovcd-core/src/weights.rs:44`) does two steel estimates. Only the first goes into the
+`calculate_weights` (`crates/ovd-core/src/weights.rs:44`) does two steel estimates. Only the first goes into the
 lightship.
 
 1. **Top-down steel** (Method, factor Fixed in code), `weights.rs:151-163`:
@@ -69,7 +69,7 @@ lightship.
 
 Stores are an explicit zero (`weights.rs:194`). The `stores_weight` input (200 t, `models.rs:218`) is not read.
 
-Example from the parity test (`crates/ovcd-core/tests/weights.rs:38`), 90 × 14.8 × 6.5 m, four tanks:
+Example from the parity test (`crates/ovd-core/tests/weights.rs:38`), 90 × 14.8 × 6.5 m, four tanks:
 top-down steel 865.8 t, bottom-up steel 568.7 t (delta 297.1 t), tank total 446.8 t, insulation 43.0 t, piping
 52.5 t, outfitting 45.9 t, lightship 1,454.0 t.
 
@@ -108,7 +108,7 @@ The hold geometry (h_hold, widths, l_cargo) is on page 06.
   equilibrium draught T comes from `find_equilibrium_draft` (`hydrostatics.rs:21`), clamped to D. Displacement
   = Cb × V(T) × ρ. For the box hull V(T) = LOA × B × T. Deadweight = displacement − lightship
   (`barge_capacity.rs:1032`).
-- **Governing load** (`simulate`, `crates/ovcd-format/src/simulate.rs:740-751`, `797`): the cargo is the smaller of
+- **Governing load** (`simulate`, `crates/ovd-format/src/simulate.rs:740-751`, `797`): the cargo is the smaller of
   the volume-bound cargo and the weight-bound cargo, Cb × LOA × B × T_max × ρ − lightship. Displacement =
   lightship + cargo. Deadweight = displacement − lightship = cargo. The gas branch reports the payload as the
   deadweight (`simulate.rs:964`, `1081`).
@@ -119,7 +119,7 @@ The hold geometry (h_hold, widths, l_cargo) is on page 06.
 
 ### 5. Vertical centres of gravity
 
-**Gas barge** (`assess_num`, `crates/ovcd-core/src/gas_stability.rs:690`). Four lightship items, each at one
+**Gas barge** (`assess_num`, `crates/ovd-core/src/gas_stability.rs:690`). Four lightship items, each at one
 height above the keel (`gas_stability.rs:714-719`):
 
 | Item | Mass | KG |
@@ -144,7 +144,7 @@ of the full trapezoidal hold, h/3 × (2 w_top + w_bot)/(w_top + w_bot). KG is th
 ratio does not lower the cargo centroid.
 
 **Legacy chain** (`calculate_stability`, `hydrostatics.rs:61`, and `calculate_trim`, `hydrostatics.rs:163`).
-Reached only through the parity interface (`crates/ovcd-format/src/eval.rs:1544`, `1570`), not by `simulate`.
+Reached only through the parity interface (`crates/ovd-format/src/eval.rs:1544`, `1570`), not by `simulate`.
 KG: bottom-up hull steel at D/2, tank shells and insulation at the tank centre, cargo at the tank centre, piping at
 D, outfitting at 0.75 D, stores at DB/2 (or 0.25 D with no double bottom). LCG from the aft end: hull and piping at
 LOA/2, tanks and cargo at the centre of the tank zone, outfitting and stores at half the stern non-tank length.
@@ -152,7 +152,7 @@ Trim = (LCG − LCB) × L_wp / BM_L.
 
 ### 6. Calibration factors
 
-`src/vessel_designer/calibration.py` (`fit_factors`, line 107) fits the factors from `calibration/cases.yaml` and
+`src/ovd/calibration.py` (`fit_factors`, line 107) fits the factors from `calibration/cases.yaml` and
 writes `calibration/factors.yaml`. Held-out cases are left out of the fit.
 
 - **k per hold type** = mean of observed lightship / (LOA × B × D). Box 0.1086 t/m³ (n = 2, range 0.095–0.1223);
@@ -220,7 +220,7 @@ writes `calibration/factors.yaml`. Held-out cases are left out of the fit.
 
 ## Inputs the user can change
 
-From the Defaults Profile (`crates/ovcd-format/src/builtin_profile.json`). Names are the glossary names.
+From the Defaults Profile (`crates/ovd-format/src/builtin_profile.json`). Names are the glossary names.
 
 | Input | Default | Unit | Where the default comes from |
 |---|---|---|---|
@@ -241,7 +241,7 @@ the app. Some are fields of `BargeCapacityInputs` or `BargeInputs` and can be se
 
 - The stern block of a self-propelled Hull has no mass in the lightship (WC-A29). The dry result gives no warning.
 - Deadweight is the cargo only (WC-A35). No loading condition has fuel, stores or crew.
-- The lightship uses top-down steel, but the cost masses use bottom-up steel (`crates/ovcd-format/src/cost.rs:76-78`).
+- The lightship uses top-down steel, but the cost masses use bottom-up steel (`crates/ovd-format/src/cost.rs:76-78`).
   In the parity example the two differ by 297 t.
 - The gas lightship factors (WC-A01, A04, A05) have no calibration case. Gas and tank barge cases are in
   `not_yet_runnable_cases` (`calibration/cases.yaml:1321`).
@@ -257,7 +257,7 @@ the app. Some are fields of `BargeCapacityInputs` or `BargeInputs` and can be se
 
 ## Evidence
 
-- **Parity tests:** `crates/ovcd-core/tests/weights.rs` checks every `WeightBreakdown` field against the original
+- **Parity tests:** `crates/ovd-core/tests/weights.rs` checks every `WeightBreakdown` field against the original
   Python, for the 90 × 14.8 × 6.5 m case and for rakes, no shield, no wing tank and a full-height wing tank. This is
   parity, not validation.
 - **Calibration** (`calibration/results.md`, bands in `calibration/bands.yaml`: lightship ±15/20/30 %, deadweight
@@ -271,7 +271,7 @@ the app. Some are fields of `BargeCapacityInputs` or `BargeInputs` and can be se
     +25.8 %.
   - Container hold: one case, in-sample.
   - No case for the gas barge or the sloped-hopper barge.
-- **Gas stability tests:** `crates/ovcd-core/tests/gas_stability.rs` (parity with the original engine).
+- **Gas stability tests:** `crates/ovd-core/tests/gas_stability.rs` (parity with the original engine).
 
 ## Questions for reviewers
 
@@ -285,7 +285,7 @@ the app. Some are fields of `BargeCapacityInputs` or `BargeInputs` and can be se
    and the lifting wheelhouse? Is a mass per 40 ft unit a fair start?
 5. Should the default Cb be 0.928 for a box-hold barge and stay 0.85 only for a gas barge?
 6. For a deck barge or pontoon, should lightship KG be at the main deck, as IS Code 2008 Part B 8.6 allows as a
-   conservative value? Should OVCD use the main deck for every barge at concept stage?
+   conservative value? Should OVD use the main deck for every barge at concept stage?
 7. Is a 6 mm plate a fair weight for a non-structural weather shield, and should its cost rate differ from the
    hull steel rate (issue #410 left this open)?
 8. Which consumables (fuel, fresh water, stores, crew) should the laden and light conditions carry for a

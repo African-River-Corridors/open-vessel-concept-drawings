@@ -1,4 +1,4 @@
-# OVCD input labels, Spanish (Latin America). Draft: machine-translated, for native review (locales/REVIEWING.md).
+# OVD input labels, Spanish (Latin America). Draft: machine-translated, for native review (locales/REVIEWING.md).
 
 ## Grupos
 

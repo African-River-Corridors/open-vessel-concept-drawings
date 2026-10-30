@@ -4,13 +4,13 @@
 >
 > Code state: written against `main` at commit `f6d446c` (2026-10-20).
 
-**For:** naval architect, draughtsperson  ·  **Code:** `crates/ovcd-format/src/ga.rs` (view builder),
-the [`otd`](https://github.com/African-River-Corridors/open-technical-drawer) crate (Drawing Format Standard, Rust; pinned by tag), `crates/ovcd-format/src/simulate.rs` (the `geometry`
-and `drawing` result objects), `crates/ovcd-cli/src/draw.rs`  ·  **Rule Sets:** none
+**For:** naval architect, draughtsperson  ·  **Code:** `crates/ovd-format/src/ga.rs` (view builder),
+the [`otd`](https://github.com/African-River-Corridors/open-technical-drawer) crate (Drawing Format Standard, Rust; pinned by tag), `crates/ovd-format/src/simulate.rs` (the `geometry`
+and `drawing` result objects), `crates/ovd-cli/src/draw.rs`  ·  **Rule Sets:** none
 
-## What OVCD computes here
+## What OVD computes here
 
-OVCD computes no engineering value for a drawing. It draws the values that the calculation already gives.
+OVD computes no engineering value for a drawing. It draws the values that the calculation already gives.
 For each Option that runs, it makes three drawings (General Arrangement views, spec 0003):
 
 - **Side elevation** (`side-elevation`): hull profile, deck, waterlines, cargo containment, zones, the stern
@@ -19,8 +19,8 @@ For each Option that runs, it makes three drawings (General Arrangement views, s
 - **Midship section** (`midship-section`): hull section, the hold shape or the tank circles with the double
   bottom, wing ballast tanks, voids, cradles and domes, waterlines, clearances.
 
-Each drawing is one drawing document (JSON) of the Drawing Format Standard. `ovcd-draw` turns it into
-normalised content, then SVG, PDF and DXF. OVCD code names the crate `ovcd_draw` (the dependency's
+Each drawing is one drawing document (JSON) of the Drawing Format Standard. `ovd-draw` turns it into
+normalised content, then SVG, PDF and DXF. OVD code names the crate `ovd_draw` (the dependency's
 name in `Cargo.toml`); its package is `otd`.
 
 A convoy, or an Option that cannot be computed, gives no drawings. The message is the same as the outputs
@@ -53,10 +53,10 @@ panel (`ga_views_of`, `ga.rs`).
    Cargo, when they are plain ASCII and at most 100 characters; and, if checks fail, one note "DESIGN FAILS
    n CHECKS: ..." (`failed_notes`). The status is `concept`, so the standard adds the status line
    "CONCEPT – NOT FOR CONSTRUCTION" (clause 14.9). Label: Method.
-7. **Outputs.** `ovcd draw <file.vdesign> --out <dir> [--option <name>]` writes per Option and view: the
-   drawing document, the normalised content, DXF, SVG and PDF (`draw.rs`). `ovcd draw --document` prints
-   the drawing documents only. The app shows the SVG (`crates/ovcd-shell/src/views.rs`); the web build
-   exports SVG, PDF and DXF (`crates/ovcd-web/src/export.rs`). Label: Method.
+7. **Outputs.** `ovd draw <file.vdesign> --out <dir> [--option <name>]` writes per Option and view: the
+   drawing document, the normalised content, DXF, SVG and PDF (`draw.rs`). `ovd draw --document` prints
+   the drawing documents only. The app shows the SVG (`crates/ovd-shell/src/views.rs`); the web build
+   exports SVG, PDF and DXF (`crates/ovd-web/src/export.rs`). Label: Method.
 
 ### Output formats
 
@@ -141,7 +141,7 @@ Each row is one drawn element. "Source or basis" starts with the geometry source
 ## Inputs the user can change
 
 No input belongs to the drawing alone. These inputs move drawn geometry. Defaults are from
-`crates/ovcd-core/src/barge_capacity.rs` and `models.rs`.
+`crates/ovd-core/src/barge_capacity.rs` and `models.rs`.
 
 | Input | Default | Unit | Drawn as |
 |---|---|---|---|
@@ -177,7 +177,7 @@ The drawing constants in DR-A23, DR-A30, DR-A31, DR-A37, DR-A38, DR-A43 and DR-A
 - The hull form is a raked box only. The drawn bow rake is not the shape that the hydrostatics use (they
   use the block coefficient).
 - There is no title block, no drawing number and no revision register. The status is always `concept`.
-- `crates/ovcd-core/src/ga_adapter.rs` is a port of the earlier Python drawing adapter. The view builder
+- `crates/ovd-core/src/ga_adapter.rs` is a port of the earlier Python drawing adapter. The view builder
   does not use it. It serves the parity harness (`eval.rs`) and one core test only.
 - Findings for the register (#121): see the engineering basis triage tickets, errors E1 to E4.
 
@@ -190,13 +190,13 @@ The drawing constants in DR-A23, DR-A30, DR-A31, DR-A37, DR-A38, DR-A43 and DR-A
 - **Cross-implementation:** a CI job (`.github/workflows/ci.yml`) installs the Python tool at the pinned
   commit and compares normalised content for every fixture Design.
 - **Outputs:** in the `otd` repository, `tests/outputs.rs` and `tests/dxf.rs` (DXF read back with a second
-  reader, `tests/support/dxf_reader.rs`). Here, `tools/dxf_crosscheck.py` reads OVCD's own DXF files back.
-- **View builder:** `crates/ovcd-format/tests/ga.rs` (every document validates; LOA, beam, depth, draught
+  reader, `tests/support/dxf_reader.rs`). Here, `tools/dxf_crosscheck.py` reads OVD's own DXF files back.
+- **View builder:** `crates/ovd-format/tests/ga.rs` (every document validates; LOA, beam, depth, draught
   and freeboard on the drawings equal the results; dry bulk and gas show their containment);
   `ga_recovery.rs` (each drawn item at the place the results give, `null` items left out);
   `ga_leaders.rs` (labels inside the frame, no crossing leaders, no overlapping label boxes);
   `ga_failed_note.rs`.
-- **Render check for this page:** the built CLI (`ovcd 0.2.2`, older than the workspace 0.2.3) drew a
+- **Render check for this page:** the built CLI (`ovd 0.2.2`, older than the workspace 0.2.3) drew a
   sloped-hopper fixture and the website gas example. They confirmed the layout above. That build refused
   two newer fixtures (unknown inputs), so the current code was not rendered.
 - No test checks drawn geometry against a computed result other than the five main dimensions and the

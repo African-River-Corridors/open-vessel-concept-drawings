@@ -15,7 +15,7 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-RULES = ROOT / "crates" / "ovcd-format" / "rules"
+RULES = ROOT / "crates" / "ovd-format" / "rules"
 
 #: One step per unit for a constant limit, above the engine's grid error (the big steps of the
 #: boundary mutants in README.md: areas 0.002 m rad, GZ 0.01 m, angle 2 degrees; GM, also in
@@ -124,7 +124,7 @@ def run(cases: list[dict], select: list[str], trace_of, rule_sets: tuple[str, ..
     a case's Rule Trace; `rule_sets` are set texts loaded at run time (a selected set not among them
     is a built-in one). Each result is a mutant (without its text) and `noticed_by`, the cases whose
     verdict on the mutated Rule changed. With `expected_only`, a set that holds many Rules the corpus does not
-    cover (the `ovcd` set) is mutated only on the Rules some case expects a verdict for, and each mutant is run
+    cover (the `ovd` set) is mutated only on the Rules some case expects a verdict for, and each mutant is run
     only over the cases that expect that Rule. With `near_only` it runs only the base cases and the boundary
     mutants made for that Rule, the ones that sit near its limit: the corpus is large and the rest cannot
     notice a small step."""

@@ -1,14 +1,14 @@
 """The DXF files of the drawing crate, read by readers that are not the crate (spec 0003, issue #99).
 
-For every conformance document that has a result, and every view of every fixture Design, `ovcd draw build`
-(or `ovcd draw --out`) writes a DXF. Then:
+For every conformance document that has a result, and every view of every fixture Design, `ovd draw build`
+(or `ovd draw --out`) writes a DXF. Then:
 
 1. the standard's own test reader (`tests/dxf_reader.py` of the standard's repository, which works on the
    group codes and does not use ezdxf) rebuilds the normalised content from the DXF. It must equal the
    normalised content of the Python implementation, and the viewports must hold the stated scales;
 2. ezdxf reads the file and its audit finds no error.
 
-    python3 tools/dxf_crosscheck.py --ovcd target/debug/ovcd --tdfa-src <checkout of the standard's repository>
+    python3 tools/dxf_crosscheck.py --ovd target/debug/ovd --tdfa-src <checkout of the standard's repository>
 
 Needs `ezdxf` and the Python implementation of the standard (`pip install` at the pinned commit; see the
 `drawing-crosscheck` job in .github/workflows/ci.yml). Exit 1 on any difference.
@@ -29,13 +29,13 @@ import otd  # noqa: E402  the pinned crate, for its conformance suite
 
 ROOT = Path(__file__).resolve().parent.parent
 SUITE = otd.standard() / "conformance"
-FIXTURES = ROOT / "crates" / "ovcd-format" / "tests" / "fixtures"
+FIXTURES = ROOT / "crates" / "ovd-format" / "tests" / "fixtures"
 MIN_FILES = 100
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--ovcd", default=str(ROOT / "target" / "debug" / "ovcd"))
+    ap.add_argument("--ovd", default=str(ROOT / "target" / "debug" / "ovd"))
     ap.add_argument("--tdfa-src", required=True, help="a checkout of the standard's repository (for tests/dxf_reader.py)")
     args = ap.parse_args()
     sys.path.insert(0, args.tdfa_src)
@@ -57,18 +57,18 @@ def main() -> int:
                 continue
             work = tmp / case["id"]
             shutil.copytree(SUITE / case["dir"], work)
-            proc = subprocess.run([args.ovcd, "draw", "build", str(work / "input.json"), "--out", str(work / "out")], capture_output=True, text=True)
+            proc = subprocess.run([args.ovd, "draw", "build", str(work / "input.json"), "--out", str(work / "out")], capture_output=True, text=True)
             if proc.returncode != 0:
-                problems.append(f"{case['id']}: ovcd draw build failed: {proc.stderr.strip()[:300]}")
+                problems.append(f"{case['id']}: ovd draw build failed: {proc.stderr.strip()[:300]}")
                 continue
             jobs.append((case["id"], work / "input.json", work / "out" / "input.dxf"))
         for fixture in sorted(FIXTURES.glob("*.vdesign")):
             out = tmp / fixture.stem
-            proc = subprocess.run([args.ovcd, "draw", "--out", str(out), str(fixture)], capture_output=True, text=True)
+            proc = subprocess.run([args.ovd, "draw", "--out", str(out), str(fixture)], capture_output=True, text=True)
             if proc.returncode != 0:
                 if "no drawings of a pushed convoy yet" in proc.stderr:
                     continue
-                problems.append(f"{fixture.name}: ovcd draw failed: {proc.stderr.strip()[:300]}")
+                problems.append(f"{fixture.name}: ovd draw failed: {proc.stderr.strip()[:300]}")
                 continue
             for document in sorted(out.glob("*.drawing.json")):
                 jobs.append((f"{fixture.name}/{document.name}", document, document.with_name(document.name[: -len(".drawing.json")] + ".dxf")))

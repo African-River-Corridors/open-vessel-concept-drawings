@@ -4,7 +4,7 @@ Planned work. Each item links to its issue — comment there to help or to discu
 
 ## Where this is going
 
-Open Vessel Concept Design starts as a concept design tool. The aim is a **trusted, open preliminary-design
+Open Vessel Designer starts as a concept design tool. The aim is a **trusted, open preliminary-design
 resource for the shipbuilding community**: intact and damage stability, hull strength in waves, basic
 construction drawings, a bill of quantities, a costing engine, voyage simulation, better equipment and
 accommodation arrangements, tug-barge systems (pushed, towed and articulated tug-barge) with standard tug
@@ -16,7 +16,7 @@ ships under the IACS Common Structural Rules wait until after version 1.0.
 
 **How it earns trust:**
 - Every result names its rule set, edition and paragraph, and every coefficient its source.
-- Rules are versioned data, not code ([#176](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/176)).
+- Rules are versioned data, not code ([#176](https://github.com/African-River-Corridors/open-vessel-designer/issues/176)).
 - An **evaluation harness** tests the engine against known designs with known verdicts (below).
 - New analyses get a second, independent implementation, as the drawing standard has (ADR 0009).
 - Heavy physics runs on proven open solvers (for example OpenFOAM for CFD, Capytaine for wave loads),
@@ -27,7 +27,7 @@ ships under the IACS Common Structural Rules wait until after version 1.0.
 ## Evaluation harness
 
 A growing set of **designs whose compliance is already known**, each with its expected verdict per rule,
-runs against the engine on every pull request ([#184](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/184), phase 0).
+runs against the engine on every pull request ([#184](https://github.com/African-River-Corridors/open-vessel-designer/issues/184), phase 0).
 
 - **Known-good** cases: worked examples from the rules and from textbooks, public approved designs, and
   built reference vessels. **Known-bad** cases: published non-compliant designs, and **boundary mutants** —
@@ -36,7 +36,7 @@ runs against the engine on every pull request ([#184](https://github.com/African
 - When the engine disagrees with a known verdict, the harness sorts it: a gap in what the engine can model;
   a **code bug** (the two independent implementations disagree); a **suspect rule** (they agree with each
   other but not with the known verdict); or a known limitation
-  ([#121](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/121)). Only what is
+  ([#121](https://github.com/African-River-Corridors/open-vessel-designer/issues/121)). Only what is
   left goes to an expert, and each settled case joins the set.
 - Each release reports the false-fail rate, the false-pass rate (held at zero for blocking rules) and
   rule coverage (every rule has at least one passing and one failing case). A new rule ships with its own
@@ -68,7 +68,7 @@ One engineering model of each Hull is the single source of truth for its geometr
 It has three parametric layers, all data in `.vdesign`: the hull sections table, the arrangement (decks,
 bulkheads, Spaces) and the structure. Meshes are always derived. A 3D view is one view of it; the
 analyses read it. It is a design twin: the model and its analyses stay in step with the design. An
-operational twin with live data is a future direction only. OVCD owns the concept-level analyses
+operational twin with live data is a future direction only. OVD owns the concept-level analyses
 (ADR 0011); companion projects do detailed FE, CFD, seakeeping and ship-handling simulation from its
 open exports.
 
@@ -84,18 +84,18 @@ open exports.
 
 ## Near term
 
-- **Publish to PyPI** ([#1](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/1)) so it installs with `pip install vessel-designer`.
-- **Public example river on an open DEM** ([#2](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/2)) — a worked case on a freely downloadable elevation model
+- **Publish to PyPI** ([#1](https://github.com/African-River-Corridors/open-vessel-designer/issues/1)) so it installs with `pip install open-vessel-designer`.
+- **Public example river on an open DEM** ([#2](https://github.com/African-River-Corridors/open-vessel-designer/issues/2)) — a worked case on a freely downloadable elevation model
   whose licence allows commercial reuse.
-- **Calibrate against more real barges** ([#3](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/3)) — more built vessels with published lightship, capacity
+- **Calibrate against more real barges** ([#3](https://github.com/African-River-Corridors/open-vessel-designer/issues/3)) — more built vessels with published lightship, capacity
   and draught.
-- **Turn remaining baked-in defaults into inputs** ([#4](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/4)) — e.g. block coefficient 0.85 and the stern-block
+- **Turn remaining baked-in defaults into inputs** ([#4](https://github.com/African-River-Corridors/open-vessel-designer/issues/4)) — e.g. block coefficient 0.85 and the stern-block
   size. (Fabrication rates are already data: see `examples/barge_cost_rates.example.yaml`. The tank
   outer diameter cap is already an input, `max_tank_od_m`, and there is no tank-length cap.)
-- **Define an Option by a standard Vessel Class** ([#94](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/94)) — pick a class
+- **Define an Option by a standard Vessel Class** ([#94](https://github.com/African-River-Corridors/open-vessel-designer/issues/94)) — pick a class
   (e.g. CEMT Va) instead of typing length and beam. **Done**: length and beam decide the class; picking
   one sets them, the Formation and the draught and air-draft limits.
-- **Close the mutation test gaps from the Rust port** ([#123](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/123)) — tests
+- **Close the mutation test gaps from the Rust port** ([#123](https://github.com/African-River-Corridors/open-vessel-designer/issues/123)) — tests
   only; no result changes.
 
 ### After the Rust port
@@ -104,15 +104,15 @@ Spec 0001 (`docs/specs/0001-parity-harness-and-rust-core.md`, the Rust port) is 
 there, in order:
 
 1. Calibration Bands and the calibration check (high priority,
-   [#119](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/119)).
+   [#119](https://github.com/African-River-Corridors/open-vessel-designer/issues/119)).
    **Done** as a warning only, while the model is in development: a case outside its band is marked in
    `calibration/results.md` and raises a CI warning annotation, and never fails the build.
 2. Default moulded-depth rule by Cargo (high priority): fewer inputs for non-experts. **Done**: a left-out
    depth is the beam times a ratio by Cargo (`catalogue/depth_rule.md` lists the reference vessels against it)
-   ([#120](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/120)).
+   ([#120](https://github.com/African-River-Corridors/open-vessel-designer/issues/120)).
 3. Review of the known engineering findings and general improvements to the model. The findings are
-   listed in [#121](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/121);
-   the post-build review of the port ([#113](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/113))
+   listed in [#121](https://github.com/African-River-Corridors/open-vessel-designer/issues/121);
+   the post-build review of the port ([#113](https://github.com/African-River-Corridors/open-vessel-designer/issues/113))
    adds to it. Nothing is agreed yet. Each agreed change comes one at a time, with a before/after table.
 4. Formations: convoy totals, then convoy resistance and power.
 5. More Hull Forms (V-bottom and others), with configurable parameters. Now Vessel Model phase 1 (spec 0008).
@@ -124,7 +124,7 @@ there, in order:
 9. A web version on the WebAssembly core.
 10. The first signed public installer, once the known engineering findings (#121) are reviewed and each is
     fixed or shown in the app as a known limitation. It also needs signing and notarisation
-    ([#122](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/122)). Until then,
+    ([#122](https://github.com/African-River-Corridors/open-vessel-designer/issues/122)). Until then,
     unsigned pre-releases (from 0.2.1) are published for trial use, with a first-run notice that results
     are unverified.
 

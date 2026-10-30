@@ -1,4 +1,4 @@
-# OVCD app text, Twi (Akan), Asante Twi spelling. Draft for native review (locales/REVIEWING.md).
+# OVD app text, Twi (Akan), Asante Twi spelling. Draft for native review (locales/REVIEWING.md).
 # This draft is small on purpose. It holds only common words whose Twi is well established.
 # Every message not here shows in English. Technical terms keep English (see locales/terms.toml):
 # a native speaker with marine knowledge should decide them. Do not add invented words.

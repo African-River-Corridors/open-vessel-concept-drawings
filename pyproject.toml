@@ -1,5 +1,5 @@
 [project]
-name = "vessel-designer"
+name = "open-vessel-designer"
 version = "0.2.4"
 description = "Concept design of inland and coastal cargo vessels: GA, characteristics, BOQ, cost — calibrated on real vessels."
 requires-python = ">=3.12"
@@ -10,7 +10,7 @@ readme = "README.md"
 dependencies = ["pyyaml>=6"]
 
 [project.urls]
-Repository = "https://github.com/African-River-Corridors/open-vessel-concept-drawings"
+Repository = "https://github.com/African-River-Corridors/open-vessel-designer"
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "pytest-xdist>=3.6", "numpy>=1.26", "jsonschema>=4.18"]
@@ -19,16 +19,16 @@ dev = ["pytest>=8", "pytest-xdist>=3.6", "numpy>=1.26", "jsonschema>=4.18"]
 requires = ["maturin>=1.7,<2"]
 build-backend = "maturin"
 
-# maturin builds crates/ovcd-py (PyO3, abi3 for Python 3.12+) into vessel_designer/_native, next to
-# the thin Python layer in src/, which calls it for every calculation (vessel_designer/_bridge.py).
+# maturin builds crates/ovd-py (PyO3, abi3 for Python 3.12+) into ovd/_native, next to
+# the thin Python layer in src/, which calls it for every calculation (ovd/_bridge.py).
 # data/barge_cost_rates.example.yaml is a copy of examples/ (a test keeps the two equal); it sits
 # inside src/ so it ships in the wheel and core.barge_cost finds it with importlib.resources.
 [tool.maturin]
-manifest-path = "crates/ovcd-py/Cargo.toml"
-module-name = "vessel_designer._native"
+manifest-path = "crates/ovd-py/Cargo.toml"
+module-name = "ovd._native"
 python-source = "src"
 features = ["pyo3/extension-module"]
-include = ["src/vessel_designer/data/*.yaml"]
+include = ["src/ovd/data/*.yaml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

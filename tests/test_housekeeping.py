@@ -4,7 +4,7 @@ import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
 HOLDER = "African River Corridors Limited"
-REPO = "open-vessel-concept-drawings"
+REPO = "open-vessel-designer"
 
 
 def read(rel: str) -> str:
@@ -34,7 +34,7 @@ def test_licence_holder():
 def test_repo_name_in_urls():
     for rel in ("README.md", "CONTRIBUTING.md", "ROADMAP.md", "pyproject.toml"):
         text = read(rel)
-        assert "African-River-Corridors/vessel_designer" not in text, rel
+        assert "African-River-Corridors/ovd" not in text, rel
     assert f"African-River-Corridors/{REPO}" in read("pyproject.toml")
     assert f"African-River-Corridors/{REPO}" in read("ROADMAP.md")
 

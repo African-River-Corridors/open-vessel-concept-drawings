@@ -3,8 +3,8 @@
 Applies the channel draft cap (T_max = design_depth - UKC) to the volume-bound barge
 capacity.
 """
-from vessel_designer.core.barge_capacity import BargeCapacityInputs, compute as cap_compute
-from vessel_designer.core.journey_derating import JourneyDeratingInputs, compute
+from ovd.core.barge_capacity import BargeCapacityInputs, compute as cap_compute
+from ovd.core.journey_derating import JourneyDeratingInputs, compute
 
 
 def _bauxite_cap(beam=16.0, depth=6.0):

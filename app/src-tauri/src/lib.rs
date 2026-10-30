@@ -1,12 +1,12 @@
-//! The OVCD desktop app shell.
+//! The OVD desktop app shell.
 //!
-//! Thin by design (spec 0002): each command forwards to the Design session in `ovcd-format`. The
+//! Thin by design (spec 0002): each command forwards to the Design session in `ovd-format`. The
 //! shell owns the native open and save dialogs, the unsaved-changes guard and the window title,
 //! and nothing else. It holds no calculation, validation or default logic.
 
 mod notice;
 
-use ovcd_shell::AppState;
+use ovd_shell::AppState;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::{AppHandle, Emitter, Manager, State, Window, WindowEvent};
@@ -28,13 +28,13 @@ fn finish(window: &Window, app: &AppState) -> Reply {
 }
 
 /// Smoke-test hook, debug builds only. A native dialog cannot be driven by WebDriver, so when
-/// `OVCD_TEST_DIALOG_DIR` is set, each dialog is answered from a file in that folder instead:
+/// `OVD_TEST_DIALOG_DIR` is set, each dialog is answered from a file in that folder instead:
 /// `open.txt`, `save.txt`, `profile.txt` and `offsets.txt` hold the path to pick (no file means the
 /// user cancelled), and `discard.txt` holds `no` to refuse a discard (anything else, or no file,
 /// agrees). Release builds have no such hook.
 #[cfg(debug_assertions)]
 fn test_answer(file: &str) -> Option<Option<String>> {
-    let dir = std::env::var_os("OVCD_TEST_DIALOG_DIR")?;
+    let dir = std::env::var_os("OVD_TEST_DIALOG_DIR")?;
     let text = std::fs::read_to_string(Path::new(&dir).join(file)).ok();
     Some(text.map(|t| t.trim().to_string()).filter(|t| !t.is_empty()))
 }
@@ -98,7 +98,7 @@ fn pick_save(app: &AppHandle) -> Result<Option<PathBuf>, String> {
         None => match app
             .dialog()
             .file()
-            .add_filter("OVCD Design", &["vdesign"])
+            .add_filter("OVD Design", &["vdesign"])
             .set_file_name("design.vdesign")
             .blocking_save_file()
         {
@@ -204,7 +204,7 @@ async fn open_file(app: AppHandle, window: Window, state: State<'_, Shared>) -> 
     if !confirm_discard(&app, &state)? {
         return Ok(serde_json::Value::Null);
     }
-    let Some(path) = pick_file(&app, "open.txt", "OVCD Design", &["vdesign"])? else {
+    let Some(path) = pick_file(&app, "open.txt", "OVD Design", &["vdesign"])? else {
         return Ok(serde_json::Value::Null);
     };
     let text = std::fs::read_to_string(&path)
@@ -481,7 +481,7 @@ pub fn run() {
             Ok(())
         })
         .build(tauri::generate_context!())
-        .expect("error while building the OVCD app")
+        .expect("error while building the OVD app")
         .run(|_app, _event| {
             // macOS hands a file to the app as an Apple Event, not an argument.
             #[cfg(target_os = "macos")]

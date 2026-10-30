@@ -1,6 +1,6 @@
 # Codifying a rule
 
-How a person or an agent turns a paragraph of a rule book into a Rule that OVCD can load. The design is
+How a person or an agent turns a paragraph of a rule book into a Rule that OVD can load. The design is
 in `docs/specs/0004-rules-engine.md` (section "Domain model") and ADR 0013. The terms are in
 `GLOSSARY.md`.
 
@@ -42,7 +42,7 @@ public. The pull request link shows who did the work.
 - Split the paragraph into **one Rule per requirement**. "Not less than 0.055 … and not less than 0.09"
   is two Rules.
 - Rule id: `<family>/<paragraph>/<slug>`.
-  - `family`: the Rule Set's family (`igc`, `is2008`, `lr-inland`, `ovcd`).
+  - `family`: the Rule Set's family (`igc`, `is2008`, `lr-inland`, `ovd`).
   - `paragraph`: the locator of the paragraph **that states the requirement**, spaces removed
     (`2.4.1.2`, `A.2.2.1`, `9.3.1.11.1(b)`). The loader checks it against `source.locator`.
   - `slug`: lowercase words with hyphens that say which requirement of the paragraph (`area-0-30`).
@@ -53,7 +53,7 @@ public. The pull request link shows who did the work.
 
 ### 3. Write the Measure and the Criterion
 
-- **Measure**: what quantity the paragraph tests, on which object. Pick it from `ovcd rules --measures`.
+- **Measure**: what quantity the paragraph tests, on which object. Pick it from `ovd rules --measures`.
   Check that the Measure's method measures what the text measures: the datum (plate to plate, excluding
   insulation), the range (up to 40° or the down-flooding angle), the object (each tank, each loading
   condition). If no Measure fits, stop and open an issue for a new Measure: that needs Rust, with its own
@@ -80,7 +80,7 @@ public. The pull request link shows who did the work.
   The ship type (2G) is on the Rule Set, not on each Rule. A condition the inputs cannot express (a ship
   length of 24 m or more) is not written as applicability: say so in the pull request.
 - **Citation** (`source`): document, edition, locator, the page in the file you read, access.
-- **Origin**: `regulation` (a statutory code), `class` (a class rule book), or for OVCD's own checks
+- **Origin**: `regulation` (a statutory code), `class` (a class rule book), or for OVD's own checks
   `physical`, `tool-limit`, `method-validity`.
 
 ### 5. Set the status
@@ -175,7 +175,7 @@ explain). `rule-record.template.json` beside this page holds the same record wit
 
 **Step 1. Source.** IGC Code as adopted by MSC.370(93) (adopted 22 May 2014, in force 1 January 2016),
 amended by MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109). Each
-amending resolution was opened: none changes 2.3 or 2.4 (`ovcd-rule-sources/igc/NOTES.md`). File
+amending resolution was opened: none changes 2.3 or 2.4 (`ovd-rule-sources/igc/NOTES.md`). File
 `MSC.370-93.pdf`, PDF pages 21–22. Free.
 
 **Step 2. Clause and id.** 2.4.1.2 says that for types 2G/2PG cargo tanks are located "nowhere less than

@@ -5,7 +5,7 @@ for the register (#121) only after maintainer triage. Row ids (IS-Ann) refer to 
 
 ## Gaps
 
-What a stability specialist expects that OVCD does not do.
+What a stability specialist expects that OVD does not do.
 
 | # | Gap | Page rows | Effect if closed |
 |---|---|---|---|
@@ -16,7 +16,7 @@ What a stability specialist expects that OVCD does not do.
 | G5 | No slack-tank case: all tanks always have the same fill. | IS-A18 | Medium for multi-tank designs |
 | G6 | GZ from a prismatic box at even keel. The hull geometry of area 01 (rakes, `HullGeometry`) does not reach the GZ, KB or BM. No free trim. | IS-A02, IS-A06, IS-A07, IS-A47 | Unknown; likely medium at large angles |
 | G7 | No pontoon criteria (Part B 2.2) and no inland intact set. Wide, shallow barges tend to fail Part A 2.2.3 (angle of max GZ ≥ 25°). Part A 2.2.3 allows alternative criteria; the ABS steel barge rules (2024, 3-6-1/3.1) point cargo barges of 24 m and over to Part B 2.2. | IS-A34, IS-A46 | Large for river barges: verdicts can flip |
-| G8 | No applicability by length. Part A 1.1.1 covers ships of 24 m and over; OVCD applies it to every length and says nothing. | IS-A46 | None on numbers; changes the wording of the verdict |
+| G8 | No applicability by length. Part A 1.1.1 covers ships of 24 m and over; OVD applies it to every length and says nothing. | IS-A46 | None on numbers; changes the wording of the verdict |
 | G9 | Dry bulk: no GZ, no criteria, full load only, no cargo shift. | IS-A48 to IS-A53 | Large (the feature is missing) |
 | G10 | Tank heads left out of the free surface inertia and treated as cylinder for the fill level. | IS-A19, IS-A22 | Small |
 | G11 | Dome mass not in the weight split; stern block mass not in KG for self-propelled hulls. | IS-A13, IS-A14 | Small to medium (non-conservative) |
@@ -35,11 +35,11 @@ Places where the code and its cited source, or two parts of the code, disagree.
 | E1 | Areas 0–40° and 30–40° always end at 40°. The text ends them at the down-flooding angle if less. (Known: finding #282.) | `gas_stability.rs:448`, `:455`, `:628`, `:629` | MSC.267(85), 2008 IS Code, Part A 2.2.1 | Non-conservative when θf < 40° |
 | E2 | The code cites only Part A 2.2, but Part A 2.1.1 says the criteria apply to all loading conditions of Part B 3.3 and 3.4, and 2.1.2 says free surface applies to all of them. The three code conditions are not that set. | `gas_stability.rs:723`, `:430` | Part A 2.1.1, 2.1.2; Part B 3.4.1.2, 3.1.4 | Unknown; likely non-conservative for arrival and ballast conditions |
 | E3 | The limitation line says "ADN 9.3.1.15 / IGC 2.7 need both" wind heel and damage stability. ADN 9.3.1.15 is damage stability only, the ADN set was removed (#175), and the wind heel requirement comes from IGC 2.2.2 through the IS Code (Part A 2.3), not from IGC 2.7. | `gas_stability.rs:795` | ADN 2025 9.3.1.15; IGC MSC.370(93) 2.2.2, 2.7 | None on numbers; the citation is wrong |
-| E4 | `area_0_27` is computed and written to every condition but no Rule uses it. It is the ADN 9.3.1.14.2(b) measure (0.024 m·rad to 27°), left after #175. A reader can take it for a criterion. | `gas_stability.rs:626`; `crates/ovcd-format/src/gas_stability.rs:196` | ADN 2025 9.3.1.14.2(b) | None on numbers |
+| E4 | `area_0_27` is computed and written to every condition but no Rule uses it. It is the ADN 9.3.1.14.2(b) measure (0.024 m·rad to 27°), left after #175. A reader can take it for a criterion. | `gas_stability.rs:626`; `crates/ovd-format/src/gas_stability.rs:196` | ADN 2025 9.3.1.14.2(b) | None on numbers |
 | E5 | Two GM paths disagree. The legacy `calculate_stability` reads `fill_ratio` as a fraction of the diameter (`h = fill × 2r`), puts the cargo at the tank centre at any fill, and adds a stores item. `gas_stability` reads the fill as a fraction of the section area and puts the cargo at the liquid centroid. The Python API still exposes the legacy function. | `hydrostatics.rs:94`, `:106`, `:131`; `tanks.rs:280` vs `gas_stability.rs:733` | Internal (no rule) | Different GM for the same design through two public functions |
 | E6 | `BargeResults.stability_ok` is documented "True if GM_fluid > 0.15 m" (strict), while Part A 2.2.4 says "not less than" 0.15 m. The GA adapter sets it to `true` always. | `models.rs:407`; `ga_adapter.rs:246` | Part A 2.2.4 | A reader of that field gets a pass with no check |
 | E7 | The bulk check is named `gm_positive` but tests GM ≥ 0.15 m, uses the Part A 2.2.4 number with no citation, and is solid GM at full load only. | `barge_capacity.rs:1004`–`:1011` | Part A 2.2.4 | None on numbers; the name and the citation mislead |
-| E8 | The Python comment says "gas uses hydrostatics.calculate_stability". Gas uses `gas_stability.assess`. | `src/vessel_designer/core/barge_capacity.py:193` | Internal | None |
+| E8 | The Python comment says "gas uses hydrostatics.calculate_stability". Gas uses `gas_stability.assess`. | `src/ovd/core/barge_capacity.py:193` | Internal | None |
 
 ## Changes
 

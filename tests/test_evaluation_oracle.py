@@ -16,8 +16,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "evaluation" / "oracle"))
 import box_oracle as oracle  # noqa: E402
 
-from vessel_designer.core.gas_arrangement import fit  # noqa: E402
-from vessel_designer.core.gas_stability import assess, box_gz  # noqa: E402
+from ovd.core.gas_arrangement import fit  # noqa: E402
+from ovd.core.gas_stability import assess, box_gz  # noqa: E402
 
 sys.path.insert(0, str(ROOT / "evaluation"))
 from engine import box_condition  # noqa: E402
@@ -75,7 +75,7 @@ def test_the_oracle_is_independent_of_the_engine_on_gz():
 def test_the_oracle_never_imports_the_engine():
     """Label: property - the oracle shares no code with the engine."""
     text = (ROOT / "evaluation" / "oracle" / "box_oracle.py").read_text(encoding="utf-8")
-    assert "vessel_designer" not in text and "ovcd" not in text.replace("evaluation", "")
+    assert "ovd" not in text and "ovd" not in text.replace("evaluation", "")
 
 
 def test_the_case_files_hold_what_the_oracle_prints():

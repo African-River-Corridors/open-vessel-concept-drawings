@@ -269,7 +269,7 @@ def test_the_real_corpus_notices_every_mutant_of_is2008_a():
     text = (EVAL / "results.md").read_text(encoding="utf-8")
     # 12 of `is2008-a`, and the mutants of the liquid bulk sets (issue #338): none is weak, but the two of
     # `marpol/23/accidental-oil-outflow` (issue #341): the evaluation harness has no draught, so it cannot work
-    # out the mean oil outflow; `ovcd-core/tests/oil_outflow.rs` checks that Rule's method on the published
+    # out the mean oil outflow; `ovd-core/tests/oil_outflow.rs` checks that Rule's method on the published
     # tank barge of Res. MEPC.122(52) instead. A weak stern mutant (issue #355) is a coefficient of 0 moved
     # by 0.01, which changes no limit.
     section = text.split("## Rule mutation", 1)[1].split("\n## ", 1)[0]

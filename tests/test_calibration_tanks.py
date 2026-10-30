@@ -10,8 +10,8 @@ import re
 import pytest
 import yaml
 
-from vessel_designer import calibration
-from vessel_designer.calibration import (CAL, _assess_tanks, _load_tank_bands, _load_tank_cases, report,
+from ovd import calibration
+from ovd.calibration import (CAL, _assess_tanks, _load_tank_bands, _load_tank_cases, report,
                                          _run_tank, _tank_geometry, _tank_warnings_for)
 
 CONFIDENCES = ("high", "medium", "low")
@@ -81,7 +81,7 @@ def test_the_published_river_tank_gives_the_published_wall_by_the_formula():
 
     Label: sourced - Senjanovic et al., DESIGN 2006, river LPG tank: 4730 mm outer diameter, 15.8 bar, S690QL1 285 MPa, cylinder 13.1 mm; IGC 4.23.3.1 (Rm 770 MPa over 3); 13.08 mm and 14.52 mm are hand calculations
     """
-    from vessel_designer.core import pressure_vessel as pv
+    from ovd.core import pressure_vessel as pv
     r, p = 4730.0 / 2.0, 1.58
     at_paper = pv.cylinder_wall_thickness(p, r - pv.cylinder_wall_thickness(p, r, 285.0, 1.0), 285.0, 1.0)
     assert at_paper == pytest.approx(13.08, abs=0.005)

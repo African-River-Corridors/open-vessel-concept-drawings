@@ -90,7 +90,7 @@ def test_a_type_n_vessel_has_the_type_n_rules():
 def test_the_oracle_shares_no_code_with_the_engine():
     """Label: property"""
     text = (ROOT / "evaluation" / "oracle" / "tank_oracle.py").read_text(encoding="utf-8")
-    assert "vessel_designer" not in text
+    assert "ovd" not in text
     imports = [ln for ln in text.splitlines() if ln.startswith(("import ", "from "))]
     assert all(ln.split()[1] in ("sys", "pathlib", "__future__", "yaml") for ln in imports), imports
 

@@ -7,7 +7,7 @@ Status: **draft, deepened 2026-10-20, for the maintainer's approval.** Decision 
 
 The engine checks a Design against engineering rules, but the rules are not visible as rules. They are
 constants, `match` branches on a ship-type string, and citations inside message text, spread through
-ten modules of `ovcd-core` (about 40 checks, plus the six stability criteria). A designer cannot see which
+ten modules of `ovd-core` (about 40 checks, plus the six stability criteria). A designer cannot see which
 rule sets a result was checked against, which paragraph each limit comes from, or by how much a check
 passed. A reviewer must read Rust to check a number against a page. An agent that adds a rule set must
 edit code in several places, and nothing stops it from leaving a rule half built: that is how `ADN_G`
@@ -18,7 +18,7 @@ A code audit against the source texts (205 rule-like items in the core and the f
 - 23 items cite a paragraph and match its text.
 - 11 cite a paragraph but the value or the measure differs. Seven of them are already fixed (#237, the
   stepped d(Vc); #215, the inland type G floors). Four remain.
-- 128 are design defaults, tool limits or physical feasibility checks: OVCD's own choices, not rules.
+- 128 are design defaults, tool limits or physical feasibility checks: OVD's own choices, not rules.
 - 43 have no source that can be checked yet: pressure-vessel formulas from a paywalled code, material
   strengths, and the validity ranges and coefficients of published methods (squat, resistance, waves).
 
@@ -28,16 +28,16 @@ The evaluation harness (#184) needs one row per rule to say which rule a disagre
 ## Solution
 
 Rules become **data**: named, versioned **Rule Sets** in files that a reviewer can read and an agent can
-edit. Physics stays **code**: **Measures** in `ovcd-core` compute the quantities the rules compare.
+edit. Physics stays **code**: **Measures** in `ovd-core` compute the quantities the rules compare.
 
-1. A Rule Set file format (JSON, with a published schema) and a loader in `ovcd-format`. The built-in
+1. A Rule Set file format (JSON, with a published schema) and a loader in `ovd-format`. The built-in
    sets are files in the repo, built into every binary and the WebAssembly build. Any set can also be
    loaded at run time.
-2. A rule evaluator and a **Rule Trace** in `ovcd-core`: every result lists every Rule of every selected
+2. A rule evaluator and a **Rule Trace** in `ovd-core`: every result lists every Rule of every selected
    Rule Set, with citation, inputs, value, limit, margin, outcome and verification status.
 3. Today's rules move into four built-in sets, with **no change to any result or results hash**:
    `is2008-a` (IS Code 2008 Part A), `igc-2g` (IGC Code as amended, type 2G), `lr-inland-gas` (the gas
-   separation clauses of Lloyd's Register's inland waterways rules, draft) and `ovcd` (OVCD's own checks).
+   separation clauses of Lloyd's Register's inland waterways rules, draft) and `ovd` (OVD's own checks).
 4. A **Service Area** input (river only, or coastal and river) sets the default Rule Sets of an Option.
    The Option stores the sets it used, with version and hash.
 5. `fit`, the evaluation harness and the app read the Rule Trace.
@@ -54,7 +54,7 @@ edit. Physics stays **code**: **Measures** in `ovcd-core` compute the quantities
 5. As a designer, I want every rule check to show its value, its limit and its margin, so that I see how close the design is to failing.
 6. As a designer, I want to see which rule governs when two Rule Sets cover the same requirement, so that I know which one to design to.
 7. As a designer, I want rules the engine cannot evaluate yet listed as "not evaluated", so that a missing check is never mistaken for a pass.
-8. As a designer, I want unverified rules and OVCD's own checks marked as such, so that I never present them as published rules.
+8. As a designer, I want unverified rules and OVD's own checks marked as such, so that I never present them as published rules.
 9. As a designer, I want `fit` to return only designs that meet every blocking rule, so that the answer I get is a design that passes.
 10. As a designer, I want a saved file to give the same results when I open it a year later, so that an engine update does not change my study silently.
 11. As a designer, I want a warning when a Rule Set in my file has a newer version, so that I can choose to re-check against it.
@@ -72,7 +72,7 @@ edit. Physics stays **code**: **Measures** in `ovcd-core` compute the quantities
 19. As an agent, I want a schema and a loader that refuse a malformed Rule Set with a clear message, so that I can edit rule files safely.
 20. As an agent, I want to load a Rule Set file at run time (`--rule-set`), so that I can test a rule change without rebuilding.
 21. As an agent, I want a new rule set to need only a data file and harness cases, unless it needs a new quantity, so that adding ADN or a class rule set later is small.
-22. As an agent, I want the Rule Trace as JSON from `ovcd run --json`, so that I can read the governing rule and its margin.
+22. As an agent, I want the Rule Trace as JSON from `ovd run --json`, so that I can read the governing rule and its margin.
 23. As an agent, I want CI to fail when a released Rule Set version changes, so that old files always reproduce.
 24. As an agent, I want the harness to name the first rule whose verdict differs, so that I fix the right thing.
 25. As an agent, I want the harness to move each rule limit and see if a case notices, so that I know when the corpus is too weak.
@@ -88,7 +88,7 @@ edit. Physics stays **code**: **Measures** in `ovcd-core` compute the quantities
 
 The glossary holds the terms: **Rule**, **Criterion**, **Requirement**, **Applicability**, **Blocking
 Rule**, **Verified**, **Rule Set**, **Measure**, **Rule Trace**, **Margin**, **Service Area**,
-**Governing Rule**, **OVCD Check**. The IS Code calls its requirements "criteria"; in OVCD a Criterion is
+**Governing Rule**, **OVD Check**. The IS Code calls its requirements "criteria"; in OVD a Criterion is
 only the test part of a Rule (comparison and limit). The `Criterion` struct of `gas_stability` becomes a
 trace row in code.
 
@@ -209,8 +209,8 @@ candidates with the governing limit of that Requirement (for example the clear s
 The same Rule is still checked on the result, so a typed override that breaks it fails. Sizing is a
 property of how the search uses a Rule, not an outcome; the first draft's `size` outcome is gone.
 
-**Rule Set.** A named, versioned group of Rules from one source edition, or from OVCD itself for the
-`ovcd` set. It has an applicability, and it may `include` other sets at a pinned version.
+**Rule Set.** A named, versioned group of Rules from one source edition, or from OVD itself for the
+`ovd` set. It has an applicability, and it may `include` other sets at a pinned version.
 
 **Selection.** The Option's selected sets, closed under `includes`. The closure is refused when: an
 include cycle exists; two versions of one set id are in it (a typed `is2008-a@1.1.0` beside an
@@ -234,7 +234,7 @@ Rules. A default that breaks one is a finding, not a silent pass (see the allowa
 
 ### Measure (code)
 
-- A named Rust function in `ovcd-core` that computes one quantity for one object. It has a stable id
+- A named Rust function in `ovd-core` that computes one quantity for one object. It has a stable id
   (`gz.area`, `gz.at_angle`, `gz.angle_of_max`, `gm0`, `tank.side_gap`, `tank.bottom_gap`,
   `tank.vc`, `tank.wall_thickness`, `squat.froude_depth`, ...), a unit, the object type it applies to,
   its arguments, and its own tests. Input Measures (`input.<name>`) echo the value of an input.
@@ -242,14 +242,14 @@ Rules. A default that breaks one is a finding, not a silent pass (see the allowa
   source not yet in the library is `unverified` (the ASME pressure-vessel formulas, the squat and
   resistance methods), and the trace says so in `method_status`.
 - The core keeps a registry of Measure ids with unit, object type, arguments and method status.
-  `ovcd rules --measures` prints it.
+  `ovd rules --measures` prints it.
 
 ### Rule (data)
 
 | Field | Meaning | Example |
 |---|---|---|
 | `id` | `<family>/<paragraph>/<slug>` (grammar below), stable, never reused for another requirement | `is2008/A.2.2.1/area-0-30` |
-| `title` | OVCD's own words, at most 15 words | "Area under the GZ curve, 0° to 30°" |
+| `title` | OVD's own words, at most 15 words | "Area under the GZ curve, 0° to 30°" |
 | `origin` | `regulation`, `class`, `method-validity`, `physical`, `tool-limit`; and, added in schema 1.x for outside users, `guideline`, `national-practice` (#463) | `regulation` |
 | `source` | document, edition, paragraph (`locator`), page, `access` | MSC.267(85), IS Code 2008, Part A 2.2.1, p12 |
 | `codified` | `{by, date, review}`: who wrote the record (a role) and the pull request | `{by: "agent", date: 2026-10-21, review: "#n"}` |
@@ -268,7 +268,7 @@ Rules. A default that breaks one is a finding, not a silent pass (see the allowa
 
 - **Rule id grammar.** `^[a-z][a-z0-9-]*/[A-Za-z0-9][A-Za-z0-9.()-]*/[a-z0-9][a-z0-9-]*$`. The family is
   the set's `family`. For a `regulation` or `class` Rule the paragraph segment is the source locator
-  with spaces removed (`A.2.2.1`, `9.3.1.11.1(b)`), and the loader checks that they agree. For an OVCD
+  with spaces removed (`A.2.2.1`, `9.3.1.11.1(b)`), and the loader checks that they agree. For an OVD
   Check it is a topic (`gas-arrangement`). The slug says which requirement of the paragraph. Ids are
   unique within a set. An id keeps its Measure and direction in every later version of its set; a
   change of either is a new id, and the old id is never used again.
@@ -292,7 +292,7 @@ Rules. A default that breaks one is a finding, not a silent pass (see the allowa
 - **Sourced** means `origin` is a published one (`regulation`, `class`, `guideline` or
   `national-practice`) **and** `verified` is filled. Nothing else is ever shown as a published rule.
   A `guideline` is a design guideline that says it is not a standard; `national-practice` is a
-  national standard known through another text (a guideline's survey, say). OVCD's sets use neither. A sourced Rule whose Measure method is `unverified` is shown as
+  national standard known through another text (a guideline's survey, say). OVD's sets use neither. A sourced Rule whose Measure method is `unverified` is shown as
   sourced with an unverified method: both statuses are in the trace.
 
 ### Rule Set (data)
@@ -300,7 +300,7 @@ Rules. A default that breaks one is a finding, not a silent pass (see the allowa
 | Field | Meaning |
 |---|---|
 | `id`, `family`, `title` | `igc-2g`, `igc`, "IGC Code as amended, ship type 2G" |
-| `version` | semver of OVCD's encoding (`1.0.0`), rules below |
+| `version` | semver of OVD's encoding (`1.0.0`), rules below |
 | `edition` | the source edition: document, edition, amendments included, in-force date |
 | `sources` | each text read: document, edition, URL when free, access, SHA-256 of the file read |
 | `status` | `draft` or `stable` (stable needs full harness coverage, below) |
@@ -319,7 +319,7 @@ Rules. A default that breaks one is a finding, not a silent pass (see the allowa
   result-changing fields of an existing Rule, or removes one, is a **major** version. CI checks the
   class against the hashes (#273). Two versions with the same content hash are equivalent: opening a
   file stored with the older one gives no "newer version" warning.
-- **Files.** One file per set version: `crates/ovcd-format/rules/<set-id>/<version>.json`, with a JSON
+- **Files.** One file per set version: `crates/ovd-format/rules/<set-id>/<version>.json`, with a JSON
   Schema beside them (`rules/rule-set.schema.json`). The built-in sets are embedded with `include_str!`,
   as `builtin_profile.json` is, so the WebAssembly build has them.
 - **Every released version is kept.** `rules/RELEASED.json` lists each released set version and its
@@ -329,26 +329,26 @@ Rules. A default that breaks one is a finding, not a silent pass (see the allowa
 ### The shared kernel (`arc-rules`, #463, ADR 0019)
 
 The model, the schema, the loader, the content hash, the library, Applicability and the evaluator are
-a domain-free crate, `arc-rules`, that a second tool shares. OVCD registers its side with it:
+a domain-free crate, `arc-rules`, that a second tool shares. OVD registers its side with it:
 
 - **Object types are string keys** (`option`, `hull`, `tank`, `loading-condition`, `cargo-tank`,
-  `ballast-tank`, `slop-tank`, `damage-case`, `marpol-damage-case`, `oil-outflow`). The caller declares them; `option` is OVCD's design object.
+  `ballast-tank`, `slop-tank`, `damage-case`, `marpol-damage-case`, `oil-outflow`). The caller declares them; `option` is OVD's design object.
 - **The caller passes in** the Measure registry, the applicability vocabulary and the formula shapes
-  (`less-input`, `clamp`, `at-least`, `max-capped-less`, `lesser-ratio` are OVCD's). The table row
+  (`less-input`, `clamp`, `at-least`, `max-capped-less`, `lesser-ratio` are OVD's). The table row
   shapes `const`, `a+v*b/c` and `a+v/c` are the kernel's.
 - **Object-scoped inputs.** The vocabulary marks each input `design` or `object`. A Rule's
   Applicability condition on an object input is read for each object of the Rule's type
   (`MeasureSource::object_input`, by default the design's value); an object that does not meet it has
-  a `not applicable` row. A set's own Applicability names only design inputs. Every OVCD input is a
-  design input, so no OVCD result changes.
+  a `not applicable` row. A set's own Applicability names only design inputs. Every OVD input is a
+  design input, so no OVD result changes.
 - **Rule Set schema 1.x is frozen for outside users.** A change is additive only: a new optional field,
   a new enumeration value, a new shape the caller registers. A breaking change needs schema 2.0 and a
   maintainer decision. The schema file is the kernel's (`crates/arc-rules/rule-set.schema.json`); the
-  copy beside OVCD's rule files must stay the same file (a test checks it).
+  copy beside OVD's rule files must stay the same file (a test checks it).
 
 ### Loading at run time
 
-- The loader (in the `arc-rules` kernel; OVCD gives it its vocabulary from `ovcd-format`) reads a set file, checks it against the schema, and refuses it with a clear
+- The loader (in the `arc-rules` kernel; OVD gives it its vocabulary from `ovd-format`) reads a set file, checks it against the schema, and refuses it with a clear
   message when: a field is missing; a rule id is malformed, repeated, or its paragraph segment does not
   match its locator; a Measure id is unknown, its arguments are wrong, or its unit does not match the
   limit; a table or formula shape is unknown; a limit or coefficient is not finite; a `check` Rule names
@@ -363,12 +363,12 @@ a domain-free crate, `arc-rules`, that a second tool shares. OVCD registers its 
   different hash it is refused (a changed set needs a new version). A loaded set with a new version of a
   built-in id is a separate version: it is used only where a Design or a flag selects that version.
   Nothing loaded at run time replaces a built-in version silently.
-- `ovcd run`, `ovcd fill` and `ovcd validate` take `--rule-set <file>` (repeatable), as they take
+- `ovd run`, `ovd fill` and `ovd validate` take `--rule-set <file>` (repeatable), as they take
   `--profile`. A loaded set is added to the stack of the run only (it is not written to the file);
   `--rule-set` with the id of a set in the stack and a new version replaces that set for the run, and the
   output says so. A loaded file also supplies a stored version the engine lacks.
-- `ovcd rules` lists the built-in sets and versions; `ovcd rules show <id>[@version]` prints one set
-  with its Rules and verification status; `ovcd rules --measures` prints the Measure registry.
+- `ovd rules` lists the built-in sets and versions; `ovd rules show <id>[@version]` prints one set
+  with its Rules and verification status; `ovd rules --measures` prints the Measure registry.
 - The Design session API (used by the app and, later, the web app) takes the same loaded sets.
 
 ### Composition: strictest governs
@@ -411,7 +411,7 @@ One row per Rule per object, in selection order, then the set's rule order, then
   changes no hash, and a rule change is reported as a rule change, not as "results differ".
 - The existing `checks` list stays for now, so nothing that reads it breaks. Each check reports one
   Rule. The `checks` list is in the results hash, so the Rule id is not written into each check (that
-  would move every saved hash): the table `CHECK_RULES` in `crates/ovcd-format/src/trace.rs` holds the
+  would move every saved hash): the table `CHECK_RULES` in `crates/ovd-format/src/trace.rs` holds the
   link, and a test over the fixture Designs keeps it complete (#272). Removing the duplicate list is a
   later change.
 - A blocking failure is a row with outcome `fail`. The Option's `ok` is unchanged in meaning: no
@@ -426,7 +426,7 @@ One row per Rule per object, in selection order, then the set's rule order, then
   a new ADR is needed). Stored as used, marked typed or default. The Defaults Profile default is
   `river-only` (confirmed by the maintainer, 2026-10-16).
 - New input `rule_sets`: the list of selected sets, each `{id, version, hash, source}` where `source` is
-  `default` (from the Service Area) or `typed` (added by the user). The `ovcd` set is always selected and
+  `default` (from the Service Area) or `typed` (added by the user). The `ovd` set is always selected and
   cannot be removed. A set required by `includes` cannot be removed while the set that includes it is
   selected.
 - **Since format version 3** (#274, with the ADR 0012 hull block) an Option stores `service_area` and
@@ -434,8 +434,8 @@ One row per Rule per object, in selection order, then the set's rule order, then
 - **Where the stacks live (#275).** In the Defaults Profile, input `rule_sets`, key `default_stacks`:
   per Service Area, a `gas` list (a Type C tank Cargo Containment), an `other` list and, since #339, a
   `liquid_bulk` list (the `integral_tanks` Cargo Containment; a profile without it takes `other` with
-  `adn-tank`, and `marpol-i` on coastal-and-river, put in before `ovcd`) of set ids. A new
-  Option takes each set at its highest built-in version. A profile copy may change them; the `ovcd` set
+  `adn-tank`, and `marpol-i` on coastal-and-river, put in before `ovd`) of set ids. A new
+  Option takes each set at its highest built-in version. A profile copy may change them; the `ovd` set
   must be in each. Changing the Service Area or the Cargo resets the `default` entries of `rule_sets` and
   keeps the `typed` ones (a typed entry takes the place of the default one with its id).
 - **Default stacks built in this spec.** The sets that exist after this spec are the same for both
@@ -444,9 +444,9 @@ One row per Rule per object, in selection order, then the set's rule order, then
 
 | Cargo | `river-only` and `coastal-and-river` (this spec) |
 |---|---|
-| Gas | `igc-2g`, which includes `is2008-a`; `lr-inland-gas` (draft, unverified, until the IGC chapter 3 rules replace it); `ovcd` |
-| Dry bulk and others | `is2008-a` (its rows are `not evaluated` until intact stability covers every Cargo, roadmap phase 1); `ovcd` |
-| Liquid bulk (crude oil, #339) | the dry bulk stack with `adn-tank` (any Service Area), and on `coastal-and-river` also `marpol-i` and the freeboard sets (`icll-freeboard`, `solas-v22`); `normam-202` is never in a default stack; `ovcd` |
+| Gas | `igc-2g`, which includes `is2008-a`; `lr-inland-gas` (draft, unverified, until the IGC chapter 3 rules replace it); `ovd` |
+| Dry bulk and others | `is2008-a` (its rows are `not evaluated` until intact stability covers every Cargo, roadmap phase 1); `ovd` |
+| Liquid bulk (crude oil, #339) | the dry bulk stack with `adn-tank` (any Service Area), and on `coastal-and-river` also `marpol-i` and the freeboard sets (`icll-freeboard`, `solas-v22`); `normam-202` is never in a default stack; `ovd` |
 
 On `coastal-and-river` every stack also holds `abs-barges` (issue #363: two note rows for an ATB Formation, none for any other).
 
@@ -515,8 +515,8 @@ that cannot keep them is split or stopped. The audit dispositions decide where e
 | Cited, and the value matches the text | A Rule in its set, `verified`, with the locator read |
 | Cited, but the value or measure differs | A Rule that keeps today's value, `unverified`, linked to a finding. The finding is decided later, one at a time, as a design change |
 | Design default or tool limit that is an input | Stays an input with its basis in the Defaults Profile. Not a Rule |
-| Physical feasibility check or tool limit that is a check | A Rule in the `ovcd` set with origin `physical` or `tool-limit`. Shown as an OVCD check, never as sourced |
-| No checkable source | `unverified`: a method validity range is a Rule in `ovcd` with origin `method-validity`; a formula or coefficient is a Measure whose method is unverified; a material strength stays an input with an unverified basis |
+| Physical feasibility check or tool limit that is a check | A Rule in the `ovd` set with origin `physical` or `tool-limit`. Shown as an OVD check, never as sourced |
+| No checkable source | `unverified`: a method validity range is a Rule in `ovd` with origin `method-validity`; a formula or coefficient is a Measure whose method is unverified; a material strength stays an input with an unverified basis |
 
 The regulation and class items, by set (paragraphs as read in the free texts; see Appendix A):
 
@@ -553,7 +553,7 @@ The regulation and class items, by set (paragraphs as read in the free texts; se
   kept as they are, `unverified`, each linked to a finding. These three Rules keep the code's tolerance
   of 1e-9 m. The set stays in the default gas stack, marked unverified, until the IGC chapter 3 rules on
   segregation of the cargo area replace it (maintainer, 2026-10-16).
-- **`ovcd`**: the tank length-over-diameter limit 7.0 (a tool limit; its origin is ADN 9.3.1.11.1(b),
+- **`ovd`**: the tank length-over-diameter limit 7.0 (a tool limit; its origin is ADN 9.3.1.11.1(b),
   which applies only if an ADN set is selected later), physical feasibility checks (draught below depth,
   keel clears the bed, air draft), method validity ranges (squat Froude depth number below 0.7, blockage
   at most 0.35), the hopper GM warning, and the other checks of the ten modules.
@@ -569,7 +569,7 @@ the end-bulkhead condition (#281), the 0–40° area without a down-flooding ang
   default stack for the Option's Cargo, each set at its highest built-in version, marked `default`;
   `service_area` becomes `river-only`, marked `default`. One warning per Option. Results cannot change,
   because that is the stack the engine checked every Option against. (The first draft said version
-  `1.0.0`; `ovcd` and `lr-inland-gas` have since moved past it, and a stack at `1.0.0` would not be today's
+  `1.0.0`; `ovd` and `lr-inland-gas` have since moved past it, and a stack at `1.0.0` would not be today's
   rules.) Both new inputs join the one "fixed value the engine used before" warning of the Option.
 - Opening a file whose stored set version is built in: that version is used. A newer version exists: a
   warning, never a silent swap. A stored hash that differs from the built-in hash of the same version: a
@@ -578,7 +578,7 @@ the end-bulkhead condition (#281), the 0–40° area without a down-flooding ang
 - **Shared with the ADR 0012 hull block.** Version 3 holds both. Whichever lands first opens version 3;
   the rules-engine fields wait for the hull block (maintainer decision 3), so version 3 ships once,
   with both.
-- `ovcd schema` lists the new inputs and the Rule Set schema.
+- `ovd schema` lists the new inputs and the Rule Set schema.
 
 ### App
 
@@ -594,7 +594,7 @@ the end-bulkhead condition (#281), the 0–40° area without a down-flooding ang
 
 ### Testing Decisions
 
-- **A good test checks behaviour through a public seam:** `ovcd run --json`, the Design session, the
+- **A good test checks behaviour through a public seam:** `ovd run --json`, the Design session, the
   loader, the harness runner. Not the private layout of the evaluator.
 - **No result change is the main test of the migration.** Each migration ticket shows an empty
   design-impact table and unchanged fixture hashes (`tools/check_fixture_hashes.py`). No snapshot is
@@ -634,7 +634,7 @@ the end-bulkhead condition (#281), the 0–40° area without a down-flooding ang
 - Any fix of a finding. Each is decided on its own issue, as a design change.
 - Damage stability, the weather criterion and the down-flooding angle as Measures (roadmap phases 1
   and 2). Here they are only `not evaluated` rows.
-- Giving Defaults Profile ranges rule ids. They stay input validation in `ovcd-format` (ADR 0007).
+- Giving Defaults Profile ranges rule ids. They stay input validation in `ovd-format` (ADR 0007).
 - Adding, removing or loading Rule Sets in the app.
 - An expression language, and Rule overrides (ADR 0013).
 - The Ocean only Service Area.
@@ -665,7 +665,7 @@ recommendations on #280 to #283 and #292.
 2. #269 Measure registry, evaluator and Rule Trace in the results (outside the hash). Needs 1.
 3. #270 `is2008-a` 1.0.0 as data. Needs 2.
 4. #271 `igc-2g` 1.0.0 as data. Needs 2.
-5. #272 `ovcd` and `lr-inland-gas` 1.0.0: the remaining checks, with honest origins; uncited Rules marked
+5. #272 `ovd` and `lr-inland-gas` 1.0.0: the remaining checks, with honest origins; uncited Rules marked
    unverified; findings filed. Needs 2.
 6. #273 Released versions kept and the provenance gate in CI. Needs 3, 4, 5.
 7. #274 `.vdesign` version 3: `service_area` and `rule_sets`, migration from `ruleset`. Needs 3, 4, 5.
@@ -706,8 +706,8 @@ section now settles them:
     "newer version" warnings for no change. Versions with the same content hash are now equivalent, and
     semver classes are defined by the hash.
 11. A Rule could be verified while its Measure's method is not. The trace now shows both statuses.
-12. The glossary said a Rule comes from a published source, while OVCD Checks are Rules in the `ovcd`
-    set. The glossary now says an OVCD Check is a Rule with OVCD's own origin.
+12. The glossary said a Rule comes from a published source, while OVD Checks are Rules in the `ovd`
+    set. The glossary now says an OVD Check is a Rule with OVD's own origin.
 13. "`fit` must meet every selected rule" could not hold for `not evaluated` Rules. The verdict now
     names them (maintainer decision 5).
 14. Defaults were never checked against the Rules that bound them. A defaults coherence test now does,
@@ -747,5 +747,5 @@ clauses). "Fixed" means a merged change already did what the disposition asks.
 | `END_BULKHEAD_SPACE_PRESSURE_M` | 0.20 m | `lr-inland/3.5.3/end-space-domed` | Cited, condition differs (same finding) |
 | inland type G side and double-bottom floors | 0.80 m, 0.60 m | — | Measure differed. Fixed: removed (#215) |
 | `design_grid::SIDE_CLEARANCE_M` | 1.0 m "standard IGC-2G spacing" | input default, not a Rule | Cited, value differs (IGC has no 1.0 m standard): finding |
-| `MAX_TANK_LENGTH_OVER_OD` | 7.0 | `ovcd/gas-arrangement/tank-l-over-d` | Tool limit, origin recorded (ADN 9.3.1.11.1(b)) |
+| `MAX_TANK_LENGTH_OVER_OD` | 7.0 | `ovd/gas-arrangement/tank-l-over-d` | Tool limit, origin recorded (ADN 9.3.1.11.1(b)) |
 | `fill_ratio` default | 0.98 | input with basis IGC 15.3 | Cited, matches |

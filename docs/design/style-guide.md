@@ -1,4 +1,4 @@
-# OVCD app style guide
+# OVD app style guide
 
 How the desktop app looks. It gives the app the same look as the website: a 1930s construction
 blueprint. The blueprint field is Prussian blue with white ink. A gilt frame and a cream mat sit around
@@ -215,7 +215,7 @@ with a cross, warning a triangle, out of date a struck clock. Every icon button 
 ## 7 Components
 
 **App bar.** 40 px high, on `--paper`, with a 2 px `--gilt-mark` rule under it (the frame). From the
-left: the mark (the 32 px app drawing) and "OVCD"; the file buttons (New, Open, Save, Save as); About;
+left: the mark (the 32 px app drawing) and "OVD"; the file buttons (New, Open, Save, Save as); About;
 then, at the right, the panel toggles, Settings, the file name with "(unsaved)", "Defaults:"
 and "Engine x.y.z" in `--ink-3`. The file name uses `--font-mono`.
 
@@ -314,8 +314,8 @@ set:
 The icons live in `app/src-tauri/icons/`, at the sizes `tauri.conf.json` lists.
 
 **Splash (loading screen).** It shows while the engine starts, and goes away when the first result
-arrives. It is the blueprint field in a gilt frame on the cream mat. At the left: the mark, "OVCD" in
-hand lettering and "Open Vessel Concept Design" underlined; under them, one line in Source Serif 4: "An
+arrives. It is the blueprint field in a gilt frame on the cream mat. At the left: the mark, "OVD" in
+hand lettering and "Open Vessel Designer" underlined; under them, one line in Source Serif 4: "An
 open instrument for the concept and preliminary design of inland and coastal vessels." At the right: the
 midship-section drawing in white ink with its leaders. Along the foot: a title block with Version
 (the app version), State ("Starting the engine"), Before you start (the notice words) and Licence
@@ -348,7 +348,7 @@ except where this guide gives new ones (empty views, the splash).
 | Input error | The draught limit is more than the moulded depth (4.20 m). Make it less, or make the hull deeper. | Invalid input! Constraint violation in field draught_limit. |
 | Out of range | This hull is outside the calibrated range. Treat the result as a question, not an answer. | Results may be slightly less accurate. |
 | Empty view | The bill of quantities comes in a later phase. See the roadmap. | Coming soon! Stay tuned |
-| Scope | OVCD is a concept design tool. Its results are not verified. | Class-ready designs in seconds. |
+| Scope | OVD is a concept design tool. Its results are not verified. | Class-ready designs in seconds. |
 
 ## 12 Craft, not replacement
 
@@ -356,7 +356,7 @@ except where this guide gives new ones (empty views, the splash).
 office (lines plan, offsets, station, fair, body plan); leave the decision with the designer; use real
 drawing furniture (borders, title blocks, scale bars) where it helps the reader.
 
-**Do not:** say OVCD replaces naval architects, draughtsmen, yards or class; say "approved",
+**Do not:** say OVD replaces naval architects, draughtsmen, yards or class; say "approved",
 "certified", "compliant" or "class-ready" about a result; use robots, sparkles or chat bubbles in any
 image; age the drawings with sepia filters or fake stains; copy a real yard's, museum's or society's
 mark, plan or lettering.

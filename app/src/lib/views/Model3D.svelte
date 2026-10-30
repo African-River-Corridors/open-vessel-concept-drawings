@@ -447,7 +447,7 @@
         paint();
         return { kept, beyond };
       };
-      (canvas as unknown as { ovcdCoverage: typeof coverage }).ovcdCoverage = coverage;
+      (canvas as unknown as { ovdCoverage: typeof coverage }).ovdCoverage = coverage;
 
       // The section plane: the clip, and the outline the core gives at that x, drawn in the plane.
       const outline = new THREE.Group();

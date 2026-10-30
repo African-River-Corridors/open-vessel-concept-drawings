@@ -47,10 +47,10 @@ jobs:
       - name: Every case outside its band is explained in the CHANGELOG entry of this release
         # `pip install .` puts the package in site-packages, away from calibration/ and CHANGELOG.md (#664)
         env:
-          OVCD_CALIBRATION_DIR: ${{ github.workspace }}/calibration
+          OVD_CALIBRATION_DIR: ${{ github.workspace }}/calibration
         run: |
           v=$(python -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
-          python -m vessel_designer.calibration --release-check "$v"
+          python -m ovd.calibration --release-check "$v"
 
   wheels:
     needs: gate
@@ -81,7 +81,7 @@ jobs:
           python -m venv "$RUNNER_TEMP/src-venv"
           PY="$RUNNER_TEMP/src-venv/bin/python"; [ -x "$PY" ] || PY="$RUNNER_TEMP/src-venv/Scripts/python.exe"
           "$PY" -m pip install .
-          "$PY" -c "import vessel_designer, vessel_designer._native as n; print('native', n.version())"
+          "$PY" -c "import ovd, ovd._native as n; print('native', n.version())"
       - name: Build the wheel
         shell: bash
         run: |
@@ -96,7 +96,7 @@ jobs:
           # Dependencies come from PyPI as binaries. The wheel itself comes from dist/ only.
           # --only-binary :all: forbids any source build, so this step cannot need Rust.
           "$PY" -m pip install --only-binary :all: pyyaml pytest numpy
-          "$PY" -m pip install --only-binary :all: --no-index --no-deps --find-links dist vessel-designer
+          "$PY" -m pip install --only-binary :all: --no-index --no-deps --find-links dist open-vessel-designer
           "$PY" -m pip check
           # Test from a scratch copy so the checkout's src/ cannot shadow the installed wheel.
           # Tests that read the repo itself (workflows, tools, src/, calibration) run in `test`;
@@ -106,10 +106,10 @@ jobs:
           mkdir "$RUNNER_TEMP/wheel-check"
           cp -r tests tools examples calibration catalogue evaluation "$RUNNER_TEMP/wheel-check/"
           # The evaluation harness reads the built-in Rule Set files from the checkout.
-          mkdir -p "$RUNNER_TEMP/wheel-check/crates/ovcd-format"
-          cp -r crates/ovcd-format/rules "$RUNNER_TEMP/wheel-check/crates/ovcd-format/"
+          mkdir -p "$RUNNER_TEMP/wheel-check/crates/ovd-format"
+          cp -r crates/ovd-format/rules "$RUNNER_TEMP/wheel-check/crates/ovd-format/"
           cd "$RUNNER_TEMP/wheel-check"
-          "$PY" -c "import vessel_designer as v; print(v.__file__); assert 'site-packages' in v.__file__"
+          "$PY" -c "import ovd as v; print(v.__file__); assert 'site-packages' in v.__file__"
           "$PY" -m pytest -q tests \
             --ignore=tests/test_packaging.py --ignore=tests/test_housekeeping.py \
             --ignore=tests/test_release_guard.py --ignore-glob='tests/test_gates*.py' \
@@ -153,17 +153,17 @@ jobs:
       - name: Install wasmtime 49.0.3
         if: steps.wasmtime.outputs.cache-hit != 'true'
         run: cargo install wasmtime-cli --version 49.0.3 --locked
-      - name: Build ovcd for wasm32-wasip1
-        run: cargo build --release --locked -p ovcd-cli --target wasm32-wasip1
+      - name: Build ovd for wasm32-wasip1
+        run: cargo build --release --locked -p ovd-cli --target wasm32-wasip1
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - name: Fixture results hashes match under wasmtime
-        run: python tools/check_fixture_hashes.py --wasmtime ~/.cargo/bin/wasmtime target/wasm32-wasip1/release/ovcd.wasm
+        run: python tools/check_fixture_hashes.py --wasmtime ~/.cargo/bin/wasmtime target/wasm32-wasip1/release/ovd.wasm
 
   binaries:
     needs: gate
-    name: ovcd binary (${{ matrix.os }})
+    name: ovd binary (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
@@ -175,17 +175,17 @@ jobs:
       - name: Install the pinned Rust toolchain (rust-toolchain.toml)
         run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2
-      - name: Build ovcd
-        run: cargo build --release --locked -p ovcd-cli
+      - name: Build ovd
+        run: cargo build --release --locked -p ovd-cli
       - name: Smoke test
         shell: bash
-        run: target/release/ovcd --version
+        run: target/release/ovd --version
       # A version release ships its Rule Set versions, so each must be in RELEASED.json and never
       # change after (spec 0004, #273). A test-release tag does not release them.
       - name: Every built-in Rule Set version is in RELEASED.json
         if: startsWith(github.ref, 'refs/tags/v')
         shell: bash
-        run: target/release/ovcd rules --release-check
+        run: target/release/ovd rules --release-check
       # Platform-identical maths (spec 0001): the release binary must give the results hash that each
       # fixture Design stores. `cargo test` checks this on Linux only; this checks it on Windows and on
       # Intel and Apple-silicon macOS. Release gate only, not the pull request gate.
@@ -194,11 +194,11 @@ jobs:
           python-version: "3.12"
       - name: Fixture results hashes match on this system
         shell: bash
-        run: python tools/check_fixture_hashes.py target/release/ovcd
+        run: python tools/check_fixture_hashes.py target/release/ovd
       - uses: actions/upload-artifact@v4
         with:
-          name: ovcd-${{ matrix.os }}
+          name: ovd-${{ matrix.os }}
           path: |
-            target/release/ovcd
-            target/release/ovcd.exe
+            target/release/ovd
+            target/release/ovd.exe
           if-no-files-found: error

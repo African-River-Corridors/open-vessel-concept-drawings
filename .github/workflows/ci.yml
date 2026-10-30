@@ -138,7 +138,7 @@ jobs:
       # Calibration Bands (issue #119): one warning annotation per case outside its band. A band miss
       # never fails the build; a crash does. It takes about a second.
       - name: Calibration against the Calibration Bands (warning only)
-        run: python -m vessel_designer.calibration --check
+        run: python -m ovd.calibration --check
       # Evaluation harness (issue #184): known designs with known verdicts per rule, run against the
       # engine. A FALSE PASS (the engine passes a criterion a case expects to fail) fails the build; a
       # false fail and a coverage gap are warning annotations, as the Calibration Bands are. A stale
@@ -207,8 +207,8 @@ jobs:
       - name: Install the pinned Rust toolchain (rust-toolchain.toml)
         run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2
-      - name: Build ovcd
-        run: cargo build -p ovcd-cli
+      - name: Build ovd
+        run: cargo build -p ovd-cli
       - name: Install the Python implementation of the standard at the pinned commit
         run: |
           pin=$(python tools/otd.py pin)
@@ -238,12 +238,12 @@ jobs:
       - name: Install the pinned Rust toolchain (rust-toolchain.toml)
         run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2
-      - name: Build ovcd
-        run: cargo build -p ovcd-cli
+      - name: Build ovd
+        run: cargo build -p ovd-cli
       - name: Install the validator (pinned)
         run: npm install --no-save --no-package-lock gltf-validator@2.0.0-dev.3.10
       - name: Every fixture's .glb has no validator error
-        run: node tools/gltf_validate.mjs target/debug/ovcd
+        run: node tools/gltf_validate.mjs target/debug/ovd
 
   release-guard:
     runs-on: ubuntu-latest
@@ -299,12 +299,12 @@ jobs:
           npm ci
           npx tauri build --debug --no-bundle
       - name: Build the CLI (the smoke tests compare its mesh hash, issue #457)
-        run: cargo build -p ovcd-cli
+        run: cargo build -p ovd-cli
       - name: Smoke tests
         working-directory: app
         env:
           # The smoke tests save a screenshot of each view here, for review.
-          OVCD_E2E_SHOTS: ${{ runner.temp }}/app-screenshots
+          OVD_E2E_SHOTS: ${{ runner.temp }}/app-screenshots
         run: xvfb-run -a bash e2e/run.sh
       - name: Upload the screenshots
         if: always()

@@ -1,8 +1,8 @@
 import Lean.Data.Json
-import OvcdRules
+import OvdRules
 
 /-!
-# `ovcd-rules-oracle`
+# `ovd-rules-oracle`
 
 Reads cases as JSON, evaluates them with the proved definitions at `Float`, and prints the
 verdict, each row's outcome and the governing Rule of each requirement. A Rust test can write
@@ -10,7 +10,7 @@ the same JSON from property-test cases and compare (the differential-test seam).
 for the input form and for why `Float` needs finite limits and values.
 -/
 
-open Lean OvcdRules
+open Lean OvdRules
 
 def parseDir : String → Except String Dir
   | "lower" => .ok .lower
@@ -96,7 +96,7 @@ def evalCase (j : Json) : Except String Json := do
 
 def main (args : List String) : IO UInt32 := do
   let some path := args.head?
-    | IO.eprintln "usage: ovcd-rules-oracle <cases.json>"; return 2
+    | IO.eprintln "usage: ovd-rules-oracle <cases.json>"; return 2
   let text ← IO.FS.readFile path
   match (do
       let j ← Json.parse text
@@ -104,4 +104,4 @@ def main (args : List String) : IO UInt32 := do
       let out ← cases.toList.mapM evalCase
       return Json.mkObj [("cases", Json.arr out.toArray)]) with
   | .ok out => IO.println out.pretty; return 0
-  | .error e => IO.eprintln s!"ovcd-rules-oracle: {e}"; return 1
+  | .error e => IO.eprintln s!"ovd-rules-oracle: {e}"; return 1

@@ -2,9 +2,9 @@
 
     python examples/quickstart.py
 """
-from vessel_designer.core.barge_capacity import BargeCapacityInputs, compute
-from vessel_designer.core.gas_arrangement import fit
-from vessel_designer.core.vessel_standards import get_standard
+from ovd.core.barge_capacity import BargeCapacityInputs, compute
+from ovd.core.gas_arrangement import fit
+from ovd.core.vessel_standards import get_standard
 
 # 1. Start from a standard class, not a bespoke hull.
 cls = get_standard("CN_II_motor")

@@ -3,8 +3,8 @@
 Scope: rules that set concept-design limits for small crude oil tankers (coasters) and sea-going or
 coastal tank barges, including tug-barge units. Date of research: 2026-10-20.
 
-Source files are in `~/Dev/ovcd-rule-sources/crude-oil/seagoing/` and logged in
-`~/Dev/ovcd-rule-sources/crude-oil/SOURCES.md`. Some texts were already in the library
+Source files are in `~/Dev/ovd-rule-sources/crude-oil/seagoing/` and logged in
+`~/Dev/ovd-rule-sources/crude-oil/SOURCES.md`. Some texts were already in the library
 (`../icll/`, `../is-code-2008/`, `../abs-barges/`, `../type-c/class/`).
 
 ## How to read this file
@@ -12,8 +12,8 @@ Source files are in `~/Dev/ovcd-rule-sources/crude-oil/seagoing/` and logged in
 - **Rule id**: `<family>/<paragraph>/<slug>`.
 - **Read**: "read" = I read the primary text in the file named. "secondary" = I saw it only in a
   summary or reproduction. "not verified" = from memory or a source I could not open.
-- **Compute**: "yes" = OVCD can compute it from principal dimensions, tank layout, weights and
-  hydrostatics. "partial" = OVCD can compute a proxy or a check, but the full rule needs detail
+- **Compute**: "yes" = OVD can compute it from principal dimensions, tank layout, weights and
+  hydrostatics. "partial" = OVD can compute a proxy or a check, but the full rule needs detail
   that a concept tool does not have. "no" = arrangement, equipment or operation; record as a flag.
 - **Edition basis**: MARPOL Annex I = revised Annex I, Res. MEPC.117(52) (adopted 15 Oct 2004, in
   force 1 Jan 2007), plus MEPC.141(54) (2006), MEPC.248(66) (2014) and MEPC.330(76) (2021). The
@@ -85,7 +85,7 @@ Source files are in `~/Dev/ovcd-rule-sources/crude-oil/seagoing/` and logged in
 - **Citation**: Reg. 19.3.4; UI 43.
 - **Requires**: for crude tankers ≥ 20,000 dwt only, wing + double-bottom + peak tanks hold at
   least the Reg. 18 segregated ballast. Not binding below 20,000 dwt.
-- **Applicability**: crude ≥ 20,000 dwt; product ≥ 30,000 dwt. **Not in OVCD's size range.**
+- **Applicability**: crude ≥ 20,000 dwt; product ≥ 30,000 dwt. **Not in OVD's size range.**
 - **Compute**: yes, but not needed in range.
 - **Read**: read.
 
@@ -163,7 +163,7 @@ Source files are in `~/Dev/ovcd-rule-sources/crude-oil/seagoing/` and logged in
   Not needed if the pump-room floor is already that high (e.g. gondola stern), or if flooding the
   pump-room does not disable ballast or cargo pumping.
 - **Applicability**: oil tankers ≥ 5,000 dwt constructed on or after 1 Jan 2007.
-- **Compute**: yes (if OVCD models a pump-room); most small tankers use deepwell pumps and no
+- **Compute**: yes (if OVD models a pump-room); most small tankers use deepwell pumps and no
   pump-room.
 - **Read**: read.
 
@@ -180,7 +180,7 @@ Source files are in `~/Dev/ovcd-rule-sources/crude-oil/seagoing/` and logged in
 - **Applicability**: oil tankers ≥ 5,000 dwt delivered on or after 1 Jan 2010, barges included
   (MEPC.122(52) Part C uses a tank barge as its worked example).
 - **Compute**: **yes** — fully defined by tank box coordinates (Xa, Xf, Zl, Zu, y, Yp, Ys, z), L,
-  Bs, BB, Ds, ds, DWT, C. Good candidate for an OVCD module.
+  Bs, BB, Ds, ds, DWT, C. Good candidate for an OVD module.
 - **Read**: read (full tables are in MEPC.117(52) pp. on Reg. 23).
 
 ### marpol-i/23.3.2/small-tanker-tank-length (< 5,000 dwt)
@@ -209,7 +209,7 @@ Source files are in `~/Dev/ovcd-rule-sources/crude-oil/seagoing/` and logged in
 - **Requires**: SBT so that in every ballast condition `dm ≥ 2.0 + 0.02L` m, trim by stern
   ≤ 0.015L, propeller fully immersed. For L < 150 m: "to the satisfaction of the Administration".
 - **Applicability**: **mandatory only for crude tankers ≥ 20,000 dwt** (product ≥ 30,000 dwt).
-  Not mandatory in OVCD's range. Reg. 18.9 lets a smaller tanker qualify as SBT voluntarily; that
+  Not mandatory in OVD's range. Reg. 18.9 lets a smaller tanker qualify as SBT voluntarily; that
   earns the slop-tank reduction in 29.2.3.2.
 - **Compute**: yes (ballast-condition draught and trim check). Useful as a design target even
   where not mandatory.
@@ -237,7 +237,7 @@ Source files are in `~/Dev/ovcd-rule-sources/crude-oil/seagoing/` and logged in
 - **Applicability**: oil tankers **≥ 5,000 dwt** delivered on or after 1 Feb 2002. Below 5,000 dwt
   the general IS Code criteria apply (see `is-code/A2.2`); class may still apply 27 (ABS barge rules
   3-6-1 apply the liquid-transfer appendix to all tank barges).
-- **Compute**: **yes** — UI 55.1.1 is a closed algorithm OVCD can run from tank geometry and
+- **Compute**: **yes** — UI 55.1.1 is a closed algorithm OVD can run from tank geometry and
   hydrostatics. This is the binding constraint on beam and on wide centre tanks (no centreline
   bulkhead → large free surface).
 - **Read**: read (Reg.); UI read in flag-state reproduction.
@@ -277,7 +277,7 @@ Source files are in `~/Dev/ovcd-rule-sources/crude-oil/seagoing/` and logged in
   approved loading range, or limiting KG/GM curves.
 - **Applicability**: all oil tankers (no size floor stated in 28.6). ABS barge rules 3-6-1/7 apply
   the same to tank barges.
-- **Compute**: no (equipment flag). OVCD can output limiting KG/GM curves as a design product.
+- **Compute**: no (equipment flag). OVD can output limiting KG/GM curves as a design product.
 - **Read**: read.
 
 ### marpol-i/29.2.3/slop-tank-capacity
@@ -431,7 +431,7 @@ Source files are in `~/Dev/ovcd-rule-sources/crude-oil/seagoing/` and logged in
   from avoiding the Reg. 29 addition, and from the Type A deck-integrity regime. Above 80 m the gain
   is 50–140 mm. Corrections common to both: block coefficient `×(Cb+0.68)/1.36` for Cb > 0.68
   (Reg. 30, Cb capped at 1.0); depth `+(D − L/15)·R` mm, `R = L/0.48` for L < 120 m (Reg. 31).
-- **Compute**: yes — OVCD can compute minimum freeboard, then maximum draught and dwt from D.
+- **Compute**: yes — OVD can compute minimum freeboard, then maximum draught and dwt from D.
 - **Read**: read.
 
 ### icll/27.3/type-a-damage-over-150m
@@ -544,7 +544,7 @@ Source files are in `~/Dev/ovcd-rule-sources/crude-oil/seagoing/` and logged in
 
 Sea-going oil barges at DNV and LR: notation names not verified.
 
-## G. What OVCD can compute — summary
+## G. What OVD can compute — summary
 
 | Rule id | Compute | Main design lever |
 |---|---|---|
@@ -601,4 +601,4 @@ Sea-going oil barges at DNV and LR: notation names not verified.
 - **ITB/ATB tug-barge combinations**: no IMO text found on whether a pinned ITB is one "ship" for
   MARPOL dwt thresholds and SOLAS. US practice (46 CFR, USCG NVICs) not collected.
 - **Crude cargo grades** under 46 CFR 30.10 (Grade A–C by RVP and flashpoint): not verified.
-- **Weather criterion** (IS Code A2.3) not restated here; OVCD already holds the IS Code.
+- **Weather criterion** (IS Code A2.3) not restated here; OVD already holds the IS Code.

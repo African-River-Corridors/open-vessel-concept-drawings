@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from vessel_designer.core.barge_cost import (EXAMPLE_RATES_FILE, BargeCostInputs, BargeCostRates,
+from ovd.core.barge_cost import (EXAMPLE_RATES_FILE, BargeCostInputs, BargeCostRates,
                                              compute, load_rates)
 
 RATES = BargeCostRates(
@@ -100,7 +100,7 @@ def test_bad_rates_are_rejected():
 def test_flat_reader_agrees_with_pyyaml_on_the_example_and_rejects_nesting(tmp_path):
     """Label: property
     """
-    from vessel_designer.core.barge_cost import parse_flat_yaml
+    from ovd.core.barge_cost import parse_flat_yaml
     text = EXAMPLE.read_text(encoding="utf-8")
     assert BargeCostRates.from_mapping(parse_flat_yaml(text)) == \
         BargeCostRates.from_mapping(yaml.safe_load(text))

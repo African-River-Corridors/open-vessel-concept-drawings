@@ -1,6 +1,6 @@
 """The core's Vessel Class list is generated from `catalogue/vessel_classes.yaml` (issue #94).
 
-`crates/ovcd-core/src/vessel_classes_generated.rs` is written by `tools/gen_vessel_classes.py`. Risk
+`crates/ovd-core/src/vessel_classes_generated.rs` is written by `tools/gen_vessel_classes.py`. Risk
 stopped: someone edits the generated file by hand, or edits the YAML (or the generator) and leaves the
 core's list behind, so the two lists drift. The Python `VESSEL_STANDARDS` is read from the core, so
 there is no third list either.
@@ -12,7 +12,7 @@ from pathlib import Path
 
 import yaml
 
-from vessel_designer.core import vessel_standards as vs
+from ovd.core import vessel_standards as vs
 
 ROOT = Path(__file__).resolve().parents[1]
 _spec = importlib.util.spec_from_file_location("gen_vessel_classes", ROOT / "tools" / "gen_vessel_classes.py")

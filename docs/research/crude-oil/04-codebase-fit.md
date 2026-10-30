@@ -1,13 +1,13 @@
-# 04 — Crude oil in OVCD: codebase fit
+# 04 — Crude oil in OVD: codebase fit
 
-> Read-only review of `open-vessel-concept-drawings` at `main` = `fbfe2e8` (2026-10-20), plus the draft expert pages on
+> Read-only review of `open-vessel-designer` at `main` = `fbfe2e8` (2026-10-20), plus the draft expert pages on
 > `origin/docs/engineering-basis` (pages 02, 03, 05, 06, 09 and their `proposals/`). No code was changed, nothing was
 > built. Line numbers are from that commit. Codebase-design terms (module, interface, depth, seam, adapter, leverage,
 > locality) are used as the `codebase-design` skill defines them.
 
 ## 1. Summary
 
-- OVCD has two Cargo "phases" today: `liquid_gas` (five gases, Type C tanks) and `dry_bulk` (bauxite, box or sloped
+- OVD has two Cargo "phases" today: `liquid_gas` (five gases, Type C tanks) and `dry_bulk` (bauxite, box or sloped
   hopper hold). The phase is a **string** on `CargoProperties`. Code branches on it in at least 14 places, in four
   different styles (`== "dry_bulk"`, `!= "dry_bulk"`, `== "liquid_gas"`, `separation.is_some()`).
 - **Two of those branches route any new phase to the gas path, and one routes it to the dry path.** A crude Cargo with
@@ -34,11 +34,11 @@
 
 | What | Where | Notes |
 |---|---|---|
-| `CargoProperties { name, density, temperature, pressure, description, phase }` | `crates/ovcd-core/src/cargo.rs` 10–24 | `phase` is `&'static str`: `"liquid_gas"` or `"dry_bulk"`. Temperature and pressure feed no calculation. |
+| `CargoProperties { name, density, temperature, pressure, description, phase }` | `crates/ovd-core/src/cargo.rs` 10–24 | `phase` is `&'static str`: `"liquid_gas"` or `"dry_bulk"`. Temperature and pressure feed no calculation. |
 | `CARGO_DATABASE: [(&str, CargoProperties); 6]` | `cargo.rs` 27–94 | Fixed-size static array. Order is the old Python dict order. |
 | `get_cargo(key)` | `cargo.rs` 97–109 | The error text lists every valid key, so a new key changes a pinned message. |
-| Python copy of the data | `src/vessel_designer/core/cargo.py` | The Python package has its **own** `CARGO_DATABASE` (0.1.0 API); `tests/data/public_api.json` snapshots it. |
-| `cargo_density_override` | `crates/ovcd-core/src/models.rs` 110, 205 | Dead field: nothing reads it (basis page 06, G9). |
+| Python copy of the data | `src/ovd/core/cargo.py` | The Python package has its **own** `CARGO_DATABASE` (0.1.0 API); `tests/data/public_api.json` snapshots it. |
+| `cargo_density_override` | `crates/ovd-core/src/models.rs` 110, 205 | Dead field: nothing reads it (basis page 06, G9). |
 | Density by carriage condition | open ticket #315 | Will move density from one number per Cargo to a value by (Cargo, condition) with a cited source. Crude needs the same shape (crude density varies about 790 to 990 kg/m³ by grade; a typed density is needed). |
 
 **How a Cargo is added today:** one entry in `cargo.rs`, the same in `cargo.py`, then the profile rows that
@@ -83,7 +83,7 @@ place: every branch in section 3 must be found by hand.
 Legend for "Change": **R** = refactor with no result change; **A** = add a branch or entry; **N** = new code; **D**
 = data (profile, rule file, locale). Every row lists the function and what changes.
 
-### 3.1 Core (`crates/ovcd-core/src`)
+### 3.1 Core (`crates/ovd-core/src`)
 
 | # | File | Function or item | Change |
 |---|---|---|---|
@@ -109,7 +109,7 @@ Legend for "Change": **R** = refactor with no result change; **A** = add a branc
 | 20 | `gas_arrangement.rs` | `fit`, `smallest_viable_loa` | none: gas only. A liquid `fit` (number of tanks in line, double-hull width) is a later ticket after #277. |
 | 21 | new `liquid_bulk/` | see section 5 | **N** |
 
-### 3.2 Format (`crates/ovcd-format/src`)
+### 3.2 Format (`crates/ovd-format/src`)
 
 | # | File | Function or item | Change |
 |---|---|---|---|
@@ -153,8 +153,8 @@ Legend for "Change": **R** = refactor with no result change; **A** = add a branc
 | 54 | `app/src/lib/InputField.svelte` | cargo picker (134), `GROUP_IDS.liquid` (45) | Picker list comes from the schema (row 42). Show the `development` tag beside crude. `app-cargo-group-liquid` already exists. |
 | 55 | `app/src/lib/MainPanel.svelte` | BOQ placeholder (161–164) | none until the BOQ phase; crude BOQ lines wait with it. |
 | 56 | `locales/en/app.ftl`; after #309 `engine.ftl`, `inputs.ftl` | new labels, groups, choices, checks, GA labels | **D**: English first; draft translations per #311. |
-| 57 | `src/vessel_designer/core/cargo.py`; `tests/data/public_api.json`; `tests/api_scenarios.py` | Python copy and API snapshot | **A**: keep the Python `CARGO_DATABASE` equal to Rust; re-pin the snapshot in its own commit. |
-| 58 | Tests that pin the Cargo list or phase | `crates/ovcd-format/tests/default_depth.rs` 101 (`…liquid_has_none_yet`), `type_c_defaults.rs`, `simulate_inputs.rs`, `vdesign.rs`, `eval_refusals.rs`; `tools/design_impact.py` corpus (line 77 `GAS_CARGOES`, 85–99); `calibration/cases.yaml` 1321+ (41 `hold_type: tank` records); `evaluation/` | **A**: update pins; add crude fixtures (`crates/ovcd-format/tests/fixtures/crude_integral_tanks.vdesign`, pushed and self-propelled), design-impact cases, calibration runner arm, harness cases. |
+| 57 | `src/ovd/core/cargo.py`; `tests/data/public_api.json`; `tests/api_scenarios.py` | Python copy and API snapshot | **A**: keep the Python `CARGO_DATABASE` equal to Rust; re-pin the snapshot in its own commit. |
+| 58 | Tests that pin the Cargo list or phase | `crates/ovd-format/tests/default_depth.rs` 101 (`…liquid_has_none_yet`), `type_c_defaults.rs`, `simulate_inputs.rs`, `vdesign.rs`, `eval_refusals.rs`; `tools/design_impact.py` corpus (line 77 `GAS_CARGOES`, 85–99); `calibration/cases.yaml` 1321+ (41 `hold_type: tank` records); `evaluation/` | **A**: update pins; add crude fixtures (`crates/ovd-format/tests/fixtures/crude_integral_tanks.vdesign`, pushed and self-propelled), design-impact cases, calibration runner arm, harness cases. |
 
 **Count: 58 touch points.** Of these, 14 are phase branches that the enum refactor (row 1) turns into compile errors,
 which is the point of doing it first.
@@ -201,7 +201,7 @@ which is the point of doing it first.
 ### 5.2 Layout
 
 ```
-crates/ovcd-core/src/
+crates/ovd-core/src/
   cargo.rs                     CargoClass enum; CargoProperties gains liquid fields (data only)
   box_stability.rs   (moved)   box_gz, box_condition_at, criteria  ← from gas_stability.rs, no result change
   liquid_bulk/
@@ -216,8 +216,8 @@ crates/ovcd-core/src/
     free_surface.rs            rectangular tank i = l·b³/12 per slack tank; worst-case per condition
     lightship.rs               tank-barge lightship: k-factor fit (41 calibration records) first;
                                plating build-up (reuses weights.rs hull plating) second
-    tests (inline + crates/ovcd-core/tests/liquid_bulk.rs)
-crates/ovcd-format/src/
+    tests (inline + crates/ovd-core/tests/liquid_bulk.rs)
+crates/ovd-format/src/
   liquid.rs                    simulate_liquid, liquid results JSON, liquid_masses for cost
   ga.rs                        Containment::CargoTanks arm; draws Spaces by role
 ```
@@ -296,7 +296,7 @@ pub struct LiquidBulkResult {
 
 ### 6.1 What the spec already supports
 
-- A new Rule Set is a data file: `crates/ovcd-format/rules/<set-id>/<version>.json`, with `applies_when`,
+- A new Rule Set is a data file: `crates/ovd-format/rules/<set-id>/<version>.json`, with `applies_when`,
   `includes`, tables and Rules (spec "Rule Set (data)"). `marpol-i` and `adn-n` fit this, family `marpol` and `adn`.
 - Rule ids by paragraph (`adn/9.3.3.11.7/double-side`, `marpol/I.19.6.1/double-bottom-height` style); the loader
   checks the paragraph against the locator. Each must be read in the text first (`docs/rules/codification.md`
@@ -319,10 +319,10 @@ pub struct LiquidBulkResult {
 | **Per-object applicability.** `applies_when` reads Option inputs, not object attributes. | A Rule on `tank.volume` must apply to cargo tanks, not to ballast tanks or slop tanks. | Either one object type per role (`cargo-tank`, `ballast-tank`), or an object attribute condition. One object type per role is the smaller change and keeps the no-expression rule. |
 | **Cargo group for Applicability.** Rules name `cargo` values one by one. | Every oil added later would need every Rule Set edited. | Make the Cargo class (or an oil category) an enumerated input the schema names (derived, read-only), so `applies_when: {cargo_class: [liquid_bulk]}`. |
 | **Clamp formula shape.** | Double-hull widths are "a + b·DW, not less than x, need not exceed y". | Add a shape `max(lo, min(hi, a + b·x))` in Rust, coefficients as data, with its own sourced test. |
-| **Gas sets must not apply to crude.** | `igc-2g`, `lr-inland-gas` and `ovcd/gas-arrangement/*` apply today by default stack, not by applicability. | Give each of them `applies_when: {cargo_containment: [type_c_tanks]}` in #271/#272, so a crude Option gets `not applicable` rows, not false passes or failures. |
+| **Gas sets must not apply to crude.** | `igc-2g`, `lr-inland-gas` and `ovd/gas-arrangement/*` apply today by default stack, not by applicability. | Give each of them `applies_when: {cargo_containment: [type_c_tanks]}` in #271/#272, so a crude Option gets `not applicable` rows, not false passes or failures. |
 | **Loading conditions beyond three.** | MARPOL Annex I intact stability asks for the worst case in liquid transfer; IS Code Part B lists departure and arrival conditions. | `loading-condition` objects exist; the condition generator (section 5.5 item 3) is the missing Measure input. |
 | **Oil outflow.** | A probabilistic Measure over the compartment layout and damage distributions. | Large new Measure; ship it first as a `not evaluated` row with `gap: "needs oil outflow Measure"`. |
-| **`ovcd` checks for liquid.** | Tank breadth > 0, double side < B/2, cargo zone > 0. | New Rules in the `ovcd` set with origin `physical`. |
+| **`ovd` checks for liquid.** | Tank breadth > 0, double side < B/2, cargo zone > 0. | New Rules in the `ovd` set with origin `physical`. |
 
 ### 6.3 New Measures (Rust, with registry entries)
 
@@ -346,7 +346,7 @@ pub struct LiquidBulkResult {
   boundaries, double bottom, cofferdams, trunk if any. Midship section: inner hull, double side, double bottom,
   centreline bulkhead, heating coil note. Labels go through the Text Library (#310). No pipe routing: concept only
   (ADR 0011).
-- **Draw crate (`ovcd-draw`):** no change to the format standard; a pump symbol needs a symbol library entry.
+- **Draw crate (`ovd-draw`):** no change to the format standard; a pump symbol needs a symbol library entry.
 - **BOQ:** the app has no BOQ yet (`MainPanel.svelte` 161–164, "comes in a later phase"). Crude BOQ lines (cargo
   tank steel, coating area, heating coil length, pumps, cargo piping, valves, gauging, vents) wait for that phase;
   the cost model (row 18) can carry lump sums first.
@@ -359,13 +359,13 @@ pub struct LiquidBulkResult {
 
 ## 8. Tests and harness
 
-- **Unit and golden tests** (`crates/ovcd-core/tests/liquid_bulk.rs`): closed-form box tanks (volume, centroid, free
+- **Unit and golden tests** (`crates/ovd-core/tests/liquid_bulk.rs`): closed-form box tanks (volume, centroid, free
   surface `l·b³/12`) labelled `Label: sourced` or `derived` per `docs/agents/build-process.md`.
-- **Fixtures** (`crates/ovcd-format/tests/fixtures/`): `crude_integral_tanks_pushed.vdesign` and
+- **Fixtures** (`crates/ovd-format/tests/fixtures/`): `crude_integral_tanks_pushed.vdesign` and
   `…_self_propelled.vdesign`, with pinned results hashes (`tools/check_fixture_hashes.py`) and the web-parity job.
 - **Design impact** (`tools/design_impact.py`): add crude cases to the corpus so later changes show their effect.
 - **Calibration** (`calibration/cases.yaml`): the 41 `hold_type: tank` records become runnable through a `tank`
-  arm in `src/vessel_designer/calibration.py` `run_barge`. Keep them held out; fit k on a declared subset only.
+  arm in `src/ovd/calibration.py` `run_barge`. Keep them held out; fit k on a declared subset only.
   Add `tank_bands.yaml`-style bands for tank barge lightship and deadweight.
 - **Evaluation harness** (`evaluation/`): stability cases use the existing `kind: box` form with `free_surface_m`, so
   `oracle/box_oracle.py` works as is. Double-hull and tank-volume Rules need a new independent oracle

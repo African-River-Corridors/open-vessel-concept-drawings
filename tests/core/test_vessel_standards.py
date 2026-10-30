@@ -1,6 +1,6 @@
 """Test triad for vessel_standards: golden, property, feasibility (ported from the prior engine)."""
 
-from vessel_designer.core.vessel_standards import (
+from ovd.core.vessel_standards import (
     VESSEL_STANDARDS,
     VesselStandard,
     get_standard,

@@ -13,7 +13,7 @@
 //! Rule and its effective bound (the limit, with the tolerance folded in; the strict flag says
 //! whether a value must be strictly beyond it). The bound is what a sizing step builds at; the
 //! Lean model proves it meets the requirement and never falls (or never rises, for an upper
-//! bound) when Rules are added (`proofs/lean/OvcdRules/Sizing.lean`, issue #482).
+//! bound) when Rules are added (`proofs/lean/OvdRules/Sizing.lean`, issue #482).
 //!
 //! The model leaves out what the oracle cannot say: tolerances, tables, formulas, Applicability.
 //! A key with no value is "not evaluated" in the model; here its Rules are written with

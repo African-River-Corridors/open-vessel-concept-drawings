@@ -231,7 +231,7 @@
               </tr>
             {/each}
             <!-- The results hash (issue #666): its first 12 characters, the full value on hover, so a
-                 Design entered here can be checked against `ovcd run --json` of a published example. -->
+                 Design entered here can be checked against `ovd run --json` of a published example. -->
             <tr data-testid="compare-hash">
               <th>{t("app-results-hash")}</th>
               {#each columns as c (c.name)}

@@ -4,7 +4,7 @@ The free compute() wraps the unchanged ResistanceCalculator and attaches validit
 checks. Golden values freeze the confined-shallow (binding) environment at the default
 barge.
 """
-from vessel_designer.core.resistance import (
+from ovd.core.resistance import (
     ResistanceCalculator,
     ResistanceInputs,
     EnvironmentInputs,
@@ -54,7 +54,7 @@ def test_feasibility_the_default_case_is_outside_barrass_validity():
 
     Label: property
     """
-    from vessel_designer.core.squat import SquatInputs, compute as squat
+    from ovd.core.squat import SquatInputs, compute as squat
     i = ResistanceInputs()
     area = (40.0 + 60.0) / 2 * 6.5
     sr = squat(SquatInputs(speed_through_water_kn=4.0, draft_m=i.draft, beam_m=i.beam,

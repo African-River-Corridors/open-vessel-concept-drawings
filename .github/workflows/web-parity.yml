@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   # The web build (issue #245): the wasm Design session gives the same results hash as native
-  # `ovcd run --json` for every fixture. The wasm-bindgen CLI is the version the crate pins.
+  # `ovd run --json` for every fixture. The wasm-bindgen CLI is the version the crate pins.
   web-parity:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -28,7 +28,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: The pinned wasm-bindgen version
         id: wb
-        run: echo "version=$(sed -n 's/^wasm-bindgen = "=\([0-9.]*\)".*/\1/p' crates/ovcd-web/Cargo.toml)" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(sed -n 's/^wasm-bindgen = "=\([0-9.]*\)".*/\1/p' crates/ovd-web/Cargo.toml)" >> "$GITHUB_OUTPUT"
       - name: wasm-bindgen CLI (cached)
         id: cli
         uses: actions/cache@v4
@@ -40,7 +40,7 @@ jobs:
         run: cargo install wasm-bindgen-cli --version "${{ steps.wb.outputs.version }}" --locked
       - name: Build the web package
         run: bash tools/build_web.sh
-      - name: Build ovcd
-        run: cargo build -p ovcd-cli
+      - name: Build ovd
+        run: cargo build -p ovd-cli
       - name: Results-hash parity, wasm against native
         run: node tools/web_parity.mjs

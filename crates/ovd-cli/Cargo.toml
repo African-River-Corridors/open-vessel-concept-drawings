@@ -1,0 +1,17 @@
+[package]
+name = "ovd-cli"
+description = "The ovd command-line tool: a thin layer over ovd-format."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "ovd"
+path = "src/main.rs"
+
+[dependencies]
+ovd-format.workspace = true
+ovd-draw.workspace = true
+serde_json.workspace = true

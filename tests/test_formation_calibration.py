@@ -1,6 +1,6 @@
 """The Formation calibration cases (issue #359, part 2): the case file is well formed, and the Defaults
-Profile check is in the tool (`--check`). The fit itself needs the `ovcd` binary:
-`python3 tools/formation_calibration.py <ovcd> --check` (see the tool)."""
+Profile check is in the tool (`--check`). The fit itself needs the `ovd` binary:
+`python3 tools/formation_calibration.py <ovd> --check` (see the tool)."""
 
 from pathlib import Path
 

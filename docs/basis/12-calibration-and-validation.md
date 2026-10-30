@@ -4,17 +4,17 @@
 >
 > Code state: written against `main` at commit `f6d446c` (2026-10-20).
 
-**For:** Any reviewer  ·  **Code:** `src/vessel_designer/calibration.py`, `calibration/`, `evaluation/run.py`, `evaluation/oracle/`, `tools/design_impact.py`, `tools/web_parity.mjs`, `tools/check_fixture_hashes.py`, `tools/draw_crosscheck.py`, `.github/workflows/ci.yml`  ·  **Rule Sets:** none (the harness checks the IS Code 2008 Part A 2.2 criteria)
+**For:** Any reviewer  ·  **Code:** `src/ovd/calibration.py`, `calibration/`, `evaluation/run.py`, `evaluation/oracle/`, `tools/design_impact.py`, `tools/web_parity.mjs`, `tools/check_fixture_hashes.py`, `tools/draw_crosscheck.py`, `.github/workflows/ci.yml`  ·  **Rule Sets:** none (the harness checks the IS Code 2008 Part A 2.2 criteria)
 
-OVCD is a concept and preliminary design tool (ADR 0011). This page answers one question: "why should I trust
+OVD is a concept and preliminary design tool (ADR 0011). This page answers one question: "why should I trust
 this number?" It lists the evidence that exists today, how strong it is, and where there is none. A result
-inside a Calibration Band is not a validation. No part of OVCD has a verification and validation report yet.
+inside a Calibration Band is not a validation. No part of OVD has a verification and validation report yet.
 
-## What OVCD computes here
+## What OVD computes here
 
 Four checks run on the engine. Each answers a different question.
 
-- **Calibration** (`python -m vessel_designer.calibration`): how far is the model from published vessels and
+- **Calibration** (`python -m ovd.calibration`): how far is the model from published vessels and
   tanks? It writes `calibration/results.md` and `calibration/factors.yaml`. CI runs `--check`, which prints
   one warning annotation per figure outside its Calibration Band.
 - **Evaluation harness** (`python3 evaluation/run.py`): does the engine give the known verdict on designs
@@ -104,7 +104,7 @@ Results today (`calibration/results.md`, as committed):
 
 The harness (`evaluation/`, issue #184, phase 0) tests one thing: the six IS Code 2008 Part A 2.2 criteria of
 a box section with a known KG. `evaluation/engine.py` calls the engine's `box_condition` (in
-`crates/ovcd-core/src/gas_stability.rs`), the per-condition step of the gas `assess`. It does not run a
+`crates/ovd-core/src/gas_stability.rs`), the per-condition step of the gas `assess`. It does not run a
 `.vdesign`.
 
 - **Known designs.** 5 base cases in `evaluation/cases/`. Two are chosen boxes. Three take their inputs from
@@ -127,14 +127,14 @@ a box section with a known KG. `evaluation/engine.py` calls the engine's `box_co
 
 ### 5. The design-impact check
 
-`tools/design_impact.py` (ADR 0010, ticket 28) builds `ovcd` from the merge base and from the branch. It runs
+`tools/design_impact.py` (ADR 0010, ticket 28) builds `ovd` from the merge base and from the branch. It runs
 the same 172 designs through both: 43 box barges from the calibration cases (in-sample and held out), 6
 points from the motor-vessel design note, 76 cases that each set one optional input, and 47 sweep cases
 (sizes, formations, channels, every gas Cargo, every LPG Carriage Condition, designs that pass every check,
 designs that carry nothing). It compares every number at a relative and absolute tolerance of 1e-9 (`same`,
 line 443). A change of type (integer to float) is a change. The keys `drawing`, `stability_marks`,
 `cost_masses` and `cost` are left out of the comparison, as they are left out of the results hash
-(`crates/ovcd-format/src/run.rs`, line 244).
+(`crates/ovd-format/src/run.rs`, line 244).
 
 The check has no stored answers. It says only whether a design moved, not whether the new value is right. The
 fast gate (`tools/gates.sh`, step 6) fails when a design moved and `CHANGELOG.md` has no table for it, when
@@ -145,7 +145,7 @@ move needs no sign-off.
 
 - **Native against WebAssembly** (CI job `web-parity`, issue #245): every Option of the 6 fixture `.vdesign`
   files must give the same SHA-256 results hash from the WebAssembly Design session as from native
-  `ovcd run --json`. The job also checks that SVG, PDF and DXF exports come out of the WebAssembly build. Exact
+  `ovd run --json`. The job also checks that SVG, PDF and DXF exports come out of the WebAssembly build. Exact
   equality; no tolerance.
 - **Fixture hashes on every system** (release gate): the fixtures store their results hashes.
   `check_fixture_hashes.py` checks them with the release binary on Windows, Intel macOS and Apple-silicon macOS,
@@ -207,7 +207,7 @@ by a pull request:
 
 - `calibration/cases.yaml`, `tank_cases.yaml`: add a case. It must have a `confidence`; a new case is held out.
 - `calibration/bands.yaml`, `tank_bands.yaml`: the bands (maintainer).
-- `OVCD_CALIBRATION_DIR` (environment): the calibration folder when the package runs from an installed wheel.
+- `OVD_CALIBRATION_DIR` (environment): the calibration folder when the package runs from an installed wheel.
 
 The fitted k for a box hold reaches users as the Defaults Profile default of `lightship_factor_t_per_m3`
 (0.1086 t/m³, soft range 0.08 to 0.15), which the user can change.
@@ -218,11 +218,11 @@ The fitted k for a box hold reaches users as the Defaults Profile default of `li
 - **Calibration covers only dry barges and one tank shape.** No calibration case runs a self-propelled vessel, a
   tank barge, a gas barge, a pusher or a convoy. 48 held-out records and all 10 pusher records cannot run.
 - **No built-vessel speed and power point.** The motor-vessel points are design-study output, and every one
-  implies the same Cb (0.835), so they test OVCD against another model.
+  implies the same Cb (0.835), so they test OVD against another model.
 - **The in-sample lightship rests on 3 points**, one of them practitioner statements. The container factor rests
   on 1.
 - **The harness covers 6 criteria on a box section.** It does not run a `.vdesign`, a real hull form, free
-  surface (every case has 0), the weather criterion, or any IGC, inland or OVCD Check rule.
+  surface (every case has 0), the weather criterion, or any IGC, inland or OVD Check rule.
 - **No verdict in the harness is published.** All are derived by the oracle. Oracle and engine could share a
   misreading of the IS Code text; nothing outside them checks it.
 - **`calibration/results.md` has no freshness check.** CI runs `--check` but does not compare the committed file

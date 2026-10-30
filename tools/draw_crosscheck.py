@@ -1,11 +1,11 @@
 """Cross-implementation check of the drawing crate (spec 0003, issue #100).
 
-For every fixture Design, `ovcd draw --document` prints the drawing documents of each Option. Each
-document is run through the Rust implementation of the Drawing Format Standard (`ovcd draw run`) and
+For every fixture Design, `ovd draw --document` prints the drawing documents of each Option. Each
+document is run through the Rust implementation of the Drawing Format Standard (`ovd draw run`) and
 through the Python implementation (`technical_drawings_for_agents run`). Both must read the document,
 and their normalised content must be equal (clause 16.9: numbers are compared as numbers).
 
-    python3 tools/draw_crosscheck.py [--ovcd target/debug/ovcd] [--tool technical_drawings_for_agents]
+    python3 tools/draw_crosscheck.py [--ovd target/debug/ovd] [--tool technical_drawings_for_agents]
 
 The Python tool is installed at the commit that the pinned `otd` crate's standard/PIN.json records
 (`python3 tools/otd.py pin`; see the `drawing-crosscheck` job in .github/workflows/ci.yml). Exit 1 on any difference, and on a run that
@@ -21,7 +21,7 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-FIXTURES = ROOT / "crates" / "ovcd-format" / "tests" / "fixtures"
+FIXTURES = ROOT / "crates" / "ovd-format" / "tests" / "fixtures"
 MIN_DOCUMENTS = 15  # five computed Options with three views each, at least
 
 
@@ -63,7 +63,7 @@ def run_json(command: list[str]) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--ovcd", default=str(ROOT / "target" / "debug" / "ovcd"))
+    ap.add_argument("--ovd", default=str(ROOT / "target" / "debug" / "ovd"))
     ap.add_argument("--tool", default="technical_drawings_for_agents")
     args = ap.parse_args()
 
@@ -71,19 +71,19 @@ def main() -> int:
     problems: list[str] = []
     with tempfile.TemporaryDirectory() as tmp:
         for fixture in sorted(FIXTURES.glob("*.vdesign")):
-            proc = subprocess.run([args.ovcd, "draw", "--document", str(fixture)], capture_output=True, text=True)
+            proc = subprocess.run([args.ovd, "draw", "--document", str(fixture)], capture_output=True, text=True)
             if proc.returncode != 0:
                 # a convoy has no drawings yet (issue #358): that is the expected message, nothing else is
                 if "no drawings of a pushed convoy yet" in proc.stderr and json.loads(proc.stdout or "{}") == {}:
                     print(f"{fixture.name}: no views (convoy), as expected")
                     continue
-                problems.append(f"{fixture.name}: ovcd draw --document failed: {proc.stderr.strip()[:300]}")
+                problems.append(f"{fixture.name}: ovd draw --document failed: {proc.stderr.strip()[:300]}")
                 continue
             for option, views in json.loads(proc.stdout).items():
                 for view, document in views.items():
                     path = Path(tmp) / f"{fixture.stem}-{len(list(Path(tmp).iterdir()))}-{view}.json"
                     path.write_text(json.dumps(document))
-                    rust = run_json([args.ovcd, "draw", "run", str(path)])
+                    rust = run_json([args.ovd, "draw", "run", str(path)])
                     python = run_json([args.tool, "run", str(path)])
                     label = f"{fixture.name} / {option} / {view}"
                     if rust["result"] != "ok" or python["result"] != "ok":

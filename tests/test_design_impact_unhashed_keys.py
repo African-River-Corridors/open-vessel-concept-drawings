@@ -13,7 +13,7 @@ import design_impact as di  # noqa: E402
 
 def test_python_and_rust_list_the_same_unhashed_keys():
     """Label: property"""
-    text = (ROOT / "crates" / "ovcd-format" / "src" / "run.rs").read_text(encoding="utf-8")
+    text = (ROOT / "crates" / "ovd-format" / "src" / "run.rs").read_text(encoding="utf-8")
     found = re.search(r"pub const UNHASHED_KEYS: \[&str; \d+\] = \[([^\]]*)\];", text)
     assert found, "UNHASHED_KEYS not found in run.rs"
     rust = re.findall(r'"([^"]+)"', found.group(1))

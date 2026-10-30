@@ -4,19 +4,19 @@
 >
 > Code state: written against `main` at commit `f6d446c` (2026-10-20).
 
-**For:** gas carrier designer  ·  **Code:** `crates/ovcd-core/src/gas_arrangement.rs`, `barge_capacity.rs`
+**For:** gas carrier designer  ·  **Code:** `crates/ovd-core/src/gas_arrangement.rs`, `barge_capacity.rs`
 (gas branch), `protective_location.rs`, `gas_separation.rs`, `design_grid.rs`, `aft_arrangement.rs`, `tanks.rs`,
-`checks.rs`; the Design path in `crates/ovcd-format/src/simulate.rs`  ·  **Rule Sets:** none built yet. Spec 0004
-plans `igc-2g` (with `is2008-a`), `lr-inland-gas` (draft, unverified) and `ovcd`. Today the rules are constants and
+`checks.rs`; the Design path in `crates/ovd-format/src/simulate.rs`  ·  **Rule Sets:** none built yet. Spec 0004
+plans `igc-2g` (with `is2008-a`), `lr-inland-gas` (draft, unverified) and `ovd`. Today the rules are constants and
 checks in code, so no value on this page is **Rule (verified)**.
 
 This page covers where the Type C cargo tanks go in the hull: the protective location of IGC 2.4, the tank
 fit and the `fit` search, and the length the gas code takes off each end of the cargo area. The tank itself (wall,
 insulation, dome, fill) is on page 04. The stability criteria are on page 03.
 
-## What OVCD computes here
+## What OVD computes here
 
-For a gas Option, `ovcd run` calls `fit` once (`simulate.rs`, `simulate_gas`, line 950). The user sees:
+For a gas Option, `ovd run` calls `fit` once (`simulate.rs`, `simulate_gas`, line 950). The user sees:
 
 - **Tank arrangement:** tanks across (`n_tanks_wide`), tanks along (`n_tanks_long`), total tanks, tank outer
   diameter (to the outside of the insulation), overall tank length.
@@ -113,7 +113,7 @@ side clearance. `models.rs`, `post_init` (lines 245 to 254) sets it from the 1.0
 is known; `gas_volumetric` (lines 507 and 553 to 557) keeps it. The width acts only as an on/off switch for the
 wing plate, the weather shield and the raised moulded depth in the weights (`weights.rs`, lines 84, 127, 157), and
 it sets the drawing. The engine has no wing ballast capacity. The drawing cuts the gap so that no line enters a
-tank (`ovcd-format/src/ga.rs`, `wing_tank`, lines 410 to 431). Label: **Fixed in code** (a known defect, #283).
+tank (`ovd-format/src/ga.rs`, `wing_tank`, lines 410 to 431). Label: **Fixed in code** (a known defect, #283).
 
 ### 5. The `fit` search (feasible first, then most cargo)
 
@@ -195,7 +195,7 @@ Rules for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3, July 20
 | GA-A20 | Gap between tanks along | 2.0 m | Fixed in code | Carried over; no source | `models.rs`, L190 | Unknown |
 | GA-A21 | Head type in this path | Hemispherical, head length OD/2 | Fixed in code | Carried over | `models.rs`, L194; `tanks.rs` head geometry | Unknown |
 | GA-A22 | Tank OD cap | 16.0 m | Estimate | Tool limit, not a rule | `barge_capacity.rs`, L46; profile `max_tank_od_m` | Unknown |
-| GA-A23 | Tank length over OD | ≤ 7.0 | Fixed in code | OVCD Check. Same value in ADN 2025 9.3.1.11.1(b) and inland rule book 3.5.1 (type G) | `gas_arrangement.rs`, L47, L257–274 | Unknown |
+| GA-A23 | Tank length over OD | ≤ 7.0 | Fixed in code | OVD Check. Same value in ADN 2025 9.3.1.11.1(b) and inland rule book 3.5.1 (type G) | `gas_arrangement.rs`, L47, L257–274 | Unknown |
 | GA-A24 | Tanks along the hull | 2 | Estimate | Carried over; an input | `barge_capacity.rs`, L51; profile `tanks_in_line` | Unknown |
 | GA-A25 | Automatic tanks across | Fewest n with OD ≤ cap | Method | Inverts GA-A18 | `barge_capacity.rs`, `tanks_wide_for_beam`, L397–432 | None |
 | GA-A26 | Tanks across searched | {1, 2, 3}, or the one number of the input `tanks_across` (issue #675) | Fixed in code; input | Python default | `gas_arrangement.rs`, `DEFAULT_TANKS_WIDE`; `simulate.rs` | May miss a better arrangement on a wide hull unless the user fixes it |
@@ -226,7 +226,7 @@ Rules for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3, July 20
 | GA-A49 | Separation inputs in a Design | Defaults only | Fixed in code | Not in the Defaults Profile | `barge_capacity.rs`, L794 | Not a value |
 | GA-A50 | Bow rake | 1.6 × moulded depth | Estimate | Carried over; input | `barge_capacity.rs`, L49, L788–791 | Unknown |
 | GA-A51 | Pushed barge stern void | 3.0 m (+ aft separation) | Estimate | Carried over; input | `barge_capacity.rs`, L72, L782–786 | Unknown |
-| GA-A52 | Cargo zone | LOA − bow void − stern void > 0 | Method | OVCD Check | `barge_capacity.rs`, L833, L949–959 | None |
+| GA-A52 | Cargo zone | LOA − bow void − stern void > 0 | Method | OVD Check | `barge_capacity.rs`, L833, L949–959 | None |
 | GA-A53 | Wing tank width | max(0, 1.0 − gap), not from cs | Fixed in code | Known defect (#283) | `models.rs`, L245–254; `barge_capacity.rs`, L507, L553–557 | Unknown (switch and drawing only) |
 | GA-A54 | Wing tank gap | 0.6 m | Estimate | Carried over; input | `barge_capacity.rs`, L68 | Unknown |
 | GA-A55 | Wing tank height | 0.66 × OD | Estimate | Carried over; input | `barge_capacity.rs`, L70 | Unknown |
@@ -238,7 +238,7 @@ Rules for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3, July 20
 
 ## Inputs the user can change
 
-Defaults come from the Defaults Profile (`crates/ovcd-format/src/builtin_profile.json`) unless noted.
+Defaults come from the Defaults Profile (`crates/ovd-format/src/builtin_profile.json`) unless noted.
 
 | Input | Default | Unit | Where the default comes from |
 |---|---|---|---|
@@ -266,7 +266,7 @@ clearance the search adds, the gaps between tanks, the head type.
 The result lists the arrangements the search tried (`fit_tried`, outside the results hash; #675): one row per depth
 and tanks across, with its outcome (chosen, less cargo, the failing checks, or why no tank was built). The app shows
 it as "Arrangements tried". A gas answer with no wing ballast tank gets the warning `warn-fit-no-wing-tank`. The JSON evaluation API accepts the
-search sets as `fit` arguments (`ovcd-format/src/gas_arrangement.rs`, `FIT_OPTION_KEYS`).
+search sets as `fit` arguments (`ovd-format/src/gas_arrangement.rs`, `FIT_OPTION_KEYS`).
 
 ## Limits and known findings
 
@@ -293,7 +293,7 @@ search sets as `fit` arguments (`ovcd-format/src/gas_arrangement.rs`, `FIT_OPTIO
 
 ## Evidence
 
-- **Unit tests** (`crates/ovcd-core/tests/`):
+- **Unit tests** (`crates/ovd-core/tests/`):
   - `protective_location.rs`: d(Vc) on both sides of 1,000, 5,000 and 30,000 m³; the clear gap is d less the
     insulation; side and bottom per ship type.
   - `dome_in_vc.rs`: the default dome holds 2π m³; the side clearance is d of the tank with its dome less the
@@ -310,7 +310,7 @@ search sets as `fit` arguments (`ovcd-format/src/gas_arrangement.rs`, `FIT_OPTIO
   - `fit_choices.rs` (#675): a fixed tanks across is the only one tried, or the answer is infeasible with its
     failing checks; a least side space is kept by every candidate and gives a wing tank; each arrangement tried has
     one outcome; a failing blind distance names the lift needed.
-- **Format tests** (`crates/ovcd-format/tests/fit_choices_inputs.rs`, #675): the two inputs leave a file saved
+- **Format tests** (`crates/ovd-format/tests/fit_choices_inputs.rs`, #675): the two inputs leave a file saved
   before as it was; they reach the search through a Design; the no-wing-tank warning; the list is outside the
   hash; the lift default and its datum.
 - **Design impact of #264:** 47 of 135 designs moved (all gas). 42 now pass with a smaller arrangement, 5 stay

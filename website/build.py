@@ -1,7 +1,7 @@
-"""Build the OVCD website and docs into website/_site/.
+"""Build the OVD website and docs into website/_site/.
 
-The site lives at https://www.africanrivercorridors.com/ovcd. The ARC site proxies /ovcd to this
-repo's GitHub Pages site, so every URL in the output is an absolute /ovcd/... path (see
+The site lives at https://www.africanrivercorridors.com/ovd. The ARC site proxies /ovd to this
+repo's GitHub Pages site, so every URL in the output is an absolute /ovd/... path (see
 website/README.md for why).
 
 Steps:
@@ -11,8 +11,8 @@ Steps:
   3. Run mkdocs (website/mkdocs.yml) into _site/docs/.
 
 Optional: --app-dist <dir> adds the built web app (app/dist-web, from `npm run build:web`):
-<dir>/index.html becomes _site/app.html (served at /ovcd/app) and the rest of <dir> goes to
-_site/app-files/ (served at /ovcd/app-files/). Without it the "coming soon" app.html stays, and
+<dir>/index.html becomes _site/app.html (served at /ovd/app) and the rest of <dir> goes to
+_site/app-files/ (served at /ovd/app-files/). Without it the "coming soon" app.html stays, and
 the docs build with no Rust or Node.
 
 Run from anywhere: python3 website/build.py [--app-dist app/dist-web]
@@ -30,8 +30,8 @@ WEBSITE = Path(__file__).resolve().parent
 REPO = WEBSITE.parent
 SITE = WEBSITE / "_site"
 DOCS_SRC = WEBSITE / "_docs"
-BLOB = "https://github.com/African-River-Corridors/open-vessel-concept-drawings/blob/main/"
-TREE = "https://github.com/African-River-Corridors/open-vessel-concept-drawings/tree/main/"
+BLOB = "https://github.com/African-River-Corridors/open-vessel-designer/blob/main/"
+TREE = "https://github.com/African-River-Corridors/open-vessel-designer/tree/main/"
 
 STATIC = ["index.html", "app.html", "site.css", "tokens.css", "favicon.svg", "assets"]
 
@@ -92,7 +92,7 @@ def assemble_docs() -> None:
     assets = DOCS_SRC / "assets"
     shutil.copytree(WEBSITE / "assets" / "logo", assets / "logo")
     shutil.copy(WEBSITE / "tokens.css", assets / "tokens.css")
-    shutil.copy(WEBSITE / "docs-theme" / "ovcd.css", assets / "ovcd.css")
+    shutil.copy(WEBSITE / "docs-theme" / "ovd.css", assets / "ovd.css")
     shutil.copy(WEBSITE / "favicon.svg", assets / "favicon.svg")
 
 
