@@ -196,6 +196,9 @@ jobs:
               awk '/^## /{ if (on) exit; if ($0 == "## Unreleased") { on = 1; next } } on { print }' CHANGELOG.md
             } > notes.md
           fi
+          # a release body holds at most 125,000 characters: cut long notes at a line, link the rest
+          python3 tools/release_notes.py notes.md \
+            --link "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/$GITHUB_SHA/CHANGELOG.md"
           {
             echo
             echo "These installers are not signed. Windows SmartScreen and macOS show a warning on first start; the README says what to click."
