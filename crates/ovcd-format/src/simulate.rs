@@ -1199,12 +1199,40 @@ fn simulate_measured(
     } else {
         0.0
     };
-    let cargo_weight_bound = if is_code(p) {
+    let mut cargo_weight_bound = if is_code(p) {
         py_max(0.0, disp_max - ls - consumables_t)
     } else {
         py_max(0.0, disp_max - ls)
     };
-    let cargo_t = py_min(cargo_volume_bound, cargo_weight_bound);
+    let mut cargo_t = py_min(cargo_volume_bound, cargo_weight_bound);
+    // Issue #680: the cap binds the draught the Design reports. A dry bulk hull with its stern block
+    // mass floats trimmed, and at the displacement of the level cap its mid-length draught can be
+    // deeper than the cap. Then the cargo is the most whose reported draught is at the cap.
+    if phase == CargoClass::DryBulk {
+        let consumables = if is_code(p) { consumables_t } else { 0.0 };
+        let reported = |cargo: f64| -> R<f64> {
+            let deadweight = cargo + consumables;
+            match barge_capacity::bulk_float_draught_at(&inp, &r, deadweight, &hull)
+                .map_err(|e| Stop::Raised(e.kind.to_string(), e.message))?
+            {
+                Some(t) => Ok(t),
+                None => level_draught(&hull, ls + deadweight, rho),
+            }
+        };
+        if reported(cargo_t)? > t_max + 1e-9 {
+            let (mut lo, mut hi) = (0.0, cargo_t);
+            for _ in 0..60 {
+                let mid = (lo + hi) / 2.0;
+                if reported(mid)? > t_max {
+                    hi = mid;
+                } else {
+                    lo = mid;
+                }
+            }
+            cargo_weight_bound = lo;
+            cargo_t = lo;
+        }
+    }
     let mut ids = TextIds::default();
     let governs = if cargo_volume_bound <= cargo_weight_bound {
         Text::plain(if phase == CargoClass::LiquidBulk {
