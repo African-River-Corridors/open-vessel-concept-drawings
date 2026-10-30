@@ -89,3 +89,77 @@ export function orbitStep(position: Vec3, target: Vec3, dAzimuth: number, dPolar
     target[2] + r * Math.cos(polar),
   ];
 }
+
+/**
+ * The part of the core's shared buffers that one group uses, as buffers of its own (spec 0009, "The
+ * 3D view"; issue #683). The core appends each part's vertices then its triangles, so a group's
+ * vertices are one run, from its lowest index to its highest: the slice is that run, and the indices
+ * are moved down by its start. Each group then gets its own bounding sphere, so transparent parts
+ * sort and frustum culling works.
+ */
+export function groupSlice(
+  positions: Float32Array,
+  indices: Uint32Array,
+  start: number,
+  count: number,
+): { positions: Float32Array; indices: Uint32Array } {
+  const own = indices.subarray(start, start + count);
+  if (own.length === 0) return { positions: new Float32Array(0), indices: new Uint32Array(0) };
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (const i of own) {
+    if (i < lo) lo = i;
+    if (i > hi) hi = i;
+  }
+  return { positions: positions.slice(3 * lo, 3 * (hi + 1)), indices: own.map((i) => i - lo) };
+}
+
+/**
+ * Whether a layer is drawn with flat shading: the hull, the decks, the bulkheads, the Spaces and the
+ * waterline planes are made of flat panels, so each face takes its own normal and the knuckles show.
+ * Any other layer is a curved part (tanks, domes, nozzles: later tickets of spec 0009), drawn smooth.
+ */
+export function flatShaded(layer: string): boolean {
+  return ["hull", "deck", "bulkhead", "space", "waterline"].includes(layer);
+}
+
+/** The default camera's height above the horizon, in degrees (spec 0009, "The 3D view"). */
+export const HOME_ELEVATION_DEG = 25;
+/** The margin round the model in the default view: the model fills 1 / 1.1 of the half view. */
+export const HOME_MARGIN = 1.1;
+
+/**
+ * The default camera of the 3D view, in model axes: from the aft-starboard quarter (45 degrees off the
+ * centre line, abaft and to starboard), `HOME_ELEVATION_DEG` above the horizon, looking at the centre
+ * of the box `min`..`max`, and just far enough back that every corner of the box is inside the view
+ * with the margin `HOME_MARGIN` (vertical field of view `fovDeg`, width over height `aspect`).
+ */
+export function homeView(min: Vec3, max: Vec3, fovDeg: number, aspect: number): { position: Vec3; target: Vec3; up: Vec3 } {
+  const target: Vec3 = [(min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2];
+  const el = (HOME_ELEVATION_DEG * Math.PI) / 180;
+  const az = Math.PI / 4;
+  // From the target towards the camera: aft (x < 0), to starboard (y > 0), up.
+  const back: Vec3 = [-Math.cos(el) * Math.cos(az), Math.cos(el) * Math.sin(az), Math.sin(el)];
+  // The screen's right and up, seen from the camera.
+  const right: Vec3 = [Math.sin(az), Math.cos(az), 0];
+  const up: Vec3 = [
+    back[1] * right[2] - back[2] * right[1],
+    back[2] * right[0] - back[0] * right[2],
+    back[0] * right[1] - back[1] * right[0],
+  ];
+  const tanV = Math.tan((fovDeg * Math.PI) / 360);
+  const tanH = tanV * aspect;
+  let distance = 0;
+  for (const cx of [min[0], max[0]])
+    for (const cy of [min[1], max[1]])
+      for (const cz of [min[2], max[2]]) {
+        const p = [cx - target[0], cy - target[1], cz - target[2]];
+        const dot = (v: Vec3) => p[0] * v[0] + p[1] * v[1] + p[2] * v[2];
+        // A corner at depth dot(back) towards the camera fits when its offset over its distance from
+        // the camera is no more than the tangent of the half view, over the margin.
+        const toward = dot(back);
+        distance = Math.max(distance, toward + (Math.abs(dot(right)) * HOME_MARGIN) / tanH, toward + (Math.abs(dot(up)) * HOME_MARGIN) / tanV);
+      }
+  const position: Vec3 = [target[0] + back[0] * distance, target[1] + back[1] * distance, target[2] + back[2] * distance];
+  return { position, target, up: [0, 0, 1] };
+}
