@@ -138,6 +138,7 @@ check-name-machinery-fits-under-deck = machinery fits under deck
 check-machinery-fits-under-deck = engine { $height } m + 1.00 m double bottom and deck structure (ESTIMATE) <= moulded depth { $depth } m
 warn-machinery-power-not-sized = The installed power is not sized yet, so the engines and their room are not in the stern block; type an installed power to place them.
 warn-machinery-no-engine = No engine of the table covers { $kw } kW per engine (the largest is 4,400 kW), so the engine room is not in the stern block.
+warn-propulsor-layout-offsets = The stern holds { $held } propulsor places for { $count } propulsors; the layout spreads the { $count } at { $pitch } m.
 
 ## crates/ovcd-core/src/offsets.rs
 

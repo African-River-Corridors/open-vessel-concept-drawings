@@ -1519,6 +1519,9 @@ fn simulate_once(p: &Map<String, Value>, measured: &mut Measured, rules: &RunRul
     if let Some(g) = stern {
         dry_parts.push(("stern", stern_drawing(g)));
     }
+    if let Some(layout) = propulsor_layout_of(&inp, &r) {
+        dry_parts.push(("propulsors", propulsors_drawing(&layout)));
+    }
     // Issue #450: the hull's own midship section, for the GA.
     dry_parts.extend(midship_outline(&hull));
     let drawing = drawing_json(dry_parts);
@@ -2244,6 +2247,97 @@ fn stern_drawing(g: &ovcd_core::stern_form::SternGeometry) -> Value {
     })
 }
 
+/// Issue #691 (spec 0009): the Propulsor Layout of a self-propelled hull, for `drawing.propulsors`
+/// (outside the results hash). A specified Propulsor takes its machinery; the default stern block
+/// its thrusters. `None` with no stern block.
+pub(crate) fn propulsor_layout_of(
+    inp: &BargeCapacityInputs,
+    r: &BargeCapacityResult,
+) -> Option<ovcd_core::machinery::PropulsorLayout> {
+    use ovcd_core::machinery::{default_thruster_layout, propulsor_layout};
+    let aft = r.aft_arrangement.as_ref()?;
+    let (envelope, clear) = match &inp.aft {
+        Some(a) => (a.thruster_envelope_m, a.thruster_clear_m),
+        None => (
+            inp.aft_design.thruster_envelope_m,
+            inp.aft_design.thruster_clear_m,
+        ),
+    };
+    match (&inp.machinery, &aft.machinery) {
+        (Some(mi), Some(m)) => {
+            // Under a tunnel stern every type sits on its tunnel's axis (spec 0009).
+            let offsets = match &inp.stern_geometry {
+                Some(g) if g.form == ovcd_core::stern_form::SternForm::Tunnel => {
+                    g.tunnel_offsets_m.as_slice()
+                }
+                _ => aft.thruster_offsets_m.as_slice(),
+            };
+            Some(propulsor_layout(mi, m, offsets, envelope + clear, inp.beam))
+        }
+        _ => default_thruster_layout(
+            aft.thruster_room_length_m,
+            envelope,
+            &aft.thruster_offsets_m,
+        ),
+    }
+}
+
+/// `drawing.propulsors` (issue #691): the Propulsor Layout as JSON.
+fn propulsors_drawing(l: &ovcd_core::machinery::PropulsorLayout) -> Value {
+    let place = |lcg: f64, kcg: f64| json!({ "lcg_m": num(lcg), "kcg_m": num(kcg) });
+    json!({
+        "propulsor_type": l.propulsor_type,
+        "diameter_m": num(l.diameter_m),
+        "axis_z_m": num(l.axis_z_m),
+        "ducted": l.ducted,
+        "propulsors": l.propulsors.iter().map(|u| json!({
+            "x_m": num(u.x_m),
+            "y_m": num(u.y_m),
+            "z_m": num(u.z_m),
+            "mass_item": u.mass_item,
+            "mass_centre": place(u.lcg_m, u.kcg_m),
+            "nozzle": u.nozzle.map_or(Value::Null, |n| json!({
+                "inner_diameter_m": num(n.inner_diameter_m),
+                "outer_diameter_m": num(n.outer_diameter_m),
+                "length_m": num(n.length_m),
+            })),
+            "azimuth": u.azimuth.map_or(Value::Null, |a| json!({
+                "leg_top_z_m": num(a.leg_top_z_m),
+                "leg_chord_m": num(a.leg_chord_m),
+                "leg_thickness_m": num(a.leg_thickness_m),
+                "pod_length_m": num(a.pod_length_m),
+                "pod_diameter_m": num(a.pod_diameter_m),
+            })),
+            "shaft": u.shaft.map_or(Value::Null, |s| json!({
+                "x_aft_m": num(s.x_aft_m),
+                "length_m": num(s.length_m),
+                "axis_z_m": num(s.axis_z_m),
+            })),
+        })).collect::<Vec<_>>(),
+        "rudders": l.rudders.iter().map(|r| json!({
+            "x_m": num(r.x_m),
+            "y_m": num(r.y_m),
+            "z_m": num(r.z_m),
+            "span_m": num(r.span_m),
+            "chord_m": num(r.chord_m),
+            "thickness_m": num(r.thickness_m),
+            "mass_item": "rudders and steering gear",
+            "mass_centre": place(r.lcg_m, r.kcg_m),
+        })).collect::<Vec<_>>(),
+        "bow_thruster": l.bow_thruster.as_ref().map_or(Value::Null, |b| json!({
+            "x_m": num(b.x_m),
+            "z_m": num(b.z_m),
+            "tunnel_diameter_m": num(b.tunnel_diameter_m),
+            "tunnel_length_m": num(b.tunnel_length_m),
+            "power_kw": num(b.power_kw),
+            "mass_item": "bow thruster",
+            "mass_centre": place(b.lcg_m, b.kcg_m),
+        })),
+        // A disagreement of the layout with the stern (not a result warning: the hash stays).
+        "warnings": l.warnings.iter().map(ToString::to_string).collect::<Vec<_>>(),
+    })
+}
+
 /// Whether the stern block's mass is in the lightship (issue #348), and what it needs. A key left
 /// out keeps it out, as before.
 fn stern_mass_of(p: &Map<String, Value>) -> R<Option<ovcd_core::aft_arrangement::SternMassInputs>> {
@@ -2751,6 +2845,9 @@ fn simulate_gas(
     }
     if let Some(g) = stern {
         drawing_parts.push(("stern", stern_drawing(g)));
+    }
+    if let Some(layout) = propulsor_layout_of(&f.engine_inputs, r) {
+        drawing_parts.push(("propulsors", propulsors_drawing(&layout)));
     }
     // Issue #450: the hull's own midship section, for the GA.
     drawing_parts.extend(midship_outline(&fit_hull));

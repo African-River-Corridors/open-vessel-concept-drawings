@@ -420,11 +420,9 @@ pub fn mass_items(
         .installed_power_kw
         .filter(|p| *p > 0.0)
         .unwrap_or(power_fallback_kw);
-    let drive_lcg = match m.zones.get(1) {
-        Some((_, a, f)) => (a + f) / 2.0,
-        None => 0.0,
-    };
-    let shaft_axis = d / 2.0;
+    let drive = drive_unit_positions(inp.propulsor, drive_room_centre(m), d);
+    let drive_lcg = drive.lcg_m;
+    let shaft_axis = axis_height(d);
     let mut push = |label: &'static str, mass_t: f64, lcg_m: f64, kcg_m: f64| {
         if mass_t > 0.0 {
             items.push(MassItem {
@@ -437,31 +435,40 @@ pub fn mass_items(
     };
     match inp.propulsor {
         PropulsorType::AzimuthDucted | PropulsorType::AzimuthOpen => {
-            push("propulsors", n * AZIMUTH_T_PER_D3 * d * d * d, drive_lcg, d);
+            push(
+                "propulsors",
+                n * AZIMUTH_T_PER_D3 * d * d * d,
+                drive.lcg_m,
+                drive.kcg_m,
+            );
         }
-        PropulsorType::VoithSchneider => push("propulsors", VSP_T_PER_KW * power, drive_lcg, d),
+        PropulsorType::VoithSchneider => {
+            push("propulsors", VSP_T_PER_KW * power, drive.lcg_m, drive.kcg_m)
+        }
         PropulsorType::PumpJet => {
             let p = power / n;
             let kg = 0.003 * p * p + 6.0829 * p - 138.17;
             push(
                 "propulsors",
                 n * kg.max(0.0) / 1000.0,
-                drive_lcg,
-                shaft_axis,
+                drive.lcg_m,
+                drive.kcg_m,
             );
         }
         PropulsorType::ShaftOpen | PropulsorType::ShaftNozzle => {
+            let shaft = shaft_positions(m, d);
             push(
                 "shaft lines",
                 n * SHAFT_T_PER_M * m.shaft_length_m,
-                AFT_PEAK_M + m.shaft_length_m / 2.0,
-                shaft_axis,
+                shaft.centre().lcg_m,
+                shaft.centre().kcg_m,
             );
+            let rudder = rudder_positions(d);
             push(
                 "rudders and steering gear",
                 n * (RUDDERS_PER_SHAFT * RUDDER_T_PER_M_D * d + STEERING_GEAR_T),
-                AFT_PEAK_M / 2.0,
-                d,
+                rudder.lcg_m,
+                rudder.kcg_m,
             );
         }
     }
@@ -514,11 +521,12 @@ pub fn mass_items(
         );
     }
     if let Some(kw) = inp.bow_thruster_kw {
+        let at = bow_thruster_position(inp);
         push(
             "bow thruster",
             BOW_THRUSTER_T_PER_KW * kw,
-            inp.bow_thruster_lcg_m,
-            1.0,
+            at.lcg_m,
+            at.kcg_m,
         );
     }
     if m.battery_room_m3 > 0.0 {
@@ -543,4 +551,379 @@ pub fn mass_items(
         double_bottom_m,
     );
     items
+}
+
+// --- Spec 0009 "Propulsors" (issue #691): the Propulsor Layout. ------------------------------------
+//
+// One set of position functions places every propulsor, shaft line, rudder and the bow thruster.
+// [`mass_items`] (and the stern block of an `unspecified` Propulsor,
+// [`crate::aft_arrangement::stern_block_mass`]) take their centres from them, and
+// [`propulsor_layout`] gives the same places, with sizes, to the drawings and the 3D view. The
+// layout adds geometry only: no mass and no result moves.
+
+/// The sizes of the Propulsor Layout that no published proportion gives (spec 0009 decision D2):
+/// each is an estimate, with a row in `docs/basis/11-drawings.md`. They size the drawn parts only;
+/// no mass, centre or result reads them.
+pub mod layout_rates {
+    /// Nozzle length over the propeller diameter (estimate).
+    pub const NOZZLE_LENGTH_OVER_D: f64 = 0.5;
+    /// Azimuth pod length and diameter over the propeller diameter (estimates).
+    pub const POD_LENGTH_OVER_D: f64 = 0.8;
+    pub const POD_DIAMETER_OVER_D: f64 = 0.35;
+    /// Azimuth leg: its top above the base, its chord and thickness, over the propeller diameter
+    /// (estimates).
+    pub const LEG_TOP_OVER_D: f64 = 1.5;
+    pub const LEG_CHORD_OVER_D: f64 = 0.4;
+    pub const LEG_THICKNESS_OVER_D: f64 = 0.15;
+    /// Rudder span and chord over the propeller diameter, thickness over the chord, and the
+    /// athwartships distance between the two rudders of a shaft over the diameter (estimates).
+    pub const RUDDER_SPAN_OVER_D: f64 = 1.0;
+    pub const RUDDER_CHORD_OVER_D: f64 = 0.7;
+    pub const RUDDER_THICKNESS_OVER_CHORD: f64 = 0.15;
+    pub const RUDDER_SPACING_OVER_D: f64 = 0.6;
+    /// Bow thruster tunnel diameter per square root of its power (m per kW^0.5, estimate).
+    pub const BOW_TUNNEL_D_PER_SQRT_KW: f64 = 0.07;
+}
+
+/// A mass centre: LCG from the aft end and KCG above the base (m).
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct Place {
+    pub lcg_m: f64,
+    pub kcg_m: f64,
+}
+
+/// The shaft axis above the base: half the propeller diameter (the tip on the base, as the Stern
+/// Form's D_max and the `powering.shaft_axis_height_m` result have it).
+pub fn axis_height(d: f64) -> f64 {
+    d / 2.0
+}
+
+/// The centre of the drive room (or shaft run), the second zone below deck; 0 with none.
+pub fn drive_room_centre(m: &Machinery) -> f64 {
+    match m.zones.get(1) {
+        Some((_, a, f)) => (a + f) / 2.0,
+        None => 0.0,
+    }
+}
+
+/// The mass centre of the drive units (azimuth, Voith Schneider, pump jet) at a drive room centred
+/// at `drive_lcg_m`: an azimuth or Voith Schneider unit at the base + D (spec 0007), a pump jet on
+/// the shaft axis.
+pub fn drive_unit_positions(propulsor: PropulsorType, drive_lcg_m: f64, d: f64) -> Place {
+    let kcg_m = match propulsor {
+        PropulsorType::PumpJet | PropulsorType::ShaftOpen | PropulsorType::ShaftNozzle => {
+            axis_height(d)
+        }
+        _ => d,
+    };
+    Place {
+        lcg_m: drive_lcg_m,
+        kcg_m,
+    }
+}
+
+/// A shaft line from the aft peak forward, on the shaft axis.
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct ShaftPlace {
+    pub x_aft_m: f64,
+    pub length_m: f64,
+    pub axis_z_m: f64,
+}
+
+impl ShaftPlace {
+    /// The shaft line's mass centre: its middle.
+    pub fn centre(&self) -> Place {
+        Place {
+            lcg_m: self.x_aft_m + self.length_m / 2.0,
+            kcg_m: self.axis_z_m,
+        }
+    }
+}
+
+/// The shaft lines of a shaft drive: from the aft peak's forward end, the shaft length forward. The
+/// propeller sits at the aft end.
+pub fn shaft_positions(m: &Machinery, d: f64) -> ShaftPlace {
+    ShaftPlace {
+        x_aft_m: rates::AFT_PEAK_M,
+        length_m: m.shaft_length_m,
+        axis_z_m: axis_height(d),
+    }
+}
+
+/// The rudders and steering gear of a shaft drive: in the aft peak, aft of the propellers, at the
+/// base + D (spec 0007).
+pub fn rudder_positions(d: f64) -> Place {
+    Place {
+        lcg_m: rates::AFT_PEAK_M / 2.0,
+        kcg_m: d,
+    }
+}
+
+/// The bow thruster: at its LCG, 1.0 m above the base (spec 0007).
+pub fn bow_thruster_position(inp: &MachineryInputs) -> Place {
+    Place {
+        lcg_m: inp.bow_thruster_lcg_m,
+        kcg_m: 1.0,
+    }
+}
+
+/// A nozzle round a propeller disc.
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct Nozzle {
+    pub inner_diameter_m: f64,
+    pub outer_diameter_m: f64,
+    pub length_m: f64,
+}
+
+/// The leg and pod of an azimuth unit: the leg from the pod up to `leg_top_z_m`.
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct AzimuthLeg {
+    pub leg_top_z_m: f64,
+    pub leg_chord_m: f64,
+    pub leg_thickness_m: f64,
+    pub pod_length_m: f64,
+    pub pod_diameter_m: f64,
+}
+
+/// One propulsor: its disc centre (x from the aft end, y + port, z the axis), the mass centre of its
+/// mass item, and its parts.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct PropulsorPart {
+    pub x_m: f64,
+    pub y_m: f64,
+    pub z_m: f64,
+    /// The mass item this unit belongs to, and its centre.
+    pub mass_item: &'static str,
+    pub lcg_m: f64,
+    pub kcg_m: f64,
+    pub nozzle: Option<Nozzle>,
+    pub azimuth: Option<AzimuthLeg>,
+    /// A shaft drive's shaft line.
+    pub shaft: Option<ShaftPlace>,
+}
+
+/// One rudder blade: its centre, span (vertical), chord (fore and aft) and thickness.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct RudderPart {
+    pub x_m: f64,
+    pub y_m: f64,
+    pub z_m: f64,
+    pub span_m: f64,
+    pub chord_m: f64,
+    pub thickness_m: f64,
+    pub lcg_m: f64,
+    pub kcg_m: f64,
+}
+
+/// The bow thruster: a tunnel across the hull on its axis.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct BowThrusterPart {
+    pub x_m: f64,
+    pub z_m: f64,
+    pub tunnel_diameter_m: f64,
+    /// Across the hull: the moulded beam.
+    pub tunnel_length_m: f64,
+    pub power_kw: f64,
+    pub lcg_m: f64,
+    pub kcg_m: f64,
+}
+
+/// The Propulsor Layout (spec 0009): the place and size of each propulsor, nozzle, rudder and bow
+/// thruster of a Hull.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct PropulsorLayout {
+    /// The Propulsor type key, or `unspecified` for the default stern block's thrusters.
+    pub propulsor_type: &'static str,
+    pub diameter_m: f64,
+    pub axis_z_m: f64,
+    pub ducted: bool,
+    pub propulsors: Vec<PropulsorPart>,
+    pub rudders: Vec<RudderPart>,
+    pub bow_thruster: Option<BowThrusterPart>,
+    #[cfg_attr(feature = "serde", serde(skip))]
+    pub warnings: Vec<Text>,
+}
+
+/// The athwartships centres of `count` units: the stern's offsets when they hold `count`, else
+/// `count` units spread at `pitch` about the centre line, with a warning. `offsets` are the tunnel
+/// centres under a tunnel stern, else the stern block's thruster offsets.
+fn unit_offsets(offsets: &[f64], count: usize, pitch: f64, warnings: &mut Vec<Text>) -> Vec<f64> {
+    if offsets.len() == count {
+        return offsets.to_vec();
+    }
+    warnings.push(text!(
+        "warn-propulsor-layout-offsets",
+        "The stern holds {held} propulsor places for {count} propulsors; the layout spreads the {count} at {pitch} m.",
+        held = offsets.len() as i64,
+        count = count as i64,
+        pitch = Arg::fixed(pitch, 2),
+    ));
+    let span = (count as f64 - 1.0) * pitch;
+    (0..count).map(|i| -span / 2.0 + i as f64 * pitch).collect()
+}
+
+/// The Propulsor Layout of a specified Propulsor. `offsets` are the tunnel centres under a tunnel
+/// stern (every type), else the stern block's thruster offsets; `pitch` is the stern block's
+/// thruster pitch, used when `offsets` does not hold `propulsor_count` units; `beam` the tunnel
+/// length of the bow thruster.
+pub fn propulsor_layout(
+    inp: &MachineryInputs,
+    m: &Machinery,
+    offsets: &[f64],
+    pitch: f64,
+    beam: f64,
+) -> PropulsorLayout {
+    use layout_rates::*;
+    let d = inp.propeller_diameter_m;
+    let axis = axis_height(d);
+    let mut warnings = Vec::new();
+    let ys = unit_offsets(
+        offsets,
+        inp.propulsor_count.max(1) as usize,
+        pitch,
+        &mut warnings,
+    );
+    let nozzle = inp.propulsor.ducted().then_some(Nozzle {
+        inner_diameter_m: d,
+        outer_diameter_m: crate::aft_arrangement::stern_mass::ENVELOPE_OVER_DIAMETER * d,
+        length_m: NOZZLE_LENGTH_OVER_D * d,
+    });
+    let mut propulsors = Vec::new();
+    let mut rudders = Vec::new();
+    for &y in &ys {
+        if inp.shaft_drive() {
+            let shaft = shaft_positions(m, d);
+            let centre = shaft.centre();
+            propulsors.push(PropulsorPart {
+                x_m: shaft.x_aft_m,
+                y_m: y,
+                z_m: axis,
+                mass_item: "shaft lines",
+                lcg_m: centre.lcg_m,
+                kcg_m: centre.kcg_m,
+                nozzle,
+                azimuth: None,
+                shaft: Some(shaft),
+            });
+            let r = rudder_positions(d);
+            for side in [-1.0, 1.0] {
+                rudders.push(RudderPart {
+                    x_m: r.lcg_m,
+                    y_m: y + side * RUDDER_SPACING_OVER_D * d / 2.0,
+                    z_m: r.kcg_m,
+                    span_m: RUDDER_SPAN_OVER_D * d,
+                    chord_m: RUDDER_CHORD_OVER_D * d,
+                    thickness_m: RUDDER_THICKNESS_OVER_CHORD * RUDDER_CHORD_OVER_D * d,
+                    lcg_m: r.lcg_m,
+                    kcg_m: r.kcg_m,
+                });
+            }
+        } else {
+            let at = drive_unit_positions(inp.propulsor, drive_room_centre(m), d);
+            let azimuth = matches!(
+                inp.propulsor,
+                PropulsorType::AzimuthOpen | PropulsorType::AzimuthDucted
+            )
+            .then(|| azimuth_leg(d));
+            propulsors.push(PropulsorPart {
+                x_m: at.lcg_m,
+                y_m: y,
+                z_m: axis,
+                mass_item: "propulsors",
+                lcg_m: at.lcg_m,
+                kcg_m: at.kcg_m,
+                nozzle,
+                azimuth,
+                shaft: None,
+            });
+        }
+    }
+    let bow_thruster = inp.bow_thruster_kw.map(|kw| {
+        let at = bow_thruster_position(inp);
+        BowThrusterPart {
+            x_m: at.lcg_m,
+            z_m: at.kcg_m,
+            tunnel_diameter_m: BOW_TUNNEL_D_PER_SQRT_KW * libm::sqrt(kw),
+            tunnel_length_m: beam,
+            power_kw: kw,
+            lcg_m: at.lcg_m,
+            kcg_m: at.kcg_m,
+        }
+    });
+    PropulsorLayout {
+        propulsor_type: inp.propulsor.key(),
+        diameter_m: d,
+        axis_z_m: axis,
+        ducted: inp.propulsor.ducted(),
+        propulsors,
+        rudders,
+        bow_thruster,
+        warnings,
+    }
+}
+
+fn azimuth_leg(d: f64) -> AzimuthLeg {
+    use layout_rates::*;
+    AzimuthLeg {
+        leg_top_z_m: LEG_TOP_OVER_D * d,
+        leg_chord_m: LEG_CHORD_OVER_D * d,
+        leg_thickness_m: LEG_THICKNESS_OVER_D * d,
+        pod_length_m: POD_LENGTH_OVER_D * d,
+        pod_diameter_m: POD_DIAMETER_OVER_D * d,
+    }
+}
+
+/// The Propulsor Layout of the default stern block (an `unspecified` Propulsor): its ducted azimuth
+/// thrusters, D = the thruster envelope / 1.35, at the thruster room's centre and the stern block's
+/// offsets (the count is the offsets', as the thrusters' mass item takes it).
+pub fn default_thruster_layout(
+    thruster_room_length_m: f64,
+    thruster_envelope_m: f64,
+    offsets: &[f64],
+) -> Option<PropulsorLayout> {
+    if offsets.is_empty() {
+        return None;
+    }
+    let d = thruster_envelope_m / crate::aft_arrangement::stern_mass::ENVELOPE_OVER_DIAMETER;
+    let at = drive_unit_positions(
+        PropulsorType::AzimuthDucted,
+        thruster_room_length_m / 2.0,
+        d,
+    );
+    let propulsors = offsets
+        .iter()
+        .map(|&y| PropulsorPart {
+            x_m: at.lcg_m,
+            y_m: y,
+            z_m: axis_height(d),
+            mass_item: "thrusters",
+            lcg_m: at.lcg_m,
+            kcg_m: at.kcg_m,
+            nozzle: Some(Nozzle {
+                inner_diameter_m: d,
+                outer_diameter_m: thruster_envelope_m,
+                length_m: layout_rates::NOZZLE_LENGTH_OVER_D * d,
+            }),
+            azimuth: Some(azimuth_leg(d)),
+            shaft: None,
+        })
+        .collect();
+    Some(PropulsorLayout {
+        propulsor_type: "unspecified",
+        diameter_m: d,
+        axis_z_m: axis_height(d),
+        ducted: true,
+        propulsors,
+        rudders: Vec::new(),
+        bow_thruster: None,
+        warnings: Vec::new(),
+    })
 }
