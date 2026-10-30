@@ -190,6 +190,67 @@ fn steel_json(w: &WeightBreakdown) -> Value {
     })
 }
 
+/// Issue #722: the gas hull steel built up from its structural members (`ovd_core::hull_panels`), set
+/// beside the two steel figures as `steel.panel_t`, and the panel table as `hull_panels`, for a later
+/// ticket to draw. Neither the lightship nor the cost reads it yet: which figure drives them is the
+/// maintainer's question on issue #722. Concept and preliminary design only; not a structural approval.
+pub fn with_hull_panels(mut v: Value, m: &ovd_core::hull_panels::HullPanelModel) -> Value {
+    if v.is_null() {
+        return v;
+    }
+    v["steel"]["panel_t"] = json!(m.total_t);
+    let members: Vec<Value> = m
+        .members
+        .iter()
+        .map(|p| {
+            json!({
+                "member": p.member,
+                "x_m": [p.x_m.0, p.x_m.1],
+                "y_m": [p.y_m.0, p.y_m.1],
+                "z_m": [p.z_m.0, p.z_m.1],
+                "count": p.count,
+                "plate_area_m2": p.plate_area_m2,
+                "plate_mm": p.plate_mm,
+                "stiffener_direction": p.stiffener_direction.as_str(),
+                "stiffener_spacing_mm": p.stiffener_spacing_mm,
+                "stiffener": p.stiffener.as_ref().map(|s| json!({
+                    "name": s.name,
+                    "area_cm2": s.area_cm2(),
+                })),
+                "stiffener_length_m": p.stiffener_length_m,
+                "primary_spacing_m": p.primary_spacing_m,
+                "primary": p.primary,
+                "plate_t": p.plate_t,
+                "stiffeners_t": p.stiffeners_t,
+                "total_t": p.total_t,
+                "rule": p.rule,
+                "basis": p.basis,
+                "note": p.note,
+            })
+        })
+        .collect();
+    let g = &m.hull_girder;
+    v["hull_panels"] = json!({
+        "scope": "Concept and preliminary design only (ADR 0011). Class minimum scantlings; not a structural approval.",
+        "rule_edition": m.rule_edition,
+        "members": members,
+        "hull_girder": {
+            "smr_cm2m": g.smr_cm2m,
+            "sm_deck_cm2m": g.sm_deck_cm2m,
+            "sm_bottom_cm2m": g.sm_bottom_cm2m,
+            "deck_added_mm": g.deck_added_mm,
+            "bottom_added_mm": g.bottom_added_mm,
+            "neutral_axis_m": g.neutral_axis_m,
+        },
+        "net_t": m.net_t,
+        "allowance_pct": m.allowance_pct,
+        "allowance_t": m.allowance_t,
+        "allowance_basis": "brackets, collars, welds and small items (an Estimate)",
+        "total_t": m.total_t,
+    });
+    v
+}
+
 fn masses_of(m: &Value) -> Option<BargeCostInputs> {
     let g = |k: &str| m["masses"][k].as_f64();
     Some(BargeCostInputs {

@@ -137,7 +137,8 @@ pub struct GasBasis {
     /// Python `int`: a count any 64-bit field holds.
     pub n_tanks_total: i64,
     pub cylinder_length: f64,
-    pub steel_top_down: f64,
+    /// The hull steel of the lightship: the panel model of the hull (issue #722).
+    pub hull_steel: f64,
     pub tank_total: f64,
     pub insulation: f64,
     pub piping_machinery: f64,
@@ -192,7 +193,7 @@ impl TryFrom<&BargeCapacityResult> for GasCapacityResult {
                 total_tank_volume: b.tanks.total_tank_volume,
                 n_tanks_total: b.tanks.n_tanks_total,
                 cylinder_length: b.tanks.cylinder_length,
-                steel_top_down: b.weights.steel_top_down,
+                hull_steel: b.weights.hull_steel_total,
                 tank_total: b.weights.tank_total,
                 insulation: b.weights.insulation,
                 piping_machinery: b.weights.piping_machinery,
@@ -262,7 +263,7 @@ pub fn assess_num(
 
     // (t, KG m)
     let mut light_items: Vec<(f64, f64)> = vec![
-        (basis.steel_top_down, 0.5 * d),
+        (basis.hull_steel, 0.5 * d),
         (basis.tank_total + basis.insulation, kg_tank),
         (basis.piping_machinery, d),
         (basis.outfitting, 0.75 * d),
@@ -277,7 +278,7 @@ pub fn assess_num(
     let tank_zone_centre =
         crate::tanks::CargoZone::new(l, basis.bow_void_m, basis.stern_void_m).centre();
     let mut long_items: Vec<(f64, f64)> = vec![
-        (basis.steel_top_down, l / 2.0),
+        (basis.hull_steel, l / 2.0),
         (basis.tank_total + basis.insulation, tank_zone_centre),
         (basis.piping_machinery, l / 2.0),
         (basis.outfitting, basis.stern_void_m / 2.0),

@@ -34,27 +34,33 @@ dataclass defaults (`models.rs:166`), sets the tank and arrangement inputs, and 
 `calculate_weights` (`crates/ovd-core/src/weights.rs:44`) does two steel estimates. Only the first goes into the
 lightship.
 
-1. **Top-down steel** (Method, factor Fixed in code), `weights.rs:151-163`:
-   - wing tank top = DB + h_support + r_wing × OD, where DB is the double bottom, h_support the tank support
-     height, r_wing the wing tank height ratio (0.66) and OD the Tank Outer Diameter.
-   - the hull is weighed to the moulded depth D (the input) only (issue #410). The wing plate does not raise it.
-   - moulded volume V_m = LOA × B × D (m³).
-   - steel_top_down = 0.10 t/m³ × V_m.
-2. **Bottom-up steel** (Method, all values Fixed in code), `weights.rs:56-149`, `166`. Plating area × thickness ×
-   7.85 t/m³, for bottom (12 mm), side (10 mm), deck (10 mm) and rakes (mean of bottom and side). Internal
-   structure = plating × (2.0 − 1) for a gas barge (issue #401, step 2: see the next paragraph; the legacy API keeps 1.4). Add the wing plate and the weather shield (6 mm). This figure is reported
-   (`steel_bottom_up`, `steel_delta`) and goes to the cost masses. It is **not** in the lightship.
-   Step 2 of issue #401 (Estimate): the gas hull's structure factor is 2.0, not 1.4 (`GAS_HULL_STRUCTURE_FACTOR` in
-   `barge_capacity.rs`). It puts the bottom-up steel near 0.10 t/m³ of L × B × D (median 0.102 over the 107 case
-   designs that have both steel figures; range 0.066 to 0.120), the same as the top-down rate. The two steel masses
-   then differ by a median of -2 % (range -17 % to +51 %; the widest hulls have the least plating per volume). The
-   reference vessel library gives 0.145 t/m³ for 92 to 110 m dry bulk and tank vessels (designer estimates, not
-   weighed ships; the sheets differ from their own sums by up to 28 %); 2.3 would put the bottom-up steel at 0.115,
-   but 13 % above the top-down steel. A factor this high says that the plate thicknesses (12, 10 and 10 mm) are thin
-   for these hulls: the one number stands for both. It moves the cost (the hull steel line is 43 % higher) and
-   `steel_delta`; the lightship does not change. The result warns when the two steel masses differ by more than 20 % of
-   the bottom-up steel (Estimate, to calibrate against the reference vessel library; issue #404). The cost keeps pricing
-   the bottom-up steel.
+1. **Hull steel: the panel model** (Method, issue #722; maintainer decision 2026-10-30), `hull_panels.rs`. The gas
+   hull's lightship, piping, outfitting and cost take their hull steel from a build-up of the structural members:
+   bottom shell, side shell and strength deck (midship 0.4L and ends), inner bottom, inner side, wing tank top,
+   transverse bulkheads (one per hold end, a collision and an aft peak bulkhead), centre and side girders, solid
+   floors, wing web frames, side web frames and deck transverses. Each member is a record with its extent (x, y and z
+   bounds), plate thickness, stiffener direction, spacing and section, its supporting primary members and its rule
+   paragraphs (`cost_masses.hull_panels` in the results). The scantlings are the class minimums of the ABS Rules for
+   Building and Classing Steel Barges (2021), which ABS 5-5/11.1 applies to a liquefied gas tank barge. The hull
+   girder check of ABS 3-2-1/3.1 (SMR = C1 C2 L^2 B (Cb + 0.7), no depth term, K = 1) thickens the deck or bottom
+   over 0.4L amidships when the midship section falls short. Only continuous longitudinal structure counts in that
+   section: the deck strips outside the tank cut-outs, not the covering above D (see 6). Cb is the
+   `block_coefficient` input (0.85, an Estimate: the laden value would need the lightship first). The weight is the
+   sum over the records (plate area x thickness x 7.85 t/m3, plus stiffeners and primary members) plus **an allowance
+   of 5 % for brackets, collars, welds and small items (an Estimate: no primary source gives one figure)**. The
+   structure factor of 2.0 (#401, step 2) is retired. Concept and preliminary design only (ADR 0011): class minimum
+   scantlings, not a structural approval.
+   - **In the panel weight:** shell, deck, inner bottom, inner side and wing tank top plating; their longitudinals;
+     transverse bulkhead plating with its stiffeners and vertical webs; double-bottom girders and floors with the
+     floor stiffeners; wing web frames (plate diaphragms); side web frames; deck transverses.
+   - **Not in it:** brackets, collars and welds (only through the 5 % allowance); openings and lightening holes (not
+     deducted); a centreline bulkhead; tank saddles and their foundations; machinery seats, the engine room and
+     casing; the superstructure and wheelhouse steel; buckling stiffening; the covering above D (its own items, 6).
+   - The **top-down steel** (0.10 t/m3 x LOA x B x D) is still reported as `steel_top_down`, for comparison only.
+   - **Bottom-up steel** = the panel steel + the covering's parts above D (wing plate, side plating to it, weather
+     shield). The cost prices it, so no member below D is counted twice. The #404 disagreement warning no longer
+     applies to a gas hull: its lightship and cost take the same steel.
+   - Calibration: `calibration/hull_steel_cases.yaml` (no factor tuned).
 3. **Tank weight** (`tank_total`, `insulation`): see page 04. This page uses the two values as they come.
 4. **Piping and machinery** = 0.04 × (steel_top_down + tank_total), `weights.rs:170` (Fixed in code).
 5. **Outfitting** = 0.035 × (steel_top_down + tank_total), `weights.rs:173` (Fixed in code).
@@ -168,16 +174,16 @@ writes `calibration/factors.yaml`. Held-out cases are left out of the fit.
 
 | Id | Item | Value or method | Label | Source or basis | Where applied | If it is wrong |
 |---|---|---|---|---|---|---|
-| WC-A01 | Gas top-down steel rate | 0.10 t/m³ of LOA × B × D_m | Fixed in code | Carried over from the original engine; no source. No gas case is runnable in calibration | `models.rs:212`; `weights.rs:163` | Unknown |
+| WC-A01 | Gas hull steel | the panel model: members with ABS Steel Barge 2021 minimum scantlings, plus 5 % for brackets, welds and small items | Method; the allowance is an Estimate | Issue #722 (maintainer decision 2026-10-30); the top-down 0.10 t/m³ is reported only | `hull_panels.rs`; `weights.rs` | Lightship, draught, stability and cost |
 | WC-A02 | Hull depth for top-down steel; covering above D | Steel to D; wing plate, side plating and weather shield above D are lightship items at their own centres | Method | Maintainer decision (issue #410): the covering above D is non-structural by default; structural only where the user sets D over it | `weights::covering_items` | Moves cargo: the light KG rises, and some designs fail the IS Code angle of max GZ |
 | WC-A03 | Wing tank top | DB + h_support + 0.66 × OD | Estimate | Profile `wing_tank_height_ratio`, carried over from the original engine | `weights.rs:155-156`; `barge_capacity.rs:70` | Unknown |
-| WC-A04 | Gas piping and machinery | 0.04 × (top-down steel + tank total) | Fixed in code | Original engine; no source | `models.rs:217`; `weights.rs:170` | Unknown |
-| WC-A05 | Gas outfitting | 0.035 × (top-down steel + tank total) | Fixed in code | Original engine; no source | `models.rs:216`; `weights.rs:173` | Unknown |
-| WC-A06 | Gas lightship sum | top-down steel + tank total + insulation + piping + outfitting | Method | Original engine | `weights.rs:176` | Unknown |
+| WC-A04 | Gas piping and machinery | 0.04 × (panel hull steel + tank total) | Fixed in code | Original engine; no source | `models.rs:217`; `weights.rs:170` | Unknown |
+| WC-A05 | Gas outfitting | 0.035 × (panel hull steel + tank total) | Fixed in code | Original engine; no source | `models.rs:216`; `weights.rs:173` | Unknown |
+| WC-A06 | Gas lightship sum | panel hull steel + tank total + insulation + piping + outfitting | Method | Original engine | `weights.rs:176` | Unknown |
 | WC-A07 | Tank steel, internals, insulation | From the tank calculation | See page 04 | Page 04 | `weights.rs:75-79` | See page 04 |
 | WC-A08 | Hull steel density | 7.85 t/m³ | Fixed in code | Carbon steel | `models.rs:211`; `weights.rs:49` | Small effect; bottom-up only |
-| WC-A09 | Gas plate thicknesses | bottom 12 mm, side 10 mm, deck 10 mm | Fixed in code | Original engine; no source | `models.rs:207-209`; `weights.rs:52-59` | Bottom-up and cost only |
-| WC-A10 | Gas structure factor | internal structure = plating × (2.0 − 1) | Estimate | Set to about 0.10 t/m³ of L × B × D, the top-down rate (issue #401, step 2); the legacy API keeps 1.4 | `models.rs:210`; `weights.rs:69` | Bottom-up and cost only |
+| WC-A09 | Gas plate thicknesses | per member from the ABS Steel Barge 2021 formulas (the 12, 10 and 10 mm defaults are the legacy API only) | Method | Issue #722 | `hull_panels.rs` | Lightship and cost |
+| WC-A10 | Gas structure factor | retired (issue #722): the members are weighed one by one; the legacy API keeps 1.4 | Method | Issue #722 | `hull_panels.rs` | None |
 | WC-A11 | Rake plating thickness | mean of bottom and side thickness | Fixed in code | Original engine | `weights.rs:62-63` | None in the gas branch: the hull has no rakes (`barge_capacity.rs:570`) |
 | WC-A12 | Wing plate | deck thickness × (B − n_wide × chord) × tank zone + B × end zones, plus side extension above D | Method | Original engine | `weights.rs:81-122` | Bottom-up and cost only |
 | WC-A13 | Weather shield | 6 mm; top 1.5 m above tank top; top, sides and ends of the tank zone | Fixed in code | Original engine | `models.rs:185-186`; `weights.rs:124-149` | Bottom-up and cost only |
@@ -241,7 +247,7 @@ the app. Some are fields of `BargeCapacityInputs` or `BargeInputs` and can be se
 
 - The stern block of a self-propelled Hull has no mass in the lightship (WC-A29). The dry result gives no warning.
 - Deadweight is the cargo only (WC-A35). No loading condition has fuel, stores or crew.
-- The lightship uses top-down steel, but the cost masses use bottom-up steel (`crates/ovd-format/src/cost.rs:76-78`).
+- Since issue #722 the gas lightship and the cost take the same hull steel (the panel model).
   In the parity example the two differ by 297 t.
 - The gas lightship factors (WC-A01, A04, A05) have no calibration case. Gas and tank barge cases are in
   `not_yet_runnable_cases` (`calibration/cases.yaml:1321`).

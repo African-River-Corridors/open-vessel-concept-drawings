@@ -32,6 +32,7 @@ pub mod gas_separation;
 pub mod gas_stability;
 pub mod holtrop_mennen;
 pub mod hull;
+pub mod hull_panels;
 pub mod hydrostatics;
 pub mod journey_derating;
 pub mod liquid_bulk;

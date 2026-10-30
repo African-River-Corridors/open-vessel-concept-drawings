@@ -92,13 +92,15 @@ def test_a_hull_where_nothing_passes_has_a_failing_assessment():
 
 
 def test_a_light_condition_that_fails_only_the_angle_of_max_gz_is_feasible_with_a_failing_assessment():
-    """Issue #498: 60 x 10 x 6 m. The Light condition (no ballast) fails IS Code 2.2.3, the angle of
+    """Issue #498: 65 x 10 x 6 m. The Light condition (no ballast) fails IS Code 2.2.3, the angle of
     maximum GZ, and nothing else. `fit` calls the arrangement feasible; the assessment, as in 0.1.0,
-    still says the Light condition does not pass.
+    still says the Light condition does not pass. (Was 60 x 10 x 6 m until issue #722: with the hull
+    steel from the panel model that hull's half-laden condition fails the angle too, as in the Rust
+    test `a_light_condition_that_fails_only_the_angle_of_max_gz_is_a_warning_not_a_failure`.)
 
     Label: property
     """
-    f = fit(60.0, 10.0, "LPG_propane", 5.7, depths=[6.0], ruleset="IGC_2G", fill_ratio=0.98)
+    f = fit(65.0, 10.0, "LPG_propane", 5.7, depths=[6.0], ruleset="IGC_2G", fill_ratio=0.98)
     assert f.feasible and f.failed_checks == []
     a = assess(f.engine_result, f.payload_t, criteria_set="IS_CODE_2008")
     assert not a.ok and only_the_light_angle_may_fail(a)

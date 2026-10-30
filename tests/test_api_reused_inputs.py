@@ -39,8 +39,10 @@ def test_gas_stability_assess_after_the_inputs_object_was_reused():
     # Re-pinned (#567: the equilibrium solves stop at a tolerance); were 5.008782640783497 (90 m,
     # Laden) and 6.817748082762562 (70 m, Half laden). The values do not depend on the order or the
     # number of earlier calls.
-    expected = {90.0: (5.008782640783499, 7.174444292789616, 11.599547988722012),
-                70.0: (4.366034263765853, 6.8177480827625585, 12.267290419878801)}
+    # Re-pinned (issue #722, the panel hull steel); were (5.008782640783499, 7.174444292789616,
+    # 11.599547988722012) and (4.366034263765853, 6.8177480827625585, 12.267290419878801).
+    expected = {90.0: (5.20345064134188, 7.565823765632389, 12.558720422799523),
+                70.0: (4.580191966771631, 7.343310448477349, 13.943513548357597)}
     # The 12 m tank diameter cap of 0.1.0 (it is an input, 16 m by default, since issue #175).
     inp = B.BargeCapacityInputs(loa=90.0, beam=14.8, depth=6.5, cargo_type="LPG_propane",
                                 max_tank_od_m=12.0)

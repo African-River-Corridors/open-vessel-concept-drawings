@@ -1,0 +1,66 @@
+# Hull steel calibration of the panel model (issue #722, `crates/ovd-core/src/hull_panels.rs`).
+# Hand-written. The `ovd` figures are what the model printed on 2026-10-30 (branch
+# fix/722-gas-hull-steel, after the panel steel became the gas-hull lightship steel, with Cb = the
+# 0.85 `block_coefficient` input in the hull girder rule); they are a record, not a test. The library table is printed by
+# `cargo test -p ovd-core --test hull_panels_calibration -- --nocapture`.
+#
+# Concept and preliminary design only (ADR 0011). The panel model takes class minimum scantlings; it
+# is not a structural approval. Nothing here is fitted: no factor was tuned to these cases.
+
+rule_source:
+  document: "ABS Rules for Building and Classing Steel Barges"
+  edition: "2021 (July 2021 archive copy)"
+  url: https://ww2.eagle.org/content/dam/eagle/rules-and-guides/archives/special_service/10_rulesforbuildingclassingsteelbarges_2021/barge-rules-july21.pdf
+  retrieved: '2026-10-30'
+  sha256: 354ca5ccc45ac822ae7cb7928d483e70f220ebebd538da155de4be08b85a6bc3
+  paragraphs: "3-2-1/3.1, 3-2-2/3.1, 3.5.1, 5.1, 3-2-3/1.1.2, 1.7, 3-2-4/3.9, 3.11, 3-2-6/5.1-5.5, 3-2-7/3.1-3.5,
+    5-1-1/3.1, 5-1-2/5.1-5.17, 5-2-1/3, 7, 11, 5-2-2/3-9, 5-5/11.1 (a liquefied gas tank barge takes the barge hull rules)"
+  note: "The 2024 edition is the one the abs-barges Rule Set cites; the 2021 archive is the free copy read here. The
+    paragraphs used were not checked against 2024."
+
+reference_vessels:
+  - id: lng-bunker-4200-concept
+    what: "A published concept design of a 4,200 m3 LNG bunkering vessel, two cylindrical Type C tanks (student design handout)"
+    url: https://www.webb.edu/wp-content/uploads/2020/05/Group-Handouts-LNG-Bunkering-Vessel.pdf
+    retrieved: '2026-10-30'
+    sha256: e40ee14584bfa1f78f9892474f9a0b63b52cea7a7b0a1aceebb8502b3682f6b3
+    published: "95 m LOA, 20 m beam, 10 m depth, 4.1 m draft, 2687 MT lightship, 2 x 2200 m3 Type C tanks, dual-fuel diesel-electric, 15 crew"
+    confidence: low
+    flags: "A concept design, not a weighed ship. Self-propelled with 6.6 MW of generator sets, a crane and accommodation: the
+      lightship holds machinery and outfit that OVD's 4 % piping-and-machinery and 3.5 % outfitting factors may not."
+    run_as: "OVD gas hull, LNG, 95 x 20 x 10 m, one tank across, two along, tanks at most 11 m OD (3,753 m3 at 0.98 fill)"
+    lightship_t: 2687
+    ovd:
+      steel_top_down_t: 1900
+      steel_bottom_up_t: 1148
+      steel_panel_t: 1528
+      lightship_t: 2278            # the panel steel drives it (issue #722)
+      lightship_before_t: 2677     # OVD 0.3.0, the top-down rate
+      residual_lightship_pct: -15.2
+      residual_lightship_before_pct: -0.4
+    watson_gilfillan_benchmark:
+      formula: "Ws = K E^1.36, E = L(B+T) + 0.85 L (D-T); K 0.029 to 0.035 (tanker values, secondary, unverified)"
+      steel_t: [1391, 1679]
+
+benchmarks:
+  - id: gas-140x29-coastal-lng-A
+    what: "Worked example examples/gas-140x29-coastal-lng, Option A basis (140 x 29 x 12 m, 2 x 2 tanks of 11 m OD)"
+    ovd:
+      steel_top_down_t: 4872     # reported only
+      steel_bottom_up_before_t: 2285  # OVD 0.3.0: plating x 2.0 + wing plate + shield
+      steel_panel_t: 3591        # drives the lightship and the cost
+    watson_gilfillan_benchmark:
+      steel_t: [3605, 4351]
+      note: "T = 3.96 m (laden). Benchmark only: no barge K is published."
+
+library:
+  source: "calibration/tank_lightship.yaml fit cases: implied steel = k_implied x LOA x B x D (implied lightship less outfit)"
+  geometry_estimate: "double bottom B/15 and double side 0.76 m (MARPOL Annex I reg. 19.6 minimums, under 5,000 t dwt), cargo
+    zone the middle 84 % of the length, one hold per 20 m, closed deck, Cb 0.927"
+  flags: "US inland and river tank barges, built to river rules lighter than the unrestricted-service rules of the model, and
+    their steel is itself implied from a deadweight. Expect the model above them."
+  median_residual_pct: 23.8
+  range_pct: [4, 209]
+  outliers:
+    meb-rob20-belmax: "+209 %: B/D = 5.7, outside the B/D of about 4 that ABS 3-2-1/1 accepts; the hull girder rule thickens the deck and bottom"
+    kirby-32300b-297x54: "+111 %: its implied k (0.080) is the lowest of the Kirby group of the same size (0.114 to 0.142)"

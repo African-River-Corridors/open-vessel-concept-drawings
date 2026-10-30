@@ -59,8 +59,9 @@ def test_gas_golden_example():
     # Re-pinned again (issue #381: the opening setback is measured from the cargo area); was 1795.
     assert abs(r.cargo_capacity_t - 1789) < 5
     # Re-pinned (#448); were draught 2.64 m and air draft 7.13 m: the hull's sections, not Cb.
-    assert abs(r.full_load_draft_m - 2.43) < 0.02
-    assert abs(r.air_draft_m - 7.34) < 0.05
+    # Re-pinned (#722, the hull steel from the panel model); were draught 2.43 m and air draft 7.34 m.
+    assert abs(r.full_load_draft_m - 2.48) < 0.02
+    assert abs(r.air_draft_m - 7.29) < 0.05
     assert abs(r.cargo_zone_length_m - 68.108) < 0.05    # was 68.01 (#280), 68.308 (#381)
     assert r.ok and not r.overloaded
 
