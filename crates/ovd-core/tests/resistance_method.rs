@@ -211,3 +211,18 @@ fn barge_form_factor_warns_below_its_smallest_depth_over_draught() {
     assert!(shallow.contains("h/T 1.10 (range from 1.20)"), "{shallow}");
     assert!(!at_depth(7.8).contains("h/T"));
 }
+
+#[test]
+fn barge_form_factor_keeps_the_barge_fit_where_the_form_factor_has_no_value() {
+    // Issue #735: a box (Cp 1) has no Holtrop form factor; the run goes on with the fit and says so.
+    let fit = compute(&deep_water(ResistanceMethod::BargeFit, 1.0)).unwrap();
+    let bff = compute(&deep_water(ResistanceMethod::BargeFormFactor, 1.0)).unwrap();
+    assert_eq!(bff.method_used, AppliedMethod::BargeFit);
+    assert_eq!(fit.environments, bff.environments);
+    let c = bff
+        .checks
+        .iter()
+        .find(|c| c.name.starts_with("resistance_method_in_range["))
+        .unwrap();
+    assert!(c.message.starts_with("bluff-barge fit"), "{}", c.message);
+}

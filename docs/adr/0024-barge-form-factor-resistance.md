@@ -28,6 +28,9 @@ an inland motor cargo vessel in shallow water). Together they give 22 model-scal
    - w(Fn) = residuary_ratio(Fn) - residuary_ratio(0), the Froude-number rise of the bluff-barge fit,
      for the waves (0 below Fn 0.10).
    OVD's Lackenby and blockage factor stays on top, as for every method. No constant is fitted.
+   Where the Holtrop form factor has no value (a box at Cp 1, or a very fine hull near Cp 0.25,
+   where its run length goes negative), the hull keeps the bluff-barge fit and the range check names
+   the fit, so a run never stops on the default method.
 2. Its declared range is the range of the data (`BARGE_FORM_FACTOR_ENVELOPE`): Fn up to 0.137,
    Cp 0.768 to 0.877, L/B 7.59 to 16.29, B/T 4.05 to 8.12, and water depth over draught from 1.2
    (checked per environment; deep water has no bound).

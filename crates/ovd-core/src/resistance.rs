@@ -493,7 +493,16 @@ impl<'a> ResistanceCalculator<'a> {
         match self.inputs.method {
             ResistanceMethod::BargeFit => AppliedMethod::BargeFit,
             ResistanceMethod::HoltropMennen => AppliedMethod::Holtrop1984,
-            ResistanceMethod::BargeFormFactor => AppliedMethod::BargeFormFactor,
+            // Issue #735: the Holtrop form factor has no value for a very fine or a box hull
+            // (C_P near 0.25 or 1); such a hull keeps the bluff-barge fit, and the range check
+            // names the fit.
+            ResistanceMethod::BargeFormFactor => {
+                if self.barge_form_factor_k1().is_finite() {
+                    AppliedMethod::BargeFormFactor
+                } else {
+                    AppliedMethod::BargeFit
+                }
+            }
             ResistanceMethod::ByBlockCoefficient => {
                 if self.prismatic() <= FORM_METHOD_CP_MAX {
                     AppliedMethod::Holtrop1984
@@ -502,6 +511,20 @@ impl<'a> ResistanceCalculator<'a> {
                 }
             }
         }
+    }
+
+    /// Issue #735: the Holtrop 1984 form factor 1 + k1 of this hull (it depends on the form only),
+    /// or a value that is not finite where the formula has none.
+    fn barge_form_factor_k1(&self) -> f64 {
+        let flow = Flow {
+            speed_ms: 1.0,
+            rho: 1000.0,
+            nu: self.kinematic_viscosity(1.0),
+            g: GRAVITY,
+        };
+        let hull = self.holtrop_hull(self.compute_wetted_surface());
+        let k1 = holtrop_mennen::components(&hull, flow, Variant::Hm1984).form_factor;
+        if k1 > 0.0 { k1 } else { f64::NAN }
     }
 
     /// The hull as Holtrop–Mennen reads it: no bulb, no immersed transom, no appendages, a normal
