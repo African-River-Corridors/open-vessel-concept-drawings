@@ -1431,7 +1431,14 @@ fn failing_checks(c: &Candidate, o: &FitOptions, assessed: bool) -> Vec<Check> {
         let measured = if assessed {
             full_measured(c, o)
         } else {
-            candidate_measured(&c.result, &c.journey, &c.inputs, &checks, Vec::new())
+            candidate_measured(
+                &c.result,
+                &c.journey,
+                &c.inputs,
+                c.depth,
+                &checks,
+                Vec::new(),
+            )
         };
         for row in candidate_trace(&measured, o)
             .rows
