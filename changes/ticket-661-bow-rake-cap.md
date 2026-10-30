@@ -4,7 +4,7 @@
 <!-- design-impact -->
 ### ticket/661-bow-rake-cap (2026-10-30)
 
-Between `main f4ac6ae` and `this branch d270e75c`.
+Between `main 6f8c7e7` and `this branch a4943a6d`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
@@ -42,10 +42,10 @@ Between `main f4ac6ae` and `this branch d270e75c`.
 | sweep gas wide hull IGC_2G_EXACT 110x24 | `checks[29].message` | boil-off 539 kg/h > gas use 175 kg/h at the service speed: the excess needs reliquefaction, pressure accumulation or thermal oxidation, as venting is not acceptable (IGC Code 7.1.1, 7.1.3) | boil-off 542 kg/h > gas use 176 kg/h at the service speed: the excess needs reliquefaction, pressure accumulation or thermal oxidation, as venting is not acceptable (IGC Code 7.1.1, 7.1.3) | changed |
 | sweep gas wide hull IGC_2G_EXACT 110x24 | `checks[4].message` | cargo zone 77.31 m = LOA 110.0 - bow void 10.60 m - stern void 22.09 m | cargo zone 77.71 m = LOA 110.0 - bow void 10.20 m - stern void 22.09 m | changed |
 | sweep hull shipd bulbs 80 m | `checks[4].message` | cargo zone 63.15 m = LOA 80.0 - bow void 13.35 m - stern void 3.50 m | cargo zone 66.00 m = LOA 80.0 - bow void 10.50 m - stern void 3.50 m | changed |
-| sweep default depth gas 90x14 | `loading_conditions.conditions[2].trim_m` | -0.0220977637042 | -0.215956180378 | -877 % |
-| sweep default depth gas 90x14 | `stability.conditions[2].trim_m` | -0.0220977637042 | -0.215956180378 | -877 % |
-| sweep default depth gas 90x14 | `loading_conditions.conditions[3].trim_m` | 0.102507414945 | -0.0972858146278 | -195 % |
-| sweep default depth gas 90x14 | `stability.conditions[3].trim_m` | 0.102507414945 | -0.0972858146278 | -195 % |
-| calibration meb-dcb23-ptich | `loading_conditions.conditions[0].trim_m` | 0.259294177615 | 0.362963980286 | +40 % |
-| calibration meb-dcb23-ptich | `loading_conditions.conditions[1].trim_m` | 0.259294177615 | 0.362963980286 | +40 % |
-| ... | 3824 more changed quantities | | | |
+| sweep optional bow_rake_max_length_m | `checks[12].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 1.44 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 1.53 m of 6.00 m | changed |
+| sweep optional bow_rake_max_length_m | `checks[14].message` | intact GM 4.08 m >= 0.15 m at the reported cargo 2512 t, draught 3.39 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 4.01 m >= 0.15 m at the reported cargo 2570 t, draught 3.41 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| sweep optional bow_rake_max_length_m | `checks[16].message` | GM 4.08 m (fluid), max GZ 0.79 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | GM 4.01 m (fluid), max GZ 0.73 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | changed |
+| sweep optional bow_rake_max_length_m | `checks[17].message` | GM 4.09 m (fluid), max GZ 0.78 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | GM 4.02 m (fluid), max GZ 0.73 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | changed |
+| sweep optional bow_rake_max_length_m | `checks[18].message` | GM 13.40 m (fluid), max GZ 3.63 m at 29° | GM 13.34 m (fluid), max GZ 3.63 m at 29° | changed |
+| sweep optional bow_rake_max_length_m | `checks[19].message` | GM 13.56 m (fluid), max GZ 3.63 m at 29° | GM 13.49 m (fluid), max GZ 3.63 m at 29° | changed |
+| ... | 4752 more changed quantities | | | |
