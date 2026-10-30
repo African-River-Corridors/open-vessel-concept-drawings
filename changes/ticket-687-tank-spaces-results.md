@@ -4,7 +4,7 @@
 <!-- design-impact -->
 ### ticket/687-tank-spaces-results (2026-10-30)
 
-Between `main 913ae6d` and `this branch 5549a2b0`.
+Between `main 844e706` and `this branch 2db4938f`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
@@ -48,4 +48,4 @@ Between `main 913ae6d` and `this branch 5549a2b0`.
 | sweep CN-derived liquid 2 (130x16.3) | `spaces[1].name` | absent | CT2C | changed |
 | sweep CN-derived liquid 2 (130x16.3) | `spaces[1].side` | absent | centre | changed |
 | sweep CN-derived liquid 2 (130x16.3) | `spaces[1].tcg_m` | absent | 0 | changed |
-| ... | 1598 more changed quantities | | | |
+| ... | 1626 more changed quantities | | | |
