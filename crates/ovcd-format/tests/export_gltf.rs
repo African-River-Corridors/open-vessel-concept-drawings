@@ -271,3 +271,83 @@ fn the_root_node_maps_model_axes_to_right_handed_y_up() {
     }
     assert!(port > 0, "the fixture has vertices to port");
 }
+
+/// Label: property - every tank, dome, weather shield and Deck Item of every fixture and example is a
+/// glTF node named as the part is named in the 3D view's pick panel (its mesh group id), and takes
+/// the material of its kind (issue #690).
+#[test]
+fn every_tank_and_deck_item_is_a_named_node_with_its_material() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let mut files: Vec<_> = std::fs::read_dir(root.join("tests/fixtures"))
+        .unwrap()
+        .map(|e| e.unwrap().path())
+        .filter(|p| p.extension().is_some_and(|e| e == "vdesign"))
+        .collect();
+    files.push(root.join("../../website/assets/examples/lrg-gas-89.vdesign"));
+    let (mut tanks, mut items) = (0, 0);
+    for path in files {
+        let design = check(
+            &std::fs::read_to_string(&path).unwrap(),
+            &Profile::built_in(),
+        )
+        .design
+        .expect("a valid fixture");
+        for option in &design.options {
+            let Ok(mesh) = option_meshes(option) else {
+                continue;
+            };
+            let (doc, _) = chunks(&option_glb(option).unwrap());
+            let nodes = doc["nodes"].as_array().unwrap();
+            let material_of = |name: &str| -> Option<String> {
+                let node = nodes.iter().find(|n| n["name"] == name)?;
+                let mesh = &doc["meshes"][node["mesh"].as_u64()? as usize];
+                let m = mesh["primitives"][0]["material"].as_u64()? as usize;
+                doc["materials"][m]["name"].as_str().map(str::to_string)
+            };
+            for g in &mesh.groups {
+                let want = match g.source {
+                    PartSource::Tank { .. } => "tank",
+                    PartSource::Dome { .. } => "dome",
+                    PartSource::WeatherShield => "weather_shield",
+                    PartSource::Unit(_) => "deck_unit",
+                    PartSource::Wheelhouse(_) | PartSource::LiftColumn => "wheelhouse",
+                    _ => continue,
+                };
+                let got = material_of(&g.id)
+                    .unwrap_or_else(|| panic!("{}: no node {}", path.display(), g.id));
+                assert_eq!(got, want, "{}: {}", path.display(), g.id);
+                match g.source {
+                    PartSource::Tank { .. } => tanks += 1,
+                    _ => items += 1,
+                }
+            }
+            // The two wheelhouse positions are two nodes.
+            if mesh.groups.iter().any(|g| g.layer == "deck_item") {
+                assert!(material_of("wheelhouse_lowered").is_some());
+                assert!(material_of("wheelhouse_raised").is_some());
+            }
+        }
+    }
+    assert!(
+        tanks >= 12 && items >= 12,
+        "{tanks} tanks, {items} other parts"
+    );
+}
+
+/// Label: property - the glTF colours of the parts of spec 0009 are the Light theme tokens of the
+/// app's stylesheet (`:root`), so the export and the 3D view do not drift apart.
+#[test]
+fn the_part_colours_are_the_light_theme_tokens() {
+    let css = std::fs::read_to_string(
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../app/src/app.css"),
+    )
+    .unwrap();
+    for (token, hex) in ovcd_format::export::LIGHT_PART_COLOURS {
+        // The first definition is the Light one (`:root`); the Dark blocks come after it.
+        let at = css
+            .find(&format!("{token}:"))
+            .unwrap_or_else(|| panic!("{token} is not in app.css"));
+        let value = css[at + token.len() + 1..].trim_start();
+        assert_eq!(&value[..7], hex, "{token}");
+    }
+}

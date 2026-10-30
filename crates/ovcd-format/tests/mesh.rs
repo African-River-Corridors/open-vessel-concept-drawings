@@ -5,7 +5,8 @@
 //! triangles, once in each direction) and holds the sections volume within the ruled-quad error
 //! (the sum of half the tetrahedron volumes of the ruled quads) plus 1e-6 for the f32 rounding;
 //! the group table names one hull and one group per Space; the hash is the same twice and a
-//! one-vertex change changes it.
+//! one-vertex change changes it. Label: snapshot - the triangle count of each layer of each fixture
+//! when the triangle budget landed (issue #690); each layer stays within 1.5 x it.
 
 use std::collections::HashMap;
 use std::path::Path;
@@ -176,4 +177,361 @@ fn every_space_mesh_of_every_fixture_is_closed_and_holds_the_space_volume() {
     }
     assert!(spaces >= 10, "{spaces} Space meshes");
     assert!(cut >= 1, "a fixture has a Space the hull cuts");
+}
+
+/// The triangles of each layer of each fixture and example Option when the triangle budget landed
+/// (issue #690, spec 0009 "Performance budget"). Label: snapshot - what `option_meshes` printed.
+const TRIANGLES: &[(&str, &str, &str, u32)] = &[
+    ("gas-140x29-coastal-lng.vdesign", "A basis", "bulkhead", 36),
+    ("gas-140x29-coastal-lng.vdesign", "A basis", "deck", 2),
+    ("gas-140x29-coastal-lng.vdesign", "A basis", "deck_item", 60),
+    ("gas-140x29-coastal-lng.vdesign", "A basis", "dome", 384),
+    ("gas-140x29-coastal-lng.vdesign", "A basis", "hull", 38),
+    ("gas-140x29-coastal-lng.vdesign", "A basis", "space", 9410),
+    ("gas-140x29-coastal-lng.vdesign", "A basis", "waterline", 16),
+    (
+        "gas-140x29-coastal-lng.vdesign",
+        "A basis",
+        "weather_shield",
+        60,
+    ),
+    (
+        "gas-140x29-coastal-lng.vdesign",
+        "B profile",
+        "bulkhead",
+        36,
+    ),
+    ("gas-140x29-coastal-lng.vdesign", "B profile", "deck", 2),
+    (
+        "gas-140x29-coastal-lng.vdesign",
+        "B profile",
+        "deck_item",
+        60,
+    ),
+    ("gas-140x29-coastal-lng.vdesign", "B profile", "dome", 384),
+    ("gas-140x29-coastal-lng.vdesign", "B profile", "hull", 38),
+    ("gas-140x29-coastal-lng.vdesign", "B profile", "space", 9410),
+    (
+        "gas-140x29-coastal-lng.vdesign",
+        "B profile",
+        "waterline",
+        16,
+    ),
+    (
+        "gas-140x29-coastal-lng.vdesign",
+        "B profile",
+        "weather_shield",
+        60,
+    ),
+    ("gas-140x29-coastal-lng.vdesign", "C deep", "bulkhead", 36),
+    ("gas-140x29-coastal-lng.vdesign", "C deep", "deck", 2),
+    ("gas-140x29-coastal-lng.vdesign", "C deep", "deck_item", 60),
+    ("gas-140x29-coastal-lng.vdesign", "C deep", "dome", 384),
+    ("gas-140x29-coastal-lng.vdesign", "C deep", "hull", 38),
+    ("gas-140x29-coastal-lng.vdesign", "C deep", "space", 9418),
+    ("gas-140x29-coastal-lng.vdesign", "C deep", "waterline", 16),
+    ("lrg-gas-89.vdesign", "LRG Gas 89", "bulkhead", 28),
+    ("lrg-gas-89.vdesign", "LRG Gas 89", "deck", 0),
+    ("lrg-gas-89.vdesign", "LRG Gas 89", "deck_item", 72),
+    ("lrg-gas-89.vdesign", "LRG Gas 89", "dome", 768),
+    ("lrg-gas-89.vdesign", "LRG Gas 89", "hull", 26),
+    ("lrg-gas-89.vdesign", "LRG Gas 89", "space", 18506),
+    ("lrg-gas-89.vdesign", "LRG Gas 89", "waterline", 9),
+    (
+        "crude_integral_tanks_coastal.vdesign",
+        "Option 1",
+        "bulkhead",
+        32,
+    ),
+    (
+        "crude_integral_tanks_coastal.vdesign",
+        "Option 1",
+        "deck",
+        2,
+    ),
+    (
+        "crude_integral_tanks_coastal.vdesign",
+        "Option 1",
+        "hull",
+        26,
+    ),
+    (
+        "crude_integral_tanks_coastal.vdesign",
+        "Option 1",
+        "space",
+        218,
+    ),
+    (
+        "crude_integral_tanks_coastal.vdesign",
+        "Option 1",
+        "waterline",
+        18,
+    ),
+    (
+        "crude_integral_tanks_pushed.vdesign",
+        "Option 1",
+        "bulkhead",
+        28,
+    ),
+    ("crude_integral_tanks_pushed.vdesign", "Option 1", "deck", 2),
+    (
+        "crude_integral_tanks_pushed.vdesign",
+        "Option 1",
+        "hull",
+        26,
+    ),
+    (
+        "crude_integral_tanks_pushed.vdesign",
+        "Option 1",
+        "space",
+        194,
+    ),
+    (
+        "crude_integral_tanks_pushed.vdesign",
+        "Option 1",
+        "waterline",
+        18,
+    ),
+    (
+        "crude_integral_tanks_self_propelled.vdesign",
+        "Option 1",
+        "bulkhead",
+        192,
+    ),
+    (
+        "crude_integral_tanks_self_propelled.vdesign",
+        "Option 1",
+        "deck",
+        2,
+    ),
+    (
+        "crude_integral_tanks_self_propelled.vdesign",
+        "Option 1",
+        "deck_item",
+        60,
+    ),
+    (
+        "crude_integral_tanks_self_propelled.vdesign",
+        "Option 1",
+        "hull",
+        1306,
+    ),
+    (
+        "crude_integral_tanks_self_propelled.vdesign",
+        "Option 1",
+        "space",
+        1508,
+    ),
+    (
+        "crude_integral_tanks_self_propelled.vdesign",
+        "Option 1",
+        "waterline",
+        175,
+    ),
+    (
+        "diesel_integral_tanks_pushed.vdesign",
+        "Option 1",
+        "bulkhead",
+        36,
+    ),
+    (
+        "diesel_integral_tanks_pushed.vdesign",
+        "Option 1",
+        "deck",
+        2,
+    ),
+    (
+        "diesel_integral_tanks_pushed.vdesign",
+        "Option 1",
+        "hull",
+        26,
+    ),
+    (
+        "diesel_integral_tanks_pushed.vdesign",
+        "Option 1",
+        "space",
+        242,
+    ),
+    (
+        "diesel_integral_tanks_pushed.vdesign",
+        "Option 1",
+        "waterline",
+        18,
+    ),
+    ("dry_bulk_box_hold.vdesign", "Option 1", "bulkhead", 16),
+    ("dry_bulk_box_hold.vdesign", "Option 1", "deck", 2),
+    ("dry_bulk_box_hold.vdesign", "Option 1", "hull", 26),
+    ("dry_bulk_box_hold.vdesign", "Option 1", "space", 260),
+    ("dry_bulk_box_hold.vdesign", "Option 1", "waterline", 15),
+    ("dry_bulk_sloped_hopper.vdesign", "Option 1", "bulkhead", 16),
+    ("dry_bulk_sloped_hopper.vdesign", "Option 1", "deck", 2),
+    ("dry_bulk_sloped_hopper.vdesign", "Option 1", "hull", 26),
+    ("dry_bulk_sloped_hopper.vdesign", "Option 1", "space", 290),
+    ("dry_bulk_sloped_hopper.vdesign", "Option 1", "waterline", 6),
+    ("gas_igc_2g_exact.vdesign", "Option 1", "bulkhead", 20),
+    ("gas_igc_2g_exact.vdesign", "Option 1", "deck", 0),
+    ("gas_igc_2g_exact.vdesign", "Option 1", "dome", 192),
+    ("gas_igc_2g_exact.vdesign", "Option 1", "hull", 26),
+    ("gas_igc_2g_exact.vdesign", "Option 1", "space", 4730),
+    ("gas_igc_2g_exact.vdesign", "Option 1", "waterline", 15),
+    ("gas_igc_2g_exact.vdesign", "Option 1", "weather_shield", 60),
+    (
+        "gas_igc_2g_self_propelled.vdesign",
+        "Option 1",
+        "bulkhead",
+        28,
+    ),
+    ("gas_igc_2g_self_propelled.vdesign", "Option 1", "deck", 0),
+    (
+        "gas_igc_2g_self_propelled.vdesign",
+        "Option 1",
+        "deck_item",
+        72,
+    ),
+    ("gas_igc_2g_self_propelled.vdesign", "Option 1", "dome", 192),
+    ("gas_igc_2g_self_propelled.vdesign", "Option 1", "hull", 26),
+    (
+        "gas_igc_2g_self_propelled.vdesign",
+        "Option 1",
+        "space",
+        4730,
+    ),
+    (
+        "gas_igc_2g_self_propelled.vdesign",
+        "Option 1",
+        "waterline",
+        12,
+    ),
+    (
+        "gas_igc_2g_self_propelled.vdesign",
+        "Option 1",
+        "weather_shield",
+        60,
+    ),
+    ("offsets_dry_bulk.vdesign", "Option 1", "bulkhead", 16),
+    ("offsets_dry_bulk.vdesign", "Option 1", "deck", 6),
+    ("offsets_dry_bulk.vdesign", "Option 1", "hull", 44),
+    ("offsets_dry_bulk.vdesign", "Option 1", "space", 390),
+    ("offsets_dry_bulk.vdesign", "Option 1", "waterline", 10),
+    ("pushed_convoy.vdesign", "Option 1", "bulkhead", 16),
+    ("pushed_convoy.vdesign", "Option 1", "deck", 2),
+    ("pushed_convoy.vdesign", "Option 1", "hull", 26),
+    ("pushed_convoy.vdesign", "Option 1", "space", 260),
+    ("pushed_convoy.vdesign", "Option 1", "waterline", 6),
+    ("shipd_dry_bulk.vdesign", "Option 1", "bulkhead", 180),
+    ("shipd_dry_bulk.vdesign", "Option 1", "deck", 62),
+    ("shipd_dry_bulk.vdesign", "Option 1", "hull", 4372),
+    ("shipd_dry_bulk.vdesign", "Option 1", "space", 7822),
+    ("shipd_dry_bulk.vdesign", "Option 1", "waterline", 150),
+    ("towed_barge.vdesign", "Towed barge", "bulkhead", 16),
+    ("towed_barge.vdesign", "Towed barge", "deck", 2),
+    ("towed_barge.vdesign", "Towed barge", "hull", 26),
+    ("towed_barge.vdesign", "Towed barge", "space", 260),
+    ("towed_barge.vdesign", "Towed barge", "waterline", 15),
+    ("two_options.vdesign", "Base", "bulkhead", 16),
+    ("two_options.vdesign", "Base", "deck", 2),
+    ("two_options.vdesign", "Base", "hull", 26),
+    ("two_options.vdesign", "Base", "space", 260),
+    ("two_options.vdesign", "Base", "waterline", 6),
+    ("two_options.vdesign", "Option 2", "bulkhead", 16),
+    ("two_options.vdesign", "Option 2", "deck", 2),
+    ("two_options.vdesign", "Option 2", "hull", 26),
+    ("two_options.vdesign", "Option 2", "space", 260),
+    ("two_options.vdesign", "Option 2", "waterline", 6),
+];
+
+/// Every fixture and example design, by file name.
+fn budget_designs() -> Vec<std::path::PathBuf> {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let mut files: Vec<_> = std::fs::read_dir(root.join("tests/fixtures"))
+        .unwrap()
+        .map(|e| e.unwrap().path())
+        .filter(|p| p.extension().is_some_and(|e| e == "vdesign"))
+        .collect();
+    files.push(root.join("../../website/assets/examples/lrg-gas-89.vdesign"));
+    files.push(root.join("../../examples/gas-140x29-coastal-lng/gas-140x29-coastal-lng.vdesign"));
+    files.sort();
+    files
+}
+
+/// Label: property (the 1.5 x bound and the 200,000 cap of spec 0009) over the snapshot above. Each
+/// layer of each Option stays within 1.5 x its pinned count, so doubling a tessellation constant
+/// (`TANK_SEGMENTS`, `HEAD_RINGS`, `DOME_SEGMENTS`) fails it; and no Option passes 200,000.
+#[test]
+fn every_fixture_layer_stays_within_its_triangle_budget() {
+    let mut seen = 0;
+    for path in budget_designs() {
+        let file = path.file_name().unwrap().to_string_lossy().to_string();
+        let design = check(
+            &std::fs::read_to_string(&path).unwrap(),
+            &Profile::built_in(),
+        )
+        .design
+        .expect("a valid design");
+        for option in &design.options {
+            let Ok(m) = option_meshes(option) else {
+                continue;
+            };
+            let total = m.indices.len() / 3;
+            assert!(
+                total <= 200_000,
+                "{file} / {}: {total} triangles",
+                option.name
+            );
+            let mut layers: HashMap<&str, u32> = HashMap::new();
+            for g in &m.groups {
+                *layers.entry(g.layer.as_str()).or_default() += g.count / 3;
+            }
+            for (layer, count) in layers {
+                let pinned = TRIANGLES
+                    .iter()
+                    .find(|(f, o, l, _)| *f == file && *o == option.name && *l == layer)
+                    .unwrap_or_else(|| panic!("{file} / {} / {layer}: no budget", option.name))
+                    .3;
+                assert!(
+                    f64::from(count) <= 1.5 * f64::from(pinned),
+                    "{file} / {} / {layer}: {count} triangles over 1.5 x {pinned}",
+                    option.name
+                );
+                seen += 1;
+            }
+        }
+    }
+    assert_eq!(seen, TRIANGLES.len(), "every pinned layer is checked");
+}
+
+/// Label: property - the largest design of the sweep (a 180 x 24 m gas barge, as in the core's
+/// sweeps, with camber and sheer for the most Stations) stays under 200,000 triangles.
+#[test]
+fn the_largest_sweep_design_stays_under_200000_triangles() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let text =
+        std::fs::read_to_string(root.join("tests/fixtures/gas_igc_2g_self_propelled.vdesign"))
+            .unwrap();
+    let mut f: serde_json::Value = serde_json::from_str(&text).unwrap();
+    for (key, value) in [
+        ("length_overall_m", 180.0),
+        ("beam_m", 24.0),
+        ("moulded_depth_m", 10.0),
+        ("camber_m", 0.4),
+        ("sheer_aft_m", 0.8),
+        ("sheer_fwd_m", 1.2),
+    ] {
+        f["options"][0]["inputs"][key] = serde_json::json!({ "value": value, "source": "typed" });
+    }
+    let design = check(&f.to_string(), &Profile::built_in())
+        .design
+        .expect("a valid design");
+    let m = option_meshes(&design.options[0]).expect("meshes");
+    let tanks = m
+        .groups
+        .iter()
+        .filter(|g| g.layer == "space" && g.id.starts_with("CT"))
+        .count();
+    assert!(tanks >= 2, "{tanks} tanks");
+    assert!(
+        m.indices.len() / 3 <= 200_000,
+        "{} triangles",
+        m.indices.len() / 3
+    );
 }
