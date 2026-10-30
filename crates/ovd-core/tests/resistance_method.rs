@@ -110,8 +110,119 @@ fn the_method_names_round_trip() {
         ResistanceMethod::BargeFit,
         ResistanceMethod::HoltropMennen,
         ResistanceMethod::ByBlockCoefficient,
+        ResistanceMethod::BargeFormFactor,
     ] {
         assert_eq!(ResistanceMethod::parse(m.as_str()), Some(m));
     }
     assert_eq!(ResistanceMethod::parse("holtrop"), None);
+}
+
+fn power_at_10_kn(r: &ovd_core::resistance::ResistanceResults) -> f64 {
+    r.environments[0]
+        .speed_curve
+        .iter()
+        .find(|p| p.speed_knots == 10.0)
+        .unwrap()
+        .delivered_power_kw
+}
+
+#[test]
+fn barge_form_factor_ranks_hulls_and_reports_its_range() {
+    // Issue #735: a finer hull needs less power, at every fullness the barge fit covers.
+    let mut last = f64::INFINITY;
+    for cb in [0.97, 0.92, 0.85, 0.80] {
+        let r = compute(&deep_water(ResistanceMethod::BargeFormFactor, cb)).unwrap();
+        assert_eq!(r.method_used, AppliedMethod::BargeFormFactor);
+        let p = power_at_10_kn(&r);
+        assert!(p < last, "Cb {cb}: {p} kW, not below {last} kW");
+        last = p;
+        // More resistance than the bluff-barge fit: its form factor is above 1.10.
+        let fit = compute(&deep_water(ResistanceMethod::BargeFit, cb)).unwrap();
+        assert!(p > power_at_10_kn(&fit), "Cb {cb}");
+    }
+    // The default barge (L/B 5.2) is outside the range of the barge data (L/B from 7.59).
+    let r = compute(&deep_water(ResistanceMethod::BargeFormFactor, 0.85)).unwrap();
+    let c = r
+        .checks
+        .iter()
+        .find(|c| c.name.starts_with("resistance_method_in_range["))
+        .unwrap();
+    assert!(!c.ok);
+    assert!(c.message.starts_with("barge form factor"), "{}", c.message);
+    assert!(
+        c.message.contains("L/B 5.21 (range 7.59 to 16.29)"),
+        "{}",
+        c.message
+    );
+}
+
+#[test]
+fn barge_form_factor_adds_the_millward_term_in_shallow_water() {
+    use ovd_core::resistance::millward_form_factor_increase;
+    assert_eq!(millward_form_factor_increase(6.0, 0.0), 0.0);
+    // dk = 0.644 (T/h)^1.72; at h/T = 1 it is the constant.
+    assert!((millward_form_factor_increase(6.0, 6.0) - 0.644).abs() < 1e-12);
+    let shallow = |method| ResistanceInputs {
+        block_coefficient: 0.85,
+        method,
+        environments: vec![EnvironmentInputs {
+            name: "Shallow".to_string(),
+            water_depth: 9.0,
+            channel_width_bottom: 1000.0,
+            channel_width_surface: 1000.0,
+            apply_squat_limit: false,
+            ..EnvironmentInputs::default()
+        }],
+        ..ResistanceInputs::default()
+    };
+    let ratio = |method| {
+        let deep = power_at_10_kn(&compute(&deep_water(method, 0.85)).unwrap());
+        power_at_10_kn(&compute(&shallow(method)).unwrap()) / deep
+    };
+    assert!(ratio(ResistanceMethod::BargeFormFactor) > ratio(ResistanceMethod::BargeFit));
+}
+
+#[test]
+fn barge_form_factor_warns_below_its_smallest_depth_over_draught() {
+    // Issue #735: the barge data go down to h/T 1.2. The default barge draws 6 m.
+    let at_depth = |depth: f64| {
+        let inputs = ResistanceInputs {
+            block_coefficient: 0.85,
+            method: ResistanceMethod::BargeFormFactor,
+            speed_max_knots: 6.0,
+            environments: vec![EnvironmentInputs {
+                name: "Shallow".to_string(),
+                water_depth: depth,
+                channel_width_bottom: 1000.0,
+                channel_width_surface: 1000.0,
+                apply_squat_limit: false,
+                ..EnvironmentInputs::default()
+            }],
+            ..ResistanceInputs::default()
+        };
+        let r = compute(&inputs).unwrap();
+        r.checks
+            .into_iter()
+            .find(|c| c.name.starts_with("resistance_method_in_range["))
+            .unwrap()
+            .message
+    };
+    let shallow = at_depth(6.6);
+    assert!(shallow.contains("h/T 1.10 (range from 1.20)"), "{shallow}");
+    assert!(!at_depth(7.8).contains("h/T"));
+}
+
+#[test]
+fn barge_form_factor_keeps_the_barge_fit_where_the_form_factor_has_no_value() {
+    // Issue #735: a box (Cp 1) has no Holtrop form factor; the run goes on with the fit and says so.
+    let fit = compute(&deep_water(ResistanceMethod::BargeFit, 1.0)).unwrap();
+    let bff = compute(&deep_water(ResistanceMethod::BargeFormFactor, 1.0)).unwrap();
+    assert_eq!(bff.method_used, AppliedMethod::BargeFit);
+    assert_eq!(fit.environments, bff.environments);
+    let c = bff
+        .checks
+        .iter()
+        .find(|c| c.name.starts_with("resistance_method_in_range["))
+        .unwrap();
+    assert!(c.message.starts_with("bluff-barge fit"), "{}", c.message);
 }

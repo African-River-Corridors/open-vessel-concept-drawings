@@ -1259,7 +1259,8 @@ pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
         applies_to: AppliesTo::Only("type_c_tanks"),
         value: "\"tank_end\"",
     },
-    // Issue #723: a file saved before the resistance method keeps the bluff-barge fit.
+    // Issue #723: a file saved before the resistance method keeps the bluff-barge fit. Issue #735:
+    // new Designs take `barge_form_factor` from the Defaults Profile.
     LegacyFixedJson {
         name: "resistance_method",
         applies_to: AppliesTo::All,
@@ -1583,6 +1584,11 @@ pub const CHOICE_LABELS: &[(&str, &str)] = &[
     (
         "by_block_coefficient",
         "Holtrop-Mennen up to Cp 0.85, bluff-barge fit above",
+    ),
+    // Issue #735.
+    (
+        "barge_form_factor",
+        "Barge form factor (Holtrop 1+k, Millward shallow water)",
     ),
     ("stern_form", "Largest the stern allows"),
     ("light_draught", "Immersed at the light draught"),

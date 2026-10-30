@@ -156,17 +156,28 @@ pub fn default_environments() -> Vec<EnvironmentInputs> {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ResistanceMethod {
     /// ITTC-1957 friction x (1 + Cr/Cf(Fn)), the bluff-barge fit [`residuary_ratio`]: no hull-form
-    /// term. The method of every Design before issue #723, and still the default.
+    /// term. The method of every Design before issue #723, and the core default (a file saved
+    /// without the input reads it); new Designs take `BargeFormFactor` (issue #735).
     #[default]
     BargeFit,
     /// Holtrop 1984 ([`crate::holtrop_mennen`]) at any fullness, with a warning outside its range.
     HoltropMennen,
     /// Holtrop 1984 up to C_P [`FORM_METHOD_CP_MAX`], the bluff-barge fit above it.
     ByBlockCoefficient,
+    /// Issue #735: ITTC-1957 friction x (1 + k1 + dk + w(Fn)): the Holtrop 1984 form factor, the
+    /// Millward (1989) shallow-water increase of k, and the Froude-number rise of the bluff-barge
+    /// fit for the waves. No fitted constant; checked against barge towing-tank data
+    /// (`calibration/resistance_cases.csv`), see [`BARGE_FORM_FACTOR_ENVELOPE`].
+    BargeFormFactor,
 }
 
 /// The values of the `resistance_method` input, in the order of [`ResistanceMethod`].
-pub const RESISTANCE_METHODS: &[&str] = &["barge_fit", "holtrop_mennen", "by_block_coefficient"];
+pub const RESISTANCE_METHODS: &[&str] = &[
+    "barge_fit",
+    "holtrop_mennen",
+    "by_block_coefficient",
+    "barge_form_factor",
+];
 
 impl ResistanceMethod {
     pub fn as_str(self) -> &'static str {
@@ -174,6 +185,7 @@ impl ResistanceMethod {
             Self::BargeFit => "barge_fit",
             Self::HoltropMennen => "holtrop_mennen",
             Self::ByBlockCoefficient => "by_block_coefficient",
+            Self::BargeFormFactor => "barge_form_factor",
         }
     }
 
@@ -183,6 +195,7 @@ impl ResistanceMethod {
             "barge_fit" => Some(Self::BargeFit),
             "holtrop_mennen" => Some(Self::HoltropMennen),
             "by_block_coefficient" => Some(Self::ByBlockCoefficient),
+            "barge_form_factor" => Some(Self::BargeFormFactor),
             _ => None,
         }
     }
@@ -200,13 +213,48 @@ pub const BARGE_FIT_ENVELOPE: Envelope = Envelope {
     cp: (0.85, 1.0),
     l_over_b: (0.0, f64::INFINITY),
     b_over_t: (0.0, f64::INFINITY),
+    depth_over_draught_min: None,
 };
 
-/// The method that gives the resistance of one hull: the bluff-barge fit or Holtrop 1984.
+/// The declared range of `barge_form_factor` (issue #735): the range of the towing-tank cases it
+/// was checked against (`calibration/resistance_cases.csv`), rounded out at the third figure: Fn up
+/// to 0.137, C_P 0.768 to 0.877, L/B 7.59 to 16.29, B/T 4.05 to 8.12, water depth over draught from
+/// 1.2. Sourced: Zentari (2023), Figs 5.9 and 5.10; Tabaczek and Zawislak (2018), Table 1 and Fig. 4. Inside it the method's CT
+/// fell 0 to 36 % below the tests (mean about 17 % below); see `calibration/resistance_results.md`.
+pub const BARGE_FORM_FACTOR_ENVELOPE: Envelope = Envelope {
+    froude_max: Some(0.137),
+    cp: (0.768, 0.877),
+    l_over_b: (7.59, 16.29),
+    b_over_t: (4.05, 8.12),
+    depth_over_draught_min: Some(1.2),
+};
+
+/// Millward (1989), "The effect of water depth on hull form factor", International Shipbuilding
+/// Progress 36(407): the increase of the form factor k in water of depth `depth` over a hull of
+/// draught `draught`, dk = 0.644 (T/h)^1.72. Zero in deep water (`depth` not above 0).
+pub fn millward_form_factor_increase(draught: f64, depth: f64) -> f64 {
+    if depth <= 0.0 || draught <= 0.0 {
+        return 0.0;
+    }
+    0.644 * libm::pow(draught / depth, 1.72)
+}
+
+/// Issue #735: CT / CF of `barge_form_factor`: 1 + k1 (Holtrop 1984, from `form_factor`) + dk
+/// (Millward, from the draught and the depth; 0 in deep water) + the rise of the bluff-barge fit
+/// above its low-speed value, residuary_ratio(Fn) - residuary_ratio(0), for the waves.
+pub fn barge_form_factor_ratio(form_factor: f64, froude: f64, draught: f64, depth: f64) -> f64 {
+    form_factor
+        + millward_form_factor_increase(draught, depth)
+        + (residuary_ratio(froude) - residuary_ratio(0.0))
+}
+
+/// The method that gives the resistance of one hull: the bluff-barge fit, Holtrop 1984 or the
+/// barge form factor.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AppliedMethod {
     BargeFit,
     Holtrop1984,
+    BargeFormFactor,
 }
 
 impl AppliedMethod {
@@ -214,6 +262,7 @@ impl AppliedMethod {
         match self {
             Self::BargeFit => "bluff-barge fit",
             Self::Holtrop1984 => "Holtrop-Mennen 1984",
+            Self::BargeFormFactor => "barge form factor",
         }
     }
 
@@ -222,6 +271,7 @@ impl AppliedMethod {
         match self {
             Self::BargeFit => BARGE_FIT_ENVELOPE,
             Self::Holtrop1984 => holtrop_mennen::holtrop_envelope(cp),
+            Self::BargeFormFactor => BARGE_FORM_FACTOR_ENVELOPE,
         }
     }
 }
@@ -251,7 +301,9 @@ pub struct ResistanceInputs {
     pub speed_min_knots: f64,
     pub speed_max_knots: f64,
     pub speed_step_knots: f64,
-    /// Issue #723: the residuary resistance method. The default keeps the bluff-barge fit.
+    /// Issue #723: the residuary resistance method. The core default keeps the bluff-barge fit (the
+    /// method of a parameter set that leaves it out); new Designs take `barge_form_factor` from the
+    /// Defaults Profile (issue #735).
     pub method: ResistanceMethod,
     /// Issue #723: the hull's waterplane coefficient, for Holtrop–Mennen; `None`: (1 + 2 Cb) / 3.
     pub waterplane_coefficient: Option<f64>,
@@ -441,6 +493,16 @@ impl<'a> ResistanceCalculator<'a> {
         match self.inputs.method {
             ResistanceMethod::BargeFit => AppliedMethod::BargeFit,
             ResistanceMethod::HoltropMennen => AppliedMethod::Holtrop1984,
+            // Issue #735: the Holtrop form factor has no value for a very fine or a box hull
+            // (C_P near 0.25 or 1); such a hull keeps the bluff-barge fit, and the range check
+            // names the fit.
+            ResistanceMethod::BargeFormFactor => {
+                if self.barge_form_factor_k1().is_finite() {
+                    AppliedMethod::BargeFormFactor
+                } else {
+                    AppliedMethod::BargeFit
+                }
+            }
             ResistanceMethod::ByBlockCoefficient => {
                 if self.prismatic() <= FORM_METHOD_CP_MAX {
                     AppliedMethod::Holtrop1984
@@ -449,6 +511,20 @@ impl<'a> ResistanceCalculator<'a> {
                 }
             }
         }
+    }
+
+    /// Issue #735: the Holtrop 1984 form factor 1 + k1 of this hull (it depends on the form only),
+    /// or a value that is not finite where the formula has none.
+    fn barge_form_factor_k1(&self) -> f64 {
+        let flow = Flow {
+            speed_ms: 1.0,
+            rho: 1000.0,
+            nu: self.kinematic_viscosity(1.0),
+            g: GRAVITY,
+        };
+        let hull = self.holtrop_hull(self.compute_wetted_surface());
+        let k1 = holtrop_mennen::components(&hull, flow, Variant::Hm1984).form_factor;
+        if k1 > 0.0 { k1 } else { f64::NAN }
     }
 
     /// The hull as Holtrop–Mennen reads it: no bulb, no immersed transom, no appendages, a normal
@@ -550,7 +626,8 @@ impl<'a> ResistanceCalculator<'a> {
     }
 
     /// Shallow and confined water resistance factor: Lackenby depth term plus a blockage term.
-    fn shallow_water_factor(
+    /// Public for the calibration harness (issue #735).
+    pub fn shallow_water_factor(
         &self,
         speed_ms: f64,
         env: &EnvironmentInputs,
@@ -668,6 +745,30 @@ impl<'a> ResistanceCalculator<'a> {
                     )));
                 }
                 total - rf
+            }
+            // Issue #735: (1 + k1 + dk + w(Fn)) x the ITTC-1957 friction.
+            AppliedMethod::BargeFormFactor => {
+                let flow = Flow {
+                    speed_ms: v,
+                    rho,
+                    nu,
+                    g: GRAVITY,
+                };
+                let hull = self.holtrop_hull(wetted_surface);
+                let k1 = holtrop_mennen::components(&hull, flow, Variant::Hm1984).form_factor;
+                if !k1.is_finite() {
+                    return Err(PyException::ValueError(format!(
+                        "the barge form factor has no value for this hull (Cp {:.3}): the \
+                         Holtrop form factor needs Cp below 1",
+                        hull.cp()
+                    )));
+                }
+                let depth = if env.is_deep_water {
+                    0.0
+                } else {
+                    env.water_depth
+                };
+                rf * (barge_form_factor_ratio(k1, fn_, self.inputs.draft, depth) - 1.0)
             }
         };
         let r_deep = rf + rr;
@@ -812,7 +913,7 @@ impl<'a> ResistanceCalculator<'a> {
             ));
         }
         if self.inputs.method != ResistanceMethod::BargeFit {
-            checks.push(self.method_range_check(point.froude_number));
+            checks.push(self.method_range_check(point.froude_number, env));
         }
         for c in &mut checks {
             c.name = format!("{}[{}]", c.name, out.name);
@@ -823,13 +924,17 @@ impl<'a> ResistanceCalculator<'a> {
     /// Issue #723: the resistance method used and whether the hull and the service speed are in its
     /// declared range (a warning). Only for a Design that chose a method, so the results of a
     /// Design saved before the choice do not change.
-    fn method_range_check(&self, froude: f64) -> Check {
+    fn method_range_check(&self, froude: f64, env: &EnvironmentInputs) -> Check {
         let inp = self.inputs;
         let method = self.applied_method();
         let cp = self.prismatic();
         let (lb, bt) = (inp.lwl / inp.beam, inp.beam / inp.draft);
         let envelope = method.envelope(cp);
-        let outside = envelope.outside(froude, cp, lb, bt);
+        let mut outside = envelope.outside(froude, cp, lb, bt);
+        // Issue #735: the water depth, where the method declares a minimum.
+        let h_over_t = (!env.is_deep_water && env.water_depth > 0.0 && inp.draft > 0.0)
+            .then(|| env.water_depth / inp.draft);
+        outside.extend(envelope.outside_depth(h_over_t));
         let list = if outside.is_empty() {
             "none".to_string()
         } else {

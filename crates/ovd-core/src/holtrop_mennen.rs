@@ -367,6 +367,9 @@ pub struct Envelope {
     pub cp: (f64, f64),
     pub l_over_b: (f64, f64),
     pub b_over_t: (f64, f64),
+    /// The smallest water depth over draught the method was checked at (issue #735); `None`: no
+    /// bound declared.
+    pub depth_over_draught_min: Option<f64>,
 }
 
 /// Holtrop–Mennen for full hull forms (tankers and bulk carriers): Fn up to 0.24, C_P 0.73 to
@@ -378,6 +381,7 @@ pub const HOLTROP_FULL_FORM: Envelope = Envelope {
     cp: (0.73, 0.85),
     l_over_b: (5.1, 7.1),
     b_over_t: (2.4, 3.2),
+    depth_over_draught_min: None,
 };
 
 /// Holtrop–Mennen for general cargo ships, from the same table: Fn up to 0.30, C_P 0.58 to 0.72,
@@ -387,6 +391,7 @@ pub const HOLTROP_GENERAL_CARGO: Envelope = Envelope {
     cp: (0.58, 0.72),
     l_over_b: (5.3, 8.0),
     b_over_t: (2.4, 4.0),
+    depth_over_draught_min: None,
 };
 
 /// The envelope that applies at a prismatic coefficient: the general cargo row below C_P 0.725
@@ -409,6 +414,20 @@ pub struct OutOfRange {
 }
 
 impl Envelope {
+    /// Issue #735: the water depth over draught when it is below the declared minimum; `None` in
+    /// deep water (`h_over_t` of `None`) or with no bound.
+    pub fn outside_depth(&self, h_over_t: Option<f64>) -> Option<OutOfRange> {
+        match (self.depth_over_draught_min, h_over_t) {
+            (Some(low), Some(value)) if value < low => Some(OutOfRange {
+                name: "h/T",
+                value,
+                low,
+                high: f64::INFINITY,
+            }),
+            _ => None,
+        }
+    }
+
     /// The parameters outside the envelope, in the order Fn, C_P, L/B, B/T.
     pub fn outside(&self, froude: f64, cp: f64, l_over_b: f64, b_over_t: f64) -> Vec<OutOfRange> {
         let mut out = Vec::new();

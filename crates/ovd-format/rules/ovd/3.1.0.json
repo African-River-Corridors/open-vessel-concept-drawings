@@ -988,7 +988,7 @@
     },
     {
       "id": "ovd/resistance/method-in-range",
-      "title": "The hull and the service speed lie inside the declared range of the resistance method, in each environment",
+      "title": "The hull, the service speed and, where the method declares it, the water depth over draught lie inside the declared range of the resistance method, in each environment",
       "origin": "method-validity",
       "source": {
         "document": "I. Ortigosa, R. López and J. García, Prediction of total resistance coefficients using neural networks, Journal of Maritime Research VI(III), 2009 (the data range of Holtrop and Mennen 1982)",
@@ -1006,7 +1006,8 @@
       "applies_when": {
         "resistance_method": [
           "holtrop_mennen",
-          "by_block_coefficient"
+          "by_block_coefficient",
+          "barge_form_factor"
         ]
       },
       "kind": "check",
