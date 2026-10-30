@@ -18,7 +18,12 @@ ticket whose blockers are all closed, and no other. For each ticket:
    reuses the compiled dependencies and a merged worktree can be removed without losing the build. Use
    one folder **per lane**, not one for all lanes: cargo locks its build folder, so lanes that share one
    wait for each other. Do not use sccache: its cache keys hold the absolute source path, so it gets no
-   hits across worktrees. Test first. One PR to `main` closes the
+   hits across worktrees. Set `CARGO_INCREMENTAL=0`: the incremental cache made one lane's folder 6.9 GB,
+   and parallel lanes filled the disk. Check free space (`df -h ~`) before a full build, and delete the
+   lane's build folder when the lane ends. A new worktree has no `.venv`: make one before the Python
+   tests. Two worktrees that share a build folder can give the same binary for base and head, because
+   cargo sees nothing to rebuild; before you report "no change" from a base-and-head comparison, check
+   that the two binaries differ (`shasum`). Test first. One PR to `main` closes the
    ticket. Every acceptance criterion ticked in the PR body links to its evidence. Evidence must be
    reachable from the PR: a test name or file in the diff, a command and its output pasted in the
    body, or a CI job. "Kept with the build notes" is not enough; a reviewer must not have to ask the
@@ -27,7 +32,11 @@ ticket whose blockers are all closed, and no other. For each ticket:
    `cargo fmt --all --check`; clippy with warnings as errors on the crates touched; the tests of the crates
    or Python modules touched; `python3 tools/release_guard.py` and `--history`; and the embargo check of
    the PR body (see `issue-tracker.md`). Run the full fast gate (`bash tools/gates.sh`) only for a change
-   across many crates, or to reproduce a red CI run.
+   across many crates, or to reproduce a red CI run. Use `cargo test --no-fail-fast`, so one failing test
+   binary does not hide the others. **After a rebase or a merge of `main`**, rebuild fully and run
+   `tools/check_fixture_hashes.py` again: another lane's merge can change a function you call, or move
+   a stored results hash, with no text conflict. **A change to the results re-stamps every stored hash**:
+   the fixtures, the website examples and `examples/`. The hash check covers all three.
 4. **Auto-merge, and do not wait.** As soon as the PR is open, turn on auto-merge:
    `gh pr merge <pr> --squash --auto --delete-branch --author-email <repo-local address>` (see step 5 for
    the address). Then start the next ticket's reading and tests. Do not watch CI. Branch protection
@@ -36,7 +45,11 @@ ticket whose blockers are all closed, and no other. For each ticket:
    is missing from the changelog (run `python3 tools/design_impact.py changelog`, which writes your fragment;
    see "Changelog fragments" below). Branch protection is
    not strict, so a PR needs a rebase only for a real conflict, not each time `main` moves. If CI goes
-   red, auto-merge waits: fix it when you see it.
+   red, auto-merge waits: fix it when you see it. **Before the lane stops**, check every PR it opened
+   (`gh pr view <pr> --json state,mergeStateStatus`). A PR that is open and blocked or red is not done:
+   fix it, or report it as not merged. Do not leave a red PR in the queue. While a question about a PR is
+   open with the maintainer or the coordinating agent, turn its auto-merge off
+   (`gh pr merge <pr> --disable-auto`), so it cannot land before the answer arrives.
 5. **Merge.** Auto-merge (step 4) squash-merges with the repo-local address, so the commit on `main` carries it and not
    the account's personal address: `gh pr merge <pr> --squash --delete-branch --author-email <repo-local
    address>`. The repo-local address is the one in this clone's `git config user.email` (do not write
