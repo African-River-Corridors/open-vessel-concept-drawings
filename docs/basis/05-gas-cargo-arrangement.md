@@ -198,7 +198,8 @@ Rules for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3, July 20
 | GA-A23 | Tank length over OD | ≤ 7.0 | Fixed in code | OVCD Check. Same value in ADN 2025 9.3.1.11.1(b) and inland rule book 3.5.1 (type G) | `gas_arrangement.rs`, L47, L257–274 | Unknown |
 | GA-A24 | Tanks along the hull | 2 | Estimate | Carried over; an input | `barge_capacity.rs`, L51; profile `tanks_in_line` | Unknown |
 | GA-A25 | Automatic tanks across | Fewest n with OD ≤ cap | Method | Inverts GA-A18 | `barge_capacity.rs`, `tanks_wide_for_beam`, L397–432 | None |
-| GA-A26 | Tanks across searched | {1, 2, 3} | Fixed in code | Python default | `gas_arrangement.rs`, L53 | May miss a better arrangement on a wide hull |
+| GA-A26 | Tanks across searched | {1, 2, 3}, or the one number of the input `tanks_across` (issue #675) | Fixed in code; input | Python default | `gas_arrangement.rs`, `DEFAULT_TANKS_WIDE`; `simulate.rs` | May miss a better arrangement on a wide hull unless the user fixes it |
+| GA-A26a | Least side space | The larger of `min_side_space_m` (default 0) and the IGC 2.4 minimum; the wing tank is it less the wing tank gap. The app warns when the wing tank is 0 | Input | Issue #675 | `gas_arrangement.rs`, `build_or_refuse`; `simulate.rs`, `no_wing_tank_note` | None: a user value |
 | GA-A27 | Extra side clearance searched | {0.5, 1.0, 1.5, 2.0} m | Fixed in code | Python default | `gas_arrangement.rs`, L54, L555–576 | May miss a better arrangement |
 | GA-A28 | Depth grid | 3.5 to 7.0 m, 0.25 m steps | Fixed in code | Used with `optimise_depth` and the API | `gas_arrangement.rs`, L50; `simulate.rs`, L856–881 | May miss a better depth |
 | GA-A29 | Cap candidate clearance | cs = (B − n·OD_cap)/2 | Method | Puts the tank on the cap; ignores the gap between tanks | `gas_arrangement.rs`, `build`, L471 | Conservative (less cargo when n > 1) |
@@ -211,7 +212,8 @@ Rules for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3, July 20
 | GA-A36 | Only error checks gate | Warnings never gate | Method | `all_ok` | `checks.rs`, L47–49 | Non-conservative where a warning is a real limit (sightline) |
 | GA-A37 | Wheelhouse sightline | Warning, not a gate | Fixed in code | Against the maintainer decision on #264 (2026-10-20) | `aft_arrangement.rs`, L949–965 | Non-conservative |
 | GA-A38 | Sightline obstruction | Cargo top incl. dome | Method | — | `barge_capacity.rs`, L573, L871–874 | Unknown |
-| GA-A39 | Sightline values | Margin 0.5 m, eye 1.5 m above floor, lift ≤ 6.0 m | Estimate | Carried over; inputs | `aft_arrangement.rs`, L37–39, L820–826 | Unknown |
+| GA-A39 | Sightline values | Margin 0.5 m, eye 1.5 m above floor | Estimate | Carried over; inputs | `aft_arrangement.rs`, L37–39, L820–826 | Unknown |
+| GA-A39a | Wheelhouse lift | ≤ 6.0 m above the lowered floor on the deck (= the light air draft of a gas Design) | Estimate | Carried over; inside the published range of lifting-shaft wheelhouse lifts, 2.5–8.9 m (BÜTER Hebetechnik; 8.8 and 8.9 m rated 12 t, 7.0 m rated 6 t; issue #675). No source gives one value for a gas Design | Defaults Profile `wheelhouse_max_lift_m` | Often decides tanks across. The stroke that fits depends on the hull depth below the deck (the shaft goes into the hull); neither it nor stability with the wheelhouse raised (ES-TRIN 7.12) is checked |
 | GA-A40 | Fill ratio in `fit` | Design 0.98; `FitOptions` default 0.95 | Sourced default (Design) | IGC 15.3 (page 04) | `simulate.rs`, `fill_by_ruleset`, L814–816; `gas_arrangement.rs`, L106 | Page 04 |
 | GA-A41 | Cofferdam | ≥ 0.60 m | Rule (unverified) | Inland rule book 3.6.13 is a type C clause; finding #280 | `gas_separation.rs`, L12, L96–104 | Unknown (no gas source) |
 | GA-A42 | Opening setback | ≥ 2.00 m from the cargo area | Rule (unverified) | Inland rule book 3.3.7, 3.3.11; same in ADN 9.3.1.17.4 | `gas_separation.rs`, L13, L105–114 | Unknown (IGC 3.2.4.1 not checked) |
@@ -242,6 +244,7 @@ Defaults come from the Defaults Profile (`crates/ovcd-format/src/builtin_profile
 |---|---|---|---|
 | `ruleset` | `IGC_2G` (only value) | — | IGC 2.4.1.1 per tank, 2.4.2 datum |
 | `max_tank_od_m` | 16.0 | m | Tool limit, not a rule |
+| `tanks_across` | none (the search tries 1, 2 and 3) | tanks | Issue #675 |
 | `tanks_in_line` | 2 | tanks | Original engine |
 | `tank_support_height_m` | 0.5 | m | Original engine |
 | `tank_dome_height_m` | 2.0 | m | Original engine |
@@ -249,14 +252,20 @@ Defaults come from the Defaults Profile (`crates/ovcd-format/src/builtin_profile
 | `tank_insulation_thickness_mm` | by Cargo (LNG 330) | mm | Page 04 |
 | `wing_tank_gap_m` | 0.6 | m | Original engine |
 | `wing_tank_height_ratio` | 0.66 | — | Original engine |
+| `min_side_space_m` | 0 (the IGC 2.4 minimum alone) | m | Issue #675; the wing tank is this less `wing_tank_gap_m` |
 | `bow_rake_length_to_depth_ratio` | 1.6 | — | Original engine |
 | `pushed_stern_void_m` | 3.0 | m | Original engine |
 | `min_freeboard_m` | 0.3 | m | Profile (reaches `freeboard_at_payload` only) |
 | `optimise_depth` | false | — | Profile |
-| `sightline_margin_m`, `wheelhouse_eye_height_m`, `wheelhouse_max_lift_m` | 0.5, 1.5, 6.0 | m | Original engine |
+| `sightline_margin_m`, `wheelhouse_eye_height_m` | 0.5, 1.65 | m | Original engine; ES-TRIN 7.02 eye height (#347) |
+| `wheelhouse_max_lift_m` | 6.0 | m | Estimate inside the published range 2.5–8.9 m (BÜTER Hebetechnik); above the lowered floor on the deck (GA-A39a, #675) |
 
-Not changeable in a Design: cofferdam, opening setback, forward end space, the pressure-tank flag, the search sets
-(tanks across, extra clearance), the gaps between tanks, the head type. The JSON evaluation API accepts the
+Not changeable in a Design: cofferdam, opening setback, forward end space, the pressure-tank flag, the extra
+clearance the search adds, the gaps between tanks, the head type.
+
+The result lists the arrangements the search tried (`fit_tried`, outside the results hash; #675): one row per depth
+and tanks across, with its outcome (chosen, less cargo, the failing checks, or why no tank was built). The app shows
+it as "Arrangements tried". A gas answer with no wing ballast tank gets the warning `warn-fit-no-wing-tank`. The JSON evaluation API accepts the
 search sets as `fit` arguments (`ovcd-format/src/gas_arrangement.rs`, `FIT_OPTION_KEYS`).
 
 ## Limits and known findings
@@ -298,6 +307,12 @@ search sets as `fit` arguments (`ovcd-format/src/gas_arrangement.rs`, `FIT_OPTIO
     pinned); the side-clearance rule is never below 0.45 m with 350 mm insulation; no feasible fit has a tank over
     7 diameters.
   - `design_grid.rs`: two tanks along, no tank over 7 diameters in a feasible cell.
+  - `fit_choices.rs` (#675): a fixed tanks across is the only one tried, or the answer is infeasible with its
+    failing checks; a least side space is kept by every candidate and gives a wing tank; each arrangement tried has
+    one outcome; a failing blind distance names the lift needed.
+- **Format tests** (`crates/ovcd-format/tests/fit_choices_inputs.rs`, #675): the two inputs leave a file saved
+  before as it was; they reach the search through a Design; the no-wing-tank warning; the list is outside the
+  hash; the lift default and its datum.
 - **Design impact of #264:** 47 of 135 designs moved (all gas). 42 now pass with a smaller arrangement, 5 stay
   infeasible, none that passed before changed (issue #264, build notes).
 - **Evaluation harness** (`evaluation/results.md`): covers IS Code Part A 2.2 on box sections only. It has no
@@ -327,3 +342,6 @@ independent oracle.
 9. Should `fit` also vary the number of tanks along the hull (1 to 4), not only the count across?
 10. Is it right that `fit` also requires the volume-bound (tanks full) load to keep 0.3 m freeboard when the
     payload is limited by draught?
+11. What wheelhouse lift should a new Design assume (GA-A39a)? Published lifting-shaft lifts have strokes of 2.5
+    to 8.9 m, and the stroke that fits depends on the hull depth below the deck. Should the default stay 6.0 m,
+    take a published stroke (for example 8.8 m, rated 12 t), or follow the moulded depth by a rule (#675)?

@@ -181,6 +181,9 @@ input-tank-structure-factor = Factor de estructura del tanque
 input-tank-structure-factor-default-by = Carga, condición de transporte del GLP
 
 # status: draft
+input-tanks-across = Tanques en manga (valor manual)
+
+# status: draft
 input-tanks-in-line = Tanques en línea
 
 # status: draft
@@ -197,6 +200,9 @@ input-wing-tank-gap-m = Holgura del tanque lateral
 
 # status: draft
 input-wing-tank-height-ratio = Altura del tanque lateral sobre diámetro del tanque
+
+# status: draft
+input-min-side-space-m = Espacio lateral mínimo
 
 # status: draft
 input-weather-shield-thickness-mm = Espesor de la chapa del techo de protección

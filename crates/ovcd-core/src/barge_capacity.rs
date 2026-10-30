@@ -1568,9 +1568,9 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
         a.wheelhouse_floor_raised_m = s.floor_raised_m;
         a.wheelhouse_top_raised_m = s.floor_raised_m + a.wheelhouse_height_m;
         a.checks.retain(|c| c.name != "wheelhouse_sees_over_cargo");
-        a.checks.push(Check::new(
-            "wheelhouse_sees_over_cargo",
-            s.enough,
+        // Issue #675: a failing check says the lift needed beside the lift allowed, so the list
+        // of arrangements tried shows how close each one came. A passing one keeps its message.
+        let blind_message = if s.enough {
             text!(
                 "check-wheelhouse-blind-distance",
                 "blind distance ahead of the bow {blind} m <= {limit} m, light (ES-TRIN 7.02(2)); lift used {lift} m of {max_lift} m",
@@ -1578,7 +1578,20 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
                 limit = Arg::fixed(limit, 0),
                 lift = Arg::fixed(s.lift_used_m, 2),
                 max_lift = Arg::fixed(aft_second.wheelhouse_max_lift_m, 2),
-            ),
+            )
+        } else {
+            text!(
+                "check-wheelhouse-blind-distance-fails",
+                "blind distance ahead of the bow over {limit} m, light (ES-TRIN 7.02(2)): lift needed {needed} m of {max_lift} m",
+                limit = Arg::fixed(limit, 0),
+                needed = Arg::fixed(s.lift_needed_m, 2),
+                max_lift = Arg::fixed(aft_second.wheelhouse_max_lift_m, 2),
+            )
+        };
+        a.checks.push(Check::new(
+            "wheelhouse_sees_over_cargo",
+            s.enough,
+            blind_message,
         ));
         a.warnings
             .retain(|w| !alloc::string::ToString::to_string(w).starts_with("Sightline needs "));

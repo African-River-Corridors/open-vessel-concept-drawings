@@ -577,6 +577,13 @@ pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
         formations: None,
         value: GAS_WING_TANK_HEIGHT_RATIO,
     },
+    // Issue #675: a file saved before has no least side space beyond the IGC minimum.
+    LegacyFixed {
+        name: "min_side_space_m",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: None,
+        value: 0.0,
+    },
     LegacyFixed {
         name: "weather_shield_thickness_mm",
         applies_to: AppliesTo::Only("type_c_tanks"),
@@ -891,6 +898,12 @@ pub struct LegacyFixedJson {
 
 /// See [`LegacyFixedJson`]. Read by a file that lacks the input, like [`LEGACY_FIXED_INPUTS`].
 pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
+    // Issue #675: a file saved before let the search try 1, 2 and 3 tanks across.
+    LegacyFixedJson {
+        name: "tanks_across",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        value: "null",
+    },
     // Issue #417: no opening faces the cargo area.
     LegacyFixedJson {
         name: "deckhouse_front_opening",
@@ -2151,6 +2164,13 @@ pub const INPUTS: &[InputSpec] = &[
         Group::GasTanks,
     ),
     only(
+        "tanks_across",
+        "Tanks across (override)",
+        NUM_OR_NONE,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
         "tanks_in_line",
         "Tanks in line",
         NUM,
@@ -2188,6 +2208,13 @@ pub const INPUTS: &[InputSpec] = &[
     only(
         "wing_tank_height_ratio",
         "Wing tank height over tank diameter",
+        NUM,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "min_side_space_m",
+        "Minimum side space",
         NUM,
         "type_c_tanks",
         Group::GasTanks,
@@ -5060,6 +5087,7 @@ fn cross_checks(
     // A count is a whole number.
     for name in [
         "n_holds",
+        "tanks_across",
         "tanks_in_line",
         "thruster_count",
         "battery_unit_count",

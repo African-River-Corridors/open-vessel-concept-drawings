@@ -448,6 +448,72 @@ fn channel_width_note(p: &Map<String, Value>) -> R<Option<Text>> {
     }))
 }
 
+/// Issue #675: a gas arrangement whose side space leaves no wing ballast tank says so, with the
+/// input that gives it one. `None` when there is a tank and a wing tank, or no tank at all.
+fn no_wing_tank_note(r: &BargeCapacityResult, gap_m: f64) -> Option<Text> {
+    let tank = r.tank_outer_diameter_m.is_some_and(|od| od > 0.0);
+    (r.gas_basis.is_some() && tank && ga::wing_tank_width(r) <= 0.0).then(|| {
+        text!(
+            "warn-fit-no-wing-tank",
+            "No wing ballast tank: the side space {side} m is not more than the wing tank gap {gap} m. For a wing tank, set `{input}` above {gap} m.",
+            side = Arg::fixed(r.side_clearance_m.unwrap_or(0.0), 2),
+            gap = Arg::fixed(gap_m, 2),
+            input = Arg::input("min_side_space_m"),
+        )
+    })
+}
+
+/// Issue #675: the gas tank arrangements the search tried and what became of each, for the app.
+/// An explanation, not a result: it is one of the `UNHASHED_KEYS`.
+fn fit_tried_json(tried: &[ga::TriedArrangement], ids: &mut TextIds) -> Value {
+    Value::Array(
+        tried
+            .iter()
+            .map(|t| {
+                let (outcome, reasons) = match &t.outcome {
+                    ga::TriedOutcome::Chosen => ("chosen", Vec::new()),
+                    ga::TriedOutcome::LessCargo => ("less_cargo", Vec::new()),
+                    ga::TriedOutcome::Fails(checks) => {
+                        ids.checks(checks);
+                        let named: Vec<Check> = checks
+                            .iter()
+                            .map(|c| Check {
+                                name: c.name.replace('_', " "),
+                                ..c.clone()
+                            })
+                            .collect();
+                        let items = match checks_json(&named) {
+                            Value::Array(items) => items,
+                            _ => Vec::new(),
+                        };
+                        ("fails", items)
+                    }
+                    ga::TriedOutcome::NotBuilt(why) => {
+                        ids.text(why);
+                        (
+                            "not_built",
+                            vec![json!({ "name": "not built", "ok": false, "message": why.en, "severity": "error" })],
+                        )
+                    }
+                };
+                json!({
+                    "depth_m": num(t.depth_m),
+                    "n_wide": t.n_wide,
+                    "n_long": t.n_long,
+                    "tank_od_m": num(t.tank_od_m),
+                    "side_clearance_m": num(t.side_clearance_m),
+                    "wing_tank_width_m": num(t.wing_tank_width_m),
+                    "cargo_volume_m3": num(t.cargo_volume_m3),
+                    "cargo_t": num(t.cargo_t),
+                    "variants": t.variants,
+                    "outcome": outcome,
+                    "reasons": reasons,
+                })
+            })
+            .collect(),
+    )
+}
+
 /// The capacity checks as the simulator lists them, the name read with spaces. The two that test
 /// the full tank volume (`FULL_VOLUME_CHECKS`) gate nothing, so they are listed as warnings: shown,
 /// as every check is, but not a failure (issue #418).
@@ -2553,6 +2619,12 @@ fn simulate_gas(
         cargo_density_kg_m3: loading.density_kg_m3,
         self_propelled,
         depths: depths.clone(),
+        // Issue #675: tanks across fixed by the user, or 1, 2 and 3 tried; and a least side space.
+        tanks_wide: match opt_float(p, "tanks_across")? {
+            Some(n) => vec![whole_number(n, "tanks_across")?],
+            None => ga::DEFAULT_TANKS_WIDE.to_vec(),
+        },
+        min_side_space_m: get_or(p, "min_side_space_m", 0.0)?,
         block_coefficient: cb,
         max_tank_od_m: get_or(
             p,
@@ -2818,6 +2890,11 @@ fn simulate_gas(
         ids.text(&note);
         warnings.push(note);
     }
+    if let Some(note) = no_wing_tank_note(r, options.wing_tank_gap_m) {
+        ids.text(&note);
+        warnings.push(note);
+    }
+    let fit_tried = fit_tried_json(&f.tried, &mut ids);
     let powering_block = powering_json(
         p,
         options.machinery.as_ref(),
@@ -2903,6 +2980,7 @@ fn simulate_gas(
             "curves": curve_list,
             "stability": stability,
             "stability_marks": stability_marks,
+            "fit_tried": fit_tried,
             "cost_masses": r.gas_basis.as_ref().map_or(Value::Null, |b| match &powering_block {
                 // Issue #353: the Option's own battery and Installed Power, not a tug's.
                 Some(pw) => crate::cost::self_propelled_gas_masses(

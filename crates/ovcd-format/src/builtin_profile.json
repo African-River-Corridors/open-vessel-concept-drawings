@@ -671,6 +671,13 @@
       "soft": { "min": 5.0, "max": 30.0 },
       "basis": "carried over from the original engine: plate thickness in the hopper steel weight"
     },
+    "tanks_across": {
+      "default": null,
+      "unit": "tanks",
+      "hard": { "ge": 1, "le": 10 },
+      "soft": { "min": 1.0, "max": 3.0 },
+      "basis": "A whole number of tanks side by side across the beam, for every arrangement the search tries (issue #675). none: the search tries 1, 2 and 3 across and keeps the one that passes every check with the most cargo. The tank diameter follows from the beam, the side space and the gaps between tanks"
+    },
     "tanks_in_line": {
       "default": 2,
       "unit": "tanks",
@@ -725,6 +732,13 @@
       "hard": { "ge": 0, "le": 10 },
       "soft": { "min": 0.3, "max": 1.0 },
       "basis": "carried over from the original engine: the gap between the wing ballast tank and the cargo tank, per side. The wing tank width is the side clearance less this gap, and not less than zero"
+    },
+    "min_side_space_m": {
+      "default": 0.0,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.0, "max": 3.0 },
+      "basis": "The least space from the side shell to the outer face of the tank insulation, per side (issue #675). The search uses the larger of this and the IGC 2.4 minimum d(Vc) less the insulation, then tries up to 2 m more. The wing ballast tank is this space less the wing tank gap, so for a wing tank of width w set at least w plus the gap. 0: the IGC minimum alone"
     },
     "wing_tank_height_ratio": {
       "default": 0.66,
@@ -1056,8 +1070,9 @@
       "default": 6.0,
       "unit": "m",
       "hard": { "ge": 0, "le": 30 },
-      "soft": { "min": 3.0, "max": 10.0 },
-      "basis": "carried over from the original engine: the most the wheelhouse can rise on its lift"
+      "soft": { "min": 2.5, "max": 8.9 },
+      "status": "estimate",
+      "basis": "The most the wheelhouse can rise on its lift: the stroke, measured from the lowered floor on the deck at moulded depth. On a gas Design the lowered wheelhouse top is the highest point, so the lowered position is the light air draft and the lift is measured above it. The blind distance check (ES-TRIN 7.02(2)) gives the lift needed beside this value. 6.0 m is an Estimate carried over from the original engine, inside the published range: the lifting-shaft wheelhouse lifts of BUTER Hebetechnik (bueter-hubtische.de, read 2026-10-29) have strokes of 2.5 m (9 t), 3.0 m (3 t), 4.0 m (8 t), 7.0 m (6 t), 8.8 m and 8.9 m (12 t); the engine weighs an 8 t wheelhouse. The lift shaft goes down into the hull, so the stroke that fits depends on the depth below the deck; the engine does not check this, or the stability with the wheelhouse raised (ES-TRIN 7.12)"
     },
     "stern_form": {
       "default_by_cargo_phase": { "dry_bulk": "tunnel", "liquid_gas": "transom", "liquid_bulk": "tunnel" },
