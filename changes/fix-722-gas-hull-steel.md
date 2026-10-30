@@ -4,7 +4,7 @@
 <!-- design-impact -->
 ### fix/722-gas-hull-steel (2026-10-30)
 
-Between `main bcc91cf` and `this branch 1fbf746e`.
+Between `main 0422419` and `this branch 9c20b6b9` (the table of CI's design-impact run on the pull request, run 41125670189).
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
@@ -48,4 +48,4 @@ Between `main bcc91cf` and `this branch 1fbf746e`.
 | sweep default depth gas 90x14 | `checks[6].message` | 2 of 2 requested thrusters fit; 2 would need 5.04 m of 14.00 m beam | 2 of 2 requested thrusters fit; 2 would need 3.42 m of 14.00 m beam | changed |
 | sweep default depth gas 90x14 | `loading_conditions.conditions[3].ballast[2].fill` | absent | 0.45 | changed |
 | sweep default depth gas 90x14 | `loading_conditions.conditions[3].ballast[2].free_surface_moment_tm` | absent | 1564.98905356 | changed |
-| ... | 81736 more changed quantities | | | |
+| ... | 82464 more changed quantities | | | |
