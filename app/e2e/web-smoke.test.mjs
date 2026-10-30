@@ -234,6 +234,9 @@ describe("OVCD web smoke tests", () => {
     const status = await (await b.$("[data-testid=model3d]")).getAttribute("data-status");
     assert.equal(status, "ready", "WebGL is available in the test browser");
     const shown = async () => JSON.parse(await (await b.$("[data-testid=model3d-canvas]")).getAttribute("data-shown"));
+    // The Spaces are off on open (issue #683): put every kind on.
+    for (const box of await b.$$("[data-testid^=layer-kind-]")) await box.click();
+    await until(b, "the Spaces drawn", async () => (await shown()).some((g) => g.startsWith("space:")));
     const all = await shown();
     const layers = new Set(all.map((g) => g.split(":")[0]));
     for (const l of ["hull", "deck", "bulkhead", "space"]) assert.ok(layers.has(l), `a ${l} group is drawn: ${[...layers]}`);
@@ -264,6 +267,70 @@ describe("OVCD web smoke tests", () => {
         await (await b.$(`button=${theme}`)).click();
         await new Promise((r) => setTimeout(r, 800));
         await b.saveScreenshot(path.join(SHOTS, `web-3d-${theme.toLowerCase()}.png`));
+      }
+    }
+  });
+
+  it("opens opaque, and the section plane clips the hull, its edges and the Spaces (issue #683)", async () => {
+    const b = await start();
+    await b.url(`${origin}/ovcd/app`);
+    await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
+    await (await b.$("button=I understand")).click();
+    await until(b, "results", async () => (await outputs(b)).isExisting());
+    await b.execute(() => {
+      HTMLInputElement.prototype.click = function () {};
+    });
+    await (await b.$("button=Open")).click();
+    const picker = await b.$("[data-testid=file-picker]");
+    await picker.waitForExist({ timeout: 5000 });
+    await picker.setValue(BALLAST_FIXTURE);
+    await until(b, "the file name", async () => (await b.$("header")).getText().then((t) => t.includes("crude_integral_tanks_coastal.vdesign")));
+    const tab = (label) => b.$(`//button[@role="tab" and normalize-space()="${label}"]`);
+    await (await tab("Drawings")).click();
+    await (await tab("3D")).click();
+    await until(b, "the model", async () => (await (await b.$("[data-testid=model3d]")).getAttribute("data-status")) === "ready", 60000);
+    const canvas = () => b.$("[data-testid=model3d-canvas]");
+    const data = async (name) => JSON.parse(await (await canvas()).getAttribute(`data-${name}`));
+    // On open: the deck and the bulkheads on, and the hull opaque.
+    const shown = await data("shown");
+    assert.ok(shown.some((g) => g.startsWith("deck:")) && shown.some((g) => g.startsWith("bulkhead:")), `deck and bulkheads on: ${shown}`);
+    const opened = await data("materials");
+    assert.equal(opened.hull.opacity, 1, "the hull is opaque on open");
+    assert.equal(opened.hull.transparent, false);
+    // Every layer on: the hull turns translucent, and the draw calls are logged (reported, not gated).
+    for (const box of await b.$$("[data-testid^=layer-kind-]")) if (!(await box.isSelected())) await box.click();
+    await until(b, "the Spaces drawn", async () => (await data("shown")).some((g) => g.startsWith("space:")));
+    assert.ok((await data("materials")).hull.opacity < 1, "the hull is translucent with a Space layer on");
+    console.log(`draw calls, every layer on: ${await (await canvas()).getAttribute("data-calls")}`);
+    // The section plane clips the hull, its edges and the Spaces: none of them is drawn on the bow side.
+    await (await b.$("[data-testid=model3d-view-profile]")).click();
+    const coverage = (part) => b.execute((part) => document.querySelector("[data-testid=model3d-canvas]").ovcdCoverage(part), part);
+    const whole = await coverage("hull");
+    assert.ok(whole.beyond > 0, `without the plane the hull reaches the bow: ${JSON.stringify(whole)}`);
+    await (await b.$("[data-testid=section-on]")).click();
+    await b.execute(() => {
+      const el = document.querySelector("[data-testid=section-x]");
+      el.value = "38";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await until(b, "the outline at 38", async () => (await data("section"))?.x === 38);
+    for (const part of ["hull", "edges", "spaces"]) {
+      const c = await coverage(part);
+      assert.ok(c !== null, `${part} is drawn`);
+      assert.ok(c.kept > 0 && c.beyond === 0, `${part} clipped at x = 38: ${JSON.stringify(c)}`);
+    }
+    if (SHOTS) {
+      fs.mkdirSync(SHOTS, { recursive: true });
+      await (await b.$("[data-testid=section-on]")).click();
+      for (const theme of ["Light", "Dark"]) {
+        await (await b.$(`button=${theme}`)).click();
+        await (await b.$("[data-testid=model3d-reset]")).click();
+        await new Promise((r) => setTimeout(r, 500));
+        await b.saveScreenshot(path.join(SHOTS, `web-3d-shading-spaces-${theme.toLowerCase()}.png`));
+        for (const box of await b.$$("[data-testid^=layer-kind-]")) if (await box.isSelected()) await box.click();
+        await new Promise((r) => setTimeout(r, 500));
+        await b.saveScreenshot(path.join(SHOTS, `web-3d-shading-${theme.toLowerCase()}.png`));
+        for (const box of await b.$$("[data-testid^=layer-kind-]")) if (!(await box.isSelected())) await box.click();
       }
     }
   });

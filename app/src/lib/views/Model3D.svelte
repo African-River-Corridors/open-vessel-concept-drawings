@@ -2,14 +2,15 @@
   import { onMount } from "svelte";
   import { platform, type Meshes, type SectionOutline, type SpaceInfo, type Waterline } from "../platform";
   import { watchTheme } from "../chartTheme";
-  import { FAMILY_TOKEN, VIEW_MIRROR, familyOf, fixedView, kindLabelId, orbitStep, toView, type FixedView, type Vec3 } from "../model3d";
+  import { FAMILY_TOKEN, VIEW_MIRROR, familyOf, fixedView, flatShaded, groupSlice, homeView, kindLabelId, orbitStep, toView, type FixedView, type Vec3 } from "../model3d";
   import { num, t } from "../i18n.svelte";
 
   // The 3D view of the Vessel Model (spec 0008, issue #458). The core builds the meshes; this view only
   // draws them (three.js, loaded when the view first opens) and holds no geometry of its own. Layers:
   // the hull, the decks, the bulkheads and one per kind of Space. Click a Space (or pick it in the list)
   // to read its volume and centroid, as the core gives them. Colours come from the CSS tokens, read again
-  // when the theme changes.
+  // when the theme changes. It opens on the outside of the vessel (spec 0009, "The 3D view"): the hull
+  // opaque and flat shaded, its edges drawn, the Spaces off, from the aft-starboard quarter.
   let { option }: { option: string } = $props();
 
   type Layer = { id: string; label: string };
@@ -38,8 +39,8 @@
     return id ? t(id) : kind;
   };
   const sideName = (side: string) => t(`app-3d-side-${side}`);
-  /** An inner layer is on, so the hull is drawn translucent. */
-  let innerOn = $derived(visible.deck || visible.bulkhead || kinds.some((k) => visible[`kind:${k}`]));
+  /** A Space layer is on, so the hull and the decks are drawn translucent to show it. */
+  let innerOn = $derived(kinds.some((k) => visible[`kind:${k}`]));
 
   // Set by onMount, called by the template.
   let apply: () => void = () => {};
@@ -73,7 +74,8 @@
         data = await p.meshes(option);
         const names = data.groups.filter((g) => g.layer === "space").map((g) => g.id);
         spaces = await Promise.all(names.map((n) => p.spaceInfo(option, n)));
-        for (const s of spaces) visible[`kind:${s.kind}`] ??= true;
+        // The Spaces are off on open: the view opens on the outside of the vessel (spec 0009, D4).
+        for (const s of spaces) visible[`kind:${s.kind}`] ??= false;
         waterlines = await p.waterlines(option);
         waterline = waterlines[0]?.name ?? "";
       } catch (e) {
@@ -106,36 +108,55 @@
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 5000);
       camera.up.set(0, 0, 1);
-      scene.add(new THREE.AmbientLight(0xffffff, 1.4));
-      const sun = new THREE.DirectionalLight(0xffffff, 2.2);
-      sun.position.set(-30, -50, 80);
-      scene.add(sun);
+      // Lights (spec 0009): sky and ground from the theme, a key light from the aft-starboard quarter and
+      // a weaker fill from port. No ambient flood, so the faces of the hull read apart.
+      const sky = new THREE.HemisphereLight(0xffffff, 0xffffff, 1.6);
+      sky.position.set(0, 0, 1);
+      scene.add(sky);
+      const key = new THREE.DirectionalLight(0xffffff, 2.0);
+      const fill = new THREE.DirectionalLight(0xffffff, 0.6);
+      scene.add(key, fill, key.target, fill.target);
 
-      // One mesh per group, all on the one vertex buffer of the core. The root holds them in model axes
-      // and mirrors them into the view's right-handed axes (spec 0009, issue #682).
-      const positions = new THREE.BufferAttribute(data.positions, 3);
+      // One mesh per group, each on its own slice of the core's buffers (issue #683). The root holds
+      // them in model axes and mirrors them into the view's right-handed axes (spec 0009, issue #682).
       const meshes = new Map<string, InstanceType<typeof THREE.Mesh>>();
+      const edges: InstanceType<typeof THREE.LineSegments>[] = [];
       const space = new Map<InstanceType<typeof THREE.Object3D>, string>();
       const root = new THREE.Group();
       root.scale.set(...VIEW_MIRROR);
       scene.add(root);
       for (const g of data.groups) {
+        const part = groupSlice(data.positions, data.indices, g.start, g.count);
         const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute("position", positions);
-        geometry.setIndex(new THREE.BufferAttribute(data.indices.subarray(g.start, g.start + g.count), 1));
-        geometry.computeVertexNormals();
-        const material = new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, roughness: 0.8, metalness: 0, clippingPlanes: [plane] });
+        geometry.setAttribute("position", new THREE.BufferAttribute(part.positions, 3));
+        geometry.setIndex(new THREE.BufferAttribute(part.indices, 1));
+        const flat = flatShaded(g.layer);
+        if (!flat) geometry.computeVertexNormals();
+        const material = new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, flatShading: flat, roughness: 0.85, metalness: 0, clippingPlanes: [plane] });
         const mesh = new THREE.Mesh(geometry, material);
         mesh.userData = { layer: g.layer, id: g.id };
         root.add(mesh);
         meshes.set(`${g.layer}:${g.id}`, mesh);
         if (g.layer === "space") space.set(mesh, g.id);
+        // The hull's edges: where its faces meet at 30 degrees or more, clipped like the faces.
+        if (g.layer === "hull") {
+          const line = new THREE.LineSegments(new THREE.EdgesGeometry(geometry, 30), new THREE.LineBasicMaterial({ clippingPlanes: [plane] }));
+          line.userData = { layer: g.layer, id: g.id, edges: true };
+          root.add(line);
+          edges.push(line);
+        }
       }
       // The box of the model, in model axes.
-      const modelBox = new THREE.Box3().setFromBufferAttribute(positions);
+      const modelBox = new THREE.Box3().setFromArray(data.positions);
       const centre = modelBox.getCenter(new THREE.Vector3());
       const size = modelBox.getSize(new THREE.Vector3());
       const reach = Math.max(size.x, size.y, size.z) * 1.1;
+      // The key light from the aft-starboard quarter and above, the fill from port, both in model axes.
+      const at = (dx: number, dy: number, dz: number): Vec3 => toView([centre.x + dx * reach, centre.y + dy * reach, centre.z + dz * reach]);
+      key.position.set(...at(-0.6, 0.8, 1));
+      fill.position.set(...at(0.3, -1, 0.4));
+      key.target.position.set(...at(0, 0, 0));
+      fill.target.position.set(...at(0, 0, 0));
       length = modelBox.max.x;
       sectionX = Math.round(length / 2);
       const controls = new OrbitControls(camera, canvas);
@@ -152,6 +173,8 @@
       };
       function paint() {
         renderer.setClearColor(new THREE.Color(token("--paper") || "#f6edd8"));
+        sky.color.set(token("--surface") || "#fbf6ea");
+        sky.groundColor.set(token("--surface-2") || "#efe4c9");
         for (const mesh of meshes.values()) {
           const { layer, id } = mesh.userData as { layer: string; id: string };
           const m = mesh.material as InstanceType<typeof THREE.MeshStandardMaterial>;
@@ -163,13 +186,17 @@
                 ? id === waterline
                 : visible[layer] !== false;
           mesh.visible = on;
-          const translucent = layer === "hull" && innerOn;
-          m.transparent = translucent || layer === "space" || layer === "deck";
-          m.transparent = m.transparent || layer === "waterline";
-          m.opacity = translucent ? 0.2 : layer === "space" ? 0.85 : layer === "deck" ? 0.6 : layer === "waterline" ? 0.55 : 1;
+          // Opaque, unless a Space layer is on: then the hull and the decks let it show through.
+          const translucent = innerOn && (layer === "hull" || layer === "deck");
+          m.transparent = translucent || layer === "space" || layer === "waterline";
+          m.opacity = translucent ? (layer === "hull" ? 0.2 : 0.6) : layer === "space" ? 0.85 : layer === "waterline" ? 0.55 : 1;
           m.depthWrite = !translucent;
           m.emissive.set(layer === "space" && selected?.name === id ? token("--gilt-mark") : "#000000");
           m.emissiveIntensity = 0.55;
+        }
+        for (const line of edges) {
+          line.visible = visible.hull !== false;
+          (line.material as InstanceType<typeof THREE.LineBasicMaterial>).color.set(token("--ink"));
         }
         for (const c of outline.children) ((c as InstanceType<typeof THREE.Line>).material as InstanceType<typeof THREE.LineBasicMaterial>).color.set(token("--accent"));
         controls.update();
@@ -191,8 +218,54 @@
           port: probe([mc.x, lo.y, mc.z]),
           starboard: probe([mc.x, hi.y, mc.z]),
         });
+        // The material of each layer's first group, and the draw calls of the last frame, for the
+        // end-to-end tests (issue #683).
+        const materials: Record<string, { opacity: number; transparent: boolean }> = {};
+        for (const mesh of meshes.values()) {
+          const m = mesh.material as InstanceType<typeof THREE.MeshStandardMaterial>;
+          materials[mesh.userData.layer] ??= { opacity: m.opacity, transparent: m.transparent };
+        }
+        canvas.dataset.materials = JSON.stringify(materials);
+        canvas.dataset.calls = String(renderer.info.render.calls);
       }
       apply = paint;
+
+      // For the end-to-end tests (issue #683): draw one part alone into an off-screen target and count
+      // its pixels on each side of the section plane's trace, the bow side being the screen's right in
+      // the profile view. A part the plane clips has none on the bow side.
+      const coverage = (part: "hull" | "edges" | "spaces") => {
+        const chosen = (o: InstanceType<typeof THREE.Object3D>) =>
+          part === "hull" ? o.userData.layer === "hull" && !o.userData.edges : part === "edges" ? o.userData.edges === true : o.userData.layer === "space";
+        const parts = root.children.filter(chosen);
+        if (parts.length === 0) return null;
+        const was = new Map(root.children.map((o) => [o, o.visible]));
+        for (const o of root.children) o.visible = chosen(o) && (was.get(o) ?? false);
+        const [w, h] = [canvas.width, canvas.height];
+        const target = new THREE.WebGLRenderTarget(w, h);
+        const clear = renderer.getClearColor(new THREE.Color());
+        renderer.setClearColor(clear, 0);
+        renderer.setRenderTarget(target);
+        renderer.render(scene, camera);
+        const pixels = new Uint8Array(4 * w * h);
+        renderer.readRenderTargetPixels(target, 0, 0, w, h, pixels);
+        renderer.setRenderTarget(null);
+        renderer.setClearColor(clear, 1);
+        target.dispose();
+        for (const [o, v] of was) o.visible = v;
+        const cut = root.localToWorld(new THREE.Vector3(plane.constant < 1e8 ? plane.constant : modelBox.max.x, centre.y, centre.z)).project(camera);
+        const cutPx = ((cut.x + 1) / 2) * w;
+        let kept = 0;
+        let beyond = 0;
+        for (let i = 0; i < w * h; i++) {
+          if (pixels[4 * i + 3] === 0) continue;
+          const x = i % w;
+          if (x < cutPx - 2) kept++;
+          else if (x > cutPx + 2) beyond++;
+        }
+        paint();
+        return { kept, beyond };
+      };
+      (canvas as unknown as { ovcdCoverage: typeof coverage }).ovcdCoverage = coverage;
 
       // The section plane: the clip, and the outline the core gives at that x, drawn in the plane.
       const outline = new THREE.Group();
@@ -246,14 +319,18 @@
         controls.update();
         paint();
       }
-      const home = (): Vec3 => [centre.x - reach * 0.5, centre.y + reach * 0.8, centre.z + reach * 0.5];
-      reset = () => look(home(), [0, 0, 1]);
+      reset = () => {
+        const h = homeView(modelBox.min.toArray() as Vec3, modelBox.max.toArray() as Vec3, camera.fov, camera.aspect);
+        look(h.position, h.up);
+      };
       goTo = (v) => {
         const f = fixedView(v, [centre.x, centre.y, centre.z], reach);
         look(f.position, f.up);
       };
       selectByName = (name) => {
         selected = name ? (spaces.find((s) => s.name === name) ?? null) : null;
+        // A Space picked in the list is shown: its kind's layer goes on.
+        if (selected) visible[`kind:${selected.kind}`] = true;
         paint();
       };
       onKey = (e) => {
@@ -307,8 +384,8 @@
       const ro = new ResizeObserver(resize);
       ro.observe(host);
       const stopTheme = watchTheme(paint);
-      reset();
       resize();
+      reset();
 
       cleanup = () => {
         stopTheme();
@@ -317,7 +394,7 @@
         canvas.removeEventListener("pointerup", onUp);
         controls.dispose();
         clear();
-        for (const m of meshes.values()) {
+        for (const m of [...meshes.values(), ...edges]) {
           m.geometry.dispose();
           (m.material as InstanceType<typeof THREE.Material>).dispose();
         }

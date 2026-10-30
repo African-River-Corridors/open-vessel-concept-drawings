@@ -1,7 +1,11 @@
 // Unit tests for src/lib/model3d.ts. Run: npm run test:unit
 import test from "node:test";
 import assert from "node:assert/strict";
-import { familyOf, kindLabelId, fixedView, orbitStep, toView, VIEW_MIRROR, FAMILY_TOKEN } from "../src/lib/model3d.ts";
+import { familyOf, flatShaded, groupSlice, homeView, kindLabelId, fixedView, orbitStep, toView, VIEW_MIRROR, FAMILY_TOKEN } from "../src/lib/model3d.ts";
+
+// The default camera for the 76.5 x 11.4 x 3.5 m box, field of view 35 degrees, aspect 1.6: what homeView
+// printed (Label: snapshot).
+const SNAPSHOT_HOME = [-19.018667, 57.268667, 39.516316];
 
 test("every Space kind the arrangement places has a family and a label", () => {
   for (const kind of ["cargo_tank", "slop", "cofferdam", "pump_room", "double_bottom_ballast", "wing_ballast", "peak_ballast"]) {
@@ -49,4 +53,62 @@ test("the view mirrors the left-handed model axes once, in y (spec 0009, issue #
   assert.equal(dot(cross(ex, ey), ez), -1, "one mirror: the determinant is -1");
   assert.deepEqual(toView([3, -2, 1]), [3, 2, 1], "a point to port has view y > 0");
   assert.equal(VIEW_MIRROR[0] * VIEW_MIRROR[1] * VIEW_MIRROR[2], -1);
+});
+
+test("a group's slice holds its own vertices and its triangles re-indexed (issue #683)", () => {
+  // Label: property. Two parts appended as the core appends them: a triangle, then a quad.
+  const positions = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 5, 5, 6, 5, 5, 6, 6, 5, 5, 6, 5]);
+  const indices = new Uint32Array([0, 1, 2, 3, 4, 5, 3, 5, 6]);
+  const a = groupSlice(positions, indices, 0, 3);
+  assert.deepEqual([...a.indices], [0, 1, 2]);
+  assert.deepEqual([...a.positions], [0, 0, 0, 1, 0, 0, 0, 1, 0]);
+  const b = groupSlice(positions, indices, 3, 6);
+  assert.deepEqual([...b.indices], [0, 1, 2, 0, 2, 3]);
+  assert.deepEqual([...b.positions], [5, 5, 5, 6, 5, 5, 6, 6, 5, 5, 6, 5]);
+  // Each triangle has the same corners as in the shared buffers.
+  for (let t = 0; t < 6; t++) {
+    const k = b.indices[t];
+    assert.deepEqual([...b.positions.slice(3 * k, 3 * k + 3)], [...positions.slice(3 * indices[3 + t], 3 * indices[3 + t] + 3)]);
+  }
+  assert.equal(groupSlice(positions, indices, 9, 0).indices.length, 0);
+});
+
+test("the flat parts are flat shaded, and a curved part is smooth (issue #683)", () => {
+  for (const layer of ["hull", "deck", "bulkhead", "space", "waterline"]) assert.equal(flatShaded(layer), true, layer);
+  assert.equal(flatShaded("tank"), false);
+});
+
+test("the default camera stands aft to starboard, 25 degrees up, and frames the box with 10 % margin (issue #683)", () => {
+  // Label: snapshot (the position, as the code printed it) and property (the angles and the fit).
+  const min = [0, -5.7, 0];
+  const max = [76.5, 5.7, 3.5];
+  const fov = 35;
+  const aspect = 1.6;
+  const { position, target, up } = homeView(min, max, fov, aspect);
+  assert.deepEqual(target, [38.25, 0, 1.75]);
+  assert.deepEqual(up, [0, 0, 1]);
+  const d = position.map((v, i) => v - target[i]);
+  const r = Math.hypot(...d);
+  const deg = (x) => (x * 180) / Math.PI;
+  assert.ok(Math.abs(deg(Math.asin(d[2] / r)) - 25) < 1e-9, "25 degrees above the horizon");
+  assert.ok(d[0] < 0 && d[1] > 0 && Math.abs(-d[0] - d[1]) < 1e-9, "abaft and to starboard, on the 45 degree line");
+  // Project the eight corners with a camera built here, not with the function's own basis.
+  const f = d.map((v) => -v / r); // looking direction
+  const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const norm = (a) => a.map((v) => v / Math.hypot(...a));
+  const rt = norm(cross(f, [0, 0, 1]));
+  const u = cross(rt, f);
+  const tv = Math.tan((fov * Math.PI) / 360);
+  let most = 0;
+  for (const x of [min[0], max[0]])
+    for (const y of [min[1], max[1]])
+      for (const z of [min[2], max[2]]) {
+        const p = [x - position[0], y - position[1], z - position[2]];
+        const depth = p[0] * f[0] + p[1] * f[1] + p[2] * f[2];
+        const sx = (p[0] * rt[0] + p[1] * rt[1] + p[2] * rt[2]) / depth / (tv * aspect);
+        const sy = (p[0] * u[0] + p[1] * u[1] + p[2] * u[2]) / depth / tv;
+        most = Math.max(most, Math.abs(sx), Math.abs(sy));
+      }
+  assert.ok(Math.abs(most - 1 / 1.1) < 1e-9, `the farthest corner fills 1 / 1.1 of the half view: ${most}`);
+  assert.deepEqual(position.map((v) => Number(v.toFixed(6))), SNAPSHOT_HOME);
 });
