@@ -758,9 +758,27 @@ pub struct PropulsorLayout {
     pub warnings: Vec<Text>,
 }
 
+/// The stern block's units of a specified Propulsor away from a tunnel stern (issue #702):
+/// `propulsor_count` units, each of the Propulsor's own envelope (1.35 D), so the block's
+/// `thruster_offsets_m` and the Propulsor Layout agree. `None` under a tunnel stern, where the
+/// tunnels place the units.
+pub fn stern_block_units(
+    m: &MachineryInputs,
+    stern: Option<&crate::stern_form::SternGeometry>,
+) -> Option<(i64, f64)> {
+    if stern.is_some_and(|g| g.form == crate::stern_form::SternForm::Tunnel) {
+        return None;
+    }
+    Some((
+        i64::from(m.propulsor_count.max(1)),
+        crate::aft_arrangement::stern_mass::ENVELOPE_OVER_DIAMETER * m.propeller_diameter_m,
+    ))
+}
+
 /// The athwartships centres of `count` units: the stern's offsets when they hold `count`, else
 /// `count` units spread at `pitch` about the centre line, with a warning. `offsets` are the tunnel
-/// centres under a tunnel stern, else the stern block's thruster offsets.
+/// centres under a tunnel stern, else the stern block's thruster offsets, which hold `count` units
+/// (issue #702) unless the beam takes fewer.
 fn unit_offsets(offsets: &[f64], count: usize, pitch: f64, warnings: &mut Vec<Text>) -> Vec<f64> {
     if offsets.len() == count {
         return offsets.to_vec();
@@ -778,8 +796,8 @@ fn unit_offsets(offsets: &[f64], count: usize, pitch: f64, warnings: &mut Vec<Te
 
 /// The Propulsor Layout of a specified Propulsor. `offsets` are the tunnel centres under a tunnel
 /// stern (every type), else the stern block's thruster offsets; `pitch` is the stern block's
-/// thruster pitch, used when `offsets` does not hold `propulsor_count` units; `beam` the tunnel
-/// length of the bow thruster.
+/// thruster pitch, used when `offsets` does not hold `propulsor_count` units (the beam takes
+/// fewer); `beam` the tunnel length of the bow thruster.
 pub fn propulsor_layout(
     inp: &MachineryInputs,
     m: &Machinery,
@@ -955,6 +973,9 @@ pub fn layout_of(
     };
     match (&inp.machinery, &aft.machinery) {
         (Some(mi), Some(m)) => {
+            // Issue #702: the stern block's pitch is the Propulsor's own envelope.
+            let envelope =
+                stern_block_units(mi, inp.stern_geometry.as_ref()).map_or(envelope, |(_, e)| e);
             let offsets = match &inp.stern_geometry {
                 Some(g) if g.form == crate::stern_form::SternForm::Tunnel => {
                     g.tunnel_offsets_m.as_slice()

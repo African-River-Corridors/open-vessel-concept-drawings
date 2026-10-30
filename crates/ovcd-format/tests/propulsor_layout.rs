@@ -261,33 +261,100 @@ fn every_propulsor_type_sits_at_its_mass_items_and_counts_propulsor_count() {
     }
 }
 
-#[test]
-fn a_stern_with_other_places_than_propulsors_spreads_them_and_warns() {
-    // A transom stern takes the stern block's thruster offsets (three by default) for two shafts.
-    let s = new_self_propelled("shaft_nozzle", "transom");
-    let r = results(&s);
-    let l = &r["drawing"]["propulsors"];
-    let n_offsets = r["drawing"]["aft_arrangement"]["thruster_offsets_m"]
+/// The athwartships offsets of the stern block (`drawing.aft_arrangement.thruster_offsets_m`).
+fn stern_offsets(r: &Value) -> Vec<f64> {
+    r["drawing"]["aft_arrangement"]["thruster_offsets_m"]
         .as_array()
         .unwrap()
-        .len();
-    assert_ne!(n_offsets, 2, "the case needs a disagreement");
+        .iter()
+        .map(|y| y.as_f64().unwrap())
+        .collect()
+}
+
+fn layout_offsets(r: &Value) -> Vec<f64> {
+    r["drawing"]["propulsors"]["propulsors"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|p| p["y_m"].as_f64().unwrap())
+        .collect()
+}
+
+#[test]
+fn away_from_a_tunnel_the_stern_block_takes_propulsor_count_units_at_the_propulsor_pitch() {
+    // Issue #702, option 1: with a specified Propulsor at a transom or pram stern, the stern block
+    // lays out `propulsor_count` units at a pitch of the Propulsor's own envelope (1.35 D) plus the
+    // thruster clearance (0.6 m by default), so its offsets and the Propulsor Layout agree.
+    for propulsor in [
+        "azimuth_open",
+        "azimuth_ducted",
+        "shaft_open",
+        "shaft_nozzle",
+        "voith_schneider",
+        "pump_jet",
+    ] {
+        for stern in ["transom", "pram"] {
+            for count in [2, 3] {
+                let mut s = new_self_propelled(propulsor, stern);
+                s.set_input("Option 1", "propulsor_count", json!(count))
+                    .unwrap();
+                let r = results(&s);
+                let l = &r["drawing"]["propulsors"];
+                let held = stern_offsets(&r);
+                assert_eq!(held.len(), count, "{propulsor} {stern} {count}: {held:?}");
+                let ys = layout_offsets(&r);
+                assert_eq!(ys.len(), count, "{propulsor} {stern} {count}");
+                for (a, b) in held.iter().zip(&ys) {
+                    assert!((a - b).abs() < 1e-9, "{propulsor} {stern}: {held:?} {ys:?}");
+                }
+                let pitch = 1.35 * l["diameter_m"].as_f64().unwrap() + 0.6;
+                for w in held.windows(2) {
+                    assert!(
+                        (w[1] - w[0] - pitch).abs() < 1e-9,
+                        "{propulsor} {stern}: {held:?}, pitch {pitch}"
+                    );
+                }
+                assert!((held[0] + held[count - 1]).abs() < 1e-9, "{held:?}");
+                assert!(
+                    l["warnings"].as_array().unwrap().is_empty(),
+                    "{propulsor} {stern}: {l}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn a_beam_that_takes_fewer_units_than_propulsor_count_spreads_them_and_warns() {
+    // The stern block fits what the beam takes; the layout keeps `propulsor_count` units (the
+    // masses count them), spreads them at the stern block's pitch and warns.
+    let mut s = new_self_propelled("shaft_nozzle", "transom");
+    // Four units of D = 1.6 m need 4 x 2.16 + 3 x 0.6 + 2 x 0.6 = 11.64 m; the beam is 11.4 m.
+    s.set_input("Option 1", "propeller_diameter_m", json!(1.6))
+        .unwrap();
+    s.set_input("Option 1", "propulsor_count", json!(4))
+        .unwrap();
+    let r = results(&s);
+    let l = &r["drawing"]["propulsors"];
+    let held = stern_offsets(&r);
+    assert!(
+        held.len() < 4,
+        "the case needs a beam that takes fewer: {held:?}"
+    );
     let warnings = l["warnings"].as_array().unwrap();
     assert_eq!(warnings.len(), 1, "{l}");
     assert!(
         warnings[0]
             .as_str()
             .unwrap()
-            .contains("propulsor places for 2 propulsors")
+            .contains("propulsor places for 4 propulsors")
     );
-    // Spread about the centre line.
-    let ys: Vec<f64> = l["propulsors"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|p| p["y_m"].as_f64().unwrap())
-        .collect();
-    assert!((ys[0] + ys[1]).abs() < 1e-9, "{ys:?}");
+    let ys = layout_offsets(&r);
+    assert_eq!(ys.len(), 4);
+    // Spread about the centre line at the stern block's pitch.
+    assert!((ys[0] + ys[3]).abs() < 1e-9, "{ys:?}");
+    let pitch = 1.35 * l["diameter_m"].as_f64().unwrap() + 0.6;
+    assert!((ys[1] - ys[0] - pitch).abs() < 1e-9, "{ys:?}");
     // The layout's warning is not a result warning: the results warnings do not hold it.
     assert!(
         !r["warnings"]
