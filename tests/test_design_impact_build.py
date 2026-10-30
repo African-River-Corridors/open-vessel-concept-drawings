@@ -18,7 +18,11 @@ import design_impact as di  # noqa: E402
 
 def stub_cargo(tmp_path, monkeypatch, *, exe_rel="debug/ovd", write_exe=True, report=True,
                old_mtime=False, code=0):
-    """Put a `cargo` first on PATH. It writes `exe_rel` under CARGO_TARGET_DIR and reports it."""
+    """Put a `cargo` first on PATH. It writes `exe_rel` under CARGO_TARGET_DIR and reports it.
+    The tree gets the CLI manifest that `build` reads its package and binary names from."""
+    cli = tmp_path / "crates" / "ovd-cli"
+    cli.mkdir(parents=True, exist_ok=True)
+    (cli / "Cargo.toml").write_text('[package]\nname = "ovd-cli"\n\n[[bin]]\nname = "ovd"\n')
     bindir = tmp_path / "bin"
     bindir.mkdir(exist_ok=True)
     script = bindir / "cargo"
@@ -93,3 +97,15 @@ def test_a_fresh_build_starts_from_an_empty_target_directory(tmp_path, monkeypat
 def test_the_base_build_is_fresh():
     text = (ROOT / "tools" / "design_impact.py").read_text(encoding="utf-8")
     assert 'design-impact-base", fresh=True)' in text
+
+
+def test_the_cli_names_come_from_the_tree_not_from_this_file(tmp_path):
+    """Spec 0010: the base of the rename PR names its CLI differently, so the names are read."""
+    cli = tmp_path / "crates" / "old-cli"
+    cli.mkdir(parents=True)
+    (cli / "Cargo.toml").write_text('[package]\nname = "old-cli"\n\n[[bin]]\nname = "old"\n')
+    assert di.cli_names(tmp_path) == ("old-cli", "old")
+
+
+def test_a_tree_without_a_cli_manifest_builds_ovd(tmp_path):
+    assert di.cli_names(tmp_path) == ("ovd-cli", "ovd")

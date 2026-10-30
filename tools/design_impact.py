@@ -39,6 +39,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import tomllib
 from pathlib import Path
 
 import yaml
@@ -325,7 +326,7 @@ OPTIONAL_INPUT_CASES = (
      {"rule_sets": [
          {"id": "is2008-a", "version": "1.0.0", "source": "default",
           "hash": "cfab2d1cda90d0cfda8edbf0955082345cd30ef2d102c9840e8d4feab5297e37"},
-         {"id": "ovd", "version": "2.1.0", "source": "default",
+         {"id": "ovd", "version": "3.0.0", "source": "default",
           "hash": "7daa76a269bcad107d2e87ca16df70669aa985aab05473296555b853124cce96"}]}),
     # The typed openings (issue #417), set to their defaults on a self-propelled gas barge. They feed
     # Rules (the Rule Trace is not hashed), not the results; the same results as leaving them out. A
@@ -801,6 +802,20 @@ def base_commit() -> tuple[str, bool]:
     return parent.stdout.strip(), False
 
 
+def cli_names(tree: Path) -> tuple[str, str]:
+    """(the CLI package, its binary) as `tree` names them in `crates/*-cli/Cargo.toml`. The base of
+    the rename PR (spec 0010) still has the old names, so they are read, not assumed. With no such
+    manifest (a stand-in tree in the tests) they are `ovd-cli` and `ovd`."""
+    manifests = sorted(tree.glob("crates/*-cli/Cargo.toml"))
+    if not manifests:
+        return "ovd-cli", "ovd"
+    if len(manifests) > 1:
+        raise SystemExit(f"design_impact: more than one crates/*-cli/Cargo.toml in {tree}")
+    m = tomllib.loads(manifests[0].read_text(encoding="utf-8"))
+    bins = m.get("bin") or [{"name": m["package"]["name"]}]
+    return m["package"]["name"], bins[0]["name"]
+
+
 def build(tree: Path, target: Path, fresh: bool = False) -> Path:
     """Build `ovd` in `tree` and return the binary that cargo says it built.
 
@@ -813,7 +828,8 @@ def build(tree: Path, target: Path, fresh: bool = False) -> Path:
         shutil.rmtree(target, ignore_errors=True)
     started = time.time()
     env = {**os.environ, "CARGO_TARGET_DIR": str(target)}
-    r = subprocess.run(["cargo", "build", "-q", "-p", "ovd-cli", "--message-format=json-render-diagnostics"],
+    package, binary = cli_names(tree)
+    r = subprocess.run(["cargo", "build", "-q", "-p", package, "--message-format=json-render-diagnostics"],
                        cwd=tree, env=env, stdout=subprocess.PIPE, text=True)
     if r.returncode != 0:
         raise SystemExit(f"design_impact: cargo build failed in {tree}")
@@ -824,7 +840,7 @@ def build(tree: Path, target: Path, fresh: bool = False) -> Path:
         except ValueError:
             continue
         if (isinstance(msg, dict) and msg.get("reason") == "compiler-artifact" and msg.get("executable")
-                and msg.get("target", {}).get("name") == "ovd" and "bin" in msg["target"].get("kind", [])):
+                and msg.get("target", {}).get("name") == binary and "bin" in msg["target"].get("kind", [])):
             exe = Path(msg["executable"])
     if exe is None:
         raise SystemExit(f"design_impact: cargo built in {tree} but reported no `ovd` binary")
