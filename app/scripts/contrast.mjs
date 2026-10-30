@@ -8,6 +8,9 @@ import { dirname, resolve } from "node:path";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
+// The colours of the 3D view's parts and sea (spec 0009, issue #684): each one 3:1 on the paper.
+export const MODEL_TOKENS = ["model-hull", "model-hull-wet", "model-deck", "model-sea", "model-deck-item", "model-wheelhouse", "model-propulsor", "model-edge", "model-cut"];
+
 // [foreground, background, kind]
 export const PAIRS = [
   ["ink", "paper", "text"], ["ink", "surface", "text"], ["ink", "surface-2", "text"],
@@ -27,6 +30,7 @@ export const PAIRS = [
   ["space-ballast", "paper", "line"], ["space-ballast", "surface", "line"],
   ["space-void", "paper", "line"], ["space-void", "surface", "line"],
   ["space-machinery", "paper", "line"], ["space-machinery", "surface", "line"],
+  ...MODEL_TOKENS.map((t) => [t, "paper", "line"]),
 ];
 const TARGET = { text: 4.5, line: 3.0 };
 

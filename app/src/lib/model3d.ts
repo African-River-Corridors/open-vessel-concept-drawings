@@ -163,3 +163,16 @@ export function homeView(min: Vec3, max: Vec3, fovDeg: number, aspect: number): 
   const position: Vec3 = [target[0] + back[0] * distance, target[1] + back[1] * distance, target[2] + back[2] * distance];
   return { position, target, up: [0, 0, 1] };
 }
+
+/**
+ * The sea plane of a floating position (spec 0009, "Water"; issue #684): the draught `aft` at the hull's
+ * aft end `x0` and `fwd` at its forward end `x1`, a straight line between, as the core draws the
+ * waterline (`ovcd_core::mesh::waterline_mesh`). The plane reaches `reach` beyond the hull fore and aft
+ * and to each side. Returns its four corners (model axes) as two triangles, and the height at any x.
+ */
+export function seaPlane(x0: number, x1: number, aft: number, fwd: number, reach: number): { positions: Float32Array; indices: Uint32Array; z: (x: number) => number } {
+  const z = (x: number) => aft + ((fwd - aft) * (x - x0)) / (x1 - x0);
+  const [xa, xf] = [x0 - reach, x1 + reach];
+  const positions = new Float32Array([xa, -reach, z(xa), xf, -reach, z(xf), xf, reach, z(xf), xa, reach, z(xa)]);
+  return { positions, indices: new Uint32Array([0, 1, 2, 0, 2, 3]), z };
+}

@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { platform, type Meshes, type SectionOutline, type SpaceInfo, type Waterline } from "../platform";
   import { watchTheme } from "../chartTheme";
-  import { FAMILY_TOKEN, VIEW_MIRROR, familyOf, fixedView, flatShaded, groupSlice, homeView, kindLabelId, orbitStep, toView, type FixedView, type Vec3 } from "../model3d";
+  import { FAMILY_TOKEN, VIEW_MIRROR, familyOf, fixedView, flatShaded, groupSlice, homeView, kindLabelId, seaPlane, orbitStep, toView, type FixedView, type Vec3 } from "../model3d";
   import { num, t } from "../i18n.svelte";
 
   // The 3D view of the Vessel Model (spec 0008, issue #458). The core builds the meshes; this view only
@@ -10,7 +10,8 @@
   // the hull, the decks, the bulkheads and one per kind of Space. Click a Space (or pick it in the list)
   // to read its volume and centroid, as the core gives them. Colours come from the CSS tokens, read again
   // when the theme changes. It opens on the outside of the vessel (spec 0009, "The 3D view"): the hull
-  // opaque and flat shaded, its edges drawn, the Spaces off, from the aft-starboard quarter.
+  // opaque and flat shaded, its edges drawn, the Spaces off, from the aft-starboard quarter. A sea plane
+  // lies at the shown loading condition's waterplane, and the hull below it takes the wet colour.
   let { option }: { option: string } = $props();
 
   type Layer = { id: string; label: string };
@@ -146,6 +147,29 @@
           edges.push(line);
         }
       }
+      // The hull below the shown waterplane, in the wet colour: the hull's own geometry again, each copy
+      // clipped to its side of the plane (issue #684). No waterline shown: the dry copy keeps it all.
+      const above = new THREE.Plane(new THREE.Vector3(0, 0, 1), 1e9);
+      const below = new THREE.Plane(new THREE.Vector3(0, 0, -1), -1e9);
+      const wet: InstanceType<typeof THREE.Mesh>[] = [];
+      for (const mesh of meshes.values()) {
+        if (mesh.userData.layer !== "hull") continue;
+        (mesh.material as InstanceType<typeof THREE.MeshStandardMaterial>).clippingPlanes = [plane, above];
+        const copy = new THREE.Mesh(mesh.geometry, (mesh.material as InstanceType<typeof THREE.MeshStandardMaterial>).clone());
+        (copy.material as InstanceType<typeof THREE.MeshStandardMaterial>).clippingPlanes = [plane, below];
+        copy.userData = { ...mesh.userData, wet: true };
+        root.add(copy);
+        wet.push(copy);
+      }
+      const hullBox = new THREE.Box3();
+      for (const mesh of meshes.values()) if (mesh.userData.layer === "hull") hullBox.union(mesh.geometry.boundingBox ?? (mesh.geometry.computeBoundingBox(), mesh.geometry.boundingBox!));
+      // The sea plane, set to the shown waterline in paint().
+      const seaGeometry = new THREE.BufferGeometry();
+      const sea = new THREE.Mesh(seaGeometry, new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, flatShading: true, roughness: 0.6, metalness: 0, transparent: true, opacity: 0.45, depthWrite: false }));
+      sea.userData = { layer: "sea", id: "sea" };
+      sea.renderOrder = 1;
+      root.add(sea);
+      let seaFor = "";
       // The box of the model, in model axes.
       const modelBox = new THREE.Box3().setFromArray(data.positions);
       const centre = modelBox.getCenter(new THREE.Vector3());
@@ -163,12 +187,42 @@
       controls.enableDamping = false;
 
       const kindOf = (name: string) => spaces.find((s) => s.name === name)?.kind ?? "void";
+      // The sea plane and the split of the hull at the shown waterline.
+      const setSea = () => {
+        const w = shownWaterline;
+        sea.visible = w !== null;
+        for (const m of wet) m.visible = w !== null && visible.hull !== false;
+        if (!w) {
+          above.set(new THREE.Vector3(0, 0, 1), 1e9);
+          seaFor = "";
+          delete canvas.dataset.sea;
+          return;
+        }
+        const [x0, x1] = [hullBox.min.x, hullBox.max.x];
+        if (seaFor !== w.name) {
+          const s = seaPlane(x0, x1, w.draught_aft_m, w.draught_fwd_m, reach);
+          seaGeometry.setAttribute("position", new THREE.BufferAttribute(s.positions, 3));
+          seaGeometry.setIndex(new THREE.BufferAttribute(s.indices, 1));
+          seaGeometry.computeBoundingSphere();
+          seaFor = w.name;
+        }
+        // The plane through the waterline (model and view share x and z): keep z above it, or below.
+        const start = new THREE.Vector3(x0, 0, w.draught_aft_m);
+        const normal = new THREE.Vector3(-(w.draught_fwd_m - w.draught_aft_m) / (x1 - x0), 0, 1).normalize();
+        above.setFromNormalAndCoplanarPoint(normal, start);
+        below.setFromNormalAndCoplanarPoint(normal.clone().negate(), start);
+        // For the end-to-end tests: the drawn plane's height at the hull's ends, read from its corners.
+        const p = seaGeometry.getAttribute("position");
+        const [a, f] = [0, 1].map((i) => root.localToWorld(new THREE.Vector3(p.getX(i), p.getY(i), p.getZ(i))));
+        const zAt = (x: number) => a.z + ((f.z - a.z) * (x - a.x)) / (f.x - a.x);
+        canvas.dataset.sea = JSON.stringify({ name: w.name, aft: zAt(x0), fwd: zAt(x1) });
+      };
       const colour = (mesh: InstanceType<typeof THREE.Mesh>) => {
         const { layer, id } = mesh.userData as { layer: string; id: string };
         if (layer === "space") return token(FAMILY_TOKEN[familyOf(kindOf(id))]);
-        if (layer === "hull") return token("--ink-3");
+        if (layer === "hull") return token("--model-hull");
         if (layer === "waterline") return token("--accent");
-        if (layer === "deck") return token("--rule-strong");
+        if (layer === "deck") return token("--model-deck");
         return token("--ink-2");
       };
       function paint() {
@@ -196,14 +250,35 @@
         }
         for (const line of edges) {
           line.visible = visible.hull !== false;
-          (line.material as InstanceType<typeof THREE.LineBasicMaterial>).color.set(token("--ink"));
+          (line.material as InstanceType<typeof THREE.LineBasicMaterial>).color.set(token("--model-edge"));
+        }
+        setSea();
+        (sea.material as InstanceType<typeof THREE.MeshStandardMaterial>).color.set(token("--model-sea"));
+        for (const m of wet) {
+          const dry = meshes.get(`${m.userData.layer}:${m.userData.id}`)!.material as InstanceType<typeof THREE.MeshStandardMaterial>;
+          const mat = m.material as InstanceType<typeof THREE.MeshStandardMaterial>;
+          mat.color.set(token("--model-hull-wet"));
+          mat.transparent = dry.transparent;
+          mat.opacity = dry.opacity;
+          mat.depthWrite = dry.depthWrite;
         }
         for (const c of outline.children) ((c as InstanceType<typeof THREE.Line>).material as InstanceType<typeof THREE.LineBasicMaterial>).color.set(token("--accent"));
         controls.update();
         renderer.render(scene, camera);
         // What is drawn, for the end-to-end tests: the groups on, by layer.
         const shown = [...meshes.values()].filter((m) => m.visible).map((m) => `${m.userData.layer}:${m.userData.id}`);
+        if (sea.visible) shown.push("sea");
         canvas.dataset.shown = JSON.stringify(shown);
+        // The colours drawn, for the end-to-end tests: the theme switch repaints them (issue #684).
+        const hex = (m: InstanceType<typeof THREE.Material>) => `#${(m as InstanceType<typeof THREE.MeshStandardMaterial>).color.getHexString()}`;
+        const first = (layer: string) => [...meshes.values()].find((m) => m.userData.layer === layer);
+        canvas.dataset.colours = JSON.stringify({
+          hull: first("hull") ? hex(first("hull")!.material as InstanceType<typeof THREE.Material>) : null,
+          wet: wet[0] ? hex(wet[0].material as InstanceType<typeof THREE.Material>) : null,
+          sea: hex(sea.material as InstanceType<typeof THREE.Material>),
+          deck: first("deck") ? hex(first("deck")!.material as InstanceType<typeof THREE.Material>) : null,
+          edge: edges[0] ? hex(edges[0].material as InstanceType<typeof THREE.Material>) : null,
+        });
         // Where four points of the model's box land on the screen (x and y from -1 to 1, y up) and how
         // far each is from the camera, for the handedness check of the end-to-end tests (spec 0009).
         const probe = (p: Vec3) => {
@@ -394,6 +469,9 @@
         canvas.removeEventListener("pointerup", onUp);
         controls.dispose();
         clear();
+        seaGeometry.dispose();
+        (sea.material as InstanceType<typeof THREE.Material>).dispose();
+        for (const m of wet) (m.material as InstanceType<typeof THREE.Material>).dispose();
         for (const m of [...meshes.values(), ...edges]) {
           m.geometry.dispose();
           (m.material as InstanceType<typeof THREE.Material>).dispose();
