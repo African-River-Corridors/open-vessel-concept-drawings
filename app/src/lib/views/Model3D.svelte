@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { platform, type Meshes, type SectionOutline, type SpaceInfo, type Waterline } from "../platform";
+  import { platform, type DeckItem, type DeckItems, type Meshes, type SectionOutline, type SpaceInfo, type Waterline } from "../platform";
   import { watchTheme } from "../chartTheme";
-  import { FAMILY_TOKEN, VIEW_MIRROR, familyOf, fixedView, flatShaded, groupSlice, homeView, kindLabelId, seaPlane, orbitStep, toView, type FixedView, type Vec3 } from "../model3d";
+  import { FAMILY_TOKEN, PRESETS, VIEW_MIRROR, closedSolid, familyOf, fixedView, flatShaded, groupSlice, homeView, kindLabelId, presetOf, presetState, seaPlane, orbitStep, toView, wheelhouseDraw, type FixedView, type Preset, type Vec3, type WheelhouseShown } from "../model3d";
   import { num, t } from "../i18n.svelte";
 
   // The 3D view of the Vessel Model (spec 0008, issue #458). The core builds the meshes; this view only
@@ -12,6 +12,9 @@
   // when the theme changes. It opens on the outside of the vessel (spec 0009, "The 3D view"): the hull
   // opaque and flat shaded, its edges drawn, the Spaces off, from the aft-starboard quarter. A sea plane
   // lies at the shown loading condition's waterplane, and the hull below it takes the wet colour.
+  // Spec 0009 adds the tanks, their domes, the weather shield and the Deck Items; three View Presets
+  // (Exterior on open, Cargo, Arrangement); a half-model cut and a deck cut, whose cut faces take
+  // `--model-cut`; the wheelhouse lowered, raised or both; and a pick panel for each new part.
   let { option }: { option: string } = $props();
 
   type Layer = { id: string; label: string };
@@ -21,6 +24,16 @@
   let spaces = $state<SpaceInfo[]>([]);
   let visible = $state<Record<string, boolean>>({ hull: true, deck: true, bulkhead: true });
   let selected = $state<SpaceInfo | null>(null);
+  // The Deck Items and the wheelhouse's lift, from the core (spec 0009).
+  let deck = $state<DeckItems>({ items: [], wheelhouse: null });
+  let selectedItem = $state<DeckItem | null>(null);
+  // The cuts and the hull's translucency a preset sets.
+  let halfCut = $state(false);
+  let deckCut = $state(false);
+  let hullTranslucent = $state(false);
+  let wheelhouseShown = $state<WheelhouseShown>("lowered");
+  /** The layers of the model's groups, in the order they come. */
+  let groupLayers = $state<string[]>([]);
   // The section plane and the waterline (issue #459).
   let sectionOn = $state(false);
   let sectionX = $state(0);
@@ -34,7 +47,22 @@
     { id: "hull", label: t("app-3d-layer-hull") },
     { id: "deck", label: t("app-3d-layer-deck") },
     { id: "bulkhead", label: t("app-3d-layer-bulkhead") },
+    ...(groupLayers.includes("dome") ? [{ id: "dome", label: t("app-3d-layer-dome") }] : []),
+    ...(groupLayers.includes("weather_shield") ? [{ id: "weather_shield", label: t("app-3d-layer-weather-shield") }] : []),
+    ...(groupLayers.includes("deck_item") ? [{ id: "deck_item", label: t("app-3d-layer-deck-item") }] : []),
   ]);
+  /** The preset the toggles match, or null: "Custom". */
+  let preset = $derived(presetOf({ visible, halfCut, deckCut, sea: waterline !== "", hullTranslucent }, kinds, waterlines.length > 0));
+  function choose(p: Preset) {
+    const s = presetState(p, kinds);
+    visible = { ...visible, ...s.visible };
+    halfCut = s.halfCut;
+    deckCut = s.deckCut;
+    hullTranslucent = s.hullTranslucent;
+    waterline = s.sea ? (waterlines[0]?.name ?? "") : "";
+  }
+  const hasWheelhouse = $derived(deck.items.some((d) => d.kind === "wheelhouse_raised"));
+  const itemName = (d: DeckItem) => t(`app-3d-item-${d.kind.replaceAll("_", "-")}`);
   /** A gas Design's hold is the space around its Type C tanks (IGC term; spec 0009). */
   let hasTanks = $derived(spaces.some((s) => s.tank));
   const kindName = (kind: string) => {
@@ -43,13 +71,15 @@
     return id ? t(id) : kind;
   };
   const sideName = (side: string) => t(`app-3d-side-${side}`);
-  /** A Space layer is on, so the hull and the decks are drawn translucent to show it. */
-  let innerOn = $derived(kinds.some((k) => visible[`kind:${k}`]));
+  /** A Space layer is on, so the hull and the decks are drawn translucent to show it, unless the hull is
+   * cut in half (it shows the inside opaque); the Arrangement preset makes it translucent too. */
+  let innerOn = $derived(hullTranslucent || (!halfCut && kinds.some((k) => visible[`kind:${k}`])));
 
   // Set by onMount, called by the template.
   let apply: () => void = () => {};
   let selectByName: (name: string | null) => void = () => {};
   let drawSection: () => void = () => {};
+  let selectItem: (id: string | null) => void = () => {};
   let goTo: (v: FixedView) => void = () => {};
   let reset: () => void = () => {};
   let onKey: (e: KeyboardEvent) => void = () => {};
@@ -59,6 +89,9 @@
     void visible;
     void innerOn;
     void waterline;
+    void halfCut;
+    void deckCut;
+    void wheelhouseShown;
     apply();
   });
   $effect(() => {
@@ -78,10 +111,11 @@
         data = await p.meshes(option);
         const names = data.groups.filter((g) => g.layer === "space").map((g) => g.id);
         spaces = await Promise.all(names.map((n) => p.spaceInfo(option, n)));
-        // The Spaces are off on open: the view opens on the outside of the vessel (spec 0009, D4).
-        for (const s of spaces) visible[`kind:${s.kind}`] ??= false;
+        deck = await p.deckItems(option);
+        groupLayers = [...new Set(data.groups.map((g) => g.layer))];
         waterlines = await p.waterlines(option);
-        waterline = waterlines[0]?.name ?? "";
+        // The view opens on the Exterior preset (spec 0009, D4): the outside of the vessel, on the sea.
+        choose("exterior");
       } catch (e) {
         problem = String(e);
         status = "failed";
@@ -102,6 +136,10 @@
       renderer.localClippingEnabled = true;
       // Keeps everything at or behind x = constant (three.js clips where n.p + c < 0).
       const plane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 1e9);
+      // The half-model cut keeps model y >= 0 (the port half goes): under the mirrored root that is
+      // view y <= 0. The deck cut keeps the hull below its deck edge (spec 0009, "Cuts").
+      const half = new THREE.Plane(new THREE.Vector3(0, -1, 0), 1e9);
+      const deckPlane = new THREE.Plane(new THREE.Vector3(0, 0, -1), 1e9);
       const canvas = renderer.domElement;
       canvas.tabIndex = 0;
       canvas.dataset.testid = "model3d-canvas";
@@ -126,6 +164,10 @@
       const meshes = new Map<string, InstanceType<typeof THREE.Mesh>>();
       const edges: InstanceType<typeof THREE.LineSegments>[] = [];
       const space = new Map<InstanceType<typeof THREE.Object3D>, string>();
+      // What a click picks: a Space (a tank's dome picks its tank) or a Deck Item.
+      const pickable = new Map<InstanceType<typeof THREE.Object3D>, { item: boolean; id: string }>();
+      // The inside faces of each closed solid, drawn in `--model-cut` where a cut opens it.
+      const backs = new Map<string, InstanceType<typeof THREE.Mesh>>();
       const root = new THREE.Group();
       root.scale.set(...VIEW_MIRROR);
       scene.add(root);
@@ -137,15 +179,26 @@
         // A tank is a Space but curved: smooth, like the domes (spec 0009).
         const flat = flatShaded(g.layer) && !(g.layer === "space" && spaces.find((s) => s.name === g.id)?.tank);
         if (!flat) geometry.computeVertexNormals();
-        const material = new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, flatShading: flat, roughness: 0.85, metalness: 0, clippingPlanes: [plane] });
+        const clips = g.layer === "hull" ? [plane, half, deckPlane] : [plane, half];
+        const material = new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, flatShading: flat, roughness: 0.85, metalness: 0, clippingPlanes: clips });
         const mesh = new THREE.Mesh(geometry, material);
         mesh.userData = { layer: g.layer, id: g.id };
         root.add(mesh);
         meshes.set(`${g.layer}:${g.id}`, mesh);
         if (g.layer === "space") space.set(mesh, g.id);
+        if (g.layer === "space") pickable.set(mesh, { item: false, id: g.id });
+        if (g.layer === "dome") pickable.set(mesh, { item: false, id: g.id.replace(/_dome$/, "") });
+        if (g.layer === "deck_item") pickable.set(mesh, { item: true, id: g.id });
+        if (closedSolid(g.layer)) {
+          const back = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ side: THREE.BackSide, clippingPlanes: clips }));
+          back.userData = { layer: g.layer, id: g.id, cutFace: true };
+          back.visible = false;
+          root.add(back);
+          backs.set(`${g.layer}:${g.id}`, back);
+        }
         // The hull's edges: where its faces meet at 30 degrees or more, clipped like the faces.
         if (g.layer === "hull") {
-          const line = new THREE.LineSegments(new THREE.EdgesGeometry(geometry, 30), new THREE.LineBasicMaterial({ clippingPlanes: [plane] }));
+          const line = new THREE.LineSegments(new THREE.EdgesGeometry(geometry, 30), new THREE.LineBasicMaterial({ clippingPlanes: [plane, half, deckPlane] }));
           line.userData = { layer: g.layer, id: g.id, edges: true };
           root.add(line);
           edges.push(line);
@@ -158,15 +211,24 @@
       const wet: InstanceType<typeof THREE.Mesh>[] = [];
       for (const mesh of meshes.values()) {
         if (mesh.userData.layer !== "hull") continue;
-        (mesh.material as InstanceType<typeof THREE.MeshStandardMaterial>).clippingPlanes = [plane, above];
+        (mesh.material as InstanceType<typeof THREE.MeshStandardMaterial>).clippingPlanes = [plane, half, deckPlane, above];
         const copy = new THREE.Mesh(mesh.geometry, (mesh.material as InstanceType<typeof THREE.MeshStandardMaterial>).clone());
-        (copy.material as InstanceType<typeof THREE.MeshStandardMaterial>).clippingPlanes = [plane, below];
+        (copy.material as InstanceType<typeof THREE.MeshStandardMaterial>).clippingPlanes = [plane, half, deckPlane, below];
         copy.userData = { ...mesh.userData, wet: true };
         root.add(copy);
         wet.push(copy);
       }
       const hullBox = new THREE.Box3();
       for (const mesh of meshes.values()) if (mesh.userData.layer === "hull") hullBox.union(mesh.geometry.boundingBox ?? (mesh.geometry.computeBoundingBox(), mesh.geometry.boundingBox!));
+      // The deck edge height amidships, from the core, for the deck cut (the hull's top until it comes).
+      let deckZ = hullBox.max.z;
+      platform()
+        .sectionAt(option, (hullBox.min.x + hullBox.max.x) / 2)
+        .then((s: SectionOutline) => {
+          deckZ = s.depth_at_side_m;
+          paint();
+        })
+        .catch(() => {});
       // The sea plane, set to the shown waterline in paint().
       const seaGeometry = new THREE.BufferGeometry();
       const sea = new THREE.Mesh(seaGeometry, new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, flatShading: true, roughness: 0.6, metalness: 0, transparent: true, opacity: 0.45, depthWrite: false }));
@@ -233,7 +295,12 @@
         if (layer === "weather_shield") return token("--model-deck");
         return token("--ink-2");
       };
+      const picked = (layer: string, id: string) =>
+        (layer === "space" && selected?.name === id) || (layer === "dome" && selected?.name === id.replace(/_dome$/, "")) || (layer === "deck_item" && selectedItem?.id === id);
       function paint() {
+        half.constant = halfCut ? 0 : 1e9;
+        deckPlane.constant = deckCut ? deckZ - 1e-3 : 1e9;
+        const cutOn = halfCut || deckCut || sectionOn;
         renderer.setClearColor(new THREE.Color(token("--paper") || "#f6edd8"));
         sky.color.set(token("--surface") || "#fbf6ea");
         sky.groundColor.set(token("--surface-2") || "#efe4c9");
@@ -241,20 +308,33 @@
           const { layer, id } = mesh.userData as { layer: string; id: string };
           const m = mesh.material as InstanceType<typeof THREE.MeshStandardMaterial>;
           m.color.set(colour(mesh));
+          const wh = layer === "deck_item" ? wheelhouseDraw(id, wheelhouseShown) : { on: true, opacity: 1 };
           const on =
             layer === "space"
               ? visible[`kind:${kindOf(id)}`] !== false
               : layer === "waterline"
                 ? id === waterline
-                : visible[layer] !== false;
-          mesh.visible = on;
+                : visible[layer] !== false && wh.on;
+          // The deck cut lifts the deck and the weather shield off (spec 0009).
+          mesh.visible = on && !(deckCut && (layer === "deck" || layer === "weather_shield"));
           // Opaque, unless a Space layer is on: then the hull and the decks let it show through.
           const translucent = innerOn && (layer === "hull" || layer === "deck");
-          m.transparent = translucent || layer === "space" || layer === "waterline";
-          m.opacity = translucent ? (layer === "hull" ? 0.2 : 0.6) : layer === "space" ? 0.85 : layer === "waterline" ? 0.55 : 1;
-          m.depthWrite = !translucent;
-          m.emissive.set(layer === "space" && selected?.name === id ? token("--gilt-mark") : "#000000");
+          m.transparent = translucent || layer === "space" || layer === "waterline" || wh.opacity < 1;
+          m.opacity = translucent ? (layer === "hull" ? 0.2 : 0.6) : layer === "space" ? 0.85 : layer === "waterline" ? 0.55 : wh.opacity;
+          m.depthWrite = !translucent && wh.opacity === 1;
+          m.emissive.set(picked(layer, id) ? token("--gilt-mark") : "#000000");
           m.emissiveIntensity = 0.55;
+          // Where a cut opens a closed solid, its inside faces show in the cut colour.
+          const back = backs.get(`${layer}:${id}`);
+          const side = cutOn && back ? THREE.FrontSide : THREE.DoubleSide;
+          if (m.side !== side) {
+            m.side = side;
+            m.needsUpdate = true;
+          }
+          if (back) {
+            back.visible = mesh.visible && cutOn && !translucent && wh.opacity === 1;
+            (back.material as InstanceType<typeof THREE.MeshBasicMaterial>).color.set(token("--model-cut"));
+          }
         }
         for (const line of edges) {
           line.visible = visible.hull !== false;
@@ -277,6 +357,13 @@
         const shown = [...meshes.values()].filter((m) => m.visible).map((m) => `${m.userData.layer}:${m.userData.id}`);
         if (sea.visible) shown.push("sea");
         canvas.dataset.shown = JSON.stringify(shown);
+        // The cuts and the wheelhouse drawn, for the end-to-end tests (issue #689).
+        canvas.dataset.cuts = JSON.stringify({ half: half.constant, deck: deckPlane.constant, cutFaces: [...backs.values()].filter((b) => b.visible).length });
+        const whOpacity = (id: string) => {
+          const m = meshes.get(`deck_item:${id}`);
+          return m ? { visible: m.visible, opacity: (m.material as InstanceType<typeof THREE.MeshStandardMaterial>).opacity } : null;
+        };
+        canvas.dataset.wheelhouse = JSON.stringify({ lowered: whOpacity("wheelhouse_lowered"), raised: whOpacity("wheelhouse_raised") });
         // The colours drawn, for the end-to-end tests: the theme switch repaints them (issue #684).
         const hex = (m: InstanceType<typeof THREE.Material>) => `#${(m as InstanceType<typeof THREE.MeshStandardMaterial>).color.getHexString()}`;
         const first = (layer: string) => [...meshes.values()].find((m) => m.userData.layer === layer);
@@ -410,8 +497,14 @@
         const f = fixedView(v, [centre.x, centre.y, centre.z], reach);
         look(f.position, f.up);
       };
+      selectItem = (id) => {
+        selectedItem = id ? (deck.items.find((d) => d.id === id) ?? null) : null;
+        selected = null;
+        paint();
+      };
       selectByName = (name) => {
         selected = name ? (spaces.find((s) => s.name === name) ?? null) : null;
+        selectedItem = null;
         // A Space picked in the list is shown: its kind's layer goes on.
         if (selected) visible[`kind:${selected.kind}`] = true;
         paint();
@@ -445,8 +538,10 @@
         if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 4) return;
         const r = canvas.getBoundingClientRect();
         ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
-        const hit = ray.intersectObjects([...space.keys()].filter((o) => o.visible), false)[0];
-        selectByName(hit ? (space.get(hit.object) ?? null) : null);
+        const hit = ray.intersectObjects([...pickable.keys()].filter((o) => o.visible), false)[0];
+        const what = hit ? pickable.get(hit.object) : undefined;
+        if (what?.item) selectItem(what.id);
+        else selectByName(what ? what.id : null);
       };
       canvas.addEventListener("pointerdown", onDown);
       canvas.addEventListener("pointerup", onUp);
@@ -480,6 +575,7 @@
         seaGeometry.dispose();
         (sea.material as InstanceType<typeof THREE.Material>).dispose();
         for (const m of wet) (m.material as InstanceType<typeof THREE.Material>).dispose();
+        for (const b of backs.values()) (b.material as InstanceType<typeof THREE.Material>).dispose();
         for (const m of [...meshes.values(), ...edges]) {
           m.geometry.dispose();
           (m.material as InstanceType<typeof THREE.Material>).dispose();
@@ -495,7 +591,7 @@
   });
 </script>
 
-<div class="model" data-testid="model3d" data-status={status} data-problem={problem || undefined}>
+<div class="model" data-testid="model3d" data-status={status} data-problem={problem || undefined} data-preset={preset ?? "custom"}>
   {#if status === "failed"}
     <p class="note">{t("app-3d-failed", { why: problem })}</p>
   {:else}
@@ -512,6 +608,30 @@
           <button type="button" data-testid="model3d-view-body" onclick={() => goTo("body")}>{t("app-3d-view-body")}</button>
           <span class="hint">{t("app-3d-hint")}</span>
         </div>
+        <div class="bar presets" role="group" aria-label={t("app-3d-presets")}>
+          <span class="dim">{t("app-3d-presets")}</span>
+          {#each PRESETS as p (p)}
+            <button type="button" class:on={preset === p} aria-pressed={preset === p} data-testid="preset-{p}" onclick={() => choose(p)}>{t(`app-3d-preset-${p}`)}</button>
+          {/each}
+          {#if preset === null}<span class="custom" data-testid="preset-custom">{t("app-3d-preset-custom")}</span>{/if}
+          <label><input type="checkbox" data-testid="cut-half" bind:checked={halfCut} /> {t("app-3d-cut-half")}</label>
+          <label><input type="checkbox" data-testid="cut-deck" bind:checked={deckCut} /> {t("app-3d-cut-deck")}</label>
+        </div>
+        {#if hasWheelhouse}
+          <div class="bar presets" role="group" aria-label={t("app-3d-wheelhouse")}>
+            <span class="dim">{t("app-3d-wheelhouse")}</span>
+            {#each ["lowered", "raised", "both"] as const as w (w)}
+              <button type="button" class:on={wheelhouseShown === w} aria-pressed={wheelhouseShown === w} data-testid="wheelhouse-{w}" onclick={() => (wheelhouseShown = w)}>{t(`app-3d-wheelhouse-${w}`)}</button>
+            {/each}
+            {#if deck.wheelhouse}
+              <span class="dim" data-testid="wheelhouse-lift" data-needed={deck.wheelhouse.needed_m} data-allowed={deck.wheelhouse.allowed_m} data-air={deck.wheelhouse.air_draft_light_m}>
+                {deck.wheelhouse.needed_m === null
+                  ? t("app-3d-lift-used", { used: num(deck.wheelhouse.used_m, 2), allowed: num(deck.wheelhouse.allowed_m, 2) })
+                  : t("app-3d-lift-needed", { needed: num(deck.wheelhouse.needed_m, 2), allowed: num(deck.wheelhouse.allowed_m, 2) })}{#if deck.wheelhouse.air_draft_light_m !== null}; {t("app-3d-air-draft-light", { lowered: num(deck.wheelhouse.air_draft_light_m, 2), raised: num(deck.wheelhouse.air_draft_navigating_light_m ?? deck.wheelhouse.air_draft_light_m, 2) })}{/if}
+              </span>
+            {/if}
+          </div>
+        {/if}
         <div class="bar tools">
           <label><input type="checkbox" data-testid="section-on" bind:checked={sectionOn} /> {t("app-3d-section")}</label>
           {#if sectionOn}
@@ -548,7 +668,7 @@
         </ul>
       {/if}
       <h4>{t("app-3d-spaces")}</h4>
-      {#if spaces.length === 0}
+      {#if spaces.length === 0 && deck.items.length === 0}
         <p class="note">{t("app-3d-no-spaces")}</p>
       {:else}
         <table data-testid="model3d-spaces">
@@ -561,6 +681,13 @@
                 <th><button type="button" class="link" data-testid="space-{s.name}" onclick={() => selectByName(s.name)}>{s.name}</button></th>
                 <td>{kindName(s.kind)}</td>
                 <td class="num" title={String(s.volume_m3)}>{num(s.volume_m3, 1)}</td>
+              </tr>
+            {/each}
+            {#each deck.items as d (d.id)}
+              <tr class:on={selectedItem?.id === d.id}>
+                <th><button type="button" class="link" data-testid="deck-item-{d.id}" onclick={() => selectItem(d.id)}>{d.id}</button></th>
+                <td>{itemName(d)}</td>
+                <td class="num dim">–</td>
               </tr>
             {/each}
           </tbody>
@@ -576,6 +703,17 @@
             <dt>{t("app-3d-tank-od")}</dt><dd data-testid="space-info-tank-od" data-value={selected.tank.outer_diameter_m}>{num(selected.tank.outer_diameter_m, 2)} m</dd>
             <dt>{t("app-3d-tank-length")}</dt><dd data-testid="space-info-tank-length" data-value={selected.tank.length_m}>{num(selected.tank.length_m, 2)} m</dd>
             <dt>{t("app-3d-tank-head")}</dt><dd data-testid="space-info-tank-head">{t(`app-3d-head-${selected.tank.head_type.replaceAll("_", "-")}`)}, {num(selected.tank.head_length_m, 2)} m</dd>
+          {/if}
+        </dl>
+      {:else if selectedItem}
+        <dl class="info" data-testid="deck-item-info">
+          <dt>{t("app-3d-col-name")}</dt><dd data-testid="deck-item-info-id">{selectedItem.id}</dd>
+          <dt>{t("app-3d-col-kind")}</dt><dd>{itemName(selectedItem)}{selectedItem.kind.endsWith("_unit") ? ` (${selectedItem.label})` : ""}</dd>
+          <dt>{t("app-3d-item-size")}</dt><dd data-testid="deck-item-info-size">{num(selectedItem.x_fwd_m - selectedItem.x_aft_m, 2)} × {num(selectedItem.y_stbd_m - selectedItem.y_port_m, 2)} × {num(selectedItem.z_top_m - selectedItem.z_base_m, 2)} m</dd>
+          <dt>{t("app-3d-item-base")}</dt><dd data-testid="deck-item-info-base" data-value={selectedItem.z_base_m}>{num(selectedItem.z_base_m, 2)} m</dd>
+          <dt>{t("app-3d-item-top")}</dt><dd data-testid="deck-item-info-top" data-value={selectedItem.z_top_m}>{num(selectedItem.z_top_m, 2)} m</dd>
+          {#if selectedItem.kind.startsWith("wheelhouse") && deck.wheelhouse}
+            <dt>{t("app-3d-item-lift")}</dt><dd data-testid="deck-item-info-lift">{deck.wheelhouse.needed_m === null ? "–" : num(deck.wheelhouse.needed_m, 2)} / {num(deck.wheelhouse.used_m, 2)} / {num(deck.wheelhouse.allowed_m, 2)} m</dd>
           {/if}
         </dl>
       {:else if status !== "no-webgl"}
@@ -595,6 +733,9 @@
   .bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; }
   .bar button { padding: 1px 10px; background: var(--surface); color: var(--ink); border: 1px solid var(--rule-strong); border-radius: var(--radius); cursor: pointer; }
   .hint { color: var(--ink-3); margin-left: auto; }
+  .presets button.on { background: var(--accent-soft); border-color: var(--accent); }
+  .presets label { display: flex; align-items: center; gap: 6px; }
+  .custom { color: var(--ink-2); font-style: italic; }
   .tools label { display: flex; align-items: center; gap: 6px; }
   .tools select { background: var(--surface); color: var(--ink); border: 1px solid var(--rule-strong); border-radius: var(--radius); }
   .tools input[type="range"] { width: 200px; }

@@ -9,7 +9,7 @@ export type ModelFormat = "gltf" | "stl" | "obj" | "offsets-csv";
 
 /** Issue #457: one named part of the Vessel Model meshes, `count` indices from `start`. */
 export interface MeshGroup {
-  layer: "hull" | "deck" | "bulkhead" | "space" | "waterline";
+  layer: "hull" | "deck" | "bulkhead" | "space" | "dome" | "weather_shield" | "deck_item" | "waterline";
   id: string;
   start: number;
   count: number;
@@ -42,6 +42,31 @@ export interface SpaceInfo {
   vcg_m: number;
   /** A Type C tank's Tank Layout values (spec 0009); absent for any other Space. */
   tank?: { outer_diameter_m: number; length_m: number; head_type: string; head_length_m: number };
+}
+
+/** A Deck Item as the core gives it (spec 0009): its mesh group id, kind and box (y to starboard). */
+export interface DeckItem {
+  id: string;
+  kind: "accommodation_unit" | "battery_unit" | "wheelhouse_lowered" | "wheelhouse_raised" | "lift_column";
+  label: string;
+  x_aft_m: number;
+  x_fwd_m: number;
+  y_port_m: number;
+  y_stbd_m: number;
+  z_base_m: number;
+  z_top_m: number;
+}
+
+/** The Deck Items of an Option and its wheelhouse's lift (null without a stern block). */
+export interface DeckItems {
+  items: DeckItem[];
+  wheelhouse: {
+    needed_m: number | null;
+    used_m: number;
+    allowed_m: number;
+    air_draft_light_m: number | null;
+    air_draft_navigating_light_m: number | null;
+  } | null;
 }
 
 /** The waterline of one floating position, and the index of its group in `Meshes.groups`. */
@@ -93,5 +118,7 @@ export interface Platform {
   meshes(option: string): Promise<Meshes>;
   sectionAt(option: string, x: number): Promise<SectionOutline>;
   spaceInfo(option: string, name: string): Promise<SpaceInfo>;
+  /** Spec 0009: the Deck Items and the wheelhouse's lift, from the core. */
+  deckItems(option: string): Promise<DeckItems>;
   waterlines(option: string): Promise<Waterline[]>;
 }

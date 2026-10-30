@@ -307,7 +307,8 @@ describe("OVCD web smoke tests", () => {
     assert.equal(await (await b.$("[data-testid=model3d]")).getAttribute("data-status"), "ready");
     const shown = async () => JSON.parse(await (await b.$("[data-testid=model3d-canvas]")).getAttribute("data-shown"));
     // The domes, the weather shield and the Deck Items are drawn on open; the tanks are Spaces.
-    for (const g of ["dome:CT1C_dome", "dome:CT2C_dome", "weather_shield:weather_shield", "deck_item:unit_1", "deck_item:wheelhouse_raised"]) {
+    // The wheelhouse opens lowered (issue #689).
+    for (const g of ["dome:CT1C_dome", "dome:CT2C_dome", "weather_shield:weather_shield", "deck_item:unit_1", "deck_item:wheelhouse_lowered"]) {
       assert.ok((await shown()).includes(g), `${g} is drawn`);
     }
     await (await b.$("[data-testid=layer-kind-cargo_tank]")).click();
@@ -331,6 +332,91 @@ describe("OVCD web smoke tests", () => {
         await (await b.$(`button=${theme}`)).click();
         await new Promise((r) => setTimeout(r, 800));
         await b.saveScreenshot(path.join(SHOTS, `web-3d-tanks-${theme.toLowerCase()}.png`));
+      }
+    }
+  });
+
+  it("opens on Exterior; sets each View Preset, both cuts and the wheelhouse three ways; picks a tank and the wheelhouse (issue #689)", async () => {
+    for (const [file, name] of [[FIXTURE, "gas_igc_2g_self_propelled.vdesign"], [DRY_FIXTURE, "dry_bulk_box_hold.vdesign"]]) {
+      const b = await start();
+      await b.url(`${origin}/ovcd/app`);
+      await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
+      await (await b.$("button=I understand")).click();
+      await until(b, "results", async () => (await outputs(b)).isExisting());
+      await b.execute(() => {
+        HTMLInputElement.prototype.click = function () {};
+      });
+      await (await b.$("button=Open")).click();
+      const picker = await b.$("[data-testid=file-picker]");
+      await picker.waitForExist({ timeout: 5000 });
+      await picker.setValue(file);
+      await until(b, "the file name", async () => (await b.$("header")).getText().then((t) => t.includes(name)));
+      const tab = (label) => b.$(`//button[@role="tab" and normalize-space()="${label}"]`);
+      await (await tab("Drawings")).click();
+      await (await tab("3D")).click();
+      await until(b, "the model", async () => (await (await b.$("[data-testid=model3d]")).getAttribute("data-status")) !== "loading", 60000);
+      const model = await b.$("[data-testid=model3d]");
+      const canvas = await b.$("[data-testid=model3d-canvas]");
+      const data = async (key) => JSON.parse(await canvas.getAttribute(`data-${key}`));
+      const preset = () => model.getAttribute("data-preset");
+      // Restore the click the file picker needed off, for the checkboxes below.
+      await b.execute(() => {
+        delete HTMLInputElement.prototype.click;
+      });
+      assert.equal(await preset(), "exterior", `${name}: the view opens on Exterior`);
+      let shown = await data("shown");
+      assert.ok(!shown.some((g) => g.startsWith("space:")), `${name}: no Space on Exterior`);
+      assert.ok(shown.includes("sea"), `${name}: the sea on Exterior`);
+      // Cargo: the half cut and the deck cut on, no sea.
+      await (await b.$("[data-testid=preset-cargo]")).click();
+      await until(b, "Cargo", async () => (await preset()) === "cargo");
+      const cuts = await data("cuts");
+      assert.equal(cuts.half, 0, `${name}: the half cut`);
+      assert.ok(cuts.deck < 1e8 && cuts.cutFaces > 0, `${name}: the deck cut and its cut faces`);
+      shown = await data("shown");
+      assert.ok(!shown.some((g) => g.startsWith("deck:") || g === "sea"), `${name}: no deck, no sea in Cargo`);
+      // Arrangement: every Space, the hull translucent, no cut.
+      await (await b.$("[data-testid=preset-arrangement]")).click();
+      await until(b, "Arrangement", async () => (await preset()) === "arrangement");
+      assert.ok((await data("materials")).hull.opacity < 1, `${name}: the hull translucent`);
+      assert.equal((await data("cuts")).half, 1e9);
+      // A toggle moved off a preset is Custom.
+      await (await b.$("[data-testid=cut-half]")).click();
+      await until(b, "Custom", async () => (await preset()) === "custom");
+      assert.ok(await (await b.$("[data-testid=preset-custom]")).isExisting());
+      await (await b.$("[data-testid=cut-deck]")).click();
+      await until(b, "the deck cut", async () => (await data("cuts")).deck < 1e8);
+      if (name.startsWith("gas")) {
+        // The wheelhouse three ways, the raised one a ghost in Both.
+        for (const [w, lowered, raised, opacity] of [["raised", false, true, 1], ["both", true, true, 0.4], ["lowered", true, false, 1]]) {
+          await (await b.$(`[data-testid=wheelhouse-${w}]`)).click();
+          await until(b, `the wheelhouse ${w}`, async () => (await data("wheelhouse")).lowered.visible === lowered && (await data("wheelhouse")).raised.visible === raised);
+          if (raised) assert.equal((await data("wheelhouse")).raised.opacity, opacity, w);
+        }
+        // Pick a tank and the raised wheelhouse: their values are the results'.
+        const results = await b.execute(async () => (await window.__ovcdPlatform.evaluate()).options[0].outcome.results);
+        await (await b.$('[data-testid="space-CT1C"]')).click();
+        await until(b, "the tank info", async () => (await b.$("[data-testid=space-info-tank-od]")).isExisting());
+        assert.equal(Number(await (await b.$("[data-testid=space-info-tank-od]")).getAttribute("data-value")), results.drawing.tank.tank_outer_diameter_m);
+        await (await b.$('[data-testid="deck-item-wheelhouse_raised"]')).click();
+        await until(b, "the wheelhouse info", async () => (await b.$("[data-testid=deck-item-info]")).isExisting());
+        const a = results.drawing.aft_arrangement;
+        assert.equal(Number(await (await b.$("[data-testid=deck-item-info-base]")).getAttribute("data-value")), a.wheelhouse_floor_raised_m);
+        assert.equal(Number(await (await b.$("[data-testid=deck-item-info-top]")).getAttribute("data-value")), a.wheelhouse_top_raised_m);
+        const lift = await b.$("[data-testid=wheelhouse-lift]");
+        assert.equal(Number(await lift.getAttribute("data-air")), results.results.air_draft_light_m);
+        if (SHOTS) {
+          fs.mkdirSync(SHOTS, { recursive: true });
+          for (const p of ["exterior", "cargo", "arrangement"]) {
+            await (await b.$(`[data-testid=preset-${p}]`)).click();
+            for (const theme of ["Light", "Dark"]) {
+              await (await b.$(`button=${theme}`)).click();
+              await new Promise((r) => setTimeout(r, 600));
+              await b.saveScreenshot(path.join(SHOTS, `web-3d-preset-${p}-${theme.toLowerCase()}.png`));
+            }
+          }
+          await (await b.$("button=Light")).click();
+        }
       }
     }
   });

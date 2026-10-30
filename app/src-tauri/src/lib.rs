@@ -173,6 +173,11 @@ fn space_info(option: String, name: String, state: State<Shared>) -> Reply {
 }
 
 #[tauri::command]
+fn deck_items(option: String, state: State<Shared>) -> Reply {
+    lock(&state)?.deck_items(&option)
+}
+
+#[tauri::command]
 fn waterlines(option: String, state: State<Shared>) -> Reply {
     lock(&state)?.waterlines(&option)
 }
@@ -435,6 +440,7 @@ pub fn run() {
             mesh_groups,
             section_at,
             space_info,
+            deck_items,
             waterlines,
         ])
         .on_window_event(|window, event| {

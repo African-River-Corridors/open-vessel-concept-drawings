@@ -63,6 +63,23 @@ pub struct Outfit {
     /// The Deck Items of the stern block: the container units, then the wheelhouse lowered and
     /// raised, then its lift column. Empty without a stern block.
     pub deck_items: Vec<DeckItem>,
+    /// The wheelhouse's lift, as the 3D view labels it; `None` without a stern block.
+    pub wheelhouse_lift: Option<WheelhouseLift>,
+}
+
+/// The lift of the wheelhouse and the light air draft it costs (spec 0009, "Wheelhouse"), from the
+/// capacity result.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct WheelhouseLift {
+    /// The lift the sightline limit needs (`sightline.lift_needed_m`); `None` when no limit is set.
+    pub needed_m: Option<f64>,
+    /// The lift used (`aft_arrangement.wheelhouse_lift_m`).
+    pub used_m: f64,
+    /// The most the column gives (`wheelhouse_max_lift_m` of the stern block's inputs).
+    pub allowed_m: f64,
+    /// The light air draft, wheelhouse lowered, and with it raised (m).
+    pub air_draft_light_m: Option<f64>,
+    pub air_draft_navigating_light_m: Option<f64>,
 }
 
 /// The two positions of a lifting wheelhouse.
@@ -164,6 +181,7 @@ pub fn assemble(inp: &VesselModelInputs) -> VesselModel {
         tank_layout,
         outfit: Outfit {
             deck_items: deck_items(r, &inp.hull),
+            wheelhouse_lift: wheelhouse_lift(c, r),
         },
         frames: Vec::new(),
     }
@@ -570,5 +588,21 @@ fn weather_shield(r: &BargeCapacityResult) -> Option<WeatherShield> {
         z_foot_m: wing_top.max(i.depth),
         z_top_m: top,
         thickness_m: thickness,
+    })
+}
+
+/// The wheelhouse's lift of a result with a stern block; `None` without one.
+fn wheelhouse_lift(c: &BargeCapacityInputs, r: &BargeCapacityResult) -> Option<WheelhouseLift> {
+    let a = r.aft_arrangement.as_ref()?;
+    let allowed_m = match &c.aft {
+        Some(aft) => aft.wheelhouse_max_lift_m,
+        None => c.aft_design.wheelhouse_max_lift_m,
+    };
+    Some(WheelhouseLift {
+        needed_m: r.sightline.as_ref().map(|s| s.lift_needed_m),
+        used_m: a.wheelhouse_lift_m,
+        allowed_m,
+        air_draft_light_m: r.air_draft_light_m,
+        air_draft_navigating_light_m: r.air_draft_navigating_light_m,
     })
 }
