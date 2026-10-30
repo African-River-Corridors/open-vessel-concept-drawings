@@ -703,6 +703,13 @@ pub fn run_option_with(
                     }
                     o.insert("calibration".to_string(), calibration);
                     o.insert("rule_trace".to_string(), rule_trace);
+                    // Spec 0009, D1 (b): the Type C tank Spaces, one row each (ADR 0021). Hashed:
+                    // the rows are new, and no other value moves.
+                    if let Some(rows) = measured.vessel.as_ref().map(tank_space_rows)
+                        && !rows.is_empty()
+                    {
+                        o.insert("spaces".to_string(), Value::Array(rows));
+                    }
                 }
                 let hash = results_hash(&v);
                 RunOutcome::Results { results: v, hash }
@@ -711,6 +718,26 @@ pub fn run_option_with(
         Outcome::Raised(kind, message) => RunOutcome::Failed(format!("{kind}: {message}")),
         Outcome::Refused(message) => RunOutcome::Failed(message),
     }
+}
+
+/// The rows of the results Spaces table (spec 0009, D1): each Type C tank Space of a gas Design, with
+/// its name, kind, side, volume (m³) and centroid (m), as the 3D view's pick gives a Space.
+fn tank_space_rows(inputs: &ovcd_core::vessel_model::VesselModelInputs) -> Vec<Value> {
+    ovcd_core::vessel_model::tank_spaces_of(&inputs.capacity, &inputs.result)
+        .iter()
+        .map(|s| {
+            let (x, y, z) = s.centroid_m;
+            json!({
+                "name": s.space.name,
+                "kind": s.space.kind.key(),
+                "side": s.space.side.key(),
+                "volume_m3": s.volume_m3,
+                "lcg_m": x,
+                "tcg_m": y,
+                "vcg_m": z,
+            })
+        })
+        .collect()
 }
 
 /// Whether the lightship of the Option's hull has a calibration case (issue #434). The box-hold
