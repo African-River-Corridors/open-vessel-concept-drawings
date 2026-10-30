@@ -184,6 +184,11 @@ impl AppState {
         self.vessel(option).map(vessel::deck_items)
     }
 
+    /// The propulsor parts of an Option, for the pick panel (spec 0009).
+    pub fn propulsors(&mut self, option: &str) -> Result<Value, String> {
+        self.vessel(option).map(vessel::propulsors)
+    }
+
     /// The waterline of each floating position of an Option.
     pub fn waterlines(&mut self, option: &str) -> Result<Value, String> {
         self.vessel(option).map(vessel::waterlines)

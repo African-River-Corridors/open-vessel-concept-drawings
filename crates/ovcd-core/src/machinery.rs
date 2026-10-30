@@ -583,6 +583,9 @@ pub mod layout_rates {
     pub const RUDDER_SPACING_OVER_D: f64 = 0.6;
     /// Bow thruster tunnel diameter per square root of its power (m per kW^0.5, estimate).
     pub const BOW_TUNNEL_D_PER_SQRT_KW: f64 = 0.07;
+    /// The thickness of the propeller disc the 3D view draws, over the diameter (estimate; the
+    /// Propulsor model is an actuator disc, `propulsor.rs`).
+    pub const DISC_THICKNESS_OVER_D: f64 = 0.05;
 }
 
 /// A mass centre: LCG from the aft end and KCG above the base (m).
@@ -745,6 +748,9 @@ pub struct PropulsorLayout {
     pub diameter_m: f64,
     pub axis_z_m: f64,
     pub ducted: bool,
+    /// The Installed Power of one unit (kW), when it is sized or typed; `None` for the default
+    /// stern block.
+    pub unit_power_kw: Option<f64>,
     pub propulsors: Vec<PropulsorPart>,
     pub rudders: Vec<RudderPart>,
     pub bow_thruster: Option<BowThrusterPart>,
@@ -863,6 +869,9 @@ pub fn propulsor_layout(
         diameter_m: d,
         axis_z_m: axis,
         ducted: inp.propulsor.ducted(),
+        unit_power_kw: inp
+            .installed_power_kw
+            .map(|p| p / f64::from(inp.propulsor_count.max(1))),
         propulsors,
         rudders,
         bow_thruster,
@@ -921,9 +930,43 @@ pub fn default_thruster_layout(
         diameter_m: d,
         axis_z_m: axis_height(d),
         ducted: true,
+        unit_power_kw: None,
         propulsors,
         rudders: Vec::new(),
         bow_thruster: None,
         warnings: Vec::new(),
     })
+}
+
+/// The Propulsor Layout of a hull's stern block, from the capacity inputs and result the run worked
+/// with: a specified Propulsor from its machinery, else the default stern block's thrusters; `None`
+/// with no stern block. Under a tunnel stern every type sits on its tunnel's axis (spec 0009).
+pub fn layout_of(
+    inp: &crate::barge_capacity::BargeCapacityInputs,
+    r: &crate::barge_capacity::BargeCapacityResult,
+) -> Option<PropulsorLayout> {
+    let aft = r.aft_arrangement.as_ref()?;
+    let (envelope, clear) = match &inp.aft {
+        Some(a) => (a.thruster_envelope_m, a.thruster_clear_m),
+        None => (
+            inp.aft_design.thruster_envelope_m,
+            inp.aft_design.thruster_clear_m,
+        ),
+    };
+    match (&inp.machinery, &aft.machinery) {
+        (Some(mi), Some(m)) => {
+            let offsets = match &inp.stern_geometry {
+                Some(g) if g.form == crate::stern_form::SternForm::Tunnel => {
+                    g.tunnel_offsets_m.as_slice()
+                }
+                _ => aft.thruster_offsets_m.as_slice(),
+            };
+            Some(propulsor_layout(mi, m, offsets, envelope + clear, inp.beam))
+        }
+        _ => default_thruster_layout(
+            aft.thruster_room_length_m,
+            envelope,
+            &aft.thruster_offsets_m,
+        ),
+    }
 }

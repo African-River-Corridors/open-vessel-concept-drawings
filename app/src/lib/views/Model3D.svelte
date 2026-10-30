@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { platform, type DeckItem, type DeckItems, type Meshes, type SectionOutline, type SpaceInfo, type Waterline } from "../platform";
+  import { platform, type DeckItem, type DeckItems, type Meshes, type PropulsorPart, type SectionOutline, type SpaceInfo, type Waterline } from "../platform";
   import { watchTheme } from "../chartTheme";
   import { FAMILY_TOKEN, PRESETS, VIEW_MIRROR, closedSolid, familyOf, fixedView, flatShaded, groupSlice, homeView, kindLabelId, presetOf, presetState, seaPlane, orbitStep, toView, wheelhouseDraw, type FixedView, type Preset, type Vec3, type WheelhouseShown } from "../model3d";
   import { num, t } from "../i18n.svelte";
@@ -27,6 +27,9 @@
   // The Deck Items and the wheelhouse's lift, from the core (spec 0009).
   let deck = $state<DeckItems>({ items: [], wheelhouse: null });
   let selectedItem = $state<DeckItem | null>(null);
+  // The propulsor parts, from the core's Propulsor Layout (spec 0009).
+  let propParts = $state<PropulsorPart[]>([]);
+  let selectedProp = $state<PropulsorPart | null>(null);
   // The cuts and the hull's translucency a preset sets.
   let halfCut = $state(false);
   let deckCut = $state(false);
@@ -50,7 +53,12 @@
     ...(groupLayers.includes("dome") ? [{ id: "dome", label: t("app-3d-layer-dome") }] : []),
     ...(groupLayers.includes("weather_shield") ? [{ id: "weather_shield", label: t("app-3d-layer-weather-shield") }] : []),
     ...(groupLayers.includes("deck_item") ? [{ id: "deck_item", label: t("app-3d-layer-deck-item") }] : []),
+    ...(groupLayers.includes("propulsor") ? [{ id: "propulsor", label: t("app-3d-layer-propulsor") }] : []),
   ]);
+  /** A propulsor part's name: its part, numbered as the layout numbers it. */
+  const partName = (p: PropulsorPart) => t(`app-3d-part-${p.part.replaceAll("_", "-")}`) + (p.index === null ? "" : ` ${p.index + 1}`);
+  /** The Propulsor type's name, as the inputs name it; the default stern block's thrusters are ducted azimuth units. */
+  const typeName = (key: string) => t(key === "unspecified" ? "app-3d-propulsor-default-thrusters" : `choice-propulsor-type-${key.replaceAll("_", "-")}`);
   /** The preset the toggles match, or null: "Custom". */
   let preset = $derived(presetOf({ visible, halfCut, deckCut, sea: waterline !== "", hullTranslucent }, kinds, waterlines.length > 0));
   function choose(p: Preset) {
@@ -80,6 +88,7 @@
   let selectByName: (name: string | null) => void = () => {};
   let drawSection: () => void = () => {};
   let selectItem: (id: string | null) => void = () => {};
+  let selectProp: (id: string | null) => void = () => {};
   let goTo: (v: FixedView) => void = () => {};
   let reset: () => void = () => {};
   let onKey: (e: KeyboardEvent) => void = () => {};
@@ -112,6 +121,7 @@
         const names = data.groups.filter((g) => g.layer === "space").map((g) => g.id);
         spaces = await Promise.all(names.map((n) => p.spaceInfo(option, n)));
         deck = await p.deckItems(option);
+        propParts = await p.propulsors(option);
         groupLayers = [...new Set(data.groups.map((g) => g.layer))];
         waterlines = await p.waterlines(option);
         // The view opens on the Exterior preset (spec 0009, D4): the outside of the vessel, on the sea.
@@ -164,8 +174,8 @@
       const meshes = new Map<string, InstanceType<typeof THREE.Mesh>>();
       const edges: InstanceType<typeof THREE.LineSegments>[] = [];
       const space = new Map<InstanceType<typeof THREE.Object3D>, string>();
-      // What a click picks: a Space (a tank's dome picks its tank) or a Deck Item.
-      const pickable = new Map<InstanceType<typeof THREE.Object3D>, { item: boolean; id: string }>();
+      // What a click picks: a Space (a tank's dome picks its tank), a Deck Item or a propulsor part.
+      const pickable = new Map<InstanceType<typeof THREE.Object3D>, { item: boolean; prop?: boolean; id: string }>();
       // The inside faces of each closed solid, drawn in `--model-cut` where a cut opens it.
       const backs = new Map<string, InstanceType<typeof THREE.Mesh>>();
       const root = new THREE.Group();
@@ -189,6 +199,7 @@
         if (g.layer === "space") pickable.set(mesh, { item: false, id: g.id });
         if (g.layer === "dome") pickable.set(mesh, { item: false, id: g.id.replace(/_dome$/, "") });
         if (g.layer === "deck_item") pickable.set(mesh, { item: true, id: g.id });
+        if (g.layer === "propulsor") pickable.set(mesh, { item: false, prop: true, id: g.id });
         if (closedSolid(g.layer)) {
           const back = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ side: THREE.BackSide, clippingPlanes: clips }));
           back.userData = { layer: g.layer, id: g.id, cutFace: true };
@@ -293,10 +304,11 @@
         if (layer === "dome") return token(FAMILY_TOKEN.cargo);
         if (layer === "deck_item") return token(id.startsWith("wheelhouse") ? "--model-wheelhouse" : "--model-deck-item");
         if (layer === "weather_shield") return token("--model-deck");
+        if (layer === "propulsor") return token("--model-propulsor");
         return token("--ink-2");
       };
       const picked = (layer: string, id: string) =>
-        (layer === "space" && selected?.name === id) || (layer === "dome" && selected?.name === id.replace(/_dome$/, "")) || (layer === "deck_item" && selectedItem?.id === id);
+        (layer === "space" && selected?.name === id) || (layer === "dome" && selected?.name === id.replace(/_dome$/, "")) || (layer === "deck_item" && selectedItem?.id === id) || (layer === "propulsor" && selectedProp?.id === id);
       function paint() {
         half.constant = halfCut ? 0 : 1e9;
         deckPlane.constant = deckCut ? deckZ - 1e-3 : 1e9;
@@ -500,11 +512,19 @@
       selectItem = (id) => {
         selectedItem = id ? (deck.items.find((d) => d.id === id) ?? null) : null;
         selected = null;
+        selectedProp = null;
+        paint();
+      };
+      selectProp = (id) => {
+        selectedProp = id ? (propParts.find((d) => d.id === id) ?? null) : null;
+        selected = null;
+        selectedItem = null;
         paint();
       };
       selectByName = (name) => {
         selected = name ? (spaces.find((s) => s.name === name) ?? null) : null;
         selectedItem = null;
+        selectedProp = null;
         // A Space picked in the list is shown: its kind's layer goes on.
         if (selected) visible[`kind:${selected.kind}`] = true;
         paint();
@@ -541,6 +561,7 @@
         const hit = ray.intersectObjects([...pickable.keys()].filter((o) => o.visible), false)[0];
         const what = hit ? pickable.get(hit.object) : undefined;
         if (what?.item) selectItem(what.id);
+        else if (what?.prop) selectProp(what.id);
         else selectByName(what ? what.id : null);
       };
       canvas.addEventListener("pointerdown", onDown);
@@ -668,7 +689,7 @@
         </ul>
       {/if}
       <h4>{t("app-3d-spaces")}</h4>
-      {#if spaces.length === 0 && deck.items.length === 0}
+      {#if spaces.length === 0 && deck.items.length === 0 && propParts.length === 0}
         <p class="note">{t("app-3d-no-spaces")}</p>
       {:else}
         <table data-testid="model3d-spaces">
@@ -687,6 +708,13 @@
               <tr class:on={selectedItem?.id === d.id}>
                 <th><button type="button" class="link" data-testid="deck-item-{d.id}" onclick={() => selectItem(d.id)}>{d.id}</button></th>
                 <td>{itemName(d)}</td>
+                <td class="num dim">–</td>
+              </tr>
+            {/each}
+            {#each propParts as q (q.id)}
+              <tr class:on={selectedProp?.id === q.id}>
+                <th><button type="button" class="link" data-testid="propulsor-{q.id}" onclick={() => selectProp(q.id)}>{q.id}</button></th>
+                <td>{partName(q)}</td>
                 <td class="num dim">–</td>
               </tr>
             {/each}
@@ -715,6 +743,24 @@
           {#if selectedItem.kind.startsWith("wheelhouse") && deck.wheelhouse}
             <dt>{t("app-3d-item-lift")}</dt><dd data-testid="deck-item-info-lift">{deck.wheelhouse.needed_m === null ? "–" : num(deck.wheelhouse.needed_m, 2)} / {num(deck.wheelhouse.used_m, 2)} / {num(deck.wheelhouse.allowed_m, 2)} m</dd>
           {/if}
+        </dl>
+      {:else if selectedProp}
+        <dl class="info" data-testid="propulsor-info">
+          <dt>{t("app-3d-col-name")}</dt><dd data-testid="propulsor-info-id">{selectedProp.id}</dd>
+          <dt>{t("app-3d-col-kind")}</dt><dd>{partName(selectedProp)}</dd>
+          {#if selectedProp.part === "bow_thruster"}
+            <dt>{t("app-3d-propulsor-tunnel-diameter")}</dt><dd data-testid="propulsor-info-diameter" data-value={selectedProp.tunnel_diameter_m}>{num(selectedProp.tunnel_diameter_m ?? 0, 2)} m</dd>
+            <dt>{t("app-3d-propulsor-axis")}</dt><dd data-testid="propulsor-info-axis" data-value={selectedProp.z_m}>{num(selectedProp.z_m, 2)} m</dd>
+          {:else}
+            <dt>{t("app-3d-propulsor-type")}</dt><dd data-testid="propulsor-info-type">{typeName(selectedProp.propulsor_type)}</dd>
+            <dt>{t("app-3d-propulsor-diameter")}</dt><dd data-testid="propulsor-info-diameter" data-value={selectedProp.diameter_m}>{num(selectedProp.diameter_m, 2)} m</dd>
+            <dt>{t("app-3d-propulsor-axis")}</dt><dd data-testid="propulsor-info-axis" data-value={selectedProp.axis_z_m}>{num(selectedProp.axis_z_m, 2)} m</dd>
+          {/if}
+          {#if selectedProp.part === "rudder"}
+            <dt>{t("app-3d-propulsor-rudder-size")}</dt><dd data-testid="propulsor-info-rudder">{num(selectedProp.span_m ?? 0, 2)} × {num(selectedProp.chord_m ?? 0, 2)} m</dd>
+          {/if}
+          <dt>{selectedProp.part === "bow_thruster" ? t("app-3d-propulsor-bow-power") : t("app-3d-propulsor-power")}</dt><dd data-testid="propulsor-info-power" data-value={selectedProp.unit_power_kw}>{selectedProp.unit_power_kw === null ? "–" : `${num(selectedProp.unit_power_kw, 0)} kW`}</dd>
+          <dt>{t("app-3d-propulsor-mass-centre")}</dt><dd data-testid="propulsor-info-mass">{selectedProp.mass_item}: {num(selectedProp.lcg_m, 2)}, {num(selectedProp.kcg_m, 2)} m</dd>
         </dl>
       {:else if status !== "no-webgl"}
         <p class="note">{t("app-3d-pick-hint")}</p>

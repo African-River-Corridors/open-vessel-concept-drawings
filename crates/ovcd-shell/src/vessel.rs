@@ -170,6 +170,83 @@ pub(crate) fn deck_items(k: &Kept) -> Value {
     json!({ "items": items, "wheelhouse": lift })
 }
 
+/// The propulsor parts of the Outfit (spec 0009): each mesh group's id, its part, the propulsor it
+/// belongs to, and the values the pick panel shows (type, diameter, axis height, power), with the
+/// part's centre in the mesh's axes (y + to starboard) and its mass item, all from the core's
+/// Propulsor Layout. An empty list without a stern block.
+pub(crate) fn propulsors(k: &Kept) -> Value {
+    use ovcd_core::mesh::PartSource;
+    let Some(l) = &k.run.model.outfit.propulsors else {
+        return json!([]);
+    };
+    let common = json!({
+        "propulsor_type": l.propulsor_type,
+        "diameter_m": l.diameter_m,
+        "axis_z_m": l.axis_z_m,
+        "unit_power_kw": l.unit_power_kw,
+    });
+    let part = |source: PartSource,
+                part: &str,
+                index: Option<usize>,
+                at: [f64; 3],
+                mass: (&str, f64, f64)| {
+        let mut v = common.clone();
+        v["id"] = json!(source.id());
+        v["part"] = json!(part);
+        v["index"] = json!(index);
+        v["x_m"] = json!(at[0]);
+        v["y_m"] = json!(at[1]);
+        v["z_m"] = json!(at[2]);
+        v["mass_item"] = json!(mass.0);
+        v["lcg_m"] = json!(mass.1);
+        v["kcg_m"] = json!(mass.2);
+        v
+    };
+    let mut out = Vec::new();
+    for (i, u) in l.propulsors.iter().enumerate() {
+        let at = [u.x_m, -u.y_m, u.z_m];
+        let mass = (u.mass_item, u.lcg_m, u.kcg_m);
+        out.push(part(
+            PartSource::Propulsor(i),
+            "propulsor",
+            Some(i),
+            at,
+            mass,
+        ));
+        if u.nozzle.is_some() {
+            out.push(part(PartSource::Nozzle(i), "nozzle", Some(i), at, mass));
+        }
+        if u.azimuth.is_some() {
+            out.push(part(PartSource::Leg(i), "leg", Some(i), at, mass));
+        }
+    }
+    for (i, r) in l.rudders.iter().enumerate() {
+        let mut v = part(
+            PartSource::Rudder(i),
+            "rudder",
+            None,
+            [r.x_m, -r.y_m, r.z_m],
+            ("rudders and steering gear", r.lcg_m, r.kcg_m),
+        );
+        v["span_m"] = json!(r.span_m);
+        v["chord_m"] = json!(r.chord_m);
+        out.push(v);
+    }
+    if let Some(b) = &l.bow_thruster {
+        let mut v = part(
+            PartSource::BowThruster,
+            "bow_thruster",
+            None,
+            [b.x_m, 0.0, b.z_m],
+            ("bow thruster", b.lcg_m, b.kcg_m),
+        );
+        v["unit_power_kw"] = json!(b.power_kw);
+        v["tunnel_diameter_m"] = json!(b.tunnel_diameter_m);
+        out.push(v);
+    }
+    Value::Array(out)
+}
+
 /// The waterline of each floating position: its draughts and trim, and the index of its mesh group.
 pub(crate) fn waterlines(k: &Kept) -> Value {
     Value::Array(

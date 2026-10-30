@@ -57,12 +57,15 @@ pub struct Bulkhead {
 
 /// The Outfit layer (ADR 0021): the parts that are neither hull, compartments nor structure, and
 /// are not in the hydrostatics. Their masses are already in the lightship; the Outfit adds only
-/// their shape. The Propulsor Layout joins it later (spec 0009).
+/// their shape: the Deck Items and the Propulsor Layout (spec 0009).
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Outfit {
     /// The Deck Items of the stern block: the container units, then the wheelhouse lowered and
     /// raised, then its lift column. Empty without a stern block.
     pub deck_items: Vec<DeckItem>,
+    /// The Propulsor Layout of the stern block (spec 0009, issue #691), the same the mass items
+    /// and `drawing.propulsors` use. `None` without a stern block.
+    pub propulsors: Option<crate::machinery::PropulsorLayout>,
     /// The wheelhouse's lift, as the 3D view labels it; `None` without a stern block.
     pub wheelhouse_lift: Option<WheelhouseLift>,
 }
@@ -182,6 +185,7 @@ pub fn assemble(inp: &VesselModelInputs) -> VesselModel {
         outfit: Outfit {
             deck_items: deck_items(r, &inp.hull),
             wheelhouse_lift: wheelhouse_lift(c, r),
+            propulsors: crate::machinery::layout_of(c, r),
         },
         frames: Vec::new(),
     }
