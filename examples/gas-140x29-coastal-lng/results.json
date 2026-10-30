@@ -5,7 +5,7 @@
     {
       "name": "A basis",
       "status": "results",
-      "results_hash": "afc4b81c01702b0406e38474f811915f1acfd8621d13e9bb5553f27090e729a6",
+      "results_hash": "2599c5bdb87d4125a094905ea945aafe2aaafcf3a62aa91b2788afed94505e41",
       "hash_status": "matches",
       "results": {
         "vessel": "Gas barge, IMO Type C tanks",
@@ -538,6 +538,76 @@
             ],
             "tunnel_sections": [],
             "tunnel_crown_height_m": 4.62
+          },
+          "propulsors": {
+            "propulsor_type": "azimuth_ducted",
+            "diameter_m": 4.2,
+            "axis_z_m": 2.1,
+            "ducted": true,
+            "propulsors": [
+              {
+                "x_m": 4.949999999999999,
+                "y_m": -1.6,
+                "z_m": 2.1,
+                "mass_item": "propulsors",
+                "mass_centre": {
+                  "lcg_m": 4.949999999999999,
+                  "kcg_m": 4.2
+                },
+                "nozzle": {
+                  "inner_diameter_m": 4.2,
+                  "outer_diameter_m": 5.670000000000001,
+                  "length_m": 2.1
+                },
+                "azimuth": {
+                  "leg_top_z_m": 6.300000000000001,
+                  "leg_chord_m": 1.6800000000000002,
+                  "leg_thickness_m": 0.63,
+                  "pod_length_m": 3.3600000000000003,
+                  "pod_diameter_m": 1.47
+                },
+                "shaft": null
+              },
+              {
+                "x_m": 4.949999999999999,
+                "y_m": 1.6,
+                "z_m": 2.1,
+                "mass_item": "propulsors",
+                "mass_centre": {
+                  "lcg_m": 4.949999999999999,
+                  "kcg_m": 4.2
+                },
+                "nozzle": {
+                  "inner_diameter_m": 4.2,
+                  "outer_diameter_m": 5.670000000000001,
+                  "length_m": 2.1
+                },
+                "azimuth": {
+                  "leg_top_z_m": 6.300000000000001,
+                  "leg_chord_m": 1.6800000000000002,
+                  "leg_thickness_m": 0.63,
+                  "pod_length_m": 3.3600000000000003,
+                  "pod_diameter_m": 1.47
+                },
+                "shaft": null
+              }
+            ],
+            "rudders": [],
+            "bow_thruster": {
+              "x_m": 120.8,
+              "z_m": 1.0,
+              "tunnel_diameter_m": 4.722201245182167,
+              "tunnel_length_m": 29.0,
+              "power_kw": 4550.854,
+              "mass_item": "bow thruster",
+              "mass_centre": {
+                "lcg_m": 120.8,
+                "kcg_m": 1.0
+              }
+            },
+            "warnings": [
+              "The stern holds 3 propulsor places for 2 propulsors; the layout spreads the 2 at 3.20 m."
+            ]
           }
         },
         "arrangement": {
@@ -2209,6 +2279,47 @@
             40
           ]
         },
+        "fit_tried": [
+          {
+            "depth_m": 12.0,
+            "n_wide": 1,
+            "n_long": 2,
+            "tank_od_m": 11.0,
+            "side_clearance_m": 9.0,
+            "wing_tank_width_m": 8.4,
+            "cargo_volume_m3": 7177.394486522341,
+            "cargo_t": 3229.8275189350534,
+            "variants": 5,
+            "outcome": "less_cargo",
+            "reasons": []
+          },
+          {
+            "depth_m": 12.0,
+            "n_wide": 2,
+            "n_long": 2,
+            "tank_od_m": 11.0,
+            "side_clearance_m": 3.0,
+            "wing_tank_width_m": 2.4,
+            "cargo_volume_m3": 14354.788973044682,
+            "cargo_t": 6459.655037870107,
+            "variants": 5,
+            "outcome": "chosen",
+            "reasons": []
+          },
+          {
+            "depth_m": 12.0,
+            "n_wide": 3,
+            "n_long": 2,
+            "tank_od_m": 8.645813339296417,
+            "side_clearance_m": 0.5312799910553745,
+            "wing_tank_width_m": 0.0,
+            "cargo_volume_m3": 13074.971940433868,
+            "cargo_t": 5883.737373195241,
+            "variants": 5,
+            "outcome": "less_cargo",
+            "reasons": []
+          }
+        ],
         "cost_masses": {
           "masses": {
             "hull_steel_t": 1929.844,
@@ -3653,6 +3764,11 @@
           "design_speed_kn": 9.7,
           "margin": 1.2,
           "bollard_pull_t": 47.77743151408982,
+          "propeller_diameter_m": 4.2,
+          "shaft_axis_height_m": 2.1,
+          "blade_load_kw_m2": 51.14864008880657,
+          "blade_load_limit_kw_m2": 500.0,
+          "propeller_ducted": true,
           "battery_energy_kwh": null,
           "environments": [
             {
@@ -4319,7 +4435,9 @@
             "ovcd@2.1.0"
           ],
           "service_area": "coastal-and-river",
-          "warnings": [],
+          "warnings": [
+            "Rule Set icll-freeboard@1.0.0 is used as the file stores it; 2.0.0 is also built in with other content"
+          ],
           "rows": [
             {
               "rule": "igc/2.4.1.2/side-clearance",
@@ -5244,7 +5362,7 @@
               "outcome": "not evaluated",
               "governing": false,
               "sizes": false,
-              "gap": "the damage cases were not computed: the laden departure condition has no floating position",
+              "gap": "the damage cases were not computed: the assumed damage of IGC 2.3 is not modelled yet, so survival to IGC 2.7 is not checked",
               "finding": null
             },
             {
@@ -9106,6 +9224,96 @@
               "finding": null
             },
             {
+              "rule": "ovcd/propulsion/propeller-fits-stern",
+              "rule_sets": [
+                "ovcd@2.1.0"
+              ],
+              "title": "The propeller diameter is within the largest the Stern Form allows (D over D_max of 1 or less)",
+              "citation": "",
+              "origin": "method-validity",
+              "rule_status": "unverified",
+              "method_status": "verified",
+              "measure": {
+                "id": "propulsion.diameter_over_max",
+                "args": {}
+              },
+              "object_type": "option",
+              "object": "A basis",
+              "inputs": [],
+              "value": 0.6341058352834604,
+              "unit": "-",
+              "compare": "le",
+              "limit": 1.0,
+              "tolerance": 0.0,
+              "margin": 0.36589416471653957,
+              "consequence": "warn",
+              "outcome": "pass",
+              "governing": true,
+              "sizes": false,
+              "gap": null,
+              "finding": null
+            },
+            {
+              "rule": "ovcd/propulsion/immersion-light",
+              "rule_sets": [
+                "ovcd@2.1.0"
+              ],
+              "title": "The shaft axis is at least 0.76 diameters under the water at the lightest aft draught (0.71 for a ducted propeller): a guide, not a tunnel stern",
+              "citation": "",
+              "origin": "method-validity",
+              "rule_status": "unverified",
+              "method_status": "unverified",
+              "measure": {
+                "id": "propulsion.immersion_over_limit",
+                "args": {}
+              },
+              "object_type": "option",
+              "object": "A basis",
+              "inputs": [],
+              "value": 0.028220774860923985,
+              "unit": "-",
+              "compare": "ge",
+              "limit": 1.0,
+              "tolerance": 0.0,
+              "margin": -0.971779225139076,
+              "consequence": "warn",
+              "outcome": "warn",
+              "governing": true,
+              "sizes": false,
+              "gap": null,
+              "finding": null
+            },
+            {
+              "rule": "ovcd/propulsion/blade-load",
+              "rule_sets": [
+                "ovcd@2.1.0"
+              ],
+              "title": "The delivered power of one unit at the Installed Power is at most 400 kW per m2 of disc (500 for a ducted propeller)",
+              "citation": "",
+              "origin": "method-validity",
+              "rule_status": "unverified",
+              "method_status": "unverified",
+              "measure": {
+                "id": "propulsion.blade_load_over_limit",
+                "args": {}
+              },
+              "object_type": "option",
+              "object": "A basis",
+              "inputs": [],
+              "value": 0.10229728017761315,
+              "unit": "-",
+              "compare": "le",
+              "limit": 1.0,
+              "tolerance": 0.0,
+              "margin": 0.8977027198223868,
+              "consequence": "warn",
+              "outcome": "pass",
+              "governing": true,
+              "sizes": false,
+              "gap": null,
+              "finding": null
+            },
+            {
               "rule": "ovcd/stability/light-angle-of-max-gz",
               "rule_sets": [
                 "ovcd@2.1.0"
@@ -9255,7 +9463,7 @@
     {
       "name": "B profile",
       "status": "results",
-      "results_hash": "c8b01d222dfc3dd5558ea36c29545ee7f95b8b948bdbce8d7d5ae83b2b845f8b",
+      "results_hash": "d252390d82ddb008e3b8a0ddd7ab512ce6ecab7bd620ad6b9bf1d74e04ce19b5",
       "hash_status": "matches",
       "results": {
         "vessel": "Gas barge, IMO Type C tanks",
@@ -9788,6 +9996,76 @@
             ],
             "tunnel_sections": [],
             "tunnel_crown_height_m": 4.62
+          },
+          "propulsors": {
+            "propulsor_type": "azimuth_ducted",
+            "diameter_m": 4.2,
+            "axis_z_m": 2.1,
+            "ducted": true,
+            "propulsors": [
+              {
+                "x_m": 4.949999999999999,
+                "y_m": -1.6,
+                "z_m": 2.1,
+                "mass_item": "propulsors",
+                "mass_centre": {
+                  "lcg_m": 4.949999999999999,
+                  "kcg_m": 4.2
+                },
+                "nozzle": {
+                  "inner_diameter_m": 4.2,
+                  "outer_diameter_m": 5.670000000000001,
+                  "length_m": 2.1
+                },
+                "azimuth": {
+                  "leg_top_z_m": 6.300000000000001,
+                  "leg_chord_m": 1.6800000000000002,
+                  "leg_thickness_m": 0.63,
+                  "pod_length_m": 3.3600000000000003,
+                  "pod_diameter_m": 1.47
+                },
+                "shaft": null
+              },
+              {
+                "x_m": 4.949999999999999,
+                "y_m": 1.6,
+                "z_m": 2.1,
+                "mass_item": "propulsors",
+                "mass_centre": {
+                  "lcg_m": 4.949999999999999,
+                  "kcg_m": 4.2
+                },
+                "nozzle": {
+                  "inner_diameter_m": 4.2,
+                  "outer_diameter_m": 5.670000000000001,
+                  "length_m": 2.1
+                },
+                "azimuth": {
+                  "leg_top_z_m": 6.300000000000001,
+                  "leg_chord_m": 1.6800000000000002,
+                  "leg_thickness_m": 0.63,
+                  "pod_length_m": 3.3600000000000003,
+                  "pod_diameter_m": 1.47
+                },
+                "shaft": null
+              }
+            ],
+            "rudders": [],
+            "bow_thruster": {
+              "x_m": 120.8,
+              "z_m": 1.0,
+              "tunnel_diameter_m": 4.722201245182167,
+              "tunnel_length_m": 29.0,
+              "power_kw": 4550.854,
+              "mass_item": "bow thruster",
+              "mass_centre": {
+                "lcg_m": 120.8,
+                "kcg_m": 1.0
+              }
+            },
+            "warnings": [
+              "The stern holds 3 propulsor places for 2 propulsors; the layout spreads the 2 at 3.20 m."
+            ]
           }
         },
         "arrangement": {
@@ -11459,6 +11737,47 @@
             40
           ]
         },
+        "fit_tried": [
+          {
+            "depth_m": 12.0,
+            "n_wide": 1,
+            "n_long": 2,
+            "tank_od_m": 11.0,
+            "side_clearance_m": 9.0,
+            "wing_tank_width_m": 8.4,
+            "cargo_volume_m3": 7234.742827418546,
+            "cargo_t": 3255.634272338346,
+            "variants": 5,
+            "outcome": "less_cargo",
+            "reasons": []
+          },
+          {
+            "depth_m": 12.0,
+            "n_wide": 2,
+            "n_long": 2,
+            "tank_od_m": 11.0,
+            "side_clearance_m": 3.0,
+            "wing_tank_width_m": 2.4,
+            "cargo_volume_m3": 14469.485654837092,
+            "cargo_t": 6511.268544676692,
+            "variants": 5,
+            "outcome": "chosen",
+            "reasons": []
+          },
+          {
+            "depth_m": 12.0,
+            "n_wide": 3,
+            "n_long": 2,
+            "tank_od_m": 8.645241883151344,
+            "side_clearance_m": 0.5321371752729822,
+            "wing_tank_width_m": 0.0,
+            "cargo_volume_m3": 13175.77928594343,
+            "cargo_t": 5929.100678674544,
+            "variants": 5,
+            "outcome": "less_cargo",
+            "reasons": []
+          }
+        ],
         "cost_masses": {
           "masses": {
             "hull_steel_t": 1929.844,
@@ -12903,6 +13222,11 @@
           "design_speed_kn": 9.7,
           "margin": 1.2,
           "bollard_pull_t": 47.77743151408982,
+          "propeller_diameter_m": 4.2,
+          "shaft_axis_height_m": 2.1,
+          "blade_load_kw_m2": 51.14864008880657,
+          "blade_load_limit_kw_m2": 500.0,
+          "propeller_ducted": true,
           "battery_energy_kwh": null,
           "environments": [
             {
@@ -13569,7 +13893,9 @@
             "ovcd@2.1.0"
           ],
           "service_area": "coastal-and-river",
-          "warnings": [],
+          "warnings": [
+            "Rule Set icll-freeboard@1.0.0 is used as the file stores it; 2.0.0 is also built in with other content"
+          ],
           "rows": [
             {
               "rule": "igc/2.4.1.2/side-clearance",
@@ -14494,7 +14820,7 @@
               "outcome": "not evaluated",
               "governing": false,
               "sizes": false,
-              "gap": "the damage cases were not computed: the laden departure condition has no floating position",
+              "gap": "the damage cases were not computed: the assumed damage of IGC 2.3 is not modelled yet, so survival to IGC 2.7 is not checked",
               "finding": null
             },
             {
@@ -18356,6 +18682,96 @@
               "finding": null
             },
             {
+              "rule": "ovcd/propulsion/propeller-fits-stern",
+              "rule_sets": [
+                "ovcd@2.1.0"
+              ],
+              "title": "The propeller diameter is within the largest the Stern Form allows (D over D_max of 1 or less)",
+              "citation": "",
+              "origin": "method-validity",
+              "rule_status": "unverified",
+              "method_status": "verified",
+              "measure": {
+                "id": "propulsion.diameter_over_max",
+                "args": {}
+              },
+              "object_type": "option",
+              "object": "B profile",
+              "inputs": [],
+              "value": 0.6341058352834604,
+              "unit": "-",
+              "compare": "le",
+              "limit": 1.0,
+              "tolerance": 0.0,
+              "margin": 0.36589416471653957,
+              "consequence": "warn",
+              "outcome": "pass",
+              "governing": true,
+              "sizes": false,
+              "gap": null,
+              "finding": null
+            },
+            {
+              "rule": "ovcd/propulsion/immersion-light",
+              "rule_sets": [
+                "ovcd@2.1.0"
+              ],
+              "title": "The shaft axis is at least 0.76 diameters under the water at the lightest aft draught (0.71 for a ducted propeller): a guide, not a tunnel stern",
+              "citation": "",
+              "origin": "method-validity",
+              "rule_status": "unverified",
+              "method_status": "unverified",
+              "measure": {
+                "id": "propulsion.immersion_over_limit",
+                "args": {}
+              },
+              "object_type": "option",
+              "object": "B profile",
+              "inputs": [],
+              "value": 0.029423513835698776,
+              "unit": "-",
+              "compare": "ge",
+              "limit": 1.0,
+              "tolerance": 0.0,
+              "margin": -0.9705764861643013,
+              "consequence": "warn",
+              "outcome": "warn",
+              "governing": true,
+              "sizes": false,
+              "gap": null,
+              "finding": null
+            },
+            {
+              "rule": "ovcd/propulsion/blade-load",
+              "rule_sets": [
+                "ovcd@2.1.0"
+              ],
+              "title": "The delivered power of one unit at the Installed Power is at most 400 kW per m2 of disc (500 for a ducted propeller)",
+              "citation": "",
+              "origin": "method-validity",
+              "rule_status": "unverified",
+              "method_status": "unverified",
+              "measure": {
+                "id": "propulsion.blade_load_over_limit",
+                "args": {}
+              },
+              "object_type": "option",
+              "object": "B profile",
+              "inputs": [],
+              "value": 0.10229728017761315,
+              "unit": "-",
+              "compare": "le",
+              "limit": 1.0,
+              "tolerance": 0.0,
+              "margin": 0.8977027198223868,
+              "consequence": "warn",
+              "outcome": "pass",
+              "governing": true,
+              "sizes": false,
+              "gap": null,
+              "finding": null
+            },
+            {
               "rule": "ovcd/stability/light-angle-of-max-gz",
               "rule_sets": [
                 "ovcd@2.1.0"
@@ -18505,7 +18921,7 @@
     {
       "name": "C deep",
       "status": "results",
-      "results_hash": "74baa7a8d347ce33a3e4874b6fb4aed3e698c4fa60907ae84cd72fea9640150c",
+      "results_hash": "d91e1510c0eab3349f5e5539f3452d0c0a3b1103f508540bdfad9f9d8882810e",
       "hash_status": "matches",
       "results": {
         "vessel": "Gas barge, IMO Type C tanks",
@@ -19038,6 +19454,76 @@
             ],
             "tunnel_sections": [],
             "tunnel_crown_height_m": 4.62
+          },
+          "propulsors": {
+            "propulsor_type": "azimuth_ducted",
+            "diameter_m": 4.2,
+            "axis_z_m": 2.1,
+            "ducted": true,
+            "propulsors": [
+              {
+                "x_m": 4.949999999999999,
+                "y_m": -1.6,
+                "z_m": 2.1,
+                "mass_item": "propulsors",
+                "mass_centre": {
+                  "lcg_m": 4.949999999999999,
+                  "kcg_m": 4.2
+                },
+                "nozzle": {
+                  "inner_diameter_m": 4.2,
+                  "outer_diameter_m": 5.670000000000001,
+                  "length_m": 2.1
+                },
+                "azimuth": {
+                  "leg_top_z_m": 6.300000000000001,
+                  "leg_chord_m": 1.6800000000000002,
+                  "leg_thickness_m": 0.63,
+                  "pod_length_m": 3.3600000000000003,
+                  "pod_diameter_m": 1.47
+                },
+                "shaft": null
+              },
+              {
+                "x_m": 4.949999999999999,
+                "y_m": 1.6,
+                "z_m": 2.1,
+                "mass_item": "propulsors",
+                "mass_centre": {
+                  "lcg_m": 4.949999999999999,
+                  "kcg_m": 4.2
+                },
+                "nozzle": {
+                  "inner_diameter_m": 4.2,
+                  "outer_diameter_m": 5.670000000000001,
+                  "length_m": 2.1
+                },
+                "azimuth": {
+                  "leg_top_z_m": 6.300000000000001,
+                  "leg_chord_m": 1.6800000000000002,
+                  "leg_thickness_m": 0.63,
+                  "pod_length_m": 3.3600000000000003,
+                  "pod_diameter_m": 1.47
+                },
+                "shaft": null
+              }
+            ],
+            "rudders": [],
+            "bow_thruster": {
+              "x_m": 114.48,
+              "z_m": 1.0,
+              "tunnel_diameter_m": 5.562654725937968,
+              "tunnel_length_m": 29.0,
+              "power_kw": 6314.924,
+              "mass_item": "bow thruster",
+              "mass_centre": {
+                "lcg_m": 114.48,
+                "kcg_m": 1.0
+              }
+            },
+            "warnings": [
+              "The stern holds 3 propulsor places for 2 propulsors; the layout spreads the 2 at 3.20 m."
+            ]
           }
         },
         "arrangement": {
@@ -20709,6 +21195,47 @@
             40
           ]
         },
+        "fit_tried": [
+          {
+            "depth_m": 15.95,
+            "n_wide": 1,
+            "n_long": 2,
+            "tank_od_m": 12.0,
+            "side_clearance_m": 8.5,
+            "wing_tank_width_m": 7.9,
+            "cargo_volume_m3": 7944.791544787065,
+            "cargo_t": 3575.156195154179,
+            "variants": 5,
+            "outcome": "less_cargo",
+            "reasons": []
+          },
+          {
+            "depth_m": 15.95,
+            "n_wide": 2,
+            "n_long": 2,
+            "tank_od_m": 12.0,
+            "side_clearance_m": 2.0,
+            "wing_tank_width_m": 1.4,
+            "cargo_volume_m3": 15889.58308957413,
+            "cargo_t": 7150.312390308358,
+            "variants": 5,
+            "outcome": "chosen",
+            "reasons": []
+          },
+          {
+            "depth_m": 15.95,
+            "n_wide": 3,
+            "n_long": 2,
+            "tank_od_m": 8.650980175654883,
+            "side_clearance_m": 0.5235297365176748,
+            "wing_tank_width_m": 0.0,
+            "cargo_volume_m3": 12163.519555094279,
+            "cargo_t": 5473.583799792425,
+            "variants": 5,
+            "outcome": "less_cargo",
+            "reasons": []
+          }
+        ],
         "cost_masses": {
           "masses": {
             "hull_steel_t": 2103.486,
@@ -22153,6 +22680,11 @@
           "design_speed_kn": 9.7,
           "margin": 1.2,
           "bollard_pull_t": 53.50756749240675,
+          "propeller_diameter_m": 4.2,
+          "shaft_axis_height_m": 2.1,
+          "blade_load_kw_m2": 60.620945455074995,
+          "blade_load_limit_kw_m2": 500.0,
+          "propeller_ducted": true,
           "battery_energy_kwh": null,
           "environments": [
             {
@@ -22819,7 +23351,9 @@
             "ovcd@2.1.0"
           ],
           "service_area": "coastal-and-river",
-          "warnings": [],
+          "warnings": [
+            "Rule Set icll-freeboard@1.0.0 is used as the file stores it; 2.0.0 is also built in with other content"
+          ],
           "rows": [
             {
               "rule": "igc/2.4.1.2/side-clearance",
@@ -23744,7 +24278,7 @@
               "outcome": "not evaluated",
               "governing": false,
               "sizes": false,
-              "gap": "the damage cases were not computed: the laden departure condition has no floating position",
+              "gap": "the damage cases were not computed: the assumed damage of IGC 2.3 is not modelled yet, so survival to IGC 2.7 is not checked",
               "finding": null
             },
             {
@@ -27601,6 +28135,96 @@
               "consequence": "warn",
               "outcome": "not applicable",
               "governing": false,
+              "sizes": false,
+              "gap": null,
+              "finding": null
+            },
+            {
+              "rule": "ovcd/propulsion/propeller-fits-stern",
+              "rule_sets": [
+                "ovcd@2.1.0"
+              ],
+              "title": "The propeller diameter is within the largest the Stern Form allows (D over D_max of 1 or less)",
+              "citation": "",
+              "origin": "method-validity",
+              "rule_status": "unverified",
+              "method_status": "verified",
+              "measure": {
+                "id": "propulsion.diameter_over_max",
+                "args": {}
+              },
+              "object_type": "option",
+              "object": "C deep",
+              "inputs": [],
+              "value": 0.45696877380045703,
+              "unit": "-",
+              "compare": "le",
+              "limit": 1.0,
+              "tolerance": 0.0,
+              "margin": 0.5430312261995429,
+              "consequence": "warn",
+              "outcome": "pass",
+              "governing": true,
+              "sizes": false,
+              "gap": null,
+              "finding": null
+            },
+            {
+              "rule": "ovcd/propulsion/immersion-light",
+              "rule_sets": [
+                "ovcd@2.1.0"
+              ],
+              "title": "The shaft axis is at least 0.76 diameters under the water at the lightest aft draught (0.71 for a ducted propeller): a guide, not a tunnel stern",
+              "citation": "",
+              "origin": "method-validity",
+              "rule_status": "unverified",
+              "method_status": "unverified",
+              "measure": {
+                "id": "propulsion.immersion_over_limit",
+                "args": {}
+              },
+              "object_type": "option",
+              "object": "C deep",
+              "inputs": [],
+              "value": 0.2254275819846496,
+              "unit": "-",
+              "compare": "ge",
+              "limit": 1.0,
+              "tolerance": 0.0,
+              "margin": -0.7745724180153504,
+              "consequence": "warn",
+              "outcome": "warn",
+              "governing": true,
+              "sizes": false,
+              "gap": null,
+              "finding": null
+            },
+            {
+              "rule": "ovcd/propulsion/blade-load",
+              "rule_sets": [
+                "ovcd@2.1.0"
+              ],
+              "title": "The delivered power of one unit at the Installed Power is at most 400 kW per m2 of disc (500 for a ducted propeller)",
+              "citation": "",
+              "origin": "method-validity",
+              "rule_status": "unverified",
+              "method_status": "unverified",
+              "measure": {
+                "id": "propulsion.blade_load_over_limit",
+                "args": {}
+              },
+              "object_type": "option",
+              "object": "C deep",
+              "inputs": [],
+              "value": 0.12124189091014999,
+              "unit": "-",
+              "compare": "le",
+              "limit": 1.0,
+              "tolerance": 0.0,
+              "margin": 0.87875810908985,
+              "consequence": "warn",
+              "outcome": "pass",
+              "governing": true,
               "sizes": false,
               "gap": null,
               "finding": null

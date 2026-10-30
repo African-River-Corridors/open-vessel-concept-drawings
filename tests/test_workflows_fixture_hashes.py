@@ -197,6 +197,24 @@ def test_the_default_run_checks_the_website_examples_too(tmp_path):
     assert "'differs'" in r.stderr
 
 
+def test_the_default_run_checks_the_worked_examples_too(tmp_path):
+    # A stand-in that gives a stale hash only for a design under examples/: the default run must fail.
+    script = tmp_path / "ovcd"
+    script.write_text(textwrap.dedent(f'''\
+        #!{sys.executable}
+        import json, sys
+        status = "differs" if "/examples/" in sys.argv[-1] and "website" not in sys.argv[-1] else "matches"
+        print(json.dumps({{"options": [{{"name": "Option 1", "hash_status": status,
+                                         "results_hash": "ab" * 32, "results": {{"x": 1}}}}]}}))
+    '''))
+    script.chmod(script.stat().st_mode | stat.S_IEXEC)
+    worked = [f for d in chk.worked_examples() for f in d.glob("*.vdesign")]
+    assert worked, "examples/ holds no Design"
+    r = subprocess.run([sys.executable, str(SCRIPT), str(script)], capture_output=True, text=True)
+    assert r.returncode == 1, r.stdout
+    assert all(f.name in r.stderr for f in worked), r.stderr
+
+
 def test_an_empty_examples_folder_fails(tmp_path):
     empty = Path(tempfile.mkdtemp(dir=tmp_path))
     problems = chk.check(fake_ovcd(tmp_path), fixtures(tmp_path, SIX), also=(empty,))
