@@ -677,6 +677,40 @@ mod tests {
     }
 
     #[test]
+    fn an_option_renamed_to_a_wide_name_keeps_its_three_views() {
+        // Issue #660: the Drawings tab of "140 x 29 x 9m LNG" showed a clause 14.6 message.
+        let mut state = AppState::new_design().unwrap();
+        state
+            .rename_option("Option 1", "140 x 29 x 9m LNG")
+            .unwrap();
+        let eval = state.evaluate_json();
+        let outcome = &eval["options"][0]["outcome"];
+        assert!(
+            outcome["views"].get("message").is_none(),
+            "{}",
+            outcome["views"]
+        );
+        for key in ["side", "plan", "midship"] {
+            assert!(
+                outcome["views"][key].as_str().unwrap().contains("<svg"),
+                "{key}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_name_too_wide_for_the_drawings_is_refused_when_it_is_given() {
+        let mut state = AppState::new_design().unwrap();
+        let name = "A very long descriptive Option name that no title block can hold";
+        let err = state.rename_option("Option 1", name).unwrap_err();
+        assert!(
+            err.contains("too wide for the drawing title block"),
+            "{err}"
+        );
+        assert_eq!(state.session().design().options[0].name, "Option 1");
+    }
+
+    #[test]
     fn an_option_with_a_hard_error_gets_no_views() {
         let mut state = AppState::new_design().unwrap();
         state.set_input("Option 1", "beam_m", json!(-1.0)).unwrap();

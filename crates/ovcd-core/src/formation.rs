@@ -6,6 +6,8 @@
 //! resistance of the Equivalent Hull, which holds the pusher: the loop runs until the power moves less
 //! than 1 %, at most five times.
 
+use crate::wheelhouse::{self, Obstruction, Sightline, Waterline};
+use alloc::vec::Vec;
 use libm::pow;
 
 /// The most passes of the sizing loop (spec 0007).
@@ -186,4 +188,67 @@ pub fn size_loop(start_kw: f64, mut power_of: impl FnMut(f64) -> f64) -> Sized {
 /// `barge_kn` is the resistance of one barge, `barges` the number towed, `tug_kn` the tug's.
 pub fn tow_resistance_kn(barge_kn: f64, barges: u64, tug_kn: f64, allowance: f64) -> f64 {
     (barges as f64 * barge_kn + tug_kn) * allowance
+}
+
+/// The forward face of a pusher's wheelhouse stands at this share of the pusher's length from its
+/// stern (an Estimate: the wheelhouse of the reference pushers stands near mid-length, research 10).
+pub const PUSHER_WHEELHOUSE_AT: f64 = 0.5;
+
+/// The barges ahead of a pusher or an ATB tug as obstructions of its sightline (issue #360, spec 0007
+/// "Wheelhouse, sightline and air draft"): `in_line` barges of length `barge_length_m`, the first
+/// one's aft end at `first_aft_x_m` from the tug's stern, each with its top `top_m` above the water
+/// at its forward end. The view is over the cargo top of every barge; the bow of the convoy is the
+/// forward end of the last one.
+pub fn convoy_obstructions(
+    first_aft_x_m: f64,
+    barge_length_m: f64,
+    in_line: u64,
+    top_m: f64,
+) -> Vec<Obstruction> {
+    (1..=in_line)
+        .map(|k| Obstruction {
+            label: "barge",
+            x_m: first_aft_x_m + k as f64 * barge_length_m,
+            top_above_keel_m: top_m,
+        })
+        .collect()
+}
+
+/// The sightline of a pusher or an ATB tug over its convoy, with heights above the water: the water
+/// is level (a convoy's trim is not modelled), so the frame is the convoy's with the water at 0.
+/// Light gives the lift (ES-TRIN 7.02(2): unladen); the Blind Distance laden is that of the same eye.
+pub struct ConvoySight {
+    /// The eye from the tug's stern (m).
+    pub eye_x_m: f64,
+    /// The eye above the water with the wheelhouse lowered (m).
+    pub eye_lowered_m: f64,
+    /// The eye above the wheelhouse floor (m).
+    pub eye_height_m: f64,
+    pub max_lift_m: f64,
+    /// The forward end of the convoy from the tug's stern (m).
+    pub bow_x_m: f64,
+}
+
+/// The lift that keeps the Blind Distance over the light convoy within `limit_m`, and the Blind
+/// Distance laden from the same eye.
+pub fn convoy_sightline(
+    s: &ConvoySight,
+    light: &[Obstruction],
+    laden: &[Obstruction],
+    limit_m: f64,
+) -> (Sightline, f64) {
+    let water = Waterline::even(0.0, s.bow_x_m);
+    let light_s = wheelhouse::assess(
+        s.eye_x_m,
+        s.eye_lowered_m,
+        s.eye_height_m,
+        s.max_lift_m,
+        light,
+        s.bow_x_m,
+        &water,
+        limit_m,
+    );
+    let laden_m =
+        wheelhouse::blind_distance(s.eye_x_m, light_s.eye_raised_m, laden, s.bow_x_m, &water);
+    (light_s, laden_m)
 }

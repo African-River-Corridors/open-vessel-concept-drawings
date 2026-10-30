@@ -9,7 +9,7 @@ mod notice;
 use ovcd_shell::AppState;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
-use tauri::{AppHandle, Manager, State, Window, WindowEvent};
+use tauri::{AppHandle, Emitter, Manager, State, Window, WindowEvent};
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons};
 
 type Shared = Mutex<AppState>;
@@ -203,6 +203,45 @@ async fn open_file(app: AppHandle, window: Window, state: State<'_, Shared>) -> 
     let mut guard = lock(&state)?;
     *guard = opened;
     finish(&window, &guard)
+}
+
+/// Issue #671: load a Design the app was given from outside (Finder, "Open With", `open -a`, or a
+/// path on the command line), then tell the front end. Runs off the main thread, because the
+/// unsaved-changes question blocks. The state changes before the event is sent, so a front end
+/// that is not listening yet still finds the Design in its first snapshot.
+fn open_from_outside(app: AppHandle, path: PathBuf) {
+    std::thread::spawn(move || {
+        let state = app.state::<Shared>();
+        let result = confirm_discard(&app, &state).and_then(|go| {
+            if !go {
+                return Ok(false);
+            }
+            let text = std::fs::read_to_string(&path)
+                .map_err(|e| format!("cannot read {}: {e}", path.display()))?;
+            let opened = AppState::open(&path, &text)?;
+            let mut guard = lock(&state)?;
+            *guard = opened;
+            if let Some(window) = app.get_webview_window("main") {
+                window
+                    .set_title(&guard.title())
+                    .map_err(|e| e.to_string())?;
+            }
+            Ok(true)
+        });
+        let _ = match result {
+            Ok(true) => app.emit("design-opened", ()),
+            Ok(false) => Ok(()),
+            Err(reason) => app.emit("design-open-failed", reason),
+        };
+    });
+}
+
+/// The first `.vdesign` among the paths the app was given, if any.
+fn design_path(paths: impl IntoIterator<Item = PathBuf>) -> Option<PathBuf> {
+    paths.into_iter().find(|p| {
+        p.extension()
+            .is_some_and(|e| e.eq_ignore_ascii_case("vdesign"))
+    })
 }
 
 fn save_to(app: &AppHandle, window: &Window, state: &Shared, ask_for_path: bool) -> Reply {
@@ -422,6 +461,36 @@ pub fn run() {
                 }
             }
         })
-        .run(tauri::generate_context!())
-        .expect("error while running the OVCD app");
+        .setup(|app| {
+            // Windows and Linux hand a file to the app as a command-line argument.
+            if let Some(path) = design_path(std::env::args_os().skip(1).map(PathBuf::from)) {
+                open_from_outside(app.handle().clone(), path);
+            }
+            Ok(())
+        })
+        .build(tauri::generate_context!())
+        .expect("error while building the OVCD app")
+        .run(|_app, _event| {
+            // macOS hands a file to the app as an Apple Event, not an argument.
+            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::Opened { urls } = _event {
+                let paths = urls.into_iter().filter_map(|u| u.to_file_path().ok());
+                if let Some(path) = design_path(paths) {
+                    open_from_outside(_app.clone(), path);
+                }
+            }
+        });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_app_opens_the_first_design_it_is_given_and_ignores_other_files() {
+        let given = ["-psn_0_1", "notes.txt", "a/b.VDESIGN", "c.vdesign"].map(PathBuf::from);
+        assert_eq!(design_path(given), Some(PathBuf::from("a/b.VDESIGN")));
+        assert_eq!(design_path([PathBuf::from("design.json")]), None);
+        assert_eq!(design_path(Vec::<PathBuf>::new()), None);
+    }
 }

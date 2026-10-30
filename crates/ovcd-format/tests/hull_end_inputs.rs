@@ -373,3 +373,29 @@ fn the_ranges_refuse_what_the_engine_cannot_compute() {
         );
     }
 }
+
+#[test]
+fn the_bow_rake_ratio_is_an_estimate_and_its_rake_comes_out_of_the_cargo_zone() {
+    // Issue #661: no published source sets the ratio, so the profile marks it an estimate.
+    let profile = Profile::built_in();
+    assert_eq!(
+        profile
+            .default_status("bow_rake_length_to_depth_ratio")
+            .map(|s| s.0),
+        Some("estimate")
+    );
+    // The rake is part of the bow void, so every metre of rake the ratio adds is a metre less of
+    // cargo zone, and the cargo volume does not grow.
+    let file = "gas_igc_2g_self_propelled";
+    let long = results(file, "bow_rake_length_to_depth_ratio", json!(1.6));
+    let short = results(file, "bow_rake_length_to_depth_ratio", json!(1.0));
+    let depth = long["dims"]["depth_m"].as_f64().unwrap();
+    let less_rake = geo(&long, "bow_rake_length_m") - geo(&short, "bow_rake_length_m");
+    assert!((less_rake - 0.6 * depth).abs() < 1e-9);
+    assert!(
+        (geo(&short, "cargo_zone_length_m") - geo(&long, "cargo_zone_length_m") - less_rake).abs()
+            < 1e-9
+    );
+    let volume = |r: &Value| r["results"]["cargo_volume_m3"].as_f64().unwrap();
+    assert!(volume(&short) >= volume(&long));
+}

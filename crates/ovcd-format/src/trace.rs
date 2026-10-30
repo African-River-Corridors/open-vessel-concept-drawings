@@ -548,6 +548,14 @@ impl MeasureSource for OptionMeasures<'_> {
                     .to_string(),
             );
         }
+        // Issue #663: the damage cases are those of ADN 9.3.x.15.1 and MARPOL Annex I 28.2 only, so a gas
+        // Cargo never has any, whether or not its laden condition floats.
+        if object == ObjectType::DamageCase && gas && self.measured.damage.is_empty() {
+            return Some(
+                "the damage cases were not computed: the assumed damage of IGC 2.3 is not modelled yet, so survival to IGC 2.7 is not checked"
+                    .to_string(),
+            );
+        }
         if (object == ObjectType::DamageCase && self.measured.damage.is_empty())
             || (object == ObjectType::MarpolDamageCase && self.measured.marpol_damage.is_empty())
         {

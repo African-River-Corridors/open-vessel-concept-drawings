@@ -144,7 +144,7 @@
       "unit": "m",
       "hard": { "ge": 0 },
       "soft": { "min": 0.15, "max": 1.5 },
-      "basis": "the safety clearance: the least distance from the plane of maximum draught to the deck at side. For an open hold the Rules add the hatch coaming height, because ES-TRIN 2025/1 Article 4.01 measures to the lowest point that is not watertight. 0.3 m is ES-TRIN 2025/1 Article 4.01(1), at least 300 mm; the rules of the Service Area check the value (es-trin-2025 for a river, icll-freeboard for a coast, in the default stacks). It is not an ICLL freeboard: for a long coastal hull the ICLL type A table value is far larger (984 mm at 90 m). It must also be less than the moulded depth (hard)"
+      "basis": "the safety clearance: the least distance from the plane of maximum draught to the deck at side. For an open hold the Rules add the hatch coaming height, because ES-TRIN 2025/1 Article 4.01 measures to the lowest point that is not watertight. 0.3 m is ES-TRIN 2025/1 Article 4.01(1), at least 300 mm; es-trin-2025 checks the value (in both default stacks). It is not an ICLL freeboard: on a coast, icll-freeboard 2.0.0 checks the freeboard at the laden draught against the ICLL type A table, which for a long hull is far larger (984 mm at 90 m), so a hull that loads down to this clearance fails there (issue #659). It must also be less than the moulded depth (hard)"
     },
     "hold_covering": {
       "default": "covered",
@@ -156,7 +156,8 @@
       "unit": "-",
       "hard": { "ge": 0, "le": 10 },
       "soft": { "min": 1.0, "max": 2.5 },
-      "basis": "carried over from the original engine: the horizontal length of the bow rake as a multiple of the moulded depth. The bow void is this rake plus the forward separation or end bulkhead space"
+      "status": "estimate",
+      "basis": "carried over from the original engine: the horizontal length of the bow rake as a multiple of the moulded depth. The bow void is this rake plus the forward separation or end bulkhead space. No published source was found for the ratio, for any Service Area (issue #661). It scales with the depth, so on a deep hull whose depth is set by its tanks the rake takes a large share of the length: type bow_rake_length_m when the bow is known"
     },
     "pushed_stern_void_m": {
       "default": 3.0,

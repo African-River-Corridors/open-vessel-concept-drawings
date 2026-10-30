@@ -94,6 +94,10 @@ fn a_sloped_hopper_hold_runs_as_the_sloped_hopper_barge() {
     // And the pusher of the Formation (issue #359): `simulate` gives the barge alone, and the notes
     // of the pusher are not in its `text_ids`.
     without_cost.as_object_mut().unwrap().remove("formation");
+    // And the tug's GA block (issue #360), which comes with the pusher.
+    if let Some(d) = without_cost["drawing"].as_object_mut() {
+        d.remove("tug");
+    }
     if let Some(ids) = without_cost["text_ids"].as_object_mut() {
         ids.retain(|_, v| {
             !v["id"]

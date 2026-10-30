@@ -129,3 +129,25 @@ export function hatchPattern(ctx: CanvasRenderingContext2D, colour: string, k: n
 
 /** `font` strings for uPlot and the canvas. */
 export const uiFont = (tokens: ChartTokens, px: number, weight = 400) => `${weight} ${px}px ${tokens.fontUi || "sans-serif"}`;
+
+/**
+ * Where to write the names at the ends of the curves (issue #667). `ys` are the baselines each name
+ * wants, in canvas pixels (y down). Each name placed is at least `step` from every other and inside
+ * `[top, bottom]`, as near its own baseline as that allows, and the names keep their order down the
+ * chart. When the plot is too short for all of them, the names first in `ys` are kept and the others
+ * are null: the legend above the chart names every curve.
+ */
+export function placeLabels(ys: number[], top: number, bottom: number, step: number): (number | null)[] {
+  const room = bottom >= top ? Math.floor((bottom - top) / step) + 1 : 0;
+  const kept = ys.map((_, i) => i).slice(0, room);
+  const order = [...kept].sort((a, b) => ys[a] - ys[b] || a - b);
+  const at = order.map((i) => Math.min(Math.max(ys[i], top), bottom));
+  // Down the chart: each name at least one step below the one above it.
+  for (let j = 1; j < at.length; j++) at[j] = Math.max(at[j], at[j - 1] + step);
+  // Then up from the bottom edge, so that the lowest stays inside; the room count keeps the top inside.
+  if (at.length > 0) at[at.length - 1] = Math.min(at[at.length - 1], bottom);
+  for (let j = at.length - 2; j >= 0; j--) at[j] = Math.min(at[j], at[j + 1] - step);
+  const out: (number | null)[] = ys.map(() => null);
+  order.forEach((i, j) => (out[i] = at[j]));
+  return out;
+}

@@ -217,7 +217,7 @@ fn an_open_hold_river_design_is_measured_to_the_coaming_top() {
     ] {
         assert_eq!(outcomes(&new, id), ["pass"], "{id}");
     }
-    assert!(outcomes(&new, "icll/28(1)/type-a-tabular-freeboard").is_empty());
+    assert!(outcomes(&new, "icll/28(1)/type-a-tabular-freeboard-laden").is_empty());
 }
 
 #[test]
@@ -243,8 +243,10 @@ fn a_coastal_option_is_checked_against_the_icll_table_and_shows_the_value() {
             .cloned()
             .unwrap_or_else(|| panic!("{id}"))
     };
-    let blocked = "icll/28(1)/type-a-tabular-freeboard";
-    let barge = "icll/28(1)/type-a-tabular-freeboard-barge";
+    // icll-freeboard 2.0.0 (issue #659): the Rules read the freeboard at the laden draught. This
+    // dry-bulk hull is draught-bound, so it loads down to `min_freeboard_m` and the verdicts stay.
+    let blocked = "icll/28(1)/type-a-tabular-freeboard-laden";
+    let barge = "icll/28(1)/type-a-tabular-freeboard-laden-barge";
     let sp = |fb| coastal(fb, "self_propelled");
     let low = sp(0.3);
     let row = row_of(&low, blocked);
@@ -255,12 +257,23 @@ fn a_coastal_option_is_checked_against_the_icll_table_and_shows_the_value() {
         "{row}"
     );
     assert!(outcomes(&low, barge).is_empty());
-    assert_eq!(outcomes(&sp(0.8), blocked), ["pass"]);
-    assert_eq!(outcomes(&sp(0.792), blocked), ["fail"]);
-    assert_eq!(outcomes(&sp(0.793), blocked), ["pass"]);
+    // The value is the freeboard the result has, which can be a little less than the typed
+    // clearance (the laden draught can sit below the draught cap); the verdict follows it.
+    for fb in [0.792, 0.8, 0.85, 1.0] {
+        let r = sp(fb);
+        let freeboard = r["results"]["freeboard_m"].as_f64().unwrap();
+        let row = row_of(&r, blocked);
+        assert!(
+            (row["value"].as_f64().unwrap() - freeboard).abs() < 1e-9,
+            "{row}"
+        );
+        let want = if freeboard >= 0.793 { "pass" } else { "fail" };
+        assert_eq!(row["outcome"], want, "{fb}: {row}");
+    }
+    assert_eq!(outcomes(&sp(1.0), blocked), ["pass"]);
     let sets = low["rule_trace"]["rule_sets"].to_string();
     assert!(
-        sets.contains("icll-freeboard@1.0.0") && sets.contains("es-trin-2025@1.0.0"),
+        sets.contains("icll-freeboard@2.0.0") && sets.contains("es-trin-2025@1.0.0"),
         "{sets}"
     );
     // A pushed barge: the same value, as a warning.
@@ -268,5 +281,5 @@ fn a_coastal_option_is_checked_against_the_icll_table_and_shows_the_value() {
     let row = row_of(&pushed, barge);
     assert_eq!(row["outcome"], "warn");
     assert!(outcomes(&pushed, blocked).is_empty());
-    assert_eq!(outcomes(&coastal(0.8, "pushed_barge"), barge), ["pass"]);
+    assert_eq!(outcomes(&coastal(1.0, "pushed_barge"), barge), ["pass"]);
 }

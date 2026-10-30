@@ -332,6 +332,15 @@ pub static MEASURES: &[MeasureDef] = &[
         method_status: MethodStatus::Unverified,
     },
     MeasureDef {
+        id: "freeboard.laden",
+        unit: "m",
+        object: ObjectType::Option,
+        value: ValueKind::Number,
+        args: &[],
+        method: "The Freeboard at the laden Draught: the Moulded Depth less the Draught of the laden result, amidships and level, the deck plating not added (ICLL regulation 3(8) measures the freeboard assigned from the deck line down to the load line)",
+        method_status: MethodStatus::Unverified,
+    },
+    MeasureDef {
         id: "propulsion.redundancy_28_04",
         unit: "-",
         object: ObjectType::Option,

@@ -152,7 +152,7 @@ pub(crate) fn drawing_values(r: &BargeCapacityResult) -> Vec<(&'static str, Valu
 /// The first list is by the ADN extents of the vessel type of the Cargo (9.3.2.15.1 for type C, 9.3.3.15.1 for
 /// type N); it is empty when the Cargo has no ADN type. The second is by the extents of MARPOL Annex I
 /// regulation 28.2, worked out only when `marpol` is true (the Rule Set is in the stack). Both are empty when the
-/// departure condition has no floating position.
+/// departure condition has no floating position. A gas Cargo has neither list (IGC 2.3 damage is not modelled).
 pub(crate) fn damage_verdicts(
     hull: &ovcd_core::hydrostatics::Hull,
     liquid: &LiquidBulkResult,

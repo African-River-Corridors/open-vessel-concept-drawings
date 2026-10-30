@@ -34,6 +34,13 @@ macro_rules! label {
     };
 }
 
+mod arrangement;
+
+mod tug;
+
+pub use arrangement::{NO_ARRANGEMENT_PLAN, arrangement_plan_for, arrangement_plan_named};
+pub use tug::{NO_TUG_GA, tug_ga_for, tug_ga_named};
+
 /// The three views of one Option, as drawing documents.
 #[derive(Debug, Clone, PartialEq)]
 pub struct GaViews {
@@ -2706,39 +2713,102 @@ fn fits(window: [f64; 4], n: u32, strip: f64) -> bool {
     (window[2] - window[0]) * k <= fw + 1e-9 && (window[3] - window[1]) * k <= fh + 1e-9
 }
 
-/// The given fields of the title block (clause 14.4.1): the view, the Option and the sheet number
-/// of three. The scale, the status and the sheet size are derived by the standard.
-fn title_fields(h: &Hull, title: &str, sheet: u32) -> Value {
-    let name = h
-        .option_name
-        .as_deref()
-        .map(plain_capitals)
-        .unwrap_or_default();
-    let name = if name.is_empty() {
+/// The width of the supplementary title of the title block, less its padding (iso7200: 110 mm, 1 mm
+/// each side), and the height of its text.
+const SUPPLEMENTARY_MM: f64 = 108.0;
+const SUPPLEMENTARY_TEXT_MM: f64 = 3.5;
+/// The same for the document number (iso7200: 70 mm at 5 mm).
+const NUMBER_MM: f64 = 68.0;
+const NUMBER_TEXT_MM: f64 = 5.0;
+
+fn fits_mm(text: &str, height: f64, width: f64) -> bool {
+    ovcd_draw::rules::text_width(text, height).is_some_and(|w| w <= width)
+}
+
+/// The Option name as the title block shows it: plain capitals, or "OPTION" for none.
+fn shown_name(option: Option<&str>) -> String {
+    let name = option.map(plain_capitals).unwrap_or_default();
+    if name.is_empty() {
         "OPTION".to_string()
     } else {
         name
-    };
+    }
+}
+
+/// Can the drawings name this Option? Its name, in the capitals of the title block, must fit the
+/// supplementary title on one line (clause 14.6: a text is never cut, shortened or made smaller to
+/// fit). If not, the message names the field and how much of this name fits (issue #660).
+pub fn option_name_fits(name: &str) -> Result<(), String> {
+    let shown = shown_name(Some(name));
+    if fits_mm(&shown, SUPPLEMENTARY_TEXT_MM, SUPPLEMENTARY_MM) {
+        return Ok(());
+    }
+    let fit = (1..=name.chars().count())
+        .take_while(|&n| {
+            let part: String = name.chars().take(n).collect();
+            fits_mm(
+                &shown_name(Some(&part)),
+                SUPPLEMENTARY_TEXT_MM,
+                SUPPLEMENTARY_MM,
+            )
+        })
+        .last()
+        .unwrap_or(0);
+    Err(format!(
+        "The Option name '{name}' is too wide for the drawing title block, so the drawings cannot show it. Use a shorter name: the first {fit} characters of this one fit."
+    ))
+}
+
+/// The document number of a sheet (spec 0003): `<OPTION>-<KIND>-<n>`. When that is too wide for its
+/// cell, the Option part is a short id of the name, `OPTION-<6 hex digits of its SHA-256>`, the
+/// same on every run; the full name stays in the supplementary title (issue #660).
+fn document_number(name: &str, kind: &str, sheet: u32) -> String {
     let slug: String = name
         .chars()
         .map(|c| if c.is_ascii_alphanumeric() { c } else { '-' })
         .collect();
+    let number = format!("{slug}-{kind}-{sheet}");
+    if fits_mm(&number, NUMBER_TEXT_MM, NUMBER_MM) {
+        return number;
+    }
+    use sha2::{Digest, Sha256};
+    let id: String = Sha256::digest(name.as_bytes())[..3]
+        .iter()
+        .map(|b| format!("{b:02X}"))
+        .collect();
+    format!("OPTION-{id}-{kind}-{sheet}")
+}
+
+/// The given fields of the title block (clause 14.4.1): the view, the Option and the sheet number
+/// of three, with `kind` the document type in the number. The scale, the status and the sheet size
+/// are derived by the standard. `what` follows the name in the supplementary title when both fit.
+fn title_fields(
+    h: &Hull,
+    title: &str,
+    kind: &str,
+    sheet: u32,
+    what: &str,
+) -> Result<Value, String> {
+    if let Some(name) = h.option_name.as_deref() {
+        option_name_fits(name)?;
+    }
+    let name = shown_name(h.option_name.as_deref());
     let mut fields = json!({
         "owner": label!("draw-owner", "OPEN VESSEL CONCEPT DESIGN"),
         "title": title,
-        "document_number": format!("{slug}-GA-{sheet}"),
+        "document_number": document_number(&name, kind, sheet),
         "document_type": "GA",
         "sheet_number": sheet,
         "sheet_count": 3,
     });
     // 110 mm wide at 3.5 mm: about 40 capitals fit.
-    let supplementary = format!("{name}; {}", plain_capitals(&h.vessel));
-    if ovcd_draw::rules::text_width(&supplementary, 3.5).is_some_and(|w| w <= 108.0) {
+    let supplementary = format!("{name}; {what}");
+    if fits_mm(&supplementary, SUPPLEMENTARY_TEXT_MM, SUPPLEMENTARY_MM) {
         fields["supplementary_title"] = json!(supplementary);
     } else {
         fields["supplementary_title"] = json!(name);
     }
-    fields
+    Ok(fields)
 }
 
 /// The note that names the Rule Sets the Option was checked against, when it fits its line.
@@ -2796,9 +2866,25 @@ fn document(
         "FOR CONCEPT AND PRELIMINARY DESIGN ONLY, NOT FOR APPROVAL."
     ));
     notes.extend(failed_notes(&h.failed_checks));
+    place(
+        notes,
+        title_fields(h, title, "GA", sheet, &plain_capitals(&h.vessel))?,
+        from,
+        &|n| build(h, n),
+    )
+}
+
+/// Lay one canvas out on an A3 sheet with its notes and title block fields, at the largest scale at
+/// which it fits, no larger than 1:`from`. Gives the document and the ratio it was drawn at.
+fn place(
+    notes: Vec<String>,
+    fields: Value,
+    from: u32,
+    build: &dyn Fn(u32) -> Canvas,
+) -> Result<(Value, u32), String> {
     let strip = strip_mm(notes.len());
     for n in RATIOS.into_iter().filter(|n| *n >= from) {
-        let canvas = build(h, n);
+        let canvas = build(n);
         let window = window_of(&canvas);
         if !fits(window, n, strip) {
             continue;
@@ -2826,7 +2912,7 @@ fn document(
                 "sheet": {"size": "A3", "orientation": "landscape"},
                 "layers": layers,
                 "status": "concept",
-                "title_block": {"template": "iso7200", "fields": title_fields(h, title, sheet)},
+                "title_block": {"template": "iso7200", "fields": fields},
                 "strips": [{"id": "notes", "edge": "bottom", "size_mm": strip, "content": "notes"}],
                 "notes": notes,
                 "viewports": [{

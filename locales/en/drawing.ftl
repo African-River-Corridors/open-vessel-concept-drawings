@@ -4,6 +4,40 @@
 # `text!` call and run the tool again. A number argument arrives as text, already rounded.
 
 
+## crates/ovcd-format/src/ga/arrangement.rs
+
+draw-coupling-points = COUPLING POINTS ({ $count })
+draw-overall-length = OVERALL LENGTH { $length }
+draw-overall-beam = OVERALL BEAM { $beam }
+draw-wheelhouse-raised = RAISED
+draw-sightline-light = SIGHTLINE, LIGHT
+draw-light-waterline = LIGHT WATERLINE
+draw-view-arrangement-plan = ARRANGEMENT PLAN
+draw-note-arrangement = { $view }. DIMENSIONS IN METRES. PROFILE IN THE LIGHT CONDITION.
+draw-note-barges = { $abreast } ABREAST BY { $in_line } IN LINE.
+draw-note-blind-distance = BLIND DISTANCE AHEAD OF THE BOW: LIGHT { $light } M, LADEN { $laden } M, LIMIT { $limit } M.
+draw-note-scope = FOR CONCEPT AND PRELIMINARY DESIGN ONLY, NOT FOR APPROVAL.
+
+## crates/ovcd-format/src/ga/tug.rs
+
+draw-tug-atb = ATB TUG
+draw-tug-towing = TOWING TUG
+draw-tug-pusher = PUSHER
+draw-wl = WL
+draw-push-knees = PUSH KNEES
+draw-propeller = PROPELLER
+draw-rudder = RUDDER
+draw-flanking-rudders = FLANKING RUDDERS
+draw-wheelhouse = WHEELHOUSE
+draw-loa = LOA { $length }
+draw-draught = DRAUGHT { $draught }
+draw-engines = ENGINES ({ $count })
+draw-beam = BEAM { $beam }
+draw-view-tug-ga = { $tug } GA
+draw-note-dimensions = { $view }. DIMENSIONS IN METRES.
+draw-note-tug = { $tug } { $length } X { $beam } X { $draught } M; { $count } X { $propulsor }, DIAMETER { $diameter } M.
+draw-note-tug-positions = PROPELLERS, RUDDERS AND PUSH KNEES ARE DRAWN TO SHOW THE ARRANGEMENT, NOT CALCULATED.
+
 ## crates/ovcd-format/src/ga.rs
 
 draw-double-bottom = DOUBLE BOTTOM
@@ -22,20 +56,15 @@ draw-cargo-tank-pair = CARGO TANKS (P AND S)
 draw-cargo-tank = CARGO TANK
 draw-centreline-bulkhead = CENTRELINE BULKHEAD
 draw-cargo-heating = CARGO HEATING FITTED
-draw-wheelhouse-raised = RAISED
 draw-thrusters = THRUSTERS ({ $count })
 draw-wheelhouse-block-top = WHEELHOUSE, BLOCK TOP { $height }
 draw-containers-block-top = CONTAINERS ({ $abreast } x { $rows }), BLOCK TOP { $height }
-draw-wheelhouse = WHEELHOUSE
 draw-containers = CONTAINERS ({ $abreast } x { $rows })
 draw-air-draft = AIR DRAFT { $draught }
-draw-loa = LOA { $length }
 draw-depth = DEPTH { $depth }
 draw-freeboard = FREEBOARD { $freeboard }
-draw-draught = DRAUGHT { $draught }
 draw-light-draught = LIGHT DRAUGHT { $draught }
 draw-ballast-draught = BALLAST DRAUGHT { $draught }
-draw-beam = BEAM { $beam }
 draw-void-both-sides = VOID (BOTH SIDES)
 draw-cradle = CRADLE
 draw-inner-bottom = INNER BOTTOM { $height }
@@ -51,9 +80,6 @@ draw-fails-count = DESIGN FAILS { $count } CHECKS
 draw-owner = OPEN VESSEL CONCEPT DESIGN
 draw-note-rule-sets = RULE SETS: { $sets }.
 draw-note-rule-sets-count = { $count } RULE SETS.
-draw-note-dimensions = { $view }. DIMENSIONS IN METRES.
-draw-note-blind-distance = BLIND DISTANCE AHEAD OF THE BOW: LIGHT { $light } M, LADEN { $laden } M, LIMIT { $limit } M.
-draw-note-scope = FOR CONCEPT AND PRELIMINARY DESIGN ONLY, NOT FOR APPROVAL.
 draw-view-side-elevation = SIDE ELEVATION
 draw-view-plan = PLAN
 draw-view-midship-section = TYPICAL SECTION

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "node scripts/contrast.mjs && npm run test:unit && svelte-check --tsconfig ./tsconfig.json && vite build",
-    "test:unit": "node --test scripts/theme.test.mjs scripts/contrast.test.mjs scripts/chartTheme.test.mjs scripts/model3d.test.mjs",
+    "test:unit": "node --test scripts/theme.test.mjs scripts/contrast.test.mjs scripts/chartTheme.test.mjs scripts/model3d.test.mjs scripts/loadBasis.test.mjs",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "build:web": "svelte-check --tsconfig ./tsconfig.json && vite build --config vite.web.config.ts",
     "tauri": "tauri",

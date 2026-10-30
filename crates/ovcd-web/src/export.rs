@@ -124,6 +124,22 @@ mod tests {
     }
 
     #[test]
+    fn a_wide_option_name_exports_every_view() {
+        // Issue #660: the export of "140 x 29 x 9m LNG" broke clause 14.6.
+        let mut state = open("gas_igc_2g_self_propelled.vdesign");
+        let name = "140 x 29 x 9m LNG";
+        state.rename_option(&first_option(&state), name).unwrap();
+        for view in ["side", "plan", "midship"] {
+            assert!(svg(&state, name, view).unwrap().contains("<svg"), "{view}");
+            assert!(
+                pdf(&state, name, view).unwrap().starts_with(b"%PDF-"),
+                "{view}"
+            );
+            assert!(!dxf(&state, name, view).unwrap().is_empty(), "{view}");
+        }
+    }
+
+    #[test]
     fn a_convoy_gives_the_no_drawings_message() {
         let state = open("pushed_convoy.vdesign");
         let err = svg(&state, &first_option(&state), "side").unwrap_err();

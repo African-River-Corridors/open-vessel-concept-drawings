@@ -312,6 +312,10 @@ app-metric-light-draught = Calado leve
 # status: draft
 app-metric-freeboard = Borda livre
 # status: draft
+app-load-basis-note = O calado e a borda livre são da carga completa: a carga e { $consumables } t de provisões e combustível. As verificações de borda livre usam só a carga, por isso o calado delas é um pouco menor.
+# status: draft
+app-check-basis-cargo-only = só a carga, sem provisões nem combustível
+# status: draft
 app-metric-air-draft-loaded = Calado aéreo, carregado
 # status: draft
 app-metric-air-draft-light = Calado aéreo, leve

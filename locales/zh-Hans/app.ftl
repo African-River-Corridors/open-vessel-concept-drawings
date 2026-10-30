@@ -312,6 +312,10 @@ app-metric-light-draught = 空载吃水
 # status: draft
 app-metric-freeboard = 干舷
 # status: draft
+app-load-basis-note = 吃水和干舷按满载计算：货物加 { $consumables } t 物料和燃油。干舷校核只计货物，因此其吃水略小。
+# status: draft
+app-check-basis-cargo-only = 仅货物，不含物料和燃油
+# status: draft
 app-metric-air-draft-loaded = 水上高度，满载
 # status: draft
 app-metric-air-draft-light = 水上高度，空载

@@ -32,6 +32,20 @@
     "shortDescription": "Concept design of inland-waterway vessels",
     "windows": { "nsis": { "installMode": "currentUser" } },
     "macOS": { "signingIdentity": "-" },
-    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/icon.icns", "icons/icon.ico"]
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/icon.icns", "icons/icon.ico"],
+    "fileAssociations": [
+      {
+        "ext": ["vdesign"],
+        "name": "OVCD Design",
+        "description": "OVCD Design",
+        "role": "Editor",
+        "rank": "Owner",
+        "mimeType": "application/json",
+        "exportedType": {
+          "identifier": "org.africanrivercorridors.ovcd.vdesign",
+          "conformsTo": ["public.json"]
+        }
+      }
+    ]
   }
 }

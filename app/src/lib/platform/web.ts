@@ -153,6 +153,7 @@ export async function createWebPlatform(): Promise<Platform> {
       const text = await file.text();
       return change(() => session.open_text(file.name, text));
     },
+    onOpenedFromOutside: async () => {},
     save: async () => saveNamed(fileNameOf(await currentSnapshot())),
     saveAs: async () => {
       const name = window.prompt(t("app-file-name"), fileNameOf(await currentSnapshot()));

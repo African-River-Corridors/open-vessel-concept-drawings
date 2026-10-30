@@ -61,6 +61,12 @@ export interface Platform {
   /** Each of these returns null when the user cancels a dialog. */
   newFile(): Promise<Snapshot | null>;
   openFile(): Promise<Snapshot | null>;
+  /**
+   * Issue #671: call `opened` when the app is given a Design from outside (Finder, "Open With",
+   * the command line) and has loaded it, or `failed` with the reason when it could not. The web
+   * build is never given a file this way.
+   */
+  onOpenedFromOutside(opened: () => void, failed: (reason: string) => void): Promise<void>;
   save(): Promise<Snapshot | null>;
   saveAs(): Promise<Snapshot | null>;
   setInput(option: string, name: string, value: unknown): Promise<Snapshot>;

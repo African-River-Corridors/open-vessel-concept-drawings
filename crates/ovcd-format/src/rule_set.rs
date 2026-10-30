@@ -48,6 +48,10 @@ const BUILT_IN: &[(&str, &str)] = &[
         include_str!("../rules/icll-freeboard/1.0.0.json"),
     ),
     (
+        "rules/icll-freeboard/2.0.0.json",
+        include_str!("../rules/icll-freeboard/2.0.0.json"),
+    ),
+    (
         "rules/rheinschpv/1.0.0.json",
         include_str!("../rules/rheinschpv/1.0.0.json"),
     ),
