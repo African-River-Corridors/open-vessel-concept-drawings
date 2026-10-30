@@ -286,6 +286,8 @@ app-make-active = Tornar esta a Opção ativa
 # status: draft
 app-status = Situação
 # status: draft
+app-results-hash = Hash dos resultados
+# status: draft
 app-class-reference-dwt = Porte bruto de referência da classe ({ $class })
 # status: draft
 app-class-reference-dwt-title = O valor publicado da classe, para comparação. Nunca é uma entrada.

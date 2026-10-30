@@ -286,6 +286,8 @@ app-make-active = Hacer de esta la opción activa
 # status: draft
 app-status = Estado
 # status: draft
+app-results-hash = Hash de los resultados
+# status: draft
 app-class-reference-dwt = Peso muerto de referencia de la clase ({ $class })
 # status: draft
 app-class-reference-dwt-title = La cifra publicada de la clase, para comparar. Nunca es una entrada.

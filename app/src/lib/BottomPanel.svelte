@@ -20,6 +20,8 @@
     name: string;
     stale: boolean;
     results: Record<string, unknown> | null;
+    /** The results hash of the results shown (issue #666), or null with none. */
+    hash: string | null;
     message: string | null;
     errors: string[];
   };
@@ -28,7 +30,7 @@
   function column(o: OptionEvaluation): Column {
     const errors = o.messages.filter((m) => m.severity === "error").map((m) => say(m.text, null, m.msg));
     if (o.outcome.status === "results") {
-      return { name: o.name, stale: false, results: o.outcome.results, message: null, errors };
+      return { name: o.name, stale: false, results: o.outcome.results, hash: o.outcome.results_hash, message: null, errors };
     }
     if (o.outcome.status === "not_run") {
       const prior = lastGood[o.name]?.outcome;
@@ -36,11 +38,12 @@
         name: o.name,
         stale: true,
         results: prior?.status === "results" ? prior.results : null,
+        hash: prior?.status === "results" ? prior.results_hash : null,
         message: null,
         errors,
       };
     }
-    return { name: o.name, stale: false, results: null, message: say(o.outcome.message, null, o.outcome.msg), errors };
+    return { name: o.name, stale: false, results: null, hash: null, message: say(o.outcome.message, null, o.outcome.msg), errors };
   }
 
   let columns = $derived((evaluation?.options ?? []).map(column));
@@ -175,6 +178,14 @@
                 {/each}
               </tr>
             {/each}
+            <!-- The results hash (issue #666): its first 12 characters, the full value on hover, so a
+                 Design entered here can be checked against `ovcd run --json` of a published example. -->
+            <tr data-testid="compare-hash">
+              <th>{t("app-results-hash")}</th>
+              {#each columns as c (c.name)}
+                <td class="num text hash" class:active={c.name === active} class:old={c.stale} title={c.hash ?? ""}>{c.hash ? c.hash.slice(0, 12) : "–"}</td>
+              {/each}
+            </tr>
             {#if columns.some((c) => c.message)}
               <tr>
                 <th>{t("app-status")}</th>
@@ -216,6 +227,7 @@
   [data-testid="outputs"] th { padding-left: var(--sp-1); }
   thead th { color: var(--ink); text-align: right; background: var(--surface-2); border-bottom: var(--lw-thick) solid var(--ink); padding: var(--sp-1) var(--sp-2); font-weight: 600; }
   tbody tr { border-bottom: var(--lw-thin) solid var(--rule); }
+  .hash { font-family: var(--font-mono); }
   th.active, td.active { background: var(--accent-soft); }
   td.differs { background: var(--warn-soft); color: var(--ink); font-weight: 700; }
   .col { background: none; border: none; font: inherit; font-weight: 600; cursor: pointer; color: var(--accent); padding: 0; text-decoration: underline; }

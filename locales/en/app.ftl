@@ -165,6 +165,7 @@ app-warnings = Warnings
 app-compare = Compare
 app-make-active = Make this the active Option
 app-status = Status
+app-results-hash = Results hash
 app-class-reference-dwt = Class reference deadweight ({ $class })
 app-class-reference-dwt-title = The class's published figure, for comparison. It is never an input.
 app-not-applicable = not applicable
