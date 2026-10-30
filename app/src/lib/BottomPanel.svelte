@@ -74,6 +74,26 @@
     fail: { mark: "✕", label: "app-fail" },
   };
   let warnings = $derived((valueAt(current?.results, ["warnings"]) as string[] | undefined) ?? []);
+  // Issue #675: the gas tank arrangements the search tried, and why each lost.
+  type Tried = {
+    depth_m: number;
+    n_wide: number;
+    n_long: number;
+    tank_od_m: number;
+    side_clearance_m: number;
+    wing_tank_width_m: number;
+    cargo_volume_m3: number;
+    outcome: "chosen" | "less_cargo" | "fails" | "not_built";
+    reasons: { name: string; message: string }[];
+  };
+  const OUTCOMES: Record<Tried["outcome"], string> = {
+    chosen: "app-tried-chosen",
+    less_cargo: "app-tried-less-cargo",
+    fails: "app-tried-fails",
+    not_built: "app-tried-not-built",
+  };
+  let tried = $derived((valueAt(current?.results, ["fit_tried"]) as Tried[] | undefined) ?? []);
+  let triedDepths = $derived(new Set(tried.map((a) => a.depth_m)).size > 1);
   let ids = $derived(textIds(current?.results));
   let softWarnings = $derived((activeEval?.messages ?? []).filter((m) => m.severity === "warning"));
   // Issue #668: the full load of the Outputs carries consumables, the freeboard checks do not.
@@ -143,6 +163,38 @@
             </li>
           {/each}
         </ul>
+        {#if tried.length > 0}
+          <h2>{t("app-tried")}</h2>
+          <table class="tried" data-testid="fit-tried">
+            <thead>
+              <tr>
+                {#if triedDepths}<th>{t("app-tried-depth")}</th>{/if}
+                <th>{t("app-tried-arrangement")}</th>
+                <th class="num">{t("app-tried-tank-od")}</th>
+                <th class="num">{t("app-tried-side-space")}</th>
+                <th class="num">{t("app-tried-wing-tank")}</th>
+                <th class="num">{t("app-tried-cargo-volume")}</th>
+                <th class="outcome">{t("app-tried-outcome")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {#each tried as a}
+                <tr class={a.outcome} data-testid="fit-tried-row" data-outcome={a.outcome}>
+                  {#if triedDepths}<td class="num">{num(a.depth_m, 2)}</td>{/if}
+                  <td>{a.n_wide} × {a.n_long}</td>
+                  <td class="num">{a.outcome === "not_built" ? "–" : num(a.tank_od_m, 2)}</td>
+                  <td class="num">{a.outcome === "not_built" ? "–" : num(a.side_clearance_m, 2)}</td>
+                  <td class="num">{a.outcome === "not_built" ? "–" : num(a.wing_tank_width_m, 2)}</td>
+                  <td class="num">{a.outcome === "not_built" ? "–" : num(a.cargo_volume_m3, 0)}</td>
+                  <td class="outcome" title={a.outcome === "less_cargo" ? t("app-tried-less-cargo-title") : undefined}>{t(OUTCOMES[a.outcome])}</td>
+                </tr>
+                {#each a.reasons as r}
+                  <tr class="reason {a.outcome}"><td colspan={triedDepths ? 7 : 6}>{say(r.message, ids)}</td></tr>
+                {/each}
+              {/each}
+            </tbody>
+          </table>
+        {/if}
         {#if warnings.length > 0 || softWarnings.length > 0}
           <h2>{t("app-warnings")}</h2>
           <ul class="warnings" data-testid="warnings">
@@ -243,6 +295,13 @@
   .fail { color: var(--fail); }
   .warn .tag { background: var(--warn-soft); color: var(--warn); }
   .msg { color: var(--ink-3); margin-left: var(--sp-1); }
+  .tried { width: 100%; margin-bottom: var(--sp-3); font-size: var(--fs-12); }
+  .tried th { font-weight: 600; white-space: normal; }
+  .tried td.outcome, .tried th.outcome { white-space: nowrap; }
+  .tried tr.chosen td { color: var(--pass); font-weight: 600; }
+  .tried tr.fails td.outcome, .tried tr.not_built td.outcome { color: var(--fail); }
+  .tried tr.reason td { color: var(--fail); white-space: normal; padding-left: var(--sp-3); }
+  .tried tr:has(+ tr.reason) { border-bottom: none; }
   .fail .msg { color: var(--fail); }
   .basis { color: var(--ink-3); }
   /* The note wraps to the table's width; it never widens the Outputs column. */

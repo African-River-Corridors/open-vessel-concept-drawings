@@ -161,6 +161,8 @@ input-tank-insulation-thickness-mm-default-by = Cargo, LPG carriage condition
 input-tank-structure-factor = Tank structure factor
 input-tank-structure-factor-default-by = Cargo, LPG carriage condition
 
+input-tanks-across = Tanks across (override)
+
 input-tanks-in-line = Tanks in line
 
 input-tank-support-height-m = Tank support height
@@ -174,6 +176,8 @@ input-tank-dome-diameter-m-default-by = Cargo, LPG carriage condition
 input-wing-tank-gap-m = Wing tank gap
 
 input-wing-tank-height-ratio = Wing tank height over tank diameter
+
+input-min-side-space-m = Minimum side space
 
 input-weather-shield-thickness-mm = Weather shield plate thickness
 

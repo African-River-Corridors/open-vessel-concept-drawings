@@ -54,7 +54,7 @@ START, END = "<!-- design-impact:start -->", "<!-- design-impact:end -->"
 # Top-level results keys that are not results (drawing geometry, what a view marks). The results hash
 # leaves them out too: UNHASHED_KEYS in crates/ovcd-format/src/run.rs. tests/test_design_impact_unhashed_keys.py
 # checks that the two lists agree.
-UNHASHED_KEYS = ("drawing", "stability_marks", "cost_masses", "cost", "text_ids", "rule_trace", "calibration", "damage", "marpol_damage", "oil_outflow")
+UNHASHED_KEYS = ("drawing", "stability_marks", "cost_masses", "cost", "text_ids", "rule_trace", "calibration", "damage", "marpol_damage", "oil_outflow", "fit_tried")
 
 LABEL = "design-change"
 MAX_ROWS = 40
@@ -153,6 +153,11 @@ OPTIONAL_INPUT_CASES = (
      {"wing_tank_gap_m": 0.6}),
     ("wing_tank_height_ratio", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"wing_tank_height_ratio": 0.66}),
+    # Tanks across and the least side space (issue #675), set to their defaults: the search as before.
+    ("tanks_across", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"tanks_across": None}),
+    ("min_side_space_m", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"min_side_space_m": 0.0}),
     ("tank_wall_thickness_mm", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"tank_wall_thickness_mm": 25.0}),
     # The weather shield (issue #410, part 1b), set to its defaults: the same results as leaving it out.

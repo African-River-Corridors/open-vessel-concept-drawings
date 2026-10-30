@@ -150,12 +150,14 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     for name in [
         "water_density_t_per_m3",
         "squat_safety_margin_m",
+        "tanks_across",
         "tanks_in_line",
         "tank_support_height_m",
         "tank_dome_height_m",
         "tank_dome_diameter_m",
         "wing_tank_gap_m",
         "wing_tank_height_ratio",
+        "min_side_space_m",
         "weather_shield_thickness_mm",
         "weather_shield_clearance_m",
         "tank_forming_allowance_pct",
@@ -326,11 +328,11 @@ pub use arc_rules::load::canonical_json;
 /// Top-level results keys that are not results: drawing geometry, what a view marks, the capital
 /// budget with the masses it was worked from, the Message Ids of the result's English (ADR 0015), and
 /// the Rule Trace (spec 0004: the stored Rule Set hashes cover the rules), and the calibration label
-/// of the lightship (issue #434). They are left
+/// of the lightship (issue #434), and the gas tank arrangements the search tried (issue #675). They are left
 /// out of the results hash, so adding to one never changes a saved hash, and `tools/design_impact.py`
 /// leaves them out of its comparison (it holds the same list; `tests/test_design_impact_unhashed_keys.py` checks
 /// that the two lists agree).
-pub const UNHASHED_KEYS: [&str; 10] = [
+pub const UNHASHED_KEYS: [&str; 11] = [
     "drawing",
     "stability_marks",
     "cost_masses",
@@ -341,6 +343,7 @@ pub const UNHASHED_KEYS: [&str; 10] = [
     "damage",
     "marpol_damage",
     "oil_outflow",
+    "fit_tried",
 ];
 
 /// SHA-256 of the canonical JSON of `results`, without the [`UNHASHED_KEYS`].

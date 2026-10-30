@@ -129,6 +129,10 @@
           "value": 1.3,
           "source": "default"
         },
+        "tanks_across": {
+          "value": null,
+          "source": "default"
+        },
         "tanks_in_line": {
           "value": 2.0,
           "source": "default"
@@ -151,6 +155,10 @@
         },
         "wing_tank_height_ratio": {
           "value": 0.66,
+          "source": "default"
+        },
+        "min_side_space_m": {
+          "value": 0.0,
           "source": "default"
         },
         "weather_shield_thickness_mm": {

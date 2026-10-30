@@ -48,7 +48,7 @@ use crate::rule_trace::{
 use crate::rules::{ArgValue, MeasureRef, RuleSet};
 use crate::tanks::INT_OVERFLOW_MESSAGE;
 use crate::text;
-use crate::text::Arg;
+use crate::text::{Arg, Text};
 
 /// The rulesets `fit` accepts.
 pub const RULESETS: [&str; 1] = ["IGC_2G"];
@@ -87,6 +87,9 @@ pub struct FitOptions {
     pub depths: Vec<f64>,
     pub tanks_wide: Vec<i64>,
     pub extra_clearance_m: Vec<f64>,
+    /// Issue #675: the least side space of every candidate (m), on top of the IGC 2.4 minimum.
+    /// 0: the IGC minimum alone. The wing tank is this less [`FitOptions::wing_tank_gap_m`].
+    pub min_side_space_m: f64,
     /// Issue #448: Cb only for the IGC 4.28.2 vertical acceleration; the hydrostatics come from
     /// each candidate's sections.
     pub block_coefficient: f64,
@@ -348,6 +351,7 @@ impl Default for FitOptions {
             depths: DEFAULT_DEPTHS_M.to_vec(),
             tanks_wide: DEFAULT_TANKS_WIDE.to_vec(),
             extra_clearance_m: DEFAULT_EXTRA_CLEARANCE_M.to_vec(),
+            min_side_space_m: 0.0,
             block_coefficient: 0.85,
             max_tank_od_m: DEFAULT_MAX_TANK_OD_M,
             bow_rake_to_depth_ratio: DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
@@ -422,8 +426,49 @@ pub struct ArrangementFit {
     /// False: no candidate passed its error checks; see `failed_checks`.
     pub feasible: bool,
     pub candidates_tried: i64,
+    /// Issue #675: every arrangement the search tried, in the order it built them, and what became
+    /// of each.
+    pub tried: Vec<TriedArrangement>,
     pub engine_inputs: BargeCapacityInputs,
     pub engine_result: BargeCapacityResult,
+}
+
+/// One arrangement the search tried (issue #675): one depth and number of tanks across. It is the
+/// best of the side spaces tried for it: the chosen one, else the one with the most cargo that
+/// passes the cheap checks, else the one closest to passing: the fewest failed checks, then the
+/// smallest tank. More side space only makes the tank smaller, so the smallest tank comes closest
+/// on the height checks (blind distance, air draft) that most often turn an arrangement down.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TriedArrangement {
+    pub depth_m: f64,
+    pub n_wide: i64,
+    pub n_long: i64,
+    /// 0 when no tank was built.
+    pub tank_od_m: f64,
+    pub side_clearance_m: f64,
+    /// The side space less the wing tank gap, and not less than zero.
+    pub wing_tank_width_m: f64,
+    pub cargo_volume_m3: f64,
+    /// What the search ranks by (t): the payload, or with the IS Code conditions the cargo of
+    /// their full loads.
+    pub cargo_t: f64,
+    /// How many side spaces the search built for it.
+    pub variants: i64,
+    pub outcome: TriedOutcome,
+}
+
+/// What became of a [`TriedArrangement`].
+#[derive(Debug, Clone, PartialEq)]
+pub enum TriedOutcome {
+    /// The answer: it passes every check.
+    Chosen,
+    /// It passes the cheap checks but carries less than the answer, so the search did not assess
+    /// its stability (or it passed and lost a tie).
+    LessCargo,
+    /// It fails these error checks (the answer, when no arrangement passes, is one of these).
+    Fails(Vec<Check>),
+    /// No candidate could be built; the reason.
+    NotBuilt(Text),
 }
 
 impl FitOptions {
@@ -1048,6 +1093,8 @@ struct Search<'a> {
     cargo: &'a str,
     o: &'a FitOptions,
     tried: i64,
+    /// Issue #675: the arrangements `build` turned down, as (depth, tanks across, reason).
+    refused: Vec<(f64, i64, Text)>,
 }
 
 impl Search<'_> {
@@ -1114,8 +1161,25 @@ impl Search<'_> {
 
     fn build(&mut self, d: f64, nw: i64, nl: i64) -> Result<Option<Built>, PyError> {
         self.tried += 1;
+        let built = self.build_or_refuse(d, nw, nl)?;
+        Ok(match built {
+            Ok(b) => Some(b),
+            Err(reason) => {
+                self.refused.push((d, nw, reason));
+                None
+            }
+        })
+    }
+
+    fn build_or_refuse(&self, d: f64, nw: i64, nl: i64) -> Result<Result<Built, Text>, PyError> {
         let mut inp = self.base_inputs(d, nw, nl);
         let mut r = capacity(&inp)?;
+        // Issue #675: a side space under the user's least one is widened to it.
+        let min_side = self.o.min_side_space_m;
+        if min_side > 0.0 && opt_or_zero(r.side_clearance_m) + 1e-9 < min_side {
+            inp.side_clearance_override_m = Some(min_side);
+            r = capacity(&inp)?;
+        }
         if self.od_unusable(&r) {
             // Full-beam tank infeasible or over the cap: put the tank ON the cap and widen the
             // clearance: a legitimate design only if that clearance meets the rule.
@@ -1139,12 +1203,28 @@ impl Search<'_> {
             // `a_hull_too_narrow_for_tanks_at_the_cap_gets_no_candidate` and
             // `the_side_clearance_rule_is_never_below_0_45_m` guard the two facts this rests on.
             if cs < 0.0 {
-                return Ok(None);
+                return Ok(Err(text!(
+                    "fit-refused-cap-too-wide",
+                    "{n} across at the diameter cap {cap} m do not fit in the beam.",
+                    n = nw,
+                    cap = Arg::fixed(self.o.max_tank_od_m, 2),
+                )));
+            }
+            if cs + 1e-9 < min_side {
+                return Ok(Err(text!(
+                    "fit-refused-min-side-space",
+                    "No tank fits across the beam with the minimum side space {min} m.",
+                    min = Arg::fixed(min_side, 2),
+                )));
             }
             inp.side_clearance_override_m = Some(cs);
             r = capacity(&inp)?;
             if self.od_unusable(&r) {
-                return Ok(None);
+                return Ok(Err(text!(
+                    "fit-refused-no-tank-at-cap",
+                    "No tank fits at the diameter cap {cap} m.",
+                    cap = Arg::fixed(self.o.max_tank_od_m, 2),
+                )));
             }
             let total = opt_or_zero(r.containment_inner_volume_m3);
             // Mutation survivor (#146), `total / n` to `total % n` below: equivalent. The per-tank
@@ -1176,10 +1256,16 @@ impl Search<'_> {
             )?;
             // Killed by `a_cap_clearance_a_hair_under_the_rule_is_accepted_not_refused` (`+` to `-`).
             if cs + 1e-9 < need {
-                return Ok(None);
+                return Ok(Err(text!(
+                    "fit-refused-cap-side-space",
+                    "At the diameter cap {cap} m the side space is {side} m, under the IGC 2.4 minimum {need} m.",
+                    cap = Arg::fixed(self.o.max_tank_od_m, 2),
+                    side = Arg::fixed(cs, 2),
+                    need = Arg::fixed(need, 2),
+                )));
             }
         }
-        Ok(Some((inp, r)))
+        Ok(Ok((inp, r)))
     }
 }
 
@@ -1187,6 +1273,8 @@ impl Search<'_> {
 struct Pool {
     all: Vec<Candidate>,
     best: Option<usize>,
+    /// The candidates whose costly stage ran and failed (issue #675).
+    assessed_failed: Vec<usize>,
 }
 
 /// Build every candidate and judge it by the whole check list. Every candidate gets the cheap
@@ -1200,6 +1288,7 @@ fn search(s: &mut Search<'_>, t_max: f64, stop_at_first_pass: bool) -> Result<Po
     let mut pool = Pool {
         all: Vec::new(),
         best: None,
+        assessed_failed: Vec::new(),
     };
     for &d in &o.depths {
         for &nw in &o.tanks_wide {
@@ -1274,7 +1363,9 @@ fn search(s: &mut Search<'_>, t_max: f64, stop_at_first_pass: bool) -> Result<Po
         if pool.best.is_some() && c.tonnage < top - 1e-6 {
             break;
         }
-        if passes_all(c, o) {
+        if !passes_all(c, o) {
+            pool.assessed_failed.push(i);
+        } else {
             match pool.best {
                 None => {
                     top = c.tonnage;
@@ -1323,6 +1414,160 @@ fn closest_to_passing(pool: &[Candidate], o: &FitOptions) -> Option<usize> {
     best.map(|(i, _)| i)
 }
 
+/// The error checks a candidate fails, for the list of arrangements tried (issue #675): the cheap
+/// ones, then (when its costly stage ran) stability, then, with Rule Sets, the failing Rules no
+/// check reports, each as a check named by its Rule id.
+fn failing_checks(c: &Candidate, o: &FitOptions, assessed: bool) -> Vec<Check> {
+    let mut checks = cheap_checks(&c.result, &c.journey, c.depth, o);
+    if assessed {
+        checks.extend(stability_checks(&c.result, &c.journey, &c.inputs, o));
+    }
+    let mut out: Vec<Check> = checks
+        .iter()
+        .filter(|k| k.is_error() && !k.ok)
+        .cloned()
+        .collect();
+    if !o.rules.is_empty() {
+        let measured = if assessed {
+            full_measured(c, o)
+        } else {
+            candidate_measured(&c.result, &c.journey, &c.inputs, &checks, Vec::new())
+        };
+        for row in candidate_trace(&measured, o)
+            .rows
+            .iter()
+            .filter(|r| r.outcome == Outcome::Fail)
+        {
+            let mirrored = row
+                .measure
+                .as_ref()
+                .is_some_and(|m| m.id == "check.ok" || m.id.starts_with("separation."))
+                || row.object_type.as_deref() == Some(ObjectType::LoadingCondition.key());
+            let name = row.rule.clone().unwrap_or_default();
+            if !mirrored && !out.iter().any(|k| k.name == name) {
+                out.push(Check::new(
+                    name,
+                    false,
+                    format!("{} ({})", row.title, row.object.clone().unwrap_or_default()),
+                ));
+            }
+        }
+    }
+    out
+}
+
+/// One row per depth and number of tanks across that the search tried, in its order (issue #675).
+fn tried_arrangements(
+    pool: &Pool,
+    pick: Option<usize>,
+    refused: &[(f64, i64, Text)],
+    o: &FitOptions,
+) -> Vec<TriedArrangement> {
+    let nw_of = |c: &Candidate| c.inputs.n_tanks_wide.unwrap_or(0);
+    let mut out = Vec::new();
+    for &d in &o.depths {
+        for &nw in &o.tanks_wide {
+            let group: Vec<usize> = (0..pool.all.len())
+                .filter(|&i| pool.all[i].depth == d && nw_of(&pool.all[i]) == nw)
+                .collect();
+            if group.is_empty() {
+                if let Some((_, _, why)) = refused.iter().find(|(rd, rn, _)| *rd == d && *rn == nw)
+                {
+                    out.push(TriedArrangement {
+                        depth_m: d,
+                        n_wide: nw,
+                        n_long: o.tanks_in_line,
+                        tank_od_m: 0.0,
+                        side_clearance_m: 0.0,
+                        wing_tank_width_m: 0.0,
+                        cargo_volume_m3: 0.0,
+                        cargo_t: 0.0,
+                        variants: 0,
+                        outcome: TriedOutcome::NotBuilt(why.clone()),
+                    });
+                }
+                continue;
+            }
+            let failed = |i: &usize| pool.assessed_failed.contains(i);
+            // The first of the most cargo stays (a strict comparison), as the search ranks.
+            let most_cargo = |ids: &mut dyn Iterator<Item = usize>| {
+                ids.fold(None, |best: Option<usize>, i| match best {
+                    Some(b) if pool.all[i].tonnage <= pool.all[b].tonnage + 1e-6 => Some(b),
+                    _ => Some(i),
+                })
+            };
+            let chosen = pick.filter(|p| group.contains(p));
+            let passing = most_cargo(
+                &mut group
+                    .iter()
+                    .copied()
+                    .filter(|i| pool.all[*i].cheap_failed == 0 && !failed(i)),
+            );
+            let stability_failed = most_cargo(
+                &mut group
+                    .iter()
+                    .copied()
+                    .filter(|i| pool.all[*i].cheap_failed == 0 && failed(i)),
+            );
+            let od = |i: usize| opt_or_zero(pool.all[i].result.tank_outer_diameter_m);
+            let closest = group
+                .iter()
+                .copied()
+                .fold(None, |best: Option<usize>, i| match best {
+                    Some(b)
+                        if pool.all[i].cheap_failed > pool.all[b].cheap_failed
+                            || (pool.all[i].cheap_failed == pool.all[b].cheap_failed
+                                && od(i) >= od(b) - 1e-9) =>
+                    {
+                        Some(b)
+                    }
+                    _ => Some(i),
+                });
+            let (i, outcome) = match (chosen, passing, stability_failed, closest) {
+                (Some(i), ..) if pool.best == Some(i) => (i, TriedOutcome::Chosen),
+                (Some(i), ..) => (
+                    i,
+                    TriedOutcome::Fails(failing_checks(&pool.all[i], o, true)),
+                ),
+                (None, Some(i), ..) => (i, TriedOutcome::LessCargo),
+                (None, None, Some(i), _) => (
+                    i,
+                    TriedOutcome::Fails(failing_checks(&pool.all[i], o, true)),
+                ),
+                (None, None, None, Some(i)) => (
+                    i,
+                    TriedOutcome::Fails(failing_checks(&pool.all[i], o, false)),
+                ),
+                (None, None, None, None) => continue,
+            };
+            let c = &pool.all[i];
+            let r = &c.result;
+            out.push(TriedArrangement {
+                depth_m: d,
+                n_wide: nw,
+                n_long: c.inputs.n_tanks_long,
+                tank_od_m: opt_or_zero(r.tank_outer_diameter_m),
+                side_clearance_m: opt_or_zero(r.side_clearance_m),
+                wing_tank_width_m: wing_tank_width(r),
+                cargo_volume_m3: r.cargo_volume_m3,
+                cargo_t: c.tonnage,
+                variants: group.len() as i64,
+                outcome,
+            });
+        }
+    }
+    out
+}
+
+/// The wing ballast tank width of a gas result (m): the side space less the wing tank gap, not
+/// less than zero (issue #283). 0 with no gas basis.
+pub fn wing_tank_width(r: &BargeCapacityResult) -> f64 {
+    r.gas_basis
+        .as_ref()
+        .and_then(|g| g.inputs.wing_tank_width)
+        .unwrap_or(0.0)
+}
+
 /// The arrangement that meets every check of the search, with the most cargo per journey at draught
 /// cap `t_max` over depth x arrangement.
 ///
@@ -1348,9 +1593,11 @@ pub fn fit(
         cargo,
         o,
         tried: 0,
+        refused: Vec::new(),
     };
     let pool = search(&mut s, t_max, false)?;
     let pick = pool.best.or_else(|| closest_to_passing(&pool.all, o));
+    let tried = tried_arrangements(&pool, pick, &s.refused, o);
     let mut all = pool.all;
     // Nothing passes: report the closest failing candidate, flagged infeasible.
     let best = match pick {
@@ -1361,7 +1608,9 @@ pub fn fit(
                 kind: "IndexError",
                 message: "list index out of range".to_string(),
             })?;
-            let inp = s.base_inputs(d, 1, o.tanks_in_line);
+            // The first number of tanks across the search tried (issue #675: it may be fixed).
+            let nw = o.tanks_wide.first().copied().unwrap_or(1);
+            let inp = s.base_inputs(d, nw, o.tanks_in_line);
             let r = capacity(&inp)?;
             let j = derate_candidate(&r, loa, beam, d, t_max, o.water_density_t_per_m3)?;
             Candidate {
@@ -1469,6 +1718,7 @@ pub fn fit(
         failed_checks: failed,
         feasible,
         candidates_tried: s.tried,
+        tried,
         engine_inputs: inp,
         engine_result: r,
     })
@@ -1494,6 +1744,7 @@ fn has_passing_arrangement(
         cargo,
         o,
         tried: 0,
+        refused: Vec::new(),
     };
     Ok(search(&mut s, t_max, true)?.best.is_some())
 }

@@ -33,6 +33,7 @@ warn-aft-sightline-lift = Sightline needs { $lift } m of lift; the column gives 
 
 warn-barge-bulk-gm = Bulk GM is first-order (assumed lightship KG); cargo-shift/angle-of-repose not modelled — confirm with a full intact-stability booklet.
 check-wheelhouse-blind-distance = blind distance ahead of the bow { $blind } m <= { $limit } m, light (ES-TRIN 7.02(2)); lift used { $lift } m of { $max_lift } m
+check-wheelhouse-blind-distance-fails = blind distance ahead of the bow over { $limit } m, light (ES-TRIN 7.02(2)): lift needed { $needed } m of { $max_lift } m
 warn-aft-blind-distance-lift = The blind distance needs { $needed } m of lift; the column gives { $max_lift } m. Raise the column or lower the cargo top.
 check-feasible-geometry = cargo volume must be positive (tank/hold fits)
 check-name-feasible-geometry = feasible geometry
@@ -89,6 +90,10 @@ check-name-air-draft = Air draft
 check-condition-air-draft = { $condition }: air draft { $air } m is above the limit.
 check-name-stability-not-assessed = Stability — not assessed
 check-stability-not-assessed = stability could not be assessed: { $reason }
+fit-refused-cap-too-wide = { $n } across at the diameter cap { $cap } m do not fit in the beam.
+fit-refused-min-side-space = No tank fits across the beam with the minimum side space { $min } m.
+fit-refused-no-tank-at-cap = No tank fits at the diameter cap { $cap } m.
+fit-refused-cap-side-space = At the diameter cap { $cap } m the side space is { $side } m, under the IGC 2.4 minimum { $need } m.
 
 ## crates/ovcd-core/src/gas_separation.rs
 
@@ -271,6 +276,7 @@ msg-shipd-constraint = `{ $input }` fails ShipD constraint { $index } ({ $name }
 ## crates/ovcd-format/src/simulate.rs
 
 warn-channel-no-bottom-width = The channel has a depth but no bottom width, so squat, the Schijf limiting speed and the blockage are not checked and the speed curves are for deep water only. The draught limit still uses the depth. Give the channel bottom width to check them.
+warn-fit-no-wing-tank = No wing ballast tank: the side space { $side } m is not more than the wing tank gap { $gap } m. For a wing tank, set `{ $input }` above { $gap } m.
 check-name-intact-gm-at-reported-cargo = intact gm at reported cargo
 check-intact-gm-reported-cargo = intact GM { $gm } m >= 0.15 m at the reported cargo { $cargo } t, draught { $draught } m (first-order; cargo KG of the full hold; KG_light @0.5D)
 warn-liquid-legacy-conditions = Stability is computed for liquid bulk cargo with the IS Code loading conditions only.

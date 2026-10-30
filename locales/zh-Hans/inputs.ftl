@@ -154,6 +154,9 @@ input-tank-structure-factor = 液货舱结构系数
 # status: draft
 input-tank-structure-factor-default-by = 货物、LPG 装运方式
 # status: draft
+input-tanks-across = 横向液货舱数（手动值）
+
+# status: draft
 input-tanks-in-line = 纵向液货舱数
 # status: draft
 input-tank-support-height-m = 液货舱支座高度
@@ -165,6 +168,9 @@ input-tank-dome-diameter-m = 液货舱穹顶直径
 input-wing-tank-gap-m = 边舱间隙
 # status: draft
 input-wing-tank-height-ratio = 边舱高度与液货舱直径之比
+
+# status: draft
+input-min-side-space-m = 最小舷侧间距
 
 # status: draft
 input-weather-shield-thickness-mm = 防风雨罩板厚
