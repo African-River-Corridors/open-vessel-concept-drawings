@@ -4,9 +4,11 @@
 //! Label: property. Each part's bounding box is rebuilt from the results JSON (`drawing.tank`,
 //! `geometry`, `arrangement`, `drawing.aft_arrangement`) and compared with its mesh's box to 1 mm;
 //! the tank count is `n_tanks_total`; each tank mesh holds the closed-form volume at the outer
-//! diameter to 0.5 %; every new mesh is closed; and no tank mesh crosses another tank, a wing
-//! ballast Space mesh, or the hull below the deck (the tanks stand up through the deck: issue #686,
-//! comment of 2026-10-30).
+//! diameter to 0.5 %; every new mesh is closed; and no tank mesh crosses another tank, a ballast
+//! Space (double bottom, wing, peak) or the hull, except through the deck surface, at the deck
+//! height and inside the tank's own footprint (its deck opening): the tanks of two fixtures stand up
+//! through the deck. That reading of #686 was agreed by the coordinator overnight on 2026-10-30,
+//! pending the maintainer's review. Each condition has a test that moves a tank to break it alone.
 
 use core::f64::consts::PI;
 use std::collections::HashMap;
@@ -388,45 +390,50 @@ fn dot(a: [f64; 3], b: [f64; 3]) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
 
-/// Whether the segment `p q` passes through the inside of triangle `t` (Moller and Trumbore), not
-/// at its ends or edges: a touch is not a crossing.
-fn segment_crosses(p: [f64; 3], q: [f64; 3], t: &Tri) -> bool {
+/// Where the segment `p q` passes through the inside of triangle `t` (Moller and Trumbore), not at
+/// its ends or edges: a touch is not a crossing.
+fn segment_crossing(p: [f64; 3], q: [f64; 3], t: &Tri) -> Option<[f64; 3]> {
     let eps = 1e-7;
     let d = sub(q, p);
     let (e1, e2) = (sub(t[1], t[0]), sub(t[2], t[0]));
     let h = cross(d, e2);
     let a = dot(e1, h);
     if a.abs() < 1e-12 {
-        return false;
+        return None;
     }
     let s = sub(p, t[0]);
     let u = dot(s, h) / a;
     let qv = cross(s, e1);
     let v = dot(d, qv) / a;
     let w = dot(e2, qv) / a;
-    u > eps && v > eps && u + v < 1.0 - eps && w > eps && w < 1.0 - eps
+    (u > eps && v > eps && u + v < 1.0 - eps && w > eps && w < 1.0 - eps)
+        .then(|| [p[0] + w * d[0], p[1] + w * d[1], p[2] + w * d[2]])
 }
 
 fn bounds(t: &Tri) -> [f64; 6] {
-    let mut b = [f64::INFINITY; 3]
-        .into_iter()
-        .chain([f64::NEG_INFINITY; 3])
-        .collect::<Vec<_>>();
+    let mut b = [
+        f64::INFINITY,
+        f64::INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::NEG_INFINITY,
+        f64::NEG_INFINITY,
+    ];
     for v in t {
         for k in 0..3 {
             b[k] = b[k].min(v[k]);
             b[k + 3] = b[k + 3].max(v[k]);
         }
     }
-    [b[0], b[1], b[2], b[3], b[4], b[5]]
+    b
 }
 
 fn overlap(a: &[f64; 6], b: &[f64; 6]) -> bool {
     (0..3).all(|k| a[k] <= b[k + 3] && b[k] <= a[k + 3])
 }
 
-/// The triangles of `b` that `a` crosses or that cross `a`.
-fn crossings(a: &[Tri], b: &[Tri]) -> Vec<Tri> {
+/// The points where the surfaces of `a` and `b` cross: each edge of either through the other.
+fn crossing_points(a: &[Tri], b: &[Tri]) -> Vec<[f64; 3]> {
     let ab: Vec<_> = a.iter().map(bounds).collect();
     let mut out = Vec::new();
     for tb in b {
@@ -435,79 +442,265 @@ fn crossings(a: &[Tri], b: &[Tri]) -> Vec<Tri> {
             if !overlap(ba, &bb) {
                 continue;
             }
-            let hit = (0..3).any(|i| segment_crosses(ta[i], ta[(i + 1) % 3], tb))
-                || (0..3).any(|i| segment_crosses(tb[i], tb[(i + 1) % 3], ta));
-            if hit {
-                out.push(*tb);
-                break;
+            for i in 0..3 {
+                out.extend(segment_crossing(ta[i], ta[(i + 1) % 3], tb));
+                out.extend(segment_crossing(tb[i], tb[(i + 1) % 3], ta));
             }
         }
     }
     out
 }
 
-#[test]
-fn no_tank_crosses_another_tank_a_wing_tank_or_the_hull_below_the_deck() {
-    let mut pairs = 0;
-    let mut through_deck = 0;
-    for c in cases() {
-        let tanks: Vec<(String, Vec<Tri>)> = c
-            .mesh
-            .groups
-            .iter()
-            .filter(|g| matches!(g.source, PartSource::Tank { .. }))
-            .map(|g| {
-                (
-                    g.id.clone(),
-                    triangles(&group_mesh(&c.mesh, g.start, g.count)),
-                )
-            })
-            .collect();
-        if tanks.is_empty() {
-            continue;
+/// A tank as the results place it: its axis from `x0` to `x1` at `y`, and its outer radius.
+struct Footprint {
+    x0: f64,
+    x1: f64,
+    y: f64,
+    r: f64,
+}
+
+/// What a tank mesh `tank` must not do (issue #686, as the coordinator agreed it overnight, pending
+/// the maintainer's review): cross another tank, a ballast Space (double bottom, wing or peak), or
+/// the hull anywhere but the deck. The one hull crossing allowed is through the deck surface, at the
+/// deck height and inside the tank's own footprint (its deck opening). Each fault, named.
+fn tank_faults(
+    tank: &[Tri],
+    foot: &Footprint,
+    depth: f64,
+    hull: &[Tri],
+    others: &[(String, Vec<Tri>)],
+) -> Vec<String> {
+    let mut faults = Vec::new();
+    for (name, u) in others {
+        if let Some(p) = crossing_points(tank, u).first() {
+            faults.push(format!("crosses {name} at {p:?}"));
         }
-        let wings: Vec<(String, Vec<Tri>)> = c
-            .mesh
-            .groups
+    }
+    for p in crossing_points(tank, hull) {
+        let at_deck = (p[2] - depth).abs() < 1e-4;
+        let inside = p[0] >= foot.x0 - 1e-6
+            && p[0] <= foot.x1 + 1e-6
+            && (p[1] - foot.y).abs() <= foot.r + 1e-6;
+        if !(at_deck && inside) {
+            faults.push(format!("crosses the hull at {p:?}"));
+            break;
+        }
+    }
+    faults
+}
+
+/// The tanks, the ballast Spaces and the hull of a design, with each tank's footprint from the
+/// results.
+struct Arrangement {
+    tanks: Vec<(String, Vec<Tri>, Footprint)>,
+    ballast: Vec<(String, Vec<Tri>)>,
+    hull: Vec<Tri>,
+    depth: f64,
+}
+
+fn arrangement(c: &Case) -> Option<Arrangement> {
+    let boxes = expected_boxes(&c.results);
+    let tanks: Vec<_> = c
+        .mesh
+        .groups
+        .iter()
+        .filter(|g| matches!(g.source, PartSource::Tank { .. }))
+        .map(|g| {
+            let b = boxes
+                .iter()
+                .find(|(s, _)| *s == g.source)
+                .map(|(_, b)| *b)
+                .expect("a tank box from the results");
+            let foot = Footprint {
+                x0: b[0],
+                x1: b[3],
+                y: (b[1] + b[4]) / 2.0,
+                r: (b[4] - b[1]) / 2.0,
+            };
+            (
+                g.id.clone(),
+                triangles(&group_mesh(&c.mesh, g.start, g.count)),
+                foot,
+            )
+        })
+        .collect();
+    if tanks.is_empty() {
+        return None;
+    }
+    let ballast = c
+        .mesh
+        .groups
+        .iter()
+        .filter(|g| {
+            g.layer == "space" && ["DB", "WB", "FP", "AP"].iter().any(|p| g.id.starts_with(p))
+        })
+        .map(|g| {
+            (
+                g.id.clone(),
+                triangles(&group_mesh(&c.mesh, g.start, g.count)),
+            )
+        })
+        .collect();
+    Some(Arrangement {
+        tanks,
+        ballast,
+        hull: triangles(&part(&c.mesh, &PartSource::Hull)),
+        depth: num(&c.results, &["dims", "depth_m"]),
+    })
+}
+
+/// The faults of tank `i` of an arrangement, its mesh moved `dx` forward, `dy` to starboard and `dz`
+/// up (its footprint stays where the results put it).
+fn faults_of(a: &Arrangement, i: usize, (dx, dy, dz): (f64, f64, f64)) -> Vec<String> {
+    let (_, tank, foot) = &a.tanks[i];
+    let moved: Vec<Tri> = tank
+        .iter()
+        .map(|t| t.map(|v| [v[0] + dx, v[1] + dy, v[2] + dz]))
+        .collect();
+    let mut others = a.ballast.clone();
+    others.extend(
+        a.tanks
             .iter()
-            .filter(|g| g.layer == "space" && g.id.starts_with("WB"))
-            .map(|g| {
-                (
-                    g.id.clone(),
-                    triangles(&group_mesh(&c.mesh, g.start, g.count)),
-                )
-            })
-            .collect();
-        let hull = triangles(&part(&c.mesh, &PartSource::Hull));
-        let depth = num(&c.results, &["dims", "depth_m"]);
-        for (i, (name, t)) in tanks.iter().enumerate() {
-            for (other, u) in &tanks[i + 1..] {
-                assert!(
-                    crossings(t, u).is_empty(),
-                    "{}: {name} crosses {other}",
-                    c.at
-                );
-                pairs += 1;
+            .enumerate()
+            .filter(|(j, _)| *j != i)
+            .map(|(_, (n, t, _))| (n.clone(), t.clone())),
+    );
+    tank_faults(&moved, foot, a.depth, &a.hull, &others)
+}
+
+#[test]
+fn no_tank_crosses_another_tank_a_ballast_space_or_the_hull_but_its_deck_opening() {
+    let (mut tanks, mut through_deck) = (0, 0);
+    for c in cases() {
+        let Some(a) = arrangement(&c) else { continue };
+        for (i, (name, tank, foot)) in a.tanks.iter().enumerate() {
+            let faults = faults_of(&a, i, (0.0, 0.0, 0.0));
+            assert!(faults.is_empty(), "{}: {name} {faults:?}", c.at);
+            tanks += 1;
+            let hull = crossing_points(tank, &a.hull);
+            through_deck += usize::from(!hull.is_empty());
+            // Where a tank stands through the deck, its crossing is its deck opening.
+            for p in hull {
+                assert!((p[1] - foot.y).abs() <= foot.r + 1e-6, "{}: {name}", c.at);
             }
-            for (wing, u) in &wings {
-                assert!(
-                    crossings(t, u).is_empty(),
-                    "{}: {name} crosses {wing}",
-                    c.at
-                );
-                pairs += 1;
+        }
+        assert!(
+            !a.ballast.is_empty(),
+            "{}: ballast Spaces to check against",
+            c.at
+        );
+    }
+    assert!(tanks >= 12, "{tanks} tanks");
+    assert!(through_deck > 0, "a fixture's tanks stand through the deck");
+}
+
+#[test]
+fn a_tank_moved_outboard_into_the_side_shell_fails_the_check() {
+    // The check can fail: each tank of each gas design, moved outboard until its side is 0.5 m into
+    // the side shell, crosses the hull below the deck (issue #686, the coordinator's negative test).
+    let mut moved = 0;
+    for c in cases() {
+        let Some(a) = arrangement(&c) else { continue };
+        let half_b = num(&c.results, &["dims", "beam_m"]) / 2.0;
+        for (i, (name, _, foot)) in a.tanks.iter().enumerate() {
+            let side = if foot.y < 0.0 { -1.0 } else { 1.0 };
+            let dy = side * (half_b - (foot.y.abs() + foot.r) + 0.5);
+            let faults = faults_of(&a, i, (0.0, dy, 0.0));
+            assert!(
+                faults.iter().any(|f| f.starts_with("crosses the hull")),
+                "{}: {name} 0.5 m into the side shell passed: {faults:?}",
+                c.at
+            );
+            moved += 1;
+        }
+    }
+    assert!(moved >= 12, "{moved}");
+}
+
+#[test]
+fn a_tank_that_crosses_the_deck_outside_its_own_opening_fails_the_check() {
+    // The footprint condition can fail on its own: a tank that stands through the deck, moved 0.5 m
+    // forward (less than the gap to the next tank and the bow void), crosses the deck outside the
+    // opening the results give it, and nothing below the deck.
+    let mut moved = 0;
+    for c in cases() {
+        let Some(a) = arrangement(&c) else { continue };
+        for (i, (name, tank, _)) in a.tanks.iter().enumerate() {
+            if crossing_points(tank, &a.hull).is_empty() {
+                continue;
             }
-            // Where a tank stands through the deck it crosses the deck, and nothing else of the hull.
-            for h in crossings(t, &hull) {
+            let faults = faults_of(&a, i, (0.5, 0.0, 0.0));
+            assert!(
+                faults.iter().any(|f| f.starts_with("crosses the hull")),
+                "{}: {name} moved 0.5 m forward passed: {faults:?}",
+                c.at
+            );
+            moved += 1;
+        }
+    }
+    assert!(moved >= 2, "{moved} tanks through the deck");
+}
+
+#[test]
+fn a_tank_moved_into_the_bottom_shell_fails_the_check() {
+    // The deck-height condition can fail on its own: moved down until it is 0.5 m into the bottom
+    // shell, a tank crosses the hull inside its own footprint, but not at the deck.
+    let mut moved = 0;
+    for c in cases() {
+        let Some(a) = arrangement(&c) else { continue };
+        let bottom = num(&c.results, &["drawing", "double_bottom_m"])
+            + num(&c.results, &["drawing", "tank_support_height_m"]);
+        for (i, (name, _, _)) in a.tanks.iter().enumerate() {
+            let faults = faults_of(&a, i, (0.0, 0.0, -(bottom + 0.5)));
+            assert!(
+                faults.iter().any(|f| f.starts_with("crosses the hull")),
+                "{}: {name} 0.5 m into the bottom passed: {faults:?}",
+                c.at
+            );
+            moved += 1;
+        }
+    }
+    assert!(moved >= 12, "{moved}");
+}
+
+#[test]
+fn a_tank_moved_into_a_wing_tank_or_the_next_tank_fails_the_check() {
+    // The other conditions can fail on their own: a tank moved 0.2 m past the gap to the wing tank
+    // crosses the wing tank (and not the hull), and one moved 0.2 m past the gap to the next tank
+    // along crosses that tank.
+    let (mut wings, mut alongs) = (0, 0);
+    for c in cases() {
+        let Some(a) = arrangement(&c) else { continue };
+        let d = &c.results["drawing"];
+        let (wing, gap) = (num(d, &["wing_tank_width_m"]), num(d, &["wing_tank_gap_m"]));
+        let gap_long = num(d, &["tank", "tank_gap_longitudinal_m"]);
+        let last = a
+            .tanks
+            .iter()
+            .map(|t| t.2.x1)
+            .fold(f64::NEG_INFINITY, f64::max);
+        for (i, (name, _, foot)) in a.tanks.iter().enumerate() {
+            let side = if foot.y < 0.0 { -1.0 } else { 1.0 };
+            let outer = a.tanks.iter().all(|t| side * t.2.y <= side * foot.y);
+            if wing > 0.0 && outer {
+                let faults = faults_of(&a, i, (0.0, side * (gap + 0.2), 0.0));
                 assert!(
-                    h.iter().all(|v| (v[2] - depth).abs() < 1e-4),
-                    "{}: {name} crosses the hull below the deck at {h:?}",
+                    faults.iter().any(|f| f.starts_with("crosses WB")),
+                    "{}: {name} into the wing tank passed: {faults:?}",
                     c.at
                 );
-                through_deck += 1;
+                wings += 1;
+            }
+            if foot.x1 < last - 1e-6 {
+                let faults = faults_of(&a, i, (gap_long + 0.2, 0.0, 0.0));
+                assert!(
+                    faults.iter().any(|f| f.starts_with("crosses CT")),
+                    "{}: {name} into the next tank passed: {faults:?}",
+                    c.at
+                );
+                alongs += 1;
             }
         }
     }
-    assert!(pairs >= 10, "{pairs}");
-    assert!(through_deck > 0, "a fixture's tanks stand through the deck");
+    assert!(wings >= 2 && alongs >= 2, "{wings} {alongs}");
 }
