@@ -589,6 +589,7 @@ fn weather_shield(r: &BargeCapacityResult) -> Option<WeatherShield> {
         z_top_m: top,
         thickness_m: thickness,
     })
+}
 
 /// The Type C tank Spaces of a gas result (ADR 0021), each whole: the interior volume the capacity
 /// counts (`volume_per_tank`) at the middle of its axis. The results list them (spec 0009, D1).
