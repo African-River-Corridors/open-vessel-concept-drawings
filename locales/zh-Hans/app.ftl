@@ -286,6 +286,8 @@ app-make-active = 设为当前方案
 # status: draft
 app-status = 状态
 # status: draft
+app-results-hash = 结果哈希
+# status: draft
 app-class-reference-dwt = 等级参考载重量（{ $class }）
 # status: draft
 app-class-reference-dwt-title = 该等级公布的数值，仅供比较。它从不作为输入。

@@ -99,6 +99,21 @@ describe("OVCD web smoke tests", () => {
       return ev.options.map((o) => [o.name, o.outcome.results_hash]);
     });
     assert.deepEqual(ours, nativeHashes());
+    // Issue #666: the Compare table shows each Option's results hash, short, with the full value on hover.
+    const shownHashes = await b.execute(() =>
+      [...document.querySelectorAll("[data-testid=compare-hash] td")].map((td) => [td.textContent.trim(), td.getAttribute("title")]),
+    );
+    assert.deepEqual(shownHashes, nativeHashes().map(([, h]) => [h.slice(0, 12), h]));
+    if (SHOTS) {
+      fs.mkdirSync(SHOTS, { recursive: true });
+      for (const theme of ["Light", "Dark"]) {
+        await (await b.$(`button=${theme}`)).click();
+        await (await b.$("[data-testid=compare-hash]")).scrollIntoView();
+        await new Promise((r) => setTimeout(r, 400));
+        await b.saveScreenshot(path.join(SHOTS, `web-results-hash-${theme.toLowerCase()}.png`));
+      }
+      await (await b.$("button=Light")).click();
+    }
     // Issue #457: the meshes reach the front end typed, with the mesh hash of `ovcd mesh --hash`.
     const meshes = await b.execute(async () => {
       const ev = await window.__ovcdPlatform.evaluate();
