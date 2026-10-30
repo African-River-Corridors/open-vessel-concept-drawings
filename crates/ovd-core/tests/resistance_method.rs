@@ -181,3 +181,33 @@ fn barge_form_factor_adds_the_millward_term_in_shallow_water() {
     };
     assert!(ratio(ResistanceMethod::BargeFormFactor) > ratio(ResistanceMethod::BargeFit));
 }
+
+#[test]
+fn barge_form_factor_warns_below_its_smallest_depth_over_draught() {
+    // Issue #735: the barge data go down to h/T 1.2. The default barge draws 6 m.
+    let at_depth = |depth: f64| {
+        let inputs = ResistanceInputs {
+            block_coefficient: 0.85,
+            method: ResistanceMethod::BargeFormFactor,
+            speed_max_knots: 6.0,
+            environments: vec![EnvironmentInputs {
+                name: "Shallow".to_string(),
+                water_depth: depth,
+                channel_width_bottom: 1000.0,
+                channel_width_surface: 1000.0,
+                apply_squat_limit: false,
+                ..EnvironmentInputs::default()
+            }],
+            ..ResistanceInputs::default()
+        };
+        let r = compute(&inputs).unwrap();
+        r.checks
+            .into_iter()
+            .find(|c| c.name.starts_with("resistance_method_in_range["))
+            .unwrap()
+            .message
+    };
+    let shallow = at_depth(6.6);
+    assert!(shallow.contains("h/T 1.10 (range from 1.20)"), "{shallow}");
+    assert!(!at_depth(7.8).contains("h/T"));
+}

@@ -1259,7 +1259,8 @@ pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
         applies_to: AppliesTo::Only("type_c_tanks"),
         value: "\"tank_end\"",
     },
-    // Issue #723: a file saved before the resistance method keeps the bluff-barge fit.
+    // Issue #723: a file saved before the resistance method keeps the bluff-barge fit. Issue #735:
+    // new Designs take `barge_form_factor` from the Defaults Profile.
     LegacyFixedJson {
         name: "resistance_method",
         applies_to: AppliesTo::All,

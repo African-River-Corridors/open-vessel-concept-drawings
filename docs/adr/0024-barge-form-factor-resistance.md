@@ -1,7 +1,7 @@
 # A barge form factor method, checked against barge towing-tank data
 
-Status: **proposed**, 2026-10-30. Issue #735, after ADR 0023 (#723). The default does not change in
-this decision; the switch is a question for the maintainer (see "Proposal").
+Status: **accepted**, 2026-10-30. Issue #735, after ADR 0023 (#723). The maintainer approved
+`barge_form_factor` as the default for new Designs (see "Default").
 
 ## Context
 
@@ -29,10 +29,18 @@ an inland motor cargo vessel in shallow water). Together they give 22 model-scal
      for the waves (0 below Fn 0.10).
    OVD's Lackenby and blockage factor stays on top, as for every method. No constant is fitted.
 2. Its declared range is the range of the data (`BARGE_FORM_FACTOR_ENVELOPE`): Fn up to 0.137,
-   Cp 0.768 to 0.877, L/B 7.59 to 16.29, B/T 4.05 to 8.12 (and h/T from 1.2, documented, not checked).
+   Cp 0.768 to 0.877, L/B 7.59 to 16.29, B/T 4.05 to 8.12, and water depth over draught from 1.2
+   (checked per environment; deep water has no bound).
    Rule `ovd/resistance/method-in-range` (Rule Set `ovd` 3.1.0, not yet released) now also applies to
    it and warns outside.
-3. `barge_fit` stays the default. No saved Design, fixture or example result moves.
+3. **Default.** `barge_form_factor` is the Defaults Profile default, so every new Design takes it.
+   `barge_fit` stays selectable. Saved Designs reproduce: the format can tell them apart. A file
+   saved without `resistance_method` (before issue #723) is read with its legacy value `barge_fit`
+   (`LEGACY_FIXED_OTHER`); a file that stores a method, typed or default, keeps it. The core's own
+   default (`ResistanceMethod::default`, used when a raw parameter set leaves the method out) stays
+   `barge_fit`, so the Python-port snapshots and every stored hash stay put. Public wording:
+   barge_form_factor is the default; it is 17 % mean error against 22 published barge points;
+   outside its range the speeds are indicative.
 
 ## Evidence
 
@@ -60,14 +68,13 @@ every case) and `crates/ovd-core/tests/resistance_method.rs` (a finer hull needs
   that refit, behind the input.
 - **Shallow water.** Millward's dk should be added (here, inside `barge_form_factor`). A follow-up could
   apply it to every method; it would move shallow-water results of every Design.
-- **Default.** Propose `barge_form_factor` as the default for **new** Designs, with saved Designs kept
-  on `barge_fit` through the legacy value, once the maintainer agrees. It ranks hull forms and is the
-  closest of the three to barge tests. It still reads about 17 % low on average.
+- **Default.** `barge_form_factor` for **new** Designs, saved Designs kept on what they stored or on
+  `barge_fit` through the legacy value. Approved by the maintainer and done (Decision 3). It ranks hull
+  forms and is the closest of the three to barge tests. It still reads about 17 % low on average.
 
 ## Not done
 
 - No data for L/B under 7.6 or Fn above 0.14: the coastal LNG concept (L/B 3 to 4.5, Fn about 0.2) is
   outside the range at every Cb, and the warning says so.
-- The h/T lower bound of 1.2 is in the documentation, not in the check (the envelope has no depth term).
 - Full scale: no barge trial was found, so the correlation allowance is untested.
 - Translations of the new choice label (English only).

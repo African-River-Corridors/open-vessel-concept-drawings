@@ -223,8 +223,10 @@ fn every_case_is_inside_the_barge_form_factor_envelope() {
             c.beam / c.draught,
         );
         assert!(out.is_empty(), "{} outside: {:?}", c.id, out);
-        assert!(
-            c.depth <= 0.0 || c.depth / c.draught >= 1.2 - 1e-9,
+        let h_over_t = (c.depth > 0.0).then(|| c.depth / c.draught + 1e-9);
+        assert_eq!(
+            BARGE_FORM_FACTOR_ENVELOPE.outside_depth(h_over_t),
+            None,
             "{}",
             c.id
         );
