@@ -129,6 +129,8 @@ Each row is one drawn element. "Source or basis" starts with the geometry source
 | DR-A41 | Section deck line | Stops at each tank circle that passes through the deck | Method | Computed result | `ga.rs` `section_deck_line` | Unknown |
 | DR-A42 | Centre line | Plan and section, 4 mm past the hull | Fixed in code | Fixed proportion | `ga.rs` `plan`, `midship_section` | Unknown |
 | DR-A43 | Label layout | Column 6 mm past the bow (elevation, plan) or 24 mm left of the hull (section); 6 mm pitch; text 3.5 mm | Fixed in code | Fixed proportion; standard clause 12.6 | `ga.rs` `label_column`, `LABEL_*` | Unknown (presentation only) |
+| DR-A44 | Deck Items (3D model) | Each container unit a box on its footprint, the unit width wide, from the highest deck point under it to the units' top; the wheelhouse a box at its lowered and at its raised floor and top; the lift column from the deck to the raised floor, only when the raised floor is above the deck | Method | Computed result: `drawing.aft_arrangement` (`container_units`, y + = port turned to the model's y + = starboard; `container_unit_width_m`, `container_top_above_keel_m`; `wheelhouse_*`). Spec 0009, ADR 0021 | `vessel_model.rs` `deck_items`, `deck_height_over`; `mesh.rs` `deck_item_mesh` | Unknown (geometry only; the masses are the lightship's) |
+| DR-A45 | Lift column plan size (3D model) | Square, side 0.25 × the wheelhouse width, under the middle of the wheelhouse | Estimate | No published proportion is held (spec 0009, D2); the maintainer may change it | `vessel_model.rs` `LIFT_COLUMN_SIDE_OVER_WHEELHOUSE_WIDTH` | Unknown (picture only: the column's mass, `LIFT_COLUMN_T`, does not depend on it) |
 
 ## Inputs the user can change
 
@@ -151,7 +153,7 @@ No input belongs to the drawing alone. These inputs move drawn geometry. Default
 | `wing_tank_height_ratio` | 0.66 | – | Wing tank top (DR-A35) |
 | Stern block inputs (`wheelhouse_*`, container units, thrusters) | `aft_arrangement.rs` defaults | various | DR-A19 to DR-A23 |
 
-The drawing constants in DR-A23, DR-A30, DR-A31, DR-A37, DR-A38 and DR-A43 are not inputs.
+The drawing constants in DR-A23, DR-A30, DR-A31, DR-A37, DR-A38, DR-A43 and DR-A45 are not inputs.
 
 ## Limits and known findings
 

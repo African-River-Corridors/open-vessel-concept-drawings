@@ -56,6 +56,11 @@ hydrostatics: the Deck Items and the propulsors (ADR 0021). Their masses are alr
 lightship; the Outfit adds only their shape.
 _Avoid_: superstructure (it is not in the hydrostatics), equipment
 
+**Deck Item**:
+An Outfit part that stands on the deck: an accommodation or battery unit, the wheelhouse (lowered or
+raised), or its lift column. A unit stands on the highest deck point under its footprint.
+_Avoid_: deckhouse (on its own), container (the unit is not cargo)
+
 **Waterplane**:
 The plane of the water surface relative to the hull, set by the draught, the heel and the trim.
 

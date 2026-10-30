@@ -57,9 +57,53 @@ pub struct Bulkhead {
 
 /// The Outfit layer (ADR 0021): the parts that are neither hull, compartments nor structure, and
 /// are not in the hydrostatics. Their masses are already in the lightship; the Outfit adds only
-/// their shape. Empty until the Deck Items and the Propulsor Layout fill it (spec 0009).
+/// their shape. The Propulsor Layout joins it later (spec 0009).
 #[derive(Debug, Clone, Default, PartialEq)]
-pub struct Outfit {}
+pub struct Outfit {
+    /// The Deck Items of the stern block: the container units, then the wheelhouse lowered and
+    /// raised, then its lift column. Empty without a stern block.
+    pub deck_items: Vec<DeckItem>,
+}
+
+/// The two positions of a lifting wheelhouse.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WheelhousePosition {
+    Lowered,
+    Raised,
+}
+
+/// What a Deck Item is, and where its size comes from in the stern block's result
+/// (`AftArrangementResult`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DeckItemKind {
+    /// A container unit: entry `index` of `container_units`, an accommodation or a battery unit.
+    Unit {
+        index: usize,
+        battery: bool,
+    },
+    Wheelhouse(WheelhousePosition),
+    /// The column the wheelhouse rises on: from the deck to the raised floor.
+    LiftColumn,
+}
+
+/// A Deck Item (GLOSSARY.md): an Outfit part that stands on the deck, as a box in hull axes (x
+/// forward from the aft end, y to starboard, z up from the keel).
+#[derive(Debug, Clone, PartialEq)]
+pub struct DeckItem {
+    pub kind: DeckItemKind,
+    /// The unit's label from the stern block ("ACCOM 40 FT"); the kind's name for the others.
+    pub label: String,
+    pub x_aft_m: f64,
+    pub x_fwd_m: f64,
+    pub y_port_m: f64,
+    pub y_stbd_m: f64,
+    pub z_base_m: f64,
+    pub z_top_m: f64,
+}
+
+/// The plan size of the wheelhouse lift column, square, over the wheelhouse width. An Estimate
+/// (spec 0009, D2; basis DR-A45): no published proportion is held.
+pub const LIFT_COLUMN_SIDE_OVER_WHEELHOUSE_WIDTH: f64 = 0.25;
 
 /// The Vessel Model of spec 0008, with the tank Spaces and the Outfit layer of ADR 0021.
 #[derive(Debug, Clone, PartialEq)]
@@ -99,7 +143,9 @@ pub fn assemble(inp: &VesselModelInputs) -> VesselModel {
         bulkheads: bulkheads(c, r),
         spaces: spaces.iter().map(|s| clip(s, &inp.hull)).collect(),
         tank_layout,
-        outfit: Outfit::default(),
+        outfit: Outfit {
+            deck_items: deck_items(r, &inp.hull),
+        },
         frames: Vec::new(),
     }
 }
@@ -323,5 +369,154 @@ fn bulkheads(c: &BargeCapacityInputs, r: &BargeCapacityResult) -> Vec<Bulkhead> 
     }
     out.sort_by(|a, b| a.x_m.total_cmp(&b.x_m));
     out.dedup_by(|b, a| (b.x_m - a.x_m).abs() < SAME_X_M);
+    out
+}
+
+/// The deck height under a footprint: the highest point of the deck from `x0` to `x1` and from `y0`
+/// to `y1` (y to starboard). Hull Forms have camber and sheer, so a unit stands on the highest point
+/// under it and never cuts into the deck (spec 0009). The deck is the top of each half-section, from
+/// the deck edge to the centre line; between Sections it is the ruled surface. The highest point is
+/// at a Station or an end of the footprint, and at a point of the deck line or an edge of the
+/// footprint, so those are the points tried. With no deck under the footprint (a slot), the deck
+/// edge height.
+pub fn deck_height_over(table: &SectionsTable, (x0, x1): (f64, f64), (y0, y1): (f64, f64)) -> f64 {
+    let (a, b) = (y0.abs(), y1.abs());
+    let (lo, hi) = if y0 <= 0.0 && y1 >= 0.0 {
+        (0.0, a.max(b))
+    } else {
+        (a.min(b), a.max(b))
+    };
+    let mut xs = vec![x0, x1];
+    xs.extend(
+        table
+            .sections
+            .iter()
+            .map(|s| s.x)
+            .filter(|x| *x > x0 && *x < x1),
+    );
+    let mut top = f64::NEG_INFINITY;
+    for x in xs {
+        let (section, edge) = table.section_at(x);
+        let deck = deck_line(&section.points, edge);
+        let mut ys = vec![lo, hi];
+        ys.extend(deck.iter().map(|p| p.0).filter(|y| *y > lo && *y < hi));
+        let mut any = false;
+        for y in ys {
+            if let Some(z) = deck_z(&deck, y) {
+                top = top.max(z);
+                any = true;
+            }
+        }
+        if !any {
+            top = top.max(edge);
+        }
+    }
+    top
+}
+
+/// The deck line of a half-section: its points from the deck edge to the end (the centre line, or
+/// the slot edge), the run of last points at or above the deck edge height.
+fn deck_line(points: &[(f64, f64)], edge: f64) -> Vec<(f64, f64)> {
+    let mut start = points.len();
+    while start > 0 && points[start - 1].1 >= edge - 1e-9 {
+        start -= 1;
+    }
+    points[start..].to_vec()
+}
+
+/// The deck height at half-breadth `y` on a deck line (y falling from the deck edge inboard);
+/// `None` where the line does not reach `y`.
+fn deck_z(deck: &[(f64, f64)], y: f64) -> Option<f64> {
+    let tol = 1e-9;
+    for w in deck.windows(2) {
+        let ((ya, za), (yb, zb)) = (w[0], w[1]);
+        let (y_lo, y_hi) = (ya.min(yb), ya.max(yb));
+        if y >= y_lo - tol && y <= y_hi + tol {
+            if (ya - yb).abs() <= tol {
+                return Some(za.max(zb));
+            }
+            return Some(za + (zb - za) * (y - ya) / (yb - ya));
+        }
+    }
+    match deck {
+        [(ya, za)] if (ya - y).abs() <= tol => Some(*za),
+        _ => None,
+    }
+}
+
+/// The Deck Items of the stern block (spec 0009, "Deck Items"): each container unit on its footprint
+/// from the deck to the units' top, the wheelhouse lowered and raised, and the lift column from the
+/// deck to the raised floor. Empty without a stern block.
+fn deck_items(r: &BargeCapacityResult, table: &SectionsTable) -> Vec<DeckItem> {
+    let Some(a) = r.aft_arrangement.as_ref() else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    let half_unit = a.container_unit_width_m / 2.0;
+    for (index, (label, x_aft, x_fwd, y_centre)) in a.container_units.iter().enumerate() {
+        // `container_units` gives y + = port; the model's y is + to starboard. Convert once, here.
+        let y = -y_centre;
+        let (y_port, y_stbd) = (y - half_unit, y + half_unit);
+        out.push(DeckItem {
+            kind: DeckItemKind::Unit {
+                index,
+                battery: label.starts_with("BATTERY"),
+            },
+            label: label.clone(),
+            x_aft_m: *x_aft,
+            x_fwd_m: *x_fwd,
+            y_port_m: y_port,
+            y_stbd_m: y_stbd,
+            z_base_m: deck_height_over(table, (*x_aft, *x_fwd), (y_port, y_stbd)),
+            z_top_m: a.container_top_above_keel_m,
+        });
+    }
+    let half_wh = a.wheelhouse_width_m / 2.0;
+    if !(a.wheelhouse_x1_m > a.wheelhouse_x0_m && half_wh > 0.0) {
+        return out;
+    }
+    for (position, floor, top) in [
+        (
+            WheelhousePosition::Lowered,
+            a.wheelhouse_floor_lowered_m,
+            a.wheelhouse_top_lowered_m,
+        ),
+        (
+            WheelhousePosition::Raised,
+            a.wheelhouse_floor_raised_m,
+            a.wheelhouse_top_raised_m,
+        ),
+    ] {
+        out.push(DeckItem {
+            kind: DeckItemKind::Wheelhouse(position),
+            label: match position {
+                WheelhousePosition::Lowered => "wheelhouse_lowered",
+                WheelhousePosition::Raised => "wheelhouse_raised",
+            }
+            .to_string(),
+            x_aft_m: a.wheelhouse_x0_m,
+            x_fwd_m: a.wheelhouse_x1_m,
+            y_port_m: -half_wh,
+            y_stbd_m: half_wh,
+            z_base_m: floor,
+            z_top_m: top,
+        });
+    }
+    let half_col = LIFT_COLUMN_SIDE_OVER_WHEELHOUSE_WIDTH * a.wheelhouse_width_m / 2.0;
+    let mid = (a.wheelhouse_x0_m + a.wheelhouse_x1_m) / 2.0;
+    let (x_aft, x_fwd) = (mid - half_col, mid + half_col);
+    let base = deck_height_over(table, (x_aft, x_fwd), (-half_col, half_col));
+    if a.wheelhouse_floor_raised_m > base {
+        out.push(DeckItem {
+            kind: DeckItemKind::LiftColumn,
+            label: "lift_column".to_string(),
+            x_aft_m: x_aft,
+            x_fwd_m: x_fwd,
+            y_port_m: -half_col,
+            y_stbd_m: half_col,
+            z_base_m: base,
+            z_top_m: a.wheelhouse_floor_raised_m,
+        });
+    }
     out
 }
