@@ -155,6 +155,14 @@ fn every_space_mesh_of_every_fixture_is_closed_and_holds_the_space_volume() {
                 }
                 closed(&part).unwrap_or_else(|e| panic!("{at}: not closed at {e}"));
                 let s = model.spaces.iter().find(|s| s.space.name == g.id).unwrap();
+                // A tank Space holds its interior volume, but its mesh is the outer shape (ADR 0021):
+                // `tank_meshes.rs` checks it against the closed form at the outer diameter.
+                if matches!(
+                    s.space.shape,
+                    ovcd_core::compartments::SpaceShape::Tank { .. }
+                ) {
+                    continue;
+                }
                 assert!(
                     (part.volume() - s.volume_m3).abs() <= 2e-2 * s.volume_m3.max(1e-9) + 1e-5,
                     "{at}: mesh {} vs {}",
