@@ -452,3 +452,23 @@ fn every_default_gas_design_meets_the_new_rules_or_says_why_it_does_not() {
         "{below:?}"
     );
 }
+
+#[test]
+fn the_damage_survival_gap_of_a_gas_barge_names_the_missing_igc_damage_not_a_floating_position() {
+    // Issue #663. IGC 2.7: the ship "shall be capable of surviving the assumed damage specified in
+    // 2.3". The engine works the assumed damages of ADN 9.3.x.15.1 and MARPOL Annex I regulation 28.2
+    // only, so a gas Cargo in Type C tanks has none. The laden departure condition does float, so the
+    // gap must not say that it has no floating position.
+    let results = new_gas_results("LNG", "");
+    let conditions = results["stability"]["conditions"].as_array().unwrap();
+    assert!(!conditions.is_empty(), "the laden condition is computed");
+    let rows = results["rule_trace"]["rows"].as_array().unwrap();
+    let row = rows
+        .iter()
+        .find(|r| r["rule"] == "igc/2.7/damage-survival")
+        .expect("the IGC 2.7 row");
+    assert_eq!(row["outcome"], "not evaluated");
+    let gap = row["gap"].as_str().unwrap();
+    assert!(!gap.contains("floating position"), "{gap}");
+    assert!(gap.contains("IGC 2.3"), "{gap}");
+}
