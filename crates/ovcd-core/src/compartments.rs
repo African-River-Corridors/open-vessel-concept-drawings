@@ -16,6 +16,7 @@ use crate::barge_capacity::{BargeCapacityInputs, BargeCapacityResult};
 use crate::box_stability::{area_centroid, clip_below};
 use crate::cargo::CargoClass;
 use crate::sections::SectionsTable;
+use crate::tanks::{TankHead, TankLayout};
 
 /// What a Space holds. The liquid bulk module adds the cargo kinds (#330).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -29,7 +30,7 @@ pub enum SpaceKind {
     PeakBallast,
     /// A tank of stores and fuel (consumable liquids).
     Consumables,
-    /// A cargo tank (the liquid bulk module).
+    /// A cargo tank: a tank of the liquid bulk module, or a Type C tank of a gas hull.
     CargoTank,
     /// A slop tank: tank washings and oily residues, not cargo.
     Slop,
@@ -109,17 +110,37 @@ impl Side {
     }
 }
 
-/// One compartment: a prism of `section` from `x_aft` to `x_fwd`.
+/// The shape of a Space (ADR 0021): a prism, or a Type C cargo tank.
+#[derive(Debug, Clone, PartialEq)]
+pub enum SpaceShape {
+    /// The cross-section, (y, z) corners in order, a simple polygon, swept from `x_aft` to `x_fwd`.
+    Prism { section: Vec<(f64, f64)> },
+    /// A Type C cargo tank of the Tank Layout (`tanks::tank_layout`): a horizontal cylinder with its
+    /// Tank Heads, its axis from `axis_x0` to `axis_x1` (the Space's `x_aft` and `x_fwd`) at `y`
+    /// and `z`, `outer_diameter` across the insulation. It stands clear of the hull, so `clip`
+    /// passes it through. Its volume is the interior volume the capacity counts (`TankResult`'s
+    /// `volume_per_tank`), not the volume of its outer shape.
+    Tank {
+        axis_x0: f64,
+        axis_x1: f64,
+        y: f64,
+        z: f64,
+        outer_diameter: f64,
+        head: TankHead,
+        inner_volume_m3: f64,
+    },
+}
+
+/// One compartment: a prism or a tank (`shape`) from `x_aft` to `x_fwd`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Space {
-    /// A short name, the same in every language: "DB1P", "WB1S".
+    /// A short name, the same in every language: "DB1P", "WB1S", "CT1C".
     pub name: String,
     pub kind: SpaceKind,
     pub side: Side,
     pub x_aft: f64,
     pub x_fwd: f64,
-    /// The cross-section, (y, z) corners in order. A simple polygon.
-    pub section: Vec<(f64, f64)>,
+    pub shape: SpaceShape,
 }
 
 /// A Space with its volume and centroid inside the hull (spec 0008, "One compartment model", issue
@@ -151,12 +172,29 @@ struct HullPiece {
 
 impl ClippedSpace {
     /// The Space as its prism: the section's area times the length, at the section's centroid and
-    /// mid-length. For a Space that no hull cuts.
+    /// mid-length. For a Space that no hull cuts. A tank keeps its interior volume, at the middle of
+    /// its axis.
     pub fn prism(space: Space) -> Self {
-        let (area, cy, cz) = area_centroid(&space.section);
+        let (volume_m3, centroid_m) = match &space.shape {
+            SpaceShape::Prism { section } => {
+                let (area, cy, cz) = area_centroid(section);
+                (
+                    area * space.length(),
+                    ((space.x_aft + space.x_fwd) / 2.0, cy, cz),
+                )
+            }
+            SpaceShape::Tank {
+                axis_x0,
+                axis_x1,
+                y,
+                z,
+                inner_volume_m3,
+                ..
+            } => (*inner_volume_m3, ((axis_x0 + axis_x1) / 2.0, *y, *z)),
+        };
         Self {
-            volume_m3: area * space.length(),
-            centroid_m: ((space.x_aft + space.x_fwd) / 2.0, cy, cz),
+            volume_m3,
+            centroid_m,
             space,
             cut: Vec::new(),
         }
@@ -226,10 +264,10 @@ impl ClippedSpace {
 
     /// The clipped shape below `level`, and with `surface` the free surface inertia there.
     fn below(&self, level: f64, surface: bool) -> Moments {
-        let clipper = clip_below(&self.space.section, level);
+        let clipper = clip_below(self.space.section(), level);
         let mut m = Moments::default();
         for piece in &self.cut {
-            let fs = surface.then_some((level, self.space.section.as_slice()));
+            let fs = surface.then_some((level, self.space.section()));
             m.add(&integrate(piece, &clipper, fs).moments);
         }
         m
@@ -263,7 +301,12 @@ impl Moments {
 /// where a Space corner crosses a hull edge, so the clipped shape keeps one topology on each part.
 /// That is exact wherever the clipped area is at most cubic in x: a prism, and a box or raked box
 /// hull. Where no part of the Space lies outside the hull, the prism's values are kept exactly.
+///
+/// A tank (ADR 0021) stands clear of the hull: it passes through unchanged.
 pub fn clip(space: &Space, table: &SectionsTable) -> ClippedSpace {
+    if let SpaceShape::Tank { .. } = space.shape {
+        return ClippedSpace::prism(space.clone());
+    }
     let mut pieces = Vec::new();
     let mut covered = 0.0;
     for pair in table.sections.windows(2) {
@@ -291,7 +334,7 @@ pub fn clip(space: &Space, table: &SectionsTable) -> ClippedSpace {
     let length = space.length();
     let mut inside = (covered - length).abs() <= 1e-12 * length;
     for piece in &pieces {
-        let part = integrate(piece, &space.section, None);
+        let part = integrate(piece, space.section(), None);
         inside &= part.full_at_every_node;
         m.add(&part.moments);
     }
@@ -555,8 +598,21 @@ impl Space {
         self.x_fwd - self.x_aft
     }
 
+    /// The prism's cross-section; empty for a tank, which has none.
+    pub fn section(&self) -> &[(f64, f64)] {
+        match &self.shape {
+            SpaceShape::Prism { section } => section,
+            SpaceShape::Tank { .. } => &[],
+        }
+    }
+
     pub fn volume_m3(&self) -> f64 {
-        area_centroid(&self.section).0 * self.length()
+        match &self.shape {
+            SpaceShape::Prism { section } => area_centroid(section).0 * self.length(),
+            SpaceShape::Tank {
+                inner_volume_m3, ..
+            } => *inner_volume_m3,
+        }
     }
 
     /// The mass of the Space pressed full of a liquid of `density` (t/m³).
@@ -566,18 +622,25 @@ impl Space {
 
     /// The lowest and highest z of the section.
     pub fn z_range(&self) -> (f64, f64) {
-        self.section
+        if let SpaceShape::Tank {
+            z, outer_diameter, ..
+        } = self.shape
+        {
+            return (z - outer_diameter / 2.0, z + outer_diameter / 2.0);
+        }
+        self.section()
             .iter()
             .fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), &(_, z)| {
                 (lo.min(z), hi.max(z))
             })
     }
 
-    /// The liquid at `fraction` of the volume (clamped to 0..1).
+    /// The liquid at `fraction` of the volume (clamped to 0..1). A prism only: the cargo of a Type C
+    /// tank is the gas cargo model (`loading_conditions::GasCargo`), and a tank's fill here is empty.
     pub fn fill(&self, fraction: f64) -> Fill {
         let fraction = fraction.clamp(0.0, 1.0);
         let (z_lo, z_hi) = self.z_range();
-        let full = area_centroid(&self.section).0;
+        let full = area_centroid(self.section()).0;
         let lcg = 0.5 * (self.x_aft + self.x_fwd);
         if fraction <= 0.0 || full <= 0.0 {
             return Fill {
@@ -598,7 +661,7 @@ impl Space {
             let (mut lo, mut hi) = (z_lo, z_hi);
             for _ in 0..100 {
                 let mid = 0.5 * (lo + hi);
-                if area_centroid(&clip_below(&self.section, mid)).0 < target {
+                if area_centroid(&clip_below(self.section(), mid)).0 < target {
                     lo = mid;
                 } else {
                     hi = mid;
@@ -606,12 +669,12 @@ impl Space {
             }
             0.5 * (lo + hi)
         };
-        let wet = clip_below(&self.section, level);
+        let wet = clip_below(self.section(), level);
         let (area, y, z) = area_centroid(&wet);
         let inertia = if fraction >= 1.0 {
             0.0
         } else {
-            self.length() * chord_inertia(&self.section, level)
+            self.length() * chord_inertia(self.section(), level)
         };
         Fill {
             fraction,
@@ -692,7 +755,9 @@ pub(crate) fn pair(
             side,
             x_aft,
             x_fwd,
-            section: section(side),
+            shape: SpaceShape::Prism {
+                section: section(side),
+            },
         })
         .filter(|s| s.volume_m3() > 0.0)
         .collect()
@@ -780,12 +845,14 @@ fn peak(name: &str, (x_aft, x_fwd): (f64, f64), half_b: f64, depth: f64) -> Opti
         side: Side::Centre,
         x_aft,
         x_fwd,
-        section: vec![
-            (-half_b, 0.0),
-            (half_b, 0.0),
-            (half_b, depth),
-            (-half_b, depth),
-        ],
+        shape: SpaceShape::Prism {
+            section: vec![
+                (-half_b, 0.0),
+                (half_b, 0.0),
+                (half_b, depth),
+                (-half_b, depth),
+            ],
+        },
     })
 }
 
@@ -851,4 +918,35 @@ pub fn consumables_tanks(
         }
     }
     at(hi)
+}
+
+/// The Type C cargo tanks of a Tank Layout as Spaces (ADR 0021), each holding `inner_volume_m3` (the
+/// capacity's `volume_per_tank`).
+pub fn tank_spaces(layout: &TankLayout, inner_volume_m3: f64) -> Vec<Space> {
+    layout
+        .tanks
+        .iter()
+        .map(|t| Space {
+            name: t.name.clone(),
+            kind: SpaceKind::CargoTank,
+            side: if t.y_m < 0.0 {
+                Side::Port
+            } else if t.y_m > 0.0 {
+                Side::Starboard
+            } else {
+                Side::Centre
+            },
+            x_aft: t.axis.x0_m,
+            x_fwd: t.axis.x1_m,
+            shape: SpaceShape::Tank {
+                axis_x0: t.axis.x0_m,
+                axis_x1: t.axis.x1_m,
+                y: t.y_m,
+                z: t.z_m,
+                outer_diameter: layout.outer_diameter_m,
+                head: layout.head,
+                inner_volume_m3,
+            },
+        })
+        .collect()
 }

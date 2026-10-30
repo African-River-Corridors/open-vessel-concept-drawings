@@ -47,8 +47,14 @@ The code of a Hull Form that writes a Sections Table from the Hull Form's parame
 
 **Vessel Model**:
 The hull, arrangement and structure layers of a Hull (ADR 0018), from which every analysis and every
-view reads its geometry.
+view reads its geometry, and the Outfit layer (ADR 0021).
 _Avoid_: digital twin, 3D model (when the engineering model is meant)
+
+**Outfit**:
+The parts of the Vessel Model that are not hull, compartments or structure and are not in the
+hydrostatics: the Deck Items and the propulsors (ADR 0021). Their masses are already in the
+lightship; the Outfit adds only their shape.
+_Avoid_: superstructure (it is not in the hydrostatics), equipment
 
 **Waterplane**:
 The plane of the water surface relative to the hull, set by the draught, the heel and the trim.
@@ -135,6 +141,12 @@ _Avoid_: shell diameter, OD (when the insulated one could be meant)
 **Tank Head**:
 The closed end of a cylindrical cargo tank: hemispherical, 2:1 ellipsoidal or torispherical.
 _Avoid_: end cap, dished end (on its own)
+
+**Tank Layout**:
+The position of each Type C cargo tank of a Hull, from the core: the x range, y and z of its axis, its
+Tank Outer Diameter and Tank Head, and its dome. One function places the tanks for the capacity, the
+loading conditions, the stability, the weights, the drawings and the Vessel Model (ADR 0021).
+_Avoid_: tank arrangement (the sizing: how many tanks and how large), tank positions
 
 **Design Vapour Pressure**:
 The highest gauge pressure in the vapour space of a cargo tank that the tank is designed for (P0).

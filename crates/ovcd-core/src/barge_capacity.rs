@@ -83,6 +83,20 @@ pub fn dome_dimensions(
     (d, height_m.unwrap_or(d))
 }
 
+/// The dome in force on a tank of `outer_diameter_m` with `insulation_m` of insulation: the dome
+/// rule on its steel diameter, or the typed size (`dome_dimensions`). `(diameter, height)`.
+pub fn dome_in_force(
+    inp: &BargeCapacityInputs,
+    outer_diameter_m: f64,
+    insulation_m: f64,
+) -> (f64, f64) {
+    dome_dimensions(
+        outer_diameter_m - 2.0 * insulation_m,
+        (!inp.dome_diameter_by_rule).then_some(inp.dome_diameter),
+        (!inp.dome_height_by_rule).then_some(inp.dome_height),
+    )
+}
+
 /// Default fixed tank wall thickness (mm).
 pub const DEFAULT_TANK_WALL_THICKNESS_MM: f64 = 25.0;
 /// The tank design values the engine used before they were inputs (`models::BargeInputs`
@@ -707,16 +721,17 @@ pub fn liquid_pressure_basis(
             } else {
                 1
             };
-            let zone = inp.loa - bow_void_m - stern_void_m;
-            let length = (zone - (n - 1) as f64 * gap_m) / n as f64;
+            // Each tank's centre from the Tank Layout (spec 0009): the arrangement is not sized yet,
+            // but the tanks' places along the zone do not depend on their diameter.
+            let zone = crate::tanks::CargoZone::new(inp.loa, bow_void_m, stern_void_m);
+            let length = zone.tank_length(n, gap_m);
             let mut worst = 0.0;
-            for i in 0..n {
-                let centre = stern_void_m + (i as f64 + 0.5) * length + i as f64 * gap_m;
+            for axis in crate::tanks::tank_axes_x(stern_void_m, length, gap_m, n as usize) {
                 let az = igc_vertical_acceleration(
                     inp.loa,
                     inp.block_coefficient,
                     service_speed_kn,
-                    centre - inp.loa / 2.0,
+                    axis.centre_m - inp.loa / 2.0,
                 );
                 if az > worst {
                     worst = az;
@@ -791,13 +806,7 @@ fn gas_volumetric(
     // Appendages (nozzles, manways and the like) are not modelled: no volume is added for them.
     // The dome counts in Vc only, not in the cargo volume, the fill or the weights. By the dome rule
     // (issue #316) its size follows the steel diameter of the tank, so it is set in the loop.
-    let dome_of = |outer_diameter: f64| {
-        dome_dimensions(
-            outer_diameter - 2.0 * ins_m,
-            (!inp.dome_diameter_by_rule).then_some(inp.dome_diameter),
-            (!inp.dome_height_by_rule).then_some(inp.dome_height),
-        )
-    };
+    let dome_of = |outer_diameter: f64| dome_in_force(inp, outer_diameter, ins_m);
     let mut dome = (inp.dome_diameter, inp.dome_height);
     let is_2g = inp.vessel_type == "IGC_2G";
     // d(Vc) depends on the tank volume, which depends on the clearance: iterate. d is continuous

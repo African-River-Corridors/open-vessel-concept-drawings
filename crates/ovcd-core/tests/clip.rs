@@ -7,7 +7,7 @@
 //! `h <= r`: `V(h) = B (h b - l_r (h - h² / 2r))` and the free surface `B³/12 (b - l_r + l_r h / r)`.
 //! Label: property - a Space wholly inside the hull keeps its prism values and fills bit for bit.
 
-use ovcd_core::compartments::{Side, Space, SpaceKind, clip};
+use ovcd_core::compartments::{Side, Space, SpaceKind, SpaceShape, clip};
 use ovcd_core::hull::hull_form::{HullFormInputs, HullFormKind, HullShape, generate};
 use ovcd_core::sections::SectionsTable;
 
@@ -39,7 +39,7 @@ fn tank(x_aft: f64, x_fwd: f64, section: Vec<(f64, f64)>) -> Space {
         side: Side::Centre,
         x_aft,
         x_fwd,
-        section,
+        shape: SpaceShape::Prism { section },
     }
 }
 

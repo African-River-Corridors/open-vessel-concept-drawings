@@ -11,6 +11,7 @@
 
 use alloc::format;
 use alloc::string::{String, ToString};
+use alloc::vec::Vec;
 use core::f64::consts::PI;
 
 use libm::{fabs, log, pow, sqrt};
@@ -373,4 +374,279 @@ pub fn free_surface_moment_cylindrical(
     let i_fs = (1.0 / 12.0) * cylinder_length * pow(chord, 3.0);
 
     cargo_density * i_fs
+}
+
+// ---- the Tank Layout (spec 0009, ADR 0021) ---------------------------------------------------------
+
+/// The cargo zone along the hull: from the stern void forward to the bow void (m from the aft end).
+/// The tanks and the cargo lie in it.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct CargoZone {
+    pub x_aft_m: f64,
+    pub x_fwd_m: f64,
+}
+
+impl CargoZone {
+    pub fn new(loa: f64, bow_void_m: f64, stern_void_m: f64) -> Self {
+        Self {
+            x_aft_m: stern_void_m,
+            x_fwd_m: loa - bow_void_m,
+        }
+    }
+
+    /// `loa - bow void - stern void`.
+    pub fn length(&self) -> f64 {
+        self.x_fwd_m - self.x_aft_m
+    }
+
+    /// The middle of the zone: the LCG of the tanks and of the cargo (`gas_stability`,
+    /// `loading_conditions`).
+    pub fn centre(&self) -> f64 {
+        (self.x_aft_m + self.x_fwd_m) / 2.0
+    }
+
+    /// The overall length of one of `n_long` tanks in a line with `gap_m` between them: the length
+    /// `calculate_tank_arrangement` gives a tank.
+    pub fn tank_length(&self, n_long: i64, gap_m: f64) -> f64 {
+        (self.length() - (n_long - 1) as f64 * gap_m) / n_long as f64
+    }
+}
+
+/// The tank bottom above the keel: the double bottom plus the support height.
+pub fn tank_bottom(double_bottom_m: f64, support_height_m: f64) -> f64 {
+    double_bottom_m + support_height_m
+}
+
+/// The height of a tank's axis above the keel: the tank bottom plus half the outer diameter. The
+/// KCG of the tanks (`gas_stability`, `loading_conditions`).
+pub fn tank_axis_z(tank_bottom_m: f64, outer_diameter_m: f64) -> f64 {
+    tank_bottom_m + outer_diameter_m / 2.0
+}
+
+/// One tank's place along the hull: its axis from `x0` to `x1`, and its centre.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct TankAxisX {
+    pub x0_m: f64,
+    pub x1_m: f64,
+    /// `stern void + (i + 1/2) L + i g`: the point at which the IGC accelerations act on tank `i`.
+    pub centre_m: f64,
+}
+
+/// The `n_long` tanks of overall length `length_m` in a line from `x_aft_m` forward, `gap_m` apart.
+pub fn tank_axes_x(x_aft_m: f64, length_m: f64, gap_m: f64, n_long: usize) -> Vec<TankAxisX> {
+    (0..n_long)
+        .map(|i| {
+            let x0 = x_aft_m + i as f64 * (length_m + gap_m);
+            TankAxisX {
+                x0_m: x0,
+                x1_m: x0 + length_m,
+                centre_m: x_aft_m + (i as f64 + 0.5) * length_m + i as f64 * gap_m,
+            }
+        })
+        .collect()
+}
+
+/// The axis y of `n_wide` tanks of outer diameter `od_m` across `beam_m` less the side clearance on
+/// each side, `gap_m` apart (m, positive to starboard; the first is the port one).
+pub fn tank_axes_y(
+    beam_m: f64,
+    side_clearance_m: f64,
+    od_m: f64,
+    gap_m: f64,
+    n_wide: usize,
+) -> Vec<f64> {
+    let available = beam_m - 2.0 * side_clearance_m;
+    (0..n_wide)
+        .map(|j| -available / 2.0 + od_m / 2.0 + j as f64 * (od_m + gap_m))
+        .collect()
+}
+
+/// The shape of a Tank Head (GLOSSARY.md).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum HeadKind {
+    Hemisphere,
+    Ellipsoidal2To1,
+}
+
+impl HeadKind {
+    /// The head of a `tank_head_type` key; `None` for a key the engine does not model.
+    pub fn from_key(key: &str) -> Option<Self> {
+        match key {
+            "hemisphere" => Some(HeadKind::Hemisphere),
+            "ellipsoidal_2to1" => Some(HeadKind::Ellipsoidal2To1),
+            _ => None,
+        }
+    }
+
+    pub fn key(self) -> &'static str {
+        match self {
+            HeadKind::Hemisphere => "hemisphere",
+            HeadKind::Ellipsoidal2To1 => "ellipsoidal_2to1",
+        }
+    }
+}
+
+/// A Tank Head: its shape, and its length along the axis outside the insulation (`TankResult`'s
+/// `head_length`).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct TankHead {
+    pub kind: HeadKind,
+    pub length_m: f64,
+}
+
+/// What places the tanks.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct TankPlacement {
+    pub zone: CargoZone,
+    pub beam_m: f64,
+    pub side_clearance_m: f64,
+    pub n_wide: usize,
+    pub n_long: usize,
+    pub gap_transverse_m: f64,
+    pub gap_longitudinal_m: f64,
+    /// The tank bottom above the keel ([`tank_bottom`]).
+    pub tank_bottom_m: f64,
+    pub outer_diameter_m: f64,
+    /// The overall length of one tank, heads included.
+    pub tank_length_m: f64,
+}
+
+/// One cargo tank of a Tank Layout.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TankPlace {
+    /// A short name, the same in every language: "CT1C", "CT2P", "CT1.3".
+    pub name: String,
+    /// Along (0: the aft one) and across (0: the port one).
+    pub row: usize,
+    pub column: usize,
+    /// The axis, m in hull axes (x forward from the aft end, y to starboard, z up from the keel).
+    pub axis: TankAxisX,
+    pub y_m: f64,
+    pub z_m: f64,
+}
+
+/// A tank dome: a cylinder standing on the tank top over the middle of the tank.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct DomePlace {
+    pub x_m: f64,
+    pub y_m: f64,
+    /// The tank top under it, above the keel.
+    pub z_base_m: f64,
+    pub diameter_m: f64,
+    pub height_m: f64,
+}
+
+/// The Tank Layout (GLOSSARY.md): where each cargo tank and dome is. The capacity, the loading
+/// conditions, the stability, the weights, the drawings and the Vessel Model read it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TankLayout {
+    pub zone: CargoZone,
+    pub outer_diameter_m: f64,
+    pub head: TankHead,
+    /// Row by row from aft, each row from port to starboard.
+    pub tanks: Vec<TankPlace>,
+    /// One per tank, in the same order; empty with no dome.
+    pub domes: Vec<DomePlace>,
+}
+
+/// The name of the tank in `row` and `column` of a layout `n_wide` across: "CT1C" with one tank
+/// across, "CT1P" and "CT1S" with two, "CT1.1" to "CT1.n" (port to starboard) with more.
+fn tank_name(row: usize, column: usize, n_wide: usize) -> String {
+    match (n_wide, column) {
+        (1, _) => format!("CT{}C", row + 1),
+        (2, 0) => format!("CT{}P", row + 1),
+        (2, _) => format!("CT{}S", row + 1),
+        _ => format!("CT{}.{}", row + 1, column + 1),
+    }
+}
+
+/// The Tank Layout of a placement, a head and a dome `(diameter, height)` (`None` or a zero size:
+/// no dome).
+pub fn tank_layout(p: &TankPlacement, head: TankHead, dome: Option<(f64, f64)>) -> TankLayout {
+    let xs = tank_axes_x(
+        p.zone.x_aft_m,
+        p.tank_length_m,
+        p.gap_longitudinal_m,
+        p.n_long,
+    );
+    let ys = tank_axes_y(
+        p.beam_m,
+        p.side_clearance_m,
+        p.outer_diameter_m,
+        p.gap_transverse_m,
+        p.n_wide,
+    );
+    let z = tank_axis_z(p.tank_bottom_m, p.outer_diameter_m);
+    let mut tanks = Vec::with_capacity(xs.len() * ys.len());
+    for (row, axis) in xs.iter().enumerate() {
+        for (column, y) in ys.iter().enumerate() {
+            tanks.push(TankPlace {
+                name: tank_name(row, column, p.n_wide),
+                row,
+                column,
+                axis: *axis,
+                y_m: *y,
+                z_m: z,
+            });
+        }
+    }
+    let domes = match dome {
+        Some((diameter_m, height_m)) if diameter_m > 0.0 && height_m > 0.0 => tanks
+            .iter()
+            .map(|t| DomePlace {
+                x_m: t.axis.x0_m + p.tank_length_m / 2.0,
+                y_m: t.y_m,
+                z_base_m: p.tank_bottom_m + p.outer_diameter_m,
+                diameter_m,
+                height_m,
+            })
+            .collect(),
+        _ => Vec::new(),
+    };
+    TankLayout {
+        zone: p.zone,
+        outer_diameter_m: p.outer_diameter_m,
+        head,
+        tanks,
+        domes,
+    }
+}
+
+impl TankPlacement {
+    /// The placement of a converged arrangement: its inputs and its tanks.
+    pub fn of(inputs: &BargeInputs, tanks: &TankResult) -> Self {
+        Self {
+            zone: CargoZone::new(
+                inputs.loa,
+                inputs.bow_non_tank_length.unwrap_or(0.0),
+                inputs.stern_non_tank_length.unwrap_or(0.0),
+            ),
+            beam_m: inputs.beam,
+            side_clearance_m: inputs.side_clearance.unwrap_or(0.0),
+            n_wide: usize::try_from(tanks.n_tanks_wide).unwrap_or(0),
+            n_long: usize::try_from(tanks.n_tanks_long).unwrap_or(0),
+            gap_transverse_m: inputs.tank_gap_transverse,
+            gap_longitudinal_m: inputs.tank_gap_longitudinal,
+            tank_bottom_m: tank_bottom(
+                inputs.double_bottom_height.unwrap_or(0.0),
+                inputs.tank_support_height,
+            ),
+            outer_diameter_m: tanks.outer_diameter,
+            tank_length_m: tanks.overall_tank_length,
+        }
+    }
+}
+
+/// The Tank Layout of a converged arrangement (`GasBasis`): its inputs, its tanks and the dome in
+/// force `(diameter, height)`. `None` for a head the engine does not model.
+pub fn arrangement_layout(
+    inputs: &BargeInputs,
+    tanks: &TankResult,
+    dome: Option<(f64, f64)>,
+) -> Option<TankLayout> {
+    let head = TankHead {
+        kind: HeadKind::from_key(&inputs.tank_head_type)?,
+        length_m: tanks.head_length,
+    };
+    Some(tank_layout(&TankPlacement::of(inputs, tanks), head, dome))
 }

@@ -741,9 +741,10 @@ pub fn gas_model(
 ) -> Option<(Vec<Item>, GasCargo)> {
     let g = result.gas_basis.as_ref()?;
     let (l, d) = (g.loa, g.depth);
-    let tank_bottom = g.double_bottom_height + g.tank_support_height;
+    // The tanks' height and their place along the hull, from the Tank Layout (spec 0009).
+    let tank_bottom = crate::tanks::tank_bottom(g.double_bottom_height, g.tank_support_height);
     let r_in = g.inner_diameter / 2.0;
-    let zone_centre = (g.stern_void_m + (l - g.bow_void_m)) / 2.0;
+    let zone_centre = crate::tanks::CargoZone::new(l, g.bow_void_m, g.stern_void_m).centre();
     let mut items = alloc::vec![
         Item {
             mass_t: g.steel_top_down,
@@ -752,7 +753,7 @@ pub fn gas_model(
         },
         Item {
             mass_t: g.tank_total + g.insulation,
-            kcg_m: tank_bottom + g.outer_diameter / 2.0,
+            kcg_m: crate::tanks::tank_axis_z(tank_bottom, g.outer_diameter),
             lcg_m: zone_centre,
         },
         Item {

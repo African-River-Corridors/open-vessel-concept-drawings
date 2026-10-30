@@ -230,3 +230,58 @@ fn the_space_volumes_are_the_capacities_the_results_give() {
     }
     assert!(checked.iter().all(|&n| n > 0), "{checked:?}");
 }
+
+/// Label: property - the Type C tank Spaces of a gas Option (ADR 0021, issue #685): one per tank the
+/// results count, each holding the per-tank volume the arrangement gives, inside the beam, unchanged
+/// by the hull clip.
+#[test]
+fn a_gas_option_has_one_tank_space_per_tank_with_its_volume() {
+    let mut checked = 0;
+    for (file, name, results, model, _) in models() {
+        let at = format!("{file} / {name}");
+        let tanks: Vec<_> = model
+            .spaces
+            .iter()
+            .filter(|s| {
+                matches!(
+                    s.space.shape,
+                    ovcd_core::compartments::SpaceShape::Tank { .. }
+                )
+            })
+            .collect();
+        let Some(n) = results["geometry"]["n_tanks_total"].as_u64() else {
+            assert!(
+                model.spaces.iter().all(|s| matches!(
+                    s.space.shape,
+                    ovcd_core::compartments::SpaceShape::Prism { .. }
+                )),
+                "{at}: no tank shape without gas tanks"
+            );
+            continue;
+        };
+        assert_eq!(tanks.len() as u64, n, "{at}");
+        let per_tank = results["arrangement"]["per_tank_m3"].as_f64().unwrap();
+        let half_b = results["dims"]["beam_m"].as_f64().unwrap() / 2.0;
+        let od = results["geometry"]["tank_outer_diameter_m"]
+            .as_f64()
+            .unwrap();
+        for t in tanks {
+            assert!(!t.is_cut(), "{at}: {}", t.space.name);
+            assert_eq!(t.space.kind, SpaceKind::CargoTank, "{at}");
+            assert!(
+                (t.volume_m3 - per_tank).abs() <= 1e-9 * per_tank,
+                "{at}: {} holds {} vs {per_tank}",
+                t.space.name,
+                t.volume_m3
+            );
+            let ovcd_core::compartments::SpaceShape::Tank { y, .. } = t.space.shape else {
+                panic!("{at}: {} is not a tank", t.space.name);
+            };
+            assert!(y.abs() + od / 2.0 < half_b, "{at}: {}", t.space.name);
+            checked += 1;
+        }
+        let layout = model.tank_layout.as_ref().expect("a gas Tank Layout");
+        assert_eq!(layout.tanks.len() as u64, n, "{at}");
+    }
+    assert!(checked > 0, "a gas fixture has tanks");
+}

@@ -46,10 +46,10 @@ pub struct LiquidCostRates {
 
 /// The inside surface of a prism Space: its section's perimeter along its length, and its two ends.
 fn surface_m2(s: &crate::compartments::Space) -> f64 {
-    let n = s.section.len();
+    let n = s.section().len();
     let perimeter = (0..n).fold(0.0, |a, i| {
-        let (y0, z0) = s.section[i];
-        let (y1, z1) = s.section[(i + 1) % n];
+        let (y0, z0) = s.section()[i];
+        let (y1, z1) = s.section()[(i + 1) % n];
         a + libm::sqrt((y1 - y0) * (y1 - y0) + (z1 - z0) * (z1 - z0))
     });
     let length = s.length();

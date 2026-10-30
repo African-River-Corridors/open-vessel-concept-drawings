@@ -14,7 +14,7 @@ use alloc::string::String;
 use alloc::vec::Vec;
 
 use super::{LiquidBulkInputs, PumpArrangement, value_error};
-use crate::compartments::{Side, Space, SpaceKind, poly, rect};
+use crate::compartments::{Side, Space, SpaceKind, SpaceShape, poly, rect};
 use crate::pressure_vessel::PyError;
 
 /// The inner hull of the parallel body: the box the cargo tanks sit in.
@@ -82,7 +82,7 @@ fn space(
         side,
         x_aft,
         x_fwd,
-        section,
+        shape: SpaceShape::Prism { section },
     }
 }
 

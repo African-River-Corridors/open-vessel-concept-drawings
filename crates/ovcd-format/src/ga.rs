@@ -817,9 +817,10 @@ impl Hull {
     }
 
     /// The tanks along and across: (length of one tank overall, the x of each tank's stern end,
-    /// the athwartships centre of each tank). The length is the core's (`TankResult`); the tanks
+    /// the athwartships centre of each tank). The length is the core's (`TankResult`); the places
+    /// are the core's Tank Layout (`tanks::tank_axes_x` and `tank_axes_y`, spec 0009): the tanks
     /// follow each other along the cargo zone with the longitudinal gap, and sit across the beam
-    /// less the side clearances with the transverse gap (the core's layout, `tanks.rs`).
+    /// less the side clearances with the transverse gap.
     fn tank_layout(&self) -> Option<(f64, Vec<f64>, Vec<f64>)> {
         let Containment::Tanks {
             od,
@@ -839,13 +840,12 @@ impl Hull {
             return None;
         }
         let length = *tank_length;
-        let starts = (0..n_long)
-            .map(|i| self.stern_void + i as f64 * (length + gap_long))
+        let starts = ovcd_core::tanks::tank_axes_x(self.stern_void, length, *gap_long, n_long)
+            .iter()
+            .map(|a| a.x0_m)
             .collect();
-        let available = self.beam - 2.0 * side_clearance;
-        let centres = (0..n_wide)
-            .map(|j| -available / 2.0 + od / 2.0 + j as f64 * (od + gap_across))
-            .collect();
+        let centres =
+            ovcd_core::tanks::tank_axes_y(self.beam, *side_clearance, *od, *gap_across, n_wide);
         Some((length, starts, centres))
     }
 }

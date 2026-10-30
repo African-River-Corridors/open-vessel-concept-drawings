@@ -22,7 +22,7 @@ pub struct TankFreeSurface {
 /// The breadth of a tank: its widest chord (m).
 pub(super) fn breadth_m(s: &Space) -> f64 {
     let (lo, hi) = s
-        .section
+        .section()
         .iter()
         .fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), &(y, _)| {
             (lo.min(y), hi.max(y))

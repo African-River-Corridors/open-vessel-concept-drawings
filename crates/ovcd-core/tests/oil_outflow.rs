@@ -9,7 +9,7 @@
 //! tank, OMS = 4,172 m3, OMB(0) = 1,544 m3, OMB(2.5) = 1,974 m3, OMB = 1,673 m3 and OM = 0.071. The notes round
 //! their probabilities to 3 decimals, so the figures here agree to the rounding of the notes (0.5 %).
 
-use ovcd_core::compartments::{Side, Space, SpaceKind};
+use ovcd_core::compartments::{Side, Space, SpaceKind, SpaceShape};
 use ovcd_core::liquid_bulk::oil_outflow::{OilOutflowInputs, oil_outflow, om_limit};
 
 fn tank(name: &str, x: (f64, f64)) -> Space {
@@ -19,7 +19,9 @@ fn tank(name: &str, x: (f64, f64)) -> Space {
         side: Side::Centre,
         x_aft: x.0,
         x_fwd: x.1,
-        section: vec![(-18.0, 2.0), (18.0, 2.0), (18.0, 20.0), (-18.0, 20.0)],
+        shape: SpaceShape::Prism {
+            section: vec![(-18.0, 2.0), (18.0, 2.0), (18.0, 20.0), (-18.0, 20.0)],
+        },
     }
 }
 
@@ -80,9 +82,11 @@ fn the_cargo_level_follows_the_pressure_balance_and_a_tank_above_the_sea_loses_n
     // A tank so high that the balance level is above its top retains all its oil: no outflow from a tank that
     // is not bounded by the bottom shell.
     let mut high = tank("H", (20.0, 35.0));
-    high.section = vec![(-18.0, 2.0), (18.0, 2.0), (18.0, 3.0), (-18.0, 3.0)];
+    high.shape = SpaceShape::Prism {
+        section: vec![(-18.0, 2.0), (18.0, 2.0), (18.0, 3.0), (-18.0, 3.0)],
+    };
     // the deadweight that makes the nominal density 900 kg/m3 for this tank: DW = 0.9 C
-    let c = |t: &Space| 0.98 * 0.99 * (36.0 * (t.section[2].1 - t.section[0].1) * t.length());
+    let c = |t: &Space| 0.98 * 0.99 * (36.0 * (t.section()[2].1 - t.section()[0].1) * t.length());
     let inp = OilOutflowInputs {
         deadweight_t: 0.9 * c(&high),
         ..barge()
@@ -91,7 +95,9 @@ fn the_cargo_level_follows_the_pressure_balance_and_a_tank_above_the_sea_loses_n
     assert_eq!(r.tanks[0].ob_0_m3, 0.0);
     // The same tank on the bottom shell loses at least 1 % of its oil (7.3.3).
     let mut low = tank("L", (20.0, 35.0));
-    low.section = vec![(-18.0, 0.0), (18.0, 0.0), (18.0, 1.0), (-18.0, 1.0)];
+    low.shape = SpaceShape::Prism {
+        section: vec![(-18.0, 0.0), (18.0, 0.0), (18.0, 1.0), (-18.0, 1.0)],
+    };
     let inp = OilOutflowInputs {
         deadweight_t: 0.9 * c(&low),
         ..barge()
@@ -137,7 +143,9 @@ fn wide(name: &str, x: (f64, f64), y: (f64, f64)) -> Space {
         side: Side::Centre,
         x_aft: x.0,
         x_fwd: x.1,
-        section: vec![(y.0, 0.0), (y.1, 0.0), (y.1, 4.0), (y.0, 4.0)],
+        shape: SpaceShape::Prism {
+            section: vec![(y.0, 0.0), (y.1, 0.0), (y.1, 4.0), (y.0, 4.0)],
+        },
     }
 }
 

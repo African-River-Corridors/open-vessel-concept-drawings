@@ -258,7 +258,7 @@ fn the_verdict_is_the_criteria_applied_to_the_numbers_it_reports() {
 
 // ---- the damage cases of a layout -----------------------------------------------------------------
 
-use ovcd_core::compartments::{Side, Space, SpaceKind};
+use ovcd_core::compartments::{Side, Space, SpaceKind, SpaceShape};
 use ovcd_core::liquid_bulk::damage::{AdnExtents, damage_cases, longitudinal_extent_m};
 
 fn space(name: &str, kind: SpaceKind, x: (f64, f64), y: (f64, f64), z: (f64, f64)) -> Space {
@@ -268,7 +268,9 @@ fn space(name: &str, kind: SpaceKind, x: (f64, f64), y: (f64, f64), z: (f64, f64
         side: Side::Starboard,
         x_aft: x.0,
         x_fwd: x.1,
-        section: vec![(y.0, z.0), (y.1, z.0), (y.1, z.1), (y.0, z.1)],
+        shape: SpaceShape::Prism {
+            section: vec![(y.0, z.0), (y.1, z.0), (y.1, z.1), (y.0, z.1)],
+        },
     }
 }
 

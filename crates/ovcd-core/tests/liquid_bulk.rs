@@ -153,7 +153,7 @@ fn a_pump_room_takes_the_aft_end_and_is_not_cargo() {
 
 fn extent(s: &Space) -> ([f64; 2], [f64; 2], [f64; 2]) {
     let fold = |f: fn(&(f64, f64)) -> f64| {
-        s.section
+        s.section()
             .iter()
             .map(f)
             .fold([f64::INFINITY, f64::NEG_INFINITY], |[lo, hi], v| {

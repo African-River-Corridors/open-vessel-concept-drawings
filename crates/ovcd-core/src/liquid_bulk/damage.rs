@@ -127,7 +127,7 @@ fn bbox(s: &Space) -> ((f64, f64), (f64, f64)) {
         f64::INFINITY,
         f64::NEG_INFINITY,
     );
-    for &(y, z) in &s.section {
+    for &(y, z) in s.section() {
         y0 = y0.min(y);
         y1 = y1.max(y);
         z0 = z0.min(z);
