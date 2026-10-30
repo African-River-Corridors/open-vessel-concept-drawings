@@ -1,0 +1,2 @@
+<!-- unreleased -->
+- Release: notes longer than 120,000 characters are cut at the end of a line, with a link to the full `CHANGELOG.md` at the released commit (`tools/release_notes.py`). A GitHub release body holds at most 125,000 characters. The first publish of 0.3.0 failed on this: its section was 139,695 characters. The section opens with its summary, so the cut keeps the summary and the calibration cases. No result moves.
