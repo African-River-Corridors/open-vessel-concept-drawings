@@ -3,7 +3,9 @@
 //! arrival consumables), 3.1.2 (98 % is nominally full) and 3.1.4 (consumables free surface), and
 //! hand calculation (a box hull: T = Δ / (L B ρ), FSC = ρ i / Δ).
 
-use ovcd_core::compartments::{ClippedSpace, Side, Space, SpaceKind, consumables_tanks};
+use ovcd_core::compartments::{
+    ClippedSpace, Side, Space, SpaceKind, SpaceShape, consumables_tanks,
+};
 use ovcd_core::gas_stability::PyError;
 use ovcd_core::hydrostatics::{Hull, HullSpec};
 use ovcd_core::loading_conditions::{
@@ -47,7 +49,7 @@ fn db_pair() -> Vec<ClippedSpace> {
                 side,
                 x_aft: 0.0,
                 x_fwd: L,
-                section,
+                shape: SpaceShape::Prism { section },
             })
         })
         .collect()

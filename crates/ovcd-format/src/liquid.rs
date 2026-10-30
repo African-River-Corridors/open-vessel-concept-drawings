@@ -116,7 +116,7 @@ pub(crate) fn liquid_json(l: &LiquidBulkResult, cargo_key: &str) -> Value {
 fn drawing_space_json(s: &Space) -> Value {
     let mut v = space_json(s);
     v["section_m"] = Value::Array(
-        s.section
+        s.section()
             .iter()
             .map(|(y, z)| json!([num(*y), num(*z)]))
             .collect(),

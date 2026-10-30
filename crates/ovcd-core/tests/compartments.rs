@@ -3,7 +3,7 @@
 //! rectangular and a trapezoidal prism (I = l b³ / 12 for a rectangular free surface).
 
 use ovcd_core::barge_capacity::{BargeCapacityInputs, compute};
-use ovcd_core::compartments::{Side, Space, SpaceKind, ballast_tanks};
+use ovcd_core::compartments::{Side, Space, SpaceKind, SpaceShape, ballast_tanks};
 
 fn close(a: f64, b: f64) {
     assert!((a - b).abs() < 1e-9, "{a} != {b}");
@@ -17,7 +17,9 @@ fn box_tank() -> Space {
         side: Side::Starboard,
         x_aft: 5.0,
         x_fwd: 15.0,
-        section: vec![(1.0, 0.0), (5.0, 0.0), (5.0, 2.0), (1.0, 2.0)],
+        shape: SpaceShape::Prism {
+            section: vec![(1.0, 0.0), (5.0, 0.0), (5.0, 2.0), (1.0, 2.0)],
+        },
     }
 }
 
@@ -61,7 +63,9 @@ fn a_trapezoid_section_has_the_hand_worked_area_and_centroid() {
         side: Side::Starboard,
         x_aft: 0.0,
         x_fwd: 1.0,
-        section: vec![(1.0, 0.0), (3.0, 0.0), (3.0, 2.0), (2.0, 2.0)],
+        shape: SpaceShape::Prism {
+            section: vec![(1.0, 0.0), (3.0, 0.0), (3.0, 2.0), (2.0, 2.0)],
+        },
     };
     close(t.volume_m3(), 3.0);
     close(t.fill(1.0).vcg_m, 8.0 / 9.0);
@@ -77,7 +81,9 @@ fn a_hopper_wing_tank_at_half_height_has_the_chord_of_its_free_surface() {
         side: Side::Starboard,
         x_aft: 0.0,
         x_fwd: 4.0,
-        section: vec![(1.0, 0.0), (3.0, 0.0), (3.0, 2.0), (2.0, 2.0)],
+        shape: SpaceShape::Prism {
+            section: vec![(1.0, 0.0), (3.0, 0.0), (3.0, 2.0), (2.0, 2.0)],
+        },
     };
     // The wetted area below z 1 is (2 + 1.5) / 2 × 1 = 1.75, of 3.
     let f = t.fill(1.75 / 3.0);
@@ -136,7 +142,10 @@ fn a_gas_barge_with_a_wing_tank_has_it_up_to_the_wing_plate() {
     // The 2 m clearance less the gap.
     let width = 2.0 - i.wing_tank_gap_m;
     close(
-        wb.section.iter().map(|p| p.0).fold(f64::INFINITY, f64::min),
+        wb.section()
+            .iter()
+            .map(|p| p.0)
+            .fold(f64::INFINITY, f64::min),
         7.4 - width,
     );
     assert!(

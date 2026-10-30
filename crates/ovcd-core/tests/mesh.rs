@@ -11,7 +11,7 @@
 
 use std::collections::HashMap;
 
-use ovcd_core::compartments::{Side, Space, SpaceKind, clip};
+use ovcd_core::compartments::{Side, Space, SpaceKind, SpaceShape, clip};
 use ovcd_core::hull::hull_form::{Bottom, HullFormInputs, HullFormKind, HullShape, generate};
 use ovcd_core::mesh::{Mesh, hull_mesh, space_mesh, waterline_mesh};
 use ovcd_core::sections::{SectionsTable, Waterplane, immersed};
@@ -205,7 +205,9 @@ fn a_space_prism_is_closed_and_has_its_volume() {
         side: Side::Starboard,
         x_aft: 5.0,
         x_fwd: 45.0,
-        section: vec![(1.0, 0.0), (5.7, 0.0), (5.7, 1.2), (1.0, 1.2)],
+        shape: SpaceShape::Prism {
+            section: vec![(1.0, 0.0), (5.7, 0.0), (5.7, 1.2), (1.0, 1.2)],
+        },
     };
     let m = space_mesh(
         &clip(&s, &hull(HullFormKind::Box, HullShape::default())),
@@ -226,7 +228,9 @@ fn cut_spaces() -> Vec<Space> {
             side: Side::Starboard,
             x_aft,
             x_fwd,
-            section: section.clone(),
+            shape: SpaceShape::Prism {
+                section: section.clone(),
+            },
         })
         .collect()
 }
@@ -292,7 +296,9 @@ fn a_space_wholly_inside_the_hull_keeps_its_prism_mesh() {
         side: Side::Starboard,
         x_aft: 10.0,
         x_fwd: 50.0,
-        section: vec![(1.0, 0.0), (5.7, 0.0), (5.7, 1.2), (1.0, 1.2)],
+        shape: SpaceShape::Prism {
+            section: vec![(1.0, 0.0), (5.7, 0.0), (5.7, 1.2), (1.0, 1.2)],
+        },
     };
     let c = clip(&s, &table);
     assert!(!c.is_cut());

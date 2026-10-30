@@ -3,10 +3,11 @@
 //! starboard, z up from the base line).
 //!
 //! No new inputs: [`assemble`] takes what the engine already placed. The hull is the Option's
-//! Sections Table. The Spaces are the hold or tank layout, `compartments::ballast_tanks` (double
-//! bottom, wing tanks, peaks), the gas separation and the machinery spaces of the aft block. The
-//! bulkheads are the ones the general arrangement draws. Each Space is clipped by the hull (issue
-//! #455): a Space wholly inside keeps its prism volume and centroid.
+//! Sections Table. The Spaces are the hold or tank layout, the Type C cargo tanks of a gas hull
+//! (the Tank Layout, ADR 0021), `compartments::ballast_tanks` (double bottom, wing tanks, peaks),
+//! the gas separation and the machinery spaces of the aft block. The bulkheads are the ones the
+//! general arrangement draws. Each Space is clipped by the hull (issue #455): a Space wholly inside
+//! keeps its prism volume and centroid, and a tank passes through unchanged.
 //!
 //! No result reads the model, so it moves no results hash.
 
@@ -17,8 +18,11 @@ use alloc::vec::Vec;
 
 use crate::barge_capacity::{BargeCapacityInputs, BargeCapacityResult};
 use crate::cargo::CargoClass;
-use crate::compartments::{ClippedSpace, Side, Space, SpaceKind, ballast_tanks, clip};
+use crate::compartments::{
+    ClippedSpace, Side, Space, SpaceKind, SpaceShape, ballast_tanks, clip, tank_spaces,
+};
 use crate::sections::SectionsTable;
+use crate::tanks::TankLayout;
 
 /// What the model is assembled from: the capacity inputs and result the run worked with, and the
 /// hull it floated.
@@ -51,7 +55,13 @@ pub struct Bulkhead {
     pub watertight: bool,
 }
 
-/// The Vessel Model of spec 0008.
+/// The Outfit layer (ADR 0021): the parts that are neither hull, compartments nor structure, and
+/// are not in the hydrostatics. Their masses are already in the lightship; the Outfit adds only
+/// their shape. Empty until the Deck Items and the Propulsor Layout fill it (spec 0009).
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct Outfit {}
+
+/// The Vessel Model of spec 0008, with the tank Spaces and the Outfit layer of ADR 0021.
 #[derive(Debug, Clone, PartialEq)]
 pub struct VesselModel {
     pub hull: SectionsTable,
@@ -59,6 +69,9 @@ pub struct VesselModel {
     /// In ascending x; one per x.
     pub bulkheads: Vec<Bulkhead>,
     pub spaces: Vec<ClippedSpace>,
+    /// The Tank Layout of a gas hull, with its domes; `None` for any other hull.
+    pub tank_layout: Option<TankLayout>,
+    pub outfit: Outfit,
     /// Frame stations; empty until phase 3.
     pub frames: Vec<f64>,
 }
@@ -69,14 +82,37 @@ const SAME_X_M: f64 = 1e-9;
 /// Assemble the Vessel Model of one Option.
 pub fn assemble(inp: &VesselModelInputs) -> VesselModel {
     let (c, r) = (&inp.capacity, &inp.result);
-    let spaces = spaces(c, r);
+    let tank_layout = gas_tank_layout(c, r);
+    let mut spaces = spaces(c, r);
+    if let (Some(layout), Some(g)) = (tank_layout.as_ref(), r.gas_basis.as_ref()) {
+        // The Type C tanks follow the hold that houses them.
+        let at = spaces
+            .iter()
+            .position(|s| s.kind == SpaceKind::CargoHold)
+            .map_or(0, |i| i + 1);
+        let tanks = tank_spaces(layout, g.tanks.volume_per_tank);
+        spaces.splice(at..at, tanks);
+    }
     VesselModel {
         hull: inp.hull.clone(),
         decks: decks(c, &spaces),
         bulkheads: bulkheads(c, r),
         spaces: spaces.iter().map(|s| clip(s, &inp.hull)).collect(),
+        tank_layout,
+        outfit: Outfit::default(),
         frames: Vec::new(),
     }
+}
+
+/// The Tank Layout of a gas result, with the dome in force; `None` for any other result.
+fn gas_tank_layout(c: &BargeCapacityInputs, r: &BargeCapacityResult) -> Option<TankLayout> {
+    let g = r.gas_basis.as_ref()?;
+    let dome = crate::barge_capacity::dome_in_force(
+        c,
+        g.tanks.outer_diameter,
+        g.inputs.insulation_thickness / 1000.0,
+    );
+    crate::tanks::arrangement_layout(&g.inputs, &g.tanks, Some(dome))
 }
 
 /// The ends of the cargo zone: aft of it the stern void, forward of it the bow void.
@@ -98,7 +134,7 @@ fn centre(name: String, kind: SpaceKind, x: (f64, f64), section: Vec<(f64, f64)>
         side: Side::Centre,
         x_aft: x.0,
         x_fwd: x.1,
-        section,
+        shape: SpaceShape::Prism { section },
     }
 }
 

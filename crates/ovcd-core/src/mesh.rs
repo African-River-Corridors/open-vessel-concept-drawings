@@ -26,7 +26,7 @@ use alloc::string::{String, ToString};
 use alloc::vec;
 use alloc::vec::Vec;
 
-use crate::compartments::{ClippedSpace, Space};
+use crate::compartments::{ClippedSpace, Space, SpaceShape};
 use crate::sections::{Section, SectionsTable};
 use crate::vessel_model::{Bulkhead, Deck, VesselModel};
 
@@ -349,7 +349,7 @@ pub fn bulkhead_mesh(table: &SectionsTable, bulkhead: &Bulkhead) -> Mesh {
 
 /// A Space as its closed prism.
 fn prism_mesh(space: &Space) -> Mesh {
-    let r = &space.section;
+    let r = space.section();
     let n = r.len();
     let (xa, xf) = (space.x_aft, space.x_fwd);
     let mut b = Builder::default();
@@ -396,7 +396,7 @@ pub fn space_mesh(clipped: &ClippedSpace, table: &SectionsTable) -> Mesh {
         return prism_mesh(space);
     }
     let mut m = hull_mesh(&slab(table, space.x_aft, space.x_fwd));
-    let r = &space.section;
+    let r = space.section();
     let n = r.len();
     // The section runs counter-clockwise or clockwise: the outward normal of an edge follows.
     let area: f64 = (0..n)
@@ -429,7 +429,12 @@ pub fn vessel_meshes(model: &VesselModel, waterlines: &[(String, f64, f64)]) -> 
     for b in &model.bulkheads {
         m.append("bulkhead", &b.name, &bulkhead_mesh(&model.hull, b));
     }
-    for s in &model.spaces {
+    // A tank Space (ADR 0021) has its own mesh (spec 0009); it is not a prism.
+    for s in model
+        .spaces
+        .iter()
+        .filter(|s| matches!(s.space.shape, SpaceShape::Prism { .. }))
+    {
         m.append("space", &s.space.name, &space_mesh(s, &model.hull));
     }
     for (name, aft, fwd) in waterlines {

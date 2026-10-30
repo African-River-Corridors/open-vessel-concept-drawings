@@ -214,7 +214,7 @@ pub fn oil_outflow(spaces: &[Space], inp: &OilOutflowInputs) -> Option<OilOutflo
     for s in &tanks {
         let (z_lo, z_hi) = s.z_range();
         let (y_lo, y_hi) = s
-            .section
+            .section()
             .iter()
             .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), &(y, _)| {
                 (a.min(y), b.max(y))
@@ -235,7 +235,7 @@ pub fn oil_outflow(spaces: &[Space], inp: &OilOutflowInputs) -> Option<OilOutflo
         let ps_port = ps(half + y_lo);
         // Yp and Ys: from the port-most and starboard-most point at or below dB to the plane BB/2 to
         // starboard (centre of damage to starboard); mirrored for the other side
-        let (below_lo, below_hi) = y_extent_below(&s.section, d_b).unwrap_or((y_lo, y_hi));
+        let (below_lo, below_hi) = y_extent_below(s.section(), d_b).unwrap_or((y_lo, y_hi));
         let pb = |yp: f64, ys: f64| {
             let p_bt = 1.0 - interp(&PBP, yp / inp.beam_m) - interp(&PBS, ys / inp.beam_m);
             (p_bl * p_bt * p_bv).max(0.0)
@@ -248,7 +248,7 @@ pub fn oil_outflow(spaces: &[Space], inp: &OilOutflowInputs) -> Option<OilOutflo
             let left = if h <= 0.0 {
                 0.0
             } else {
-                PERMEABILITY * area_centroid(&clip_below(&s.section, z_lo + h)).0 * s.length()
+                PERMEABILITY * area_centroid(&clip_below(s.section(), z_lo + h)).0 * s.length()
             };
             let mut o = (volume - left.min(volume)).max(0.0);
             if z_lo < 1e-9 {
@@ -317,7 +317,7 @@ pub fn max_cargo_tank_length_m(
         .collect();
     let tank = tanks.get(index)?;
     let y_of = |s: &Space| {
-        s.section
+        s.section()
             .iter()
             .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), &(y, _)| {
                 (a.min(y), b.max(y))

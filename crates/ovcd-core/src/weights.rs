@@ -31,13 +31,14 @@ fn wing_tank_width_positive(inputs: &BargeInputs) -> Result<bool, PyError> {
     }
 }
 
-/// The length of the tank zone: `loa - bow_non_tank_length - stern_non_tank_length`.
+/// The length of the tank zone: `loa - bow_non_tank_length - stern_non_tank_length`, the Tank
+/// Layout's cargo zone (spec 0009).
 fn tank_zone_length(inputs: &BargeInputs) -> Result<f64, PyError> {
     let bow = inputs.bow_non_tank_length.ok_or_else(none_operand_error)?;
     let stern = inputs
         .stern_non_tank_length
         .ok_or_else(none_operand_error)?;
-    Ok(inputs.loa - bow - stern)
+    Ok(crate::tanks::CargoZone::new(inputs.loa, bow, stern).length())
 }
 
 /// The outer hull plate thicknesses, in mm.
@@ -142,7 +143,7 @@ pub fn covering_items(inputs: &BargeInputs, tanks: &TankResult) -> Result<Vec<Ma
     let db = inputs.double_bottom_height.unwrap_or(0.0);
     let tank_od = tanks.outer_diameter;
     let tank_r = tank_od / 2.0;
-    let cargo_tank_bottom = db + inputs.tank_support_height;
+    let cargo_tank_bottom = crate::tanks::tank_bottom(db, inputs.tank_support_height);
     let wing_tank_top = cargo_tank_bottom + inputs.wing_tank_height_ratio * tank_od;
     let tank_zone_length = tank_zone_length(inputs)?;
     let stern = inputs.stern_non_tank_length.unwrap_or(0.0);
@@ -152,7 +153,7 @@ pub fn covering_items(inputs: &BargeInputs, tanks: &TankResult) -> Result<Vec<Ma
     if wing_tank_top > d {
         // The wing plate: the beam less the tank cut-outs in the tank zone, the full beam in the
         // bow and stern zones (as `calculate_weights` weighs it).
-        let dy = wing_tank_top - (cargo_tank_bottom + tank_r);
+        let dy = wing_tank_top - crate::tanks::tank_axis_z(cargo_tank_bottom, tank_od);
         let chord_width = if fabs(dy) < tank_r {
             2.0 * sqrt(pow(tank_r, 2.0) - pow(dy, 2.0))
         } else {
@@ -242,9 +243,10 @@ pub fn dome_items(
         return Ok(Vec::new());
     }
     let rho = inputs.tank_material_density;
-    let base = inputs.double_bottom_height.unwrap_or(0.0)
-        + inputs.tank_support_height
-        + tanks.outer_diameter;
+    let base = crate::tanks::tank_bottom(
+        inputs.double_bottom_height.unwrap_or(0.0),
+        inputs.tank_support_height,
+    ) + tanks.outer_diameter;
     let n = tanks.n_tanks_total as f64;
     let m_wall = n * PI * d * h * t * rho;
     let m_top = n * PI * d * d / 4.0 * t * rho;
@@ -321,9 +323,9 @@ pub fn calculate_weights_with(
         let db = inputs.double_bottom_height.unwrap_or(0.0);
         let tank_od = tanks.outer_diameter;
         let tank_r = tank_od / 2.0;
-        let cargo_tank_bottom = db + inputs.tank_support_height;
+        let cargo_tank_bottom = crate::tanks::tank_bottom(db, inputs.tank_support_height);
         let wing_tank_top = cargo_tank_bottom + inputs.wing_tank_height_ratio * tank_od;
-        let tank_center_y = cargo_tank_bottom + tank_r;
+        let tank_center_y = crate::tanks::tank_axis_z(cargo_tank_bottom, tank_od);
 
         // Chord width of the tank at plate elevation (cutout in the tank zone only).
         let dy = wing_tank_top - tank_center_y;
@@ -365,7 +367,7 @@ pub fn calculate_weights_with(
     {
         let db = inputs.double_bottom_height.unwrap_or(0.0);
         let tank_od = tanks.outer_diameter;
-        let cargo_tank_bottom = db + inputs.tank_support_height;
+        let cargo_tank_bottom = crate::tanks::tank_bottom(db, inputs.tank_support_height);
         let wing_tank_top = cargo_tank_bottom + inputs.wing_tank_height_ratio * tank_od;
         let cargo_tank_top = cargo_tank_bottom + tank_od;
         let shield_top = cargo_tank_top + inputs.weather_shield_clearance;

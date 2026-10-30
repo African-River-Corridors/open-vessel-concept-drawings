@@ -253,8 +253,10 @@ pub fn assess_num(
     let rho_c = result.cargo_density_t_per_m3;
     let od = basis.outer_diameter;
     let r_in = basis.inner_diameter / 2.0;
-    let tank_bottom = basis.double_bottom_height + basis.tank_support_height; // outer face, above keel
-    let kg_tank = tank_bottom + od / 2.0;
+    // The tanks' height and their place along the hull, from the Tank Layout (spec 0009).
+    let tank_bottom =
+        crate::tanks::tank_bottom(basis.double_bottom_height, basis.tank_support_height); // outer face, above keel
+    let kg_tank = crate::tanks::tank_axis_z(tank_bottom, od);
     let inner_bottom = tank_bottom + (od / 2.0 - r_in);
     let v_inner_total = basis.total_tank_volume;
 
@@ -272,7 +274,8 @@ pub fn assess_num(
     // Issue #349: the same items along the hull (from the stern), for the trim: the hull steel and
     // the piping at the middle, the tanks at the middle of the tank zone, the outfitting in the
     // stern zone (as the legacy `calculate_trim` has them), the stern block items at their zones.
-    let tank_zone_centre = (basis.stern_void_m + (l - basis.bow_void_m)) / 2.0;
+    let tank_zone_centre =
+        crate::tanks::CargoZone::new(l, basis.bow_void_m, basis.stern_void_m).centre();
     let mut long_items: Vec<(f64, f64)> = vec![
         (basis.steel_top_down, l / 2.0),
         (basis.tank_total + basis.insulation, tank_zone_centre),
