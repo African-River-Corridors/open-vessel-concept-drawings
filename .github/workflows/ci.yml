@@ -121,9 +121,17 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+  # pytest runs in four shards (issue #716): tools/pytest_shard.py gives each test to one shard by a hash
+  # of its node id, and `test` below proves every collected test ran in exactly one shard. The checks
+  # that need to run only once (Calibration Bands, evaluation harness, mutants) run in shard 1.
   gate-python:
+    name: gate-python (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -131,25 +139,39 @@ jobs:
       - uses: ./.github/actions/gate-env
         with:
           cache-key: gate-python
-      - name: pytest
+      - name: pytest, shard ${{ matrix.shard }} of 4
         env:
           GATES_STEPS: pytest
+          PYTHONPATH: tools
+          PYTEST_ADDOPTS: -p pytest_shard
+          PYTEST_SHARD: ${{ matrix.shard }}/4
+          PYTEST_SHARD_IDS: ${{ runner.temp }}/ids-${{ matrix.shard }}.txt
         run: bash tools/gates.sh
+      - name: Keep the list of this shard's tests
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-shard-${{ matrix.shard }}
+          path: ${{ runner.temp }}/ids-${{ matrix.shard }}.txt
+          if-no-files-found: error
+          retention-days: 3
       # Calibration Bands (issue #119): one warning annotation per case outside its band. A band miss
       # never fails the build; a crash does. It takes about a second.
       - name: Calibration against the Calibration Bands (warning only)
+        if: matrix.shard == 1
         run: python -m ovd.calibration --check
       # Evaluation harness (issue #184): known designs with known verdicts per rule, run against the
       # engine. A FALSE PASS (the engine passes a criterion a case expects to fail) fails the build; a
       # false fail and a coverage gap are warning annotations, as the Calibration Bands are. A stale
       # evaluation/results.md also fails. It takes a few seconds.
       - name: Evaluation harness (a false pass fails the build)
+        if: matrix.shard == 1
         run: python evaluation/run.py --check
       # The boundary mutants are generated (issue #184) and take about 3 minutes to generate again.
       # They change only with evaluation/, so a run that changes nothing there skips the check: a PR
       # is compared with its base branch, a push to main with the commit before it. A tag, a manual
       # run and the nightly run do it every time (issue #481, docs/agents/slow-tests.md).
       - name: The mutants file is what the generator writes (when evaluation/ changes)
+        if: matrix.shard == 1
         env:
           EVENT: ${{ github.event_name }}
           BASE: ${{ github.base_ref }}
@@ -176,6 +198,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - uses: actions/checkout@v4
       - name: Every part of the gate passed
         env:
           RESULTS: ${{ toJSON(needs) }}
@@ -191,6 +214,16 @@ jobs:
           if bad:
               sys.exit(f"the gate failed: {bad}")
           PY
+      # Every collected pytest test ran in exactly one shard (issue #716). The shards are disjoint,
+      # all four are present, and together they hold the whole collected count.
+      - name: Download the shard lists
+        uses: actions/download-artifact@v4
+        with:
+          pattern: pytest-shard-*
+          path: ${{ runner.temp }}/shards
+          merge-multiple: true
+      - name: Every pytest test ran in exactly one shard
+        run: python3 tools/check_pytest_shards.py "$RUNNER_TEMP/shards"
 
   # The drawing crate against the Python implementation of the same standard (spec 0003): the views
   # of every fixture Design give equal normalised content in both. The Python tool is installed at
