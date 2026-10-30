@@ -522,11 +522,17 @@ pub fn stern_block_mass(
     };
     if n_thrusters > 0.0 && machinery.is_none() {
         let d = inp.thruster_envelope_m / ENVELOPE_OVER_DIAMETER;
+        // Issue #691: the place the Propulsor Layout gives the thrusters.
+        let at = crate::machinery::drive_unit_positions(
+            crate::propulsor::PropulsorType::AzimuthDucted,
+            res.thruster_room_length_m / 2.0,
+            d,
+        );
         items.push(MassItem {
             label: "thrusters",
             mass_t: n_thrusters * AZIMUTH_UNIT_T_PER_M3 * d * d * d,
-            lcg_m: res.thruster_room_length_m / 2.0,
-            kcg_m: d,
+            lcg_m: at.lcg_m,
+            kcg_m: at.kcg_m,
         });
     }
     let unit_kcg = res.container_top_above_keel_m - inp.container_height_m / 2.0;

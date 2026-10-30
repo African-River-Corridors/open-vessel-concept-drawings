@@ -418,6 +418,11 @@ thruster (open or ducted), a Voith Schneider unit or a pump jet. A Hull has one 
 or more of them.
 _Avoid_: thruster (for every type), drive, screw (on its own)
 
+**Propulsor Layout**:
+The position and size of each Propulsor, nozzle, rudder and bow thruster of a Hull, worked out in the
+core. The mass items, the drawings and the 3D view read it (spec 0009).
+_Avoid_: propeller positions, thruster layout (for every type)
+
 **Power Source**:
 What makes the power the Propulsors use: diesel-mechanical, diesel-electric, battery-electric,
 battery-hybrid or gas-fuelled generating sets.
