@@ -335,6 +335,82 @@ describe("OVCD web smoke tests", () => {
     }
   });
 
+  it("puts the sea plane at each loading condition's draughts, and repaints on a theme switch (issue #684)", async () => {
+    const b = await start();
+    await b.url(`${origin}/ovcd/app`);
+    await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
+    await (await b.$("button=I understand")).click();
+    await until(b, "results", async () => (await outputs(b)).isExisting());
+    await b.execute(() => {
+      HTMLInputElement.prototype.click = function () {};
+    });
+    await (await b.$("button=Open")).click();
+    const picker = await b.$("[data-testid=file-picker]");
+    await picker.waitForExist({ timeout: 5000 });
+    await picker.setValue(BALLAST_FIXTURE);
+    await until(b, "the file name", async () => (await b.$("header")).getText().then((t) => t.includes("crude_integral_tanks_coastal.vdesign")));
+    const tab = (label) => b.$(`//button[@role="tab" and normalize-space()="${label}"]`);
+    await (await tab("Drawings")).click();
+    await (await tab("3D")).click();
+    await until(b, "the model", async () => (await (await b.$("[data-testid=model3d]")).getAttribute("data-status")) === "ready", 60000);
+    const data = async (name) => JSON.parse(await (await b.$("[data-testid=model3d-canvas]")).getAttribute(`data-${name}`));
+    // Each loading condition: the plane, read back from its drawn corners, is at the results' draughts.
+    const conditions = await b.execute(async () => {
+      const ev = await window.__ovcdPlatform.evaluate();
+      return ev.options[0].outcome.results.loading_conditions.conditions.map((c) => ({ name: c.name, aft: c.draught_aft_m ?? c.draught_m, fwd: c.draught_fwd_m ?? c.draught_m }));
+    });
+    assert.ok(conditions.some((c) => Math.abs(c.aft - c.fwd) > 0.05), "a trimmed condition is among them");
+    for (const c of conditions) {
+      await b.execute((name) => {
+        const el = document.querySelector("[data-testid=waterline-select]");
+        el.value = name;
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+      }, c.name);
+      await until(b, `the sea at ${c.name}`, async () => (await data("sea"))?.name === c.name);
+      const sea = await data("sea");
+      assert.ok(Math.abs(sea.aft - c.aft) < 1e-4 && Math.abs(sea.fwd - c.fwd) < 1e-4, `${c.name}: sea ${JSON.stringify(sea)}, results ${c.aft} aft, ${c.fwd} forward`);
+      assert.ok((await data("shown")).includes("sea"), `${c.name}: the sea is drawn`);
+    }
+    // No waterline: no sea.
+    await b.execute(() => {
+      const el = document.querySelector("[data-testid=waterline-select]");
+      el.value = "";
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    await until(b, "no sea", async () => !(await data("shown")).includes("sea"));
+    await b.execute((name) => {
+      const el = document.querySelector("[data-testid=waterline-select]");
+      el.value = name;
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    }, conditions[0].name);
+    // The theme switch repaints the hull, the wet hull, the sea, the decks and the edges with the tokens.
+    const tokens = () =>
+      b.execute(() => {
+        const v = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim().toLowerCase();
+        return { hull: v("--model-hull"), wet: v("--model-hull-wet"), sea: v("--model-sea"), deck: v("--model-deck"), edge: v("--model-edge") };
+      });
+    const painted = {};
+    for (const theme of ["Light", "Dark"]) {
+      await (await b.$(`button=${theme}`)).click();
+      const want = await tokens();
+      const same = (a, c) => Object.keys(c).every((k) => a?.[k] === c[k]);
+      await until(b, `the ${theme} colours`, async () => same(await data("colours"), want)).catch(async (e) => {
+        throw new Error(`${e.message}: drawn ${JSON.stringify(await data("colours"))}, tokens ${JSON.stringify(want)}`);
+      });
+      painted[theme] = want;
+      if (SHOTS) {
+        fs.mkdirSync(SHOTS, { recursive: true });
+        await (await b.$("[data-testid=model3d-reset]")).click();
+        await new Promise((r) => setTimeout(r, 500));
+        await b.saveScreenshot(path.join(SHOTS, `web-3d-sea-${theme.toLowerCase()}.png`));
+        await (await b.$("[data-testid=model3d-view-profile]")).click();
+        await new Promise((r) => setTimeout(r, 500));
+        await b.saveScreenshot(path.join(SHOTS, `web-3d-sea-profile-${theme.toLowerCase()}.png`));
+      }
+    }
+    for (const k of ["hull", "wet", "sea", "edge"]) assert.notEqual(painted.Light[k], painted.Dark[k], `${k} changes with the theme`);
+  });
+
   it("draws the model right-handed: bow right from starboard, port left with the bow up in plan (issue #682)", async () => {
     const b = await start();
     await b.url(`${origin}/ovcd/app`);

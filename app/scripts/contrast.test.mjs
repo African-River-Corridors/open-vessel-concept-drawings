@@ -6,6 +6,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { MODEL_TOKENS } from "./contrast.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const script = join(here, "contrast.mjs");
@@ -50,4 +51,33 @@ test("dark blocks that disagree exit 1", () => {
   const r = run(bad);
   assert.equal(r.status, 1);
   assert.match(r.stderr, /dark blocks differ on --pass/);
+});
+
+test("every 3D view token is checked on the paper, light and dark (issue #684)", () => {
+  const r = run();
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.equal(MODEL_TOKENS.length, 9);
+  for (const t of MODEL_TOKENS) assert.match(r.stdout, new RegExp(`^${t} on paper +line +3\\.0 +[\\d.]+ +ok +[\\d.]+ +ok`, "m"), t);
+});
+
+test("a 3D view token under 3:1 on the paper exits 1 (issue #684)", () => {
+  const dir = mkdtempSync(join(tmpdir(), "contrast-"));
+  const css = readFileSync(appCss, "utf8").replaceAll("--model-sea: #7cc8e0;", "--model-sea: #3a6a8c;");
+  assert.notEqual(css, readFileSync(appCss, "utf8"));
+  const bad = join(dir, "bad-model.css");
+  writeFileSync(bad, css);
+  const r = run(bad);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /dark: model-sea on paper/);
+});
+
+test("a 3D view token missing from a theme exits 1 (issue #684)", () => {
+  const dir = mkdtempSync(join(tmpdir(), "contrast-"));
+  const css = readFileSync(appCss, "utf8").replace(/\n  --model-cut: [^;]+;[^\n]*/, "");
+  assert.notEqual(css, readFileSync(appCss, "utf8"));
+  const bad = join(dir, "missing-model.css");
+  writeFileSync(bad, css);
+  const r = run(bad);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /light: token --model-cut is missing/);
 });

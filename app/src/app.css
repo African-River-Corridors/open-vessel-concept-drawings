@@ -79,6 +79,17 @@
   --space-void: #6a4c93;      /* voids and cofferdams */
   --space-machinery: #2f7a3d; /* pump rooms and machinery */
 
+  /* The 3D view: the vessel's parts and the sea (spec 0009, issue #684). Each is 3:1 or more on --paper. */
+  --model-hull: #5f7282;      /* the hull above the shown waterline */
+  --model-hull-wet: #2c3e50;  /* the hull below it */
+  --model-deck: #8c7b56;      /* the decks */
+  --model-sea: #2f7896;       /* the sea plane, drawn translucent */
+  --model-deck-item: #7a5a2c; /* containers and other deck units */
+  --model-wheelhouse: #4f585d;
+  --model-propulsor: #5a4a7a; /* propellers, nozzles, rudders, thrusters */
+  --model-edge: #1c3550;      /* edge lines over the parts */
+  --model-cut: #8a6a35;       /* the face a cut exposes */
+
   /* Status. Always with a word and a shape; colour is never the only signal. */
   --pass: #2a6339;   --pass-soft: #e3eedc;
   --fail: #9e2a1c;   --fail-soft: #f7e0d6;
@@ -131,6 +142,8 @@
     --warn: #ffe3a3;  --warn-soft: #43473e;  --stale: #b9cfda;
     --src-class: #e0d4ff;
     --space-cargo: #ffb27a;  --space-ballast: #8fd8f0;  --space-void: #cdb7ff;  --space-machinery: #a6e8a0;
+    --model-hull: #c4d3dc;  --model-hull-wet: #7fa6bd;  --model-deck: #d9c79c;  --model-sea: #7cc8e0;
+    --model-deck-item: #e6cd96;  --model-wheelhouse: #dfe8ec;  --model-propulsor: #cdb7ff;  --model-edge: #eef6f6;  --model-cut: #d9bb80;
     color-scheme: dark;
   }
 }
@@ -143,6 +156,8 @@
   --warn: #ffe3a3;  --warn-soft: #43473e;  --stale: #b9cfda;
   --src-class: #e0d4ff;
   --space-cargo: #ffb27a;  --space-ballast: #8fd8f0;  --space-void: #cdb7ff;  --space-machinery: #a6e8a0;
+  --model-hull: #c4d3dc;  --model-hull-wet: #7fa6bd;  --model-deck: #d9c79c;  --model-sea: #7cc8e0;
+  --model-deck-item: #e6cd96;  --model-wheelhouse: #dfe8ec;  --model-propulsor: #cdb7ff;  --model-edge: #eef6f6;  --model-cut: #d9bb80;
   color-scheme: dark;
 }
 

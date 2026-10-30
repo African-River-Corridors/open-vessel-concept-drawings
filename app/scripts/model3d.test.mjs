@@ -1,7 +1,7 @@
 // Unit tests for src/lib/model3d.ts. Run: npm run test:unit
 import test from "node:test";
 import assert from "node:assert/strict";
-import { familyOf, flatShaded, groupSlice, homeView, kindLabelId, fixedView, orbitStep, toView, VIEW_MIRROR, FAMILY_TOKEN } from "../src/lib/model3d.ts";
+import { familyOf, flatShaded, groupSlice, homeView, seaPlane, kindLabelId, fixedView, orbitStep, toView, VIEW_MIRROR, FAMILY_TOKEN } from "../src/lib/model3d.ts";
 
 // The default camera for the 76.5 x 11.4 x 3.5 m box, field of view 35 degrees, aspect 1.6: what homeView
 // printed (Label: snapshot).
@@ -111,4 +111,22 @@ test("the default camera stands aft to starboard, 25 degrees up, and frames the 
       }
   assert.ok(Math.abs(most - 1 / 1.1) < 1e-9, `the farthest corner fills 1 / 1.1 of the half view: ${most}`);
   assert.deepEqual(position.map((v) => Number(v.toFixed(6))), SNAPSHOT_HOME);
+});
+
+test("the sea plane passes through the draughts at the hull's ends, and is flat across (issue #684)", () => {
+  // Label: property. A trimmed position: 1.92 m aft at x = 0, 2.51 m forward at x = 76.5.
+  const s = seaPlane(0, 76.5, 1.92, 2.51, 40);
+  assert.equal(s.z(0), 1.92);
+  assert.equal(s.z(76.5), 2.51);
+  const p = s.positions;
+  const at = (i) => [p[3 * i], p[3 * i + 1], p[3 * i + 2]];
+  for (const i of [0, 1, 2, 3]) assert.ok(Math.abs(at(i)[2] - s.z(at(i)[0])) < 1e-5, `corner ${i}: ${at(i)}`);
+  assert.equal(at(0)[2], at(3)[2], "level across at the aft edge");
+  assert.equal(at(1)[2], at(2)[2], "level across at the forward edge");
+  assert.ok(at(0)[0] < 0 && at(1)[0] > 76.5 && at(0)[1] < 0 && at(3)[1] > 0, "it reaches past the hull");
+  // The two triangles face up (counter-clockwise from above, in model axes).
+  for (const [a, b, c] of [[0, 1, 2], [0, 2, 3]]) {
+    const [u, v] = [at(b).map((x, k) => x - at(a)[k]), at(c).map((x, k) => x - at(a)[k])];
+    assert.ok(u[0] * v[1] - u[1] * v[0] > 0);
+  }
 });
