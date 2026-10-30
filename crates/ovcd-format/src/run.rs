@@ -632,6 +632,8 @@ pub fn run_option_with(
                     (Some(h), Some(t)) if t > 0.0 => Some(h / t),
                     _ => None,
                 };
+                // Issue #659: the ICLL freeboard Rules read the Freeboard the result has.
+                measured.freeboard_laden_m = v["results"]["freeboard_m"].as_f64();
                 let rule_trace = trace_json(
                     &trace_of(&selection, option, &measured),
                     crate::trace::service_area_of(option),

@@ -181,6 +181,11 @@ Through the evaluation API only (`crates/ovcd-format/src/eval.rs`, not from a De
      (`gas_arrangement.rs`, `cheap_checks`, line 297).
 4. Input checks: minimum freeboard < moulded depth (hard); with `optimise_depth`, minimum freeboard ≤ 7.0 m
    (hard) (`vdesign.rs`, near line 2721 and 2768).
+5. On a coastal Service Area, the Rule Set `icll-freeboard` 2.0.0 checks the freeboard at the laden draught
+   (Measure `freeboard.laden`, `D − T` of the result, ICLL regulation 3(8)) against the type A table 28.1 at the
+   length overall (issue #659). It does not read `min_freeboard_m`. Version 1.0.0 compared `min_freeboard_m`, the
+   safety clearance, with the table, so every coastal Option at the 0.3 m default failed whatever its real
+   freeboard; it is kept unchanged for files that store it.
 
 ## Assumptions, rules and estimates
 
