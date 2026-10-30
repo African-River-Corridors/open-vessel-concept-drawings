@@ -166,4 +166,5 @@ test("the wheelhouse switch draws it lowered, raised, or both with the raised on
   assert.deepEqual(wheelhouseDraw("unit_1", "lowered"), { on: true, opacity: 1 });
   assert.equal(closedSolid("deck"), false);
   assert.equal(closedSolid("deck_item"), true);
+  assert.equal(closedSolid("propulsor"), true);
 });

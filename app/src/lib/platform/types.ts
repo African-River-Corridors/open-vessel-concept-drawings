@@ -9,7 +9,7 @@ export type ModelFormat = "gltf" | "stl" | "obj" | "offsets-csv";
 
 /** Issue #457: one named part of the Vessel Model meshes, `count` indices from `start`. */
 export interface MeshGroup {
-  layer: "hull" | "deck" | "bulkhead" | "space" | "dome" | "weather_shield" | "deck_item" | "waterline";
+  layer: "hull" | "deck" | "bulkhead" | "space" | "dome" | "weather_shield" | "deck_item" | "propulsor" | "waterline";
   id: string;
   start: number;
   count: number;
@@ -55,6 +55,27 @@ export interface DeckItem {
   y_stbd_m: number;
   z_base_m: number;
   z_top_m: number;
+}
+
+/** A part of the Propulsor Layout (spec 0009), as the pick panel shows it: centre in mesh axes (y to
+ * starboard), and its propulsor's type, diameter, axis height and power (a bow thruster's own power). */
+export interface PropulsorPart {
+  id: string;
+  part: "propulsor" | "nozzle" | "leg" | "rudder" | "bow_thruster";
+  index: number | null;
+  propulsor_type: string;
+  diameter_m: number;
+  axis_z_m: number;
+  unit_power_kw: number | null;
+  x_m: number;
+  y_m: number;
+  z_m: number;
+  mass_item: string;
+  lcg_m: number;
+  kcg_m: number;
+  span_m?: number;
+  chord_m?: number;
+  tunnel_diameter_m?: number;
 }
 
 /** The Deck Items of an Option and its wheelhouse's lift (null without a stern block). */
@@ -120,5 +141,7 @@ export interface Platform {
   spaceInfo(option: string, name: string): Promise<SpaceInfo>;
   /** Spec 0009: the Deck Items and the wheelhouse's lift, from the core. */
   deckItems(option: string): Promise<DeckItems>;
+  /** The propulsor parts of an Option (empty without a stern block). */
+  propulsors(option: string): Promise<PropulsorPart[]>;
   waterlines(option: string): Promise<Waterline[]>;
 }

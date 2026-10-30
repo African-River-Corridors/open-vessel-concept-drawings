@@ -22,6 +22,10 @@
 //!   Diameter; each dome a closed cylinder in [`DOME_SEGMENTS`] from where it meets the shell to its
 //!   top; the weather shield as five plates (spec 0009, ADR 0021).
 //! - **Deck Items:** each as its closed box (spec 0009, ADR 0021).
+//! - **Propulsors:** from the Propulsor Layout (spec 0009, "Propulsors"): each propeller as a disc in
+//!   [`PROPULSOR_SEGMENTS`] round, with an azimuth unit's pod on the same centre; its nozzle as a ring;
+//!   an azimuth unit's leg, each rudder blade as a box; the bow thruster tunnel as a cylinder across
+//!   the hull. The layout's y is + to port; the mesh's y is + to starboard.
 //!
 //! Every group carries its source ([`PartSource`]): no geometry without a source (spec 0009).
 //!
@@ -46,6 +50,8 @@ pub const TANK_SEGMENTS: usize = 48;
 pub const HEAD_RINGS: usize = 12;
 /// Segments round a dome.
 pub const DOME_SEGMENTS: usize = 24;
+/// Segments round a propeller disc, a nozzle, a pod and the bow thruster tunnel (spec 0009).
+pub const PROPULSOR_SEGMENTS: usize = 48;
 
 /// Where a mesh group's geometry comes from (spec 0009, "no geometry without a source"): a part of
 /// the Vessel Model that the results hold. The group's layer and id follow from it.
@@ -76,11 +82,21 @@ pub enum PartSource {
     Unit(usize),
     Wheelhouse(WheelhousePosition),
     LiftColumn,
+    /// Propulsor `i` of the Propulsor Layout: its disc (and an azimuth unit's pod, on the same
+    /// centre).
+    Propulsor(usize),
+    /// The nozzle round propulsor `i`.
+    Nozzle(usize),
+    /// The leg of azimuth unit `i`, from its pod up.
+    Leg(usize),
+    /// Rudder `i` of the Propulsor Layout (two to each shaft).
+    Rudder(usize),
+    BowThruster,
 }
 
 impl PartSource {
     /// `hull`, `deck`, `bulkhead`, `space` (a tank is a Space, ADR 0021), `dome`,
-    /// `weather_shield`, `waterline` or `deck_item`.
+    /// `weather_shield`, `waterline`, `deck_item` or `propulsor`.
     pub fn layer(&self) -> &'static str {
         match self {
             PartSource::Hull => "hull",
@@ -91,12 +107,18 @@ impl PartSource {
             PartSource::WeatherShield => "weather_shield",
             PartSource::Waterline(_) => "waterline",
             PartSource::Unit(_) | PartSource::Wheelhouse(_) | PartSource::LiftColumn => "deck_item",
+            PartSource::Propulsor(_)
+            | PartSource::Nozzle(_)
+            | PartSource::Leg(_)
+            | PartSource::Rudder(_)
+            | PartSource::BowThruster => "propulsor",
         }
     }
 
     /// The part's name, the same in every language: a deck or bulkhead key, a Space or tank name,
     /// the tank's name and `_dome`, `weather_shield`, a loading condition name, `unit_1`,
-    /// `wheelhouse_lowered`, `wheelhouse_raised` or `lift_column`.
+    /// `wheelhouse_lowered`, `wheelhouse_raised`, `lift_column`, `propulsor_1`, `nozzle_1`, `leg_1`,
+    /// `rudder_1` or `bow_thruster`.
     pub fn id(&self) -> String {
         match self {
             PartSource::Hull => "hull".to_string(),
@@ -111,6 +133,11 @@ impl PartSource {
             PartSource::Wheelhouse(WheelhousePosition::Lowered) => "wheelhouse_lowered".to_string(),
             PartSource::Wheelhouse(WheelhousePosition::Raised) => "wheelhouse_raised".to_string(),
             PartSource::LiftColumn => "lift_column".to_string(),
+            PartSource::Propulsor(i) => alloc::format!("propulsor_{}", i + 1),
+            PartSource::Nozzle(i) => alloc::format!("nozzle_{}", i + 1),
+            PartSource::Leg(i) => alloc::format!("leg_{}", i + 1),
+            PartSource::Rudder(i) => alloc::format!("rudder_{}", i + 1),
+            PartSource::BowThruster => "bow_thruster".to_string(),
         }
     }
 
@@ -566,6 +593,165 @@ pub fn deck_item_mesh(item: &DeckItem) -> Mesh {
     )
 }
 
+/// The circle of [`PROPULSOR_SEGMENTS`] points, cosines and sines, exact at each quarter.
+fn propulsor_round() -> Vec<(f64, f64)> {
+    (0..PROPULSOR_SEGMENTS)
+        .map(|j| {
+            let p = 2.0 * core::f64::consts::PI * j as f64 / PROPULSOR_SEGMENTS as f64;
+            (snap(libm::cos(p)), snap(libm::sin(p)))
+        })
+        .collect()
+}
+
+/// A closed ring about an axis along x from `x0` to `x1` through `(yc, zc)`, between the radii
+/// `inner` and `outer`; `inner` 0 gives a closed cylinder (its ends fanned to the axis).
+fn ring_x(x0: f64, x1: f64, (yc, zc): (f64, f64), inner: f64, outer: f64) -> Mesh {
+    let round = propulsor_round();
+    let n = round.len();
+    let at = |x: f64, r: f64, j: usize| {
+        let (c, s) = round[j % n];
+        [x, yc + r * c, zc + r * s]
+    };
+    let mut b = Builder::default();
+    for j in 0..n {
+        // The outer face, round then along: the normal points out.
+        b.quad(
+            at(x0, outer, j),
+            at(x0, outer, j + 1),
+            at(x1, outer, j + 1),
+            at(x1, outer, j),
+        );
+        if inner > 0.0 {
+            b.quad(
+                at(x0, inner, j),
+                at(x1, inner, j),
+                at(x1, inner, j + 1),
+                at(x0, inner, j + 1),
+            );
+            b.quad(
+                at(x0, inner, j),
+                at(x0, inner, j + 1),
+                at(x0, outer, j + 1),
+                at(x0, outer, j),
+            );
+            b.quad(
+                at(x1, inner, j),
+                at(x1, outer, j),
+                at(x1, outer, j + 1),
+                at(x1, inner, j + 1),
+            );
+        } else {
+            b.triangle([x0, yc, zc], at(x0, outer, j + 1), at(x0, outer, j));
+            b.triangle([x1, yc, zc], at(x1, outer, j), at(x1, outer, j + 1));
+        }
+    }
+    b.mesh()
+}
+
+/// A closed box from `lo` to `hi`.
+fn cuboid(lo: [f64; 3], hi: [f64; 3]) -> Mesh {
+    prism(
+        &[
+            (lo[1], lo[2]),
+            (hi[1], lo[2]),
+            (hi[1], hi[2]),
+            (lo[1], hi[2]),
+        ],
+        lo[0],
+        hi[0],
+    )
+}
+
+/// The same mesh with x and y swapped: a part along y from one along x. The swap mirrors, so each
+/// triangle turns round to face out again.
+fn swap_xy(mut m: Mesh) -> Mesh {
+    for v in m.positions.as_chunks_mut::<3>().0 {
+        v.swap(0, 1);
+    }
+    for t in m.indices.as_chunks_mut::<3>().0 {
+        t.swap(1, 2);
+    }
+    m
+}
+
+/// Two meshes as one, without welding.
+fn join(mut a: Mesh, b: &Mesh) -> Mesh {
+    let base = (a.positions.len() / 3) as u32;
+    a.positions.extend_from_slice(&b.positions);
+    a.indices.extend(b.indices.iter().map(|i| i + base));
+    a
+}
+
+/// The meshes of a Propulsor Layout (spec 0009), each with its source, in hull axes (y + to
+/// starboard): for each propulsor its disc (with an azimuth unit's pod), its nozzle and its leg;
+/// each rudder; the bow thruster tunnel.
+pub fn propulsor_meshes(layout: &crate::machinery::PropulsorLayout) -> Vec<(PartSource, Mesh)> {
+    let d = layout.diameter_m;
+    let half_disc = crate::machinery::layout_rates::DISC_THICKNESS_OVER_D * d / 2.0;
+    let mut out = Vec::new();
+    for (i, u) in layout.propulsors.iter().enumerate() {
+        // The layout's y is + to port; the mesh's + to starboard.
+        let (x, y, z) = (u.x_m, -u.y_m, u.z_m);
+        let mut disc = ring_x(x - half_disc, x + half_disc, (y, z), 0.0, d / 2.0);
+        if let Some(a) = &u.azimuth {
+            let pod = ring_x(
+                x - a.pod_length_m / 2.0,
+                x + a.pod_length_m / 2.0,
+                (y, z),
+                0.0,
+                a.pod_diameter_m / 2.0,
+            );
+            disc = join(disc, &pod);
+        }
+        out.push((PartSource::Propulsor(i), disc));
+        if let Some(n) = &u.nozzle {
+            out.push((
+                PartSource::Nozzle(i),
+                ring_x(
+                    x - n.length_m / 2.0,
+                    x + n.length_m / 2.0,
+                    (y, z),
+                    n.inner_diameter_m / 2.0,
+                    n.outer_diameter_m / 2.0,
+                ),
+            ));
+        }
+        if let Some(a) = &u.azimuth {
+            let (c, t) = (a.leg_chord_m / 2.0, a.leg_thickness_m / 2.0);
+            out.push((
+                PartSource::Leg(i),
+                cuboid(
+                    [x - c, y - t, z + a.pod_diameter_m / 2.0],
+                    [x + c, y + t, a.leg_top_z_m],
+                ),
+            ));
+        }
+    }
+    for (i, r) in layout.rudders.iter().enumerate() {
+        let (c, t, s) = (r.chord_m / 2.0, r.thickness_m / 2.0, r.span_m / 2.0);
+        let y = -r.y_m;
+        out.push((
+            PartSource::Rudder(i),
+            cuboid([r.x_m - c, y - t, r.z_m - s], [r.x_m + c, y + t, r.z_m + s]),
+        ));
+    }
+    if let Some(b) = &layout.bow_thruster {
+        // Built along x through (x, z) and turned to lie across the hull.
+        let half = b.tunnel_length_m / 2.0;
+        out.push((
+            PartSource::BowThruster,
+            swap_xy(ring_x(
+                -half,
+                half,
+                (b.x_m, b.z_m),
+                0.0,
+                b.tunnel_diameter_m / 2.0,
+            )),
+        ));
+    }
+    out
+}
+
 /// The closed prism of section `r` (counter-clockwise in y, z) from `xa` to `xf`.
 fn prism(r: &[(f64, f64)], xa: f64, xf: f64) -> Mesh {
     let n = r.len();
@@ -636,8 +822,8 @@ pub fn space_mesh(clipped: &ClippedSpace, table: &SectionsTable) -> Mesh {
 }
 
 /// Every mesh of the model in a fixed order, one group each: the hull, the decks, the bulkheads,
-/// the Spaces (the tanks among them), the domes, the weather shield, the Deck Items, and the
-/// waterline of each floating position `(name, aft draught, forward draught)`.
+/// the Spaces (the tanks among them), the domes, the weather shield, the Deck Items, the propulsors,
+/// and the waterline of each floating position `(name, aft draught, forward draught)`.
 pub fn vessel_meshes(model: &VesselModel, waterlines: &[(String, f64, f64)]) -> Mesh {
     let mut m = Mesh::default();
     m.append(PartSource::Hull, &hull_mesh(&model.hull));
@@ -695,6 +881,11 @@ pub fn vessel_meshes(model: &VesselModel, waterlines: &[(String, f64, f64)]) -> 
     }
     for item in &model.outfit.deck_items {
         m.append(PartSource::of_deck_item(item), &deck_item_mesh(item));
+    }
+    if let Some(layout) = &model.outfit.propulsors {
+        for (source, part) in propulsor_meshes(layout) {
+            m.append(source, &part);
+        }
     }
     for (name, aft, fwd) in waterlines {
         m.append(

@@ -2,7 +2,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import type { Evaluation, Schema, Snapshot } from "../api";
-import type { DeckItems, MeshGroup, Platform, SectionOutline, SpaceInfo, Waterline } from "./types";
+import type { DeckItems, MeshGroup, Platform, PropulsorPart, SectionOutline, SpaceInfo, Waterline } from "./types";
 
 /** What the webview gives for a raw response: an ArrayBuffer, or (when the IPC falls back to JSON) an array of bytes. */
 function asBuffer(raw: ArrayBuffer | ArrayLike<number>): ArrayBuffer {
@@ -59,5 +59,6 @@ export const tauriPlatform: Platform = {
   sectionAt: (option, x) => invoke<SectionOutline>("section_at", { option, x }),
   spaceInfo: (option, name) => invoke<SpaceInfo>("space_info", { option, name }),
   deckItems: (option) => invoke<DeckItems>("deck_items", { option }),
+  propulsors: (option) => invoke<PropulsorPart[]>("propulsors", { option }),
   waterlines: (option) => invoke<Waterline[]>("waterlines", { option }),
 };
