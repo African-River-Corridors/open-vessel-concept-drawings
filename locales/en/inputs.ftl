@@ -96,6 +96,8 @@ input-min-freeboard-m = Minimum freeboard (safety clearance)
 
 input-bow-rake-length-to-depth-ratio = Bow rake length over depth
 
+input-bow-rake-max-length-m = Longest bow rake from depth
+
 input-pushed-stern-void-m = Stern void of a pushed barge
 
 input-lightship-factor-t-per-m3 = Lightship factor

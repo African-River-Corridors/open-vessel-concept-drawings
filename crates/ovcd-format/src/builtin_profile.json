@@ -159,6 +159,14 @@
       "status": "estimate",
       "basis": "carried over from the original engine: the horizontal length of the bow rake as a multiple of the moulded depth. The bow void is this rake plus the forward separation or end bulkhead space. No published source was found for the ratio, for any Service Area (issue #661). It scales with the depth, so on a deep hull whose depth is set by its tanks the rake takes a large share of the length: type bow_rake_length_m when the bow is known"
     },
+    "bow_rake_max_length_m": {
+      "default": 10.0,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 100 },
+      "soft": { "min": 5.0, "max": 20.0 },
+      "status": "estimate",
+      "basis": "The longest bow rake that bow_rake_length_to_depth_ratio x moulded depth gives, so a deep hull does not lose its cargo length to the rake (issue #661). none: no cap, the rule before. A working value set by the maintainer on 2026-10-30, with no published source. For scale: a 195 x 35 x 12 ft jumbo hopper barge has a rake of 27 ft 6 in, 8.4 m (Jeffboat advertisement, Maritime Reporter, 15 October 1977, p. 9). A typed bow_rake_length_m is not capped. A file saved before keeps none"
+    },
     "pushed_stern_void_m": {
       "default": 3.0,
       "unit": "m",

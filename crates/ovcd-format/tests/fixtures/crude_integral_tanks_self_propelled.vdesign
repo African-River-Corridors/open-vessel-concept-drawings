@@ -69,6 +69,10 @@
           "value": 1.6,
           "source": "default"
         },
+        "bow_rake_max_length_m": {
+          "value": null,
+          "source": "default"
+        },
         "lightship_factor_t_per_m3": {
           "value": 0.1141,
           "source": "default"

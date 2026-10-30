@@ -923,6 +923,12 @@ pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
         applies_to: AppliesTo::All,
         value: "null",
     },
+    // Issue #661: a file saved before keeps its bow rake over depth with no cap.
+    LegacyFixedJson {
+        name: "bow_rake_max_length_m",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
     // Issue #358: a file saved before checked no lock.
     LegacyFixedJson {
         name: "lock_length_m",
@@ -2042,6 +2048,13 @@ pub const INPUTS: &[InputSpec] = &[
         "bow_rake_length_to_depth_ratio",
         "Bow rake length over depth",
         NUM,
+        false,
+        Group::HullAndContainment,
+    ),
+    spec(
+        "bow_rake_max_length_m",
+        "Longest bow rake from depth",
+        NUM_OR_NONE,
         false,
         Group::HullAndContainment,
     ),

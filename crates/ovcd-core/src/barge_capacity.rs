@@ -49,6 +49,16 @@ pub const DEFAULT_MAX_TANK_OD_M: f64 = 16.0;
 
 /// Default bow rake length as a multiple of the moulded depth.
 pub const DEFAULT_BOW_RAKE_TO_DEPTH_RATIO: f64 = 1.6;
+
+/// Issue #661: the bow rake when none is typed, the ratio x the moulded depth, at most `max_m`
+/// (`None`: no cap, the rule before #661).
+pub fn default_bow_rake_m(ratio: f64, depth: f64, max_m: Option<f64>) -> f64 {
+    let rake = ratio * depth;
+    match max_m {
+        Some(cap) => rake.min(cap),
+        None => rake,
+    }
+}
 /// Default number of gas tanks along the hull.
 pub const DEFAULT_TANKS_IN_LINE: i64 = 2;
 /// Default height of the tank saddles above the inner bottom (m).
@@ -238,6 +248,8 @@ pub struct BargeCapacityInputs {
     pub bow_rake_length_m: Option<f64>,
     /// The bow rake as a multiple of the moulded depth, when `bow_rake_length_m` is `None`.
     pub bow_rake_to_depth_ratio: f64,
+    /// Issue #661: the longest bow rake the ratio gives (m). `None`: no cap.
+    pub bow_rake_max_length_m: Option<f64>,
     /// Issue #448: the keel height at the bow (m). `None`: the moulded depth, the rake the drawings
     /// show.
     pub bow_rake_rise_m: Option<f64>,
@@ -357,6 +369,7 @@ impl BargeCapacityInputs {
             downflooding_angle_deg: None,
             downflooding_openings: Vec::new(),
             bow_rake_to_depth_ratio: DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
+            bow_rake_max_length_m: None,
             bulk_end_bulkhead_m: 0.50,
             vessel_type: "IGC_2G".to_string(),
             side_clearance_override_m: None,
@@ -1280,7 +1293,11 @@ fn arrangement(inp: &BargeCapacityInputs, class: CargoClass) -> Result<Arrangeme
 
     let rake = match inp.bow_rake_length_m {
         Some(r) => r,
-        None => inp.bow_rake_to_depth_ratio * inp.depth,
+        None => default_bow_rake_m(
+            inp.bow_rake_to_depth_ratio,
+            inp.depth,
+            inp.bow_rake_max_length_m,
+        ),
     };
 
     let (aft_sep, fwd_sep, sep) = match class {

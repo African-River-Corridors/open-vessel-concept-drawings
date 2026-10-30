@@ -87,7 +87,7 @@ and the resistance wetted surface (Step 6). They can disagree a little with the 
 
 ### Step 3. Hull form
 
-- **Main path.** The bow rake length is `1.6 × D` unless `bow_rake_length_m` is typed (`barge_capacity.rs:1079-1082`;
+- **Main path.** The bow rake length is `1.6 × D`, at most `bow_rake_max_length_m` (10 m; issue #661), unless `bow_rake_length_m` is typed (`barge_capacity.rs:1079-1082`;
   constant `DEFAULT_BOW_RAKE_TO_DEPTH_RATIO`, line 50; `simulate.rs` `bow_rake_of`, line 1613). The keel rises in a
   straight line to `bow_rake_rise_m` at the bow, or to `D` when it is not typed. `Hull::build` cuts a rake longer
   than the hull to `L`, and a rise above `D` to `D` (`hydrostatics.rs:328-334`).
@@ -215,7 +215,7 @@ The resistance wetted surface stays box-based: `(L_WL B + 2 L_WL T) × 1.02`, pl
 | HF-A19 | Convoy unit beam | `B / n_abreast` | Fixed in code | None | `vessel_standards.rs:92-94` | Unknown; see the triage tickets |
 | HF-A20 | Pushed convoy | No results | Fixed in code | Not built | `run.rs:91` | Not applicable |
 | HF-A21 | Hydrostatic hull, main path | Sections Table of the raked box (bow rake, no stern rake), with the Stern Form cut in | Method | ADR 0012, spec 0008 | `barge_capacity.rs:1208-1216`; `simulate.rs:1625-1643`; `journey_derating.rs:113-124` | Exact to rounding for this shape (`tests/hull_hydrostatics.rs`). A real hull with a bilge radius has less volume |
-| HF-A22 | Bow rake length | `1.6 × D`, unless `bow_rake_length_m` is typed; cut to `L` | Estimate | Carried over from the original engine. No published source for any Service Area (issue #661) | `barge_capacity.rs:50`, `:1079-1082`; `simulate.rs:1613-1623`; `hydrostatics.rs:329` | Sets the bow void, the bow volume and `L_WL`: unknown. On a deep hull it binds the cargo: the worked 140 x 29 m gas example at `D` = 12 m has a 19.2 m rake; a 12 m rake gives 7.2 m more cargo zone and 8.2 % more cargo volume |
+| HF-A22 | Bow rake length | `min(1.6 × D, bow_rake_max_length_m)` (cap 10 m; none in a file saved before #661), unless `bow_rake_length_m` is typed; cut to `L` | Estimate | Ratio carried over from the original engine; cap a working value set by the maintainer (issue #661). No published source for either. For scale, a 195 x 35 x 12 ft jumbo hopper barge has a 27 ft 6 in (8.4 m) rake (Jeffboat, Maritime Reporter, 15 October 1977, p. 9) | `barge_capacity.rs:50`, `:1079-1082`; `simulate.rs:1613-1623`; `hydrostatics.rs:329` | Sets the bow void, the bow volume and `L_WL`: unknown. On a deep hull it binds the cargo: the worked 140 x 29 m gas example at `D` = 12 m has a 19.2 m rake; a 12 m rake gives 7.2 m more cargo zone and 8.2 % more cargo volume |
 | HF-A23 | Bow rake rise | `= D`, unless `bow_rake_rise_m` is typed; cut to `D` | Estimate | Carried over; the rake the drawings show | `simulate.rs:1621`; `barge_capacity.rs:1213`; `hydrostatics.rs:333` | Sets the bow volume below the rise and the waterplane length at low draughts |
 | HF-A24 | Stern rake, main path | None. Pushed barge: 3.0 m stern void, square stern. Self-propelled: the Stern Form | Estimate | Carried over; spec 0007 for the Stern Form | `barge_capacity.rs:100`; `stern_form.rs:412` | Unknown for a pushed barge with a raked stern: volume too large, non-conservative for draught |
 | HF-A25 | Stern rake rise, legacy | `= D` | Fixed in code | Carried over | `models.rs:235-237` | Legacy path only |

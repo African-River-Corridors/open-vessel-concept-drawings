@@ -1266,6 +1266,7 @@ fn simulate_once(p: &Map<String, Value>, measured: &mut Measured, rules: &RunRul
     let (rake_length, rake_rise) = bow_rake_of(p, d)?;
     inp.bow_rake_length_m = Some(rake_length);
     inp.bow_rake_rise_m = Some(rake_rise);
+    inp.bow_rake_max_length_m = opt_float(p, "bow_rake_max_length_m")?;
     inp.hull_shape = hull_shape_of(p)?;
     inp.downflooding_angle_deg = opt_float(p, "downflooding_angle_deg")?;
     inp.downflooding_openings = openings_of(p)?;
@@ -2013,11 +2014,15 @@ fn machinery_of(
             None => default_bow_thruster_kw(l, b, t),
         })
     };
-    let rake = get_or(
-        p,
-        "bow_rake_length_to_depth_ratio",
-        ovcd_core::barge_capacity::DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
-    )? * d;
+    let rake = ovcd_core::barge_capacity::default_bow_rake_m(
+        get_or(
+            p,
+            "bow_rake_length_to_depth_ratio",
+            ovcd_core::barge_capacity::DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
+        )?,
+        d,
+        opt_float(p, "bow_rake_max_length_m")?,
+    );
     Ok(Some(MachineryInputs {
         power_source,
         propulsor,
@@ -2033,14 +2038,19 @@ fn machinery_of(
 }
 
 /// The bow rake of the Option (issue #448, as `barge_capacity` takes it): `bow_rake_length_m`, else
-/// the ratio x depth; it rises to `bow_rake_rise_m`, else the depth.
+/// the ratio x depth, at most `bow_rake_max_length_m` (issue #661); it rises to `bow_rake_rise_m`,
+/// else the depth.
 fn bow_rake_of(p: &Map<String, Value>, d: f64) -> R<(f64, f64)> {
     let ratio = get_or(
         p,
         "bow_rake_length_to_depth_ratio",
         ovcd_core::barge_capacity::DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
     )?;
-    let length = opt_float(p, "bow_rake_length_m")?.unwrap_or(ratio * d);
+    let max = opt_float(p, "bow_rake_max_length_m")?;
+    let length = match opt_float(p, "bow_rake_length_m")? {
+        Some(l) => l,
+        None => ovcd_core::barge_capacity::default_bow_rake_m(ratio, d, max),
+    };
     let rise = opt_float(p, "bow_rake_rise_m")?.unwrap_or(d);
     Ok((length, rise))
 }
@@ -2612,6 +2622,7 @@ fn simulate_gas(
             "bow_rake_length_to_depth_ratio",
             ovcd_core::barge_capacity::DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
         )?,
+        bow_rake_max_length_m: opt_float(p, "bow_rake_max_length_m")?,
         // Issue #448: a typed bow rake and rise hold for every candidate depth.
         bow_rake_length_m: opt_float(p, "bow_rake_length_m")?,
         bow_rake_rise_m: opt_float(p, "bow_rake_rise_m")?,
