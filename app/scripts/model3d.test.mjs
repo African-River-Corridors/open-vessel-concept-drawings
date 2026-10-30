@@ -1,7 +1,7 @@
 // Unit tests for src/lib/model3d.ts. Run: npm run test:unit
 import test from "node:test";
 import assert from "node:assert/strict";
-import { familyOf, kindLabelId, fixedView, orbitStep, FAMILY_TOKEN } from "../src/lib/model3d.ts";
+import { familyOf, kindLabelId, fixedView, orbitStep, toView, VIEW_MIRROR, FAMILY_TOKEN } from "../src/lib/model3d.ts";
 
 test("every Space kind the arrangement places has a family and a label", () => {
   for (const kind of ["cargo_tank", "slop", "cofferdam", "pump_room", "double_bottom_ballast", "wing_ballast", "peak_ballast"]) {
@@ -37,4 +37,16 @@ test("an orbit step stops short of the poles", () => {
   assert.ok(q[2] < 10 && q[2] > 9.9, `${q}`);
   const r = orbitStep([10, 0, 0], [0, 0, 0], 0, 5);
   assert.ok(r[2] > -10 && r[2] < -9.9, `${r}`);
+});
+
+test("the view mirrors the left-handed model axes once, in y (spec 0009, issue #682)", () => {
+  // Label: property. With x forward and z up, a right-handed y points to port; the model's y points to
+  // starboard, so the model axes are left-handed. One mirror (determinant -1) puts port at view y > 0.
+  const [ex, ey, ez] = [toView([1, 0, 0]), toView([0, 1, 0]), toView([0, 0, 1])];
+  const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  assert.equal(dot(cross([1, 0, 0], [0, 1, 0]), [0, 0, 1]), 1, "the model axes as numbers");
+  assert.equal(dot(cross(ex, ey), ez), -1, "one mirror: the determinant is -1");
+  assert.deepEqual(toView([3, -2, 1]), [3, 2, 1], "a point to port has view y > 0");
+  assert.equal(VIEW_MIRROR[0] * VIEW_MIRROR[1] * VIEW_MIRROR[2], -1);
 });

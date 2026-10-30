@@ -268,6 +268,52 @@ describe("OVCD web smoke tests", () => {
     }
   });
 
+  it("draws the model right-handed: bow right from starboard, port left with the bow up in plan (issue #682)", async () => {
+    const b = await start();
+    await b.url(`${origin}/ovcd/app`);
+    await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
+    await (await b.$("button=I understand")).click();
+    await until(b, "results", async () => (await outputs(b)).isExisting());
+    await b.execute(() => {
+      HTMLInputElement.prototype.click = function () {};
+    });
+    await (await b.$("button=Open")).click();
+    const picker = await b.$("[data-testid=file-picker]");
+    await picker.waitForExist({ timeout: 5000 });
+    await picker.setValue(BALLAST_FIXTURE);
+    await until(b, "the file name", async () => (await b.$("header")).getText().then((t) => t.includes("crude_integral_tanks_coastal.vdesign")));
+    const tab = (label) => b.$(`//button[@role="tab" and normalize-space()="${label}"]`);
+    await (await tab("Drawings")).click();
+    await (await tab("3D")).click();
+    await until(b, "the model", async () => (await (await b.$("[data-testid=model3d]")).getAttribute("data-status")) === "ready", 60000);
+    const probe = async (view) => {
+      await (await b.$(`[data-testid=model3d-view-${view}]`)).click();
+      return JSON.parse(await (await b.$("[data-testid=model3d-canvas]")).getAttribute("data-probe"));
+    };
+    // Profile, from the starboard side: the bow on the right, and port farther away than starboard.
+    const profile = await probe("profile");
+    assert.ok(profile.bow[0] > 0 && profile.stern[0] < 0, `profile: bow ${profile.bow}, stern ${profile.stern}`);
+    assert.ok(profile.port[2] > profile.starboard[2], `profile: port ${profile.port}, starboard ${profile.starboard}`);
+    // Plan, from above: the bow up the screen, port on the left.
+    const plan = await probe("plan");
+    assert.ok(plan.bow[1] > 0 && plan.stern[1] < 0, `plan: bow ${plan.bow}, stern ${plan.stern}`);
+    assert.ok(plan.port[0] < 0 && plan.starboard[0] > 0, `plan: port ${plan.port}, starboard ${plan.starboard}`);
+    // Body plan, from ahead: port on the right.
+    const body = await probe("body");
+    assert.ok(body.port[0] > 0 && body.starboard[0] < 0, `body: port ${body.port}, starboard ${body.starboard}`);
+    if (SHOTS) {
+      fs.mkdirSync(SHOTS, { recursive: true });
+      for (const theme of ["Light", "Dark"]) {
+        await (await b.$(`button=${theme}`)).click();
+        for (const view of ["reset", "view-profile", "view-plan"]) {
+          await (await b.$(`[data-testid=model3d-${view}]`)).click();
+          await new Promise((r) => setTimeout(r, 500));
+          await b.saveScreenshot(path.join(SHOTS, `web-3d-axes-${view.replace("view-", "")}-${theme.toLowerCase()}.png`));
+        }
+      }
+    }
+  });
+
   it("moves the section plane and shows the waterline of each loading condition (issue #459)", async () => {
     const b = await start();
     await b.url(`${origin}/ovcd/app`);

@@ -41,9 +41,23 @@ export type FixedView = "profile" | "plan" | "body";
 export type Vec3 = [number, number, number];
 
 /**
+ * The mirror from model axes to view axes (spec 0009, "Axes and handedness"). The model axes (x
+ * forward, y to starboard, z up) are left-handed; three.js is right-handed. The view puts every mesh
+ * under one root group with this scale, so the picture is the vessel and not its mirror image; three.js
+ * flips the front face for the negative determinant, so faces still face out.
+ */
+export const VIEW_MIRROR: Vec3 = [1, -1, 1];
+
+/** A point in model axes, in the view's (right-handed) axes. */
+export function toView(p: Vec3): Vec3 {
+  return [p[0] * VIEW_MIRROR[0], p[1] * VIEW_MIRROR[1], p[2] * VIEW_MIRROR[2]];
+}
+
+/**
  * Where the camera stands for a fixed view of a hull of `size` (length, beam, depth) about `centre`,
  * and its up vector. Profile: from the starboard side. Plan: from above, the bow up the screen. Body
- * plan: from ahead. `distance` is how far back it stands.
+ * plan: from ahead. `distance` is how far back it stands. All in model axes: the view takes them
+ * through `toView`.
  */
 export function fixedView(view: FixedView, centre: Vec3, distance: number): { position: Vec3; up: Vec3 } {
   const [cx, cy, cz] = centre;

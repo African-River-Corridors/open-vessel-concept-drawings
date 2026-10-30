@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { platform, type Meshes, type SectionOutline, type SpaceInfo, type Waterline } from "../platform";
   import { watchTheme } from "../chartTheme";
-  import { FAMILY_TOKEN, familyOf, fixedView, kindLabelId, orbitStep, type FixedView } from "../model3d";
+  import { FAMILY_TOKEN, VIEW_MIRROR, familyOf, fixedView, kindLabelId, orbitStep, toView, type FixedView, type Vec3 } from "../model3d";
   import { num, t } from "../i18n.svelte";
 
   // The 3D view of the Vessel Model (spec 0008, issue #458). The core builds the meshes; this view only
@@ -111,11 +111,13 @@
       sun.position.set(-30, -50, 80);
       scene.add(sun);
 
-      // One mesh per group, all on the one vertex buffer of the core.
+      // One mesh per group, all on the one vertex buffer of the core. The root holds them in model axes
+      // and mirrors them into the view's right-handed axes (spec 0009, issue #682).
       const positions = new THREE.BufferAttribute(data.positions, 3);
       const meshes = new Map<string, InstanceType<typeof THREE.Mesh>>();
       const space = new Map<InstanceType<typeof THREE.Object3D>, string>();
       const root = new THREE.Group();
+      root.scale.set(...VIEW_MIRROR);
       scene.add(root);
       for (const g of data.groups) {
         const geometry = new THREE.BufferGeometry();
@@ -129,11 +131,12 @@
         meshes.set(`${g.layer}:${g.id}`, mesh);
         if (g.layer === "space") space.set(mesh, g.id);
       }
-      const box = new THREE.Box3().setFromObject(root);
-      const centre = box.getCenter(new THREE.Vector3());
-      const size = box.getSize(new THREE.Vector3());
+      // The box of the model, in model axes.
+      const modelBox = new THREE.Box3().setFromBufferAttribute(positions);
+      const centre = modelBox.getCenter(new THREE.Vector3());
+      const size = modelBox.getSize(new THREE.Vector3());
       const reach = Math.max(size.x, size.y, size.z) * 1.1;
-      length = box.max.x;
+      length = modelBox.max.x;
       sectionX = Math.round(length / 2);
       const controls = new OrbitControls(camera, canvas);
       controls.enableDamping = false;
@@ -174,12 +177,26 @@
         // What is drawn, for the end-to-end tests: the groups on, by layer.
         const shown = [...meshes.values()].filter((m) => m.visible).map((m) => `${m.userData.layer}:${m.userData.id}`);
         canvas.dataset.shown = JSON.stringify(shown);
+        // Where four points of the model's box land on the screen (x and y from -1 to 1, y up) and how
+        // far each is from the camera, for the handedness check of the end-to-end tests (spec 0009).
+        const probe = (p: Vec3) => {
+          const w = root.localToWorld(new THREE.Vector3(...p));
+          const s = w.clone().project(camera);
+          return [s.x, s.y, w.distanceTo(camera.position)];
+        };
+        const [mc, lo, hi] = [modelBox.getCenter(new THREE.Vector3()), modelBox.min, modelBox.max];
+        canvas.dataset.probe = JSON.stringify({
+          bow: probe([hi.x, mc.y, mc.z]),
+          stern: probe([lo.x, mc.y, mc.z]),
+          port: probe([mc.x, lo.y, mc.z]),
+          starboard: probe([mc.x, hi.y, mc.z]),
+        });
       }
       apply = paint;
 
       // The section plane: the clip, and the outline the core gives at that x, drawn in the plane.
       const outline = new THREE.Group();
-      scene.add(outline);
+      root.add(outline);
       let asked = 0;
       const clear = () => {
         for (const c of [...outline.children]) {
@@ -221,14 +238,15 @@
         paint();
       };
 
-      function look(position: [number, number, number], up: [number, number, number]) {
-        camera.up.set(...up);
-        camera.position.set(...position);
-        controls.target.copy(centre);
+      // The camera stands at `position` (model axes) and looks at the centre of the model.
+      function look(position: Vec3, up: Vec3) {
+        camera.up.set(...toView(up));
+        camera.position.set(...toView(position));
+        controls.target.set(...toView([centre.x, centre.y, centre.z]));
         controls.update();
         paint();
       }
-      const home = (): [number, number, number] => [centre.x - reach * 0.5, centre.y + reach * 0.8, centre.z + reach * 0.5];
+      const home = (): Vec3 => [centre.x - reach * 0.5, centre.y + reach * 0.8, centre.z + reach * 0.5];
       reset = () => look(home(), [0, 0, 1]);
       goTo = (v) => {
         const f = fixedView(v, [centre.x, centre.y, centre.z], reach);
