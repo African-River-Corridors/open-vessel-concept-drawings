@@ -259,7 +259,7 @@ fn the_run_checks_the_stored_stack_and_a_changed_stack_changes_the_trace() {
         other => panic!("{other:?}"),
     };
     let default = run_option_with(&design.options[0], &lib, &[]);
-    assert!(names(&default).contains("is2008-a") && names(&default).contains("ovd@3.0.0"));
+    assert!(names(&default).contains("is2008-a") && names(&default).contains("ovd@3.1.0"));
     assert_eq!(trace_warnings(&default), Vec::<String>::new());
     // The Option stores an older is2008-a version: the run uses it, with no swap.
     let old = lib.find("is2008-a", "1.0.0").unwrap();

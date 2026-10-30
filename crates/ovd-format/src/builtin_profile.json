@@ -820,6 +820,11 @@
       "hard": { "gt": 0, "lt": 1 },
       "soft": { "min": 0.2, "max": 0.8 }
     },
+    "resistance_method": {
+      "default": "barge_fit",
+      "status": "estimate",
+      "basis": "How the calm-water residuary resistance is worked out (issue #723, ADR 0023). barge_fit: ITTC-1957 friction times (1 + Cr/Cf), a fit of Cr/Cf on the Froude number for bluff barges (an Estimate); it has no hull-form term, so bow, stern, bilge and Cb change the power only through the wetted surface and the waterline length. holtrop_mennen: Holtrop 1984 (International Shipbuilding Progress 31, 1984) with the 1982 bulb, transom and correlation terms; its data range is Fn up to 0.24, Cp 0.73 to 0.85, L/B 5.1 to 7.1, B/T 2.4 to 3.2 for full forms (Ortigosa et al. 2009, Table 1), and a check warns outside it. by_block_coefficient: Holtrop-Mennen up to Cp 0.85, the barge fit above. The default keeps the barge fit, so a saved Design keeps its results"
+    },
     "max_speed_kn": {
       "default": 10.0,
       "unit": "kn",

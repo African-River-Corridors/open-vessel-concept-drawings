@@ -1259,6 +1259,12 @@ pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
         applies_to: AppliesTo::Only("type_c_tanks"),
         value: "\"tank_end\"",
     },
+    // Issue #723: a file saved before the resistance method keeps the bluff-barge fit.
+    LegacyFixedJson {
+        name: "resistance_method",
+        applies_to: AppliesTo::All,
+        value: "\"barge_fit\"",
+    },
     LegacyFixedJson {
         name: "tank_allowable_stress_basis",
         applies_to: AppliesTo::Only("type_c_tanks"),
@@ -1571,6 +1577,13 @@ pub const CHOICE_LABELS: &[(&str, &str)] = &[
     ("open", "Open"),
     ("tank_end", "From the tank end"),
     ("cargo_area", "From the cargo area"),
+    // Issue #723: the resistance methods.
+    ("barge_fit", "Bluff-barge fit (no hull-form term)"),
+    ("holtrop_mennen", "Holtrop-Mennen 1984"),
+    (
+        "by_block_coefficient",
+        "Holtrop-Mennen up to Cp 0.85, bluff-barge fit above",
+    ),
     ("stern_form", "Largest the stern allows"),
     ("light_draught", "Immersed at the light draught"),
     ("river-only", "River only"),
@@ -2733,6 +2746,14 @@ pub const INPUTS: &[InputSpec] = &[
         ),
         "propulsor_type",
         &["unspecified"],
+    ),
+    // Issue #723: how the calm-water residuary resistance is worked out.
+    spec(
+        "resistance_method",
+        "Resistance method",
+        InputKind::Choice(ovd_core::resistance::RESISTANCE_METHODS),
+        false,
+        Group::SpeedAndPower,
     ),
     spec(
         "max_speed_kn",

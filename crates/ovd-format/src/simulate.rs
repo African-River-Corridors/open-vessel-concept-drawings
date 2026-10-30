@@ -320,6 +320,24 @@ fn curves(
     Ok((list, Some(rr)))
 }
 
+/// Issue #723: the `resistance_method` parameter; the bluff-barge fit when it is left out.
+fn resistance_method(p: &Map<String, Value>) -> R<resistance::ResistanceMethod> {
+    match p.get("resistance_method") {
+        None | Some(Value::Null) => Ok(resistance::ResistanceMethod::default()),
+        Some(Value::String(s)) => match resistance::ResistanceMethod::parse(s) {
+            Some(m) => Ok(m),
+            None => bad(format!(
+                "`params.resistance_method` {} is not a resistance method",
+                py_repr(&json!(s))
+            )),
+        },
+        Some(other) => bad(format!(
+            "`params.resistance_method` must be text, not {}",
+            py_repr(other)
+        )),
+    }
+}
+
 /// The resistance of the hull in each environment (deep water, and the channel when one is given);
 /// `None` with no draught.
 fn resistance_of(
@@ -400,6 +418,9 @@ fn resistance_of(
         speed_step_knots: 0.5,
         // Issue #350: the wetted surface the Stern Form adds (a tunnel's roof, a run's slope).
         wetted_surface_extra_m2: extra_wetted_m2,
+        // Issue #723: the residuary method, and the hull's waterplane for Holtrop–Mennen.
+        method: resistance_method(p)?,
+        waterplane_coefficient: (h.cwp > 0.0).then_some(h.cwp),
         ..ResistanceInputs::default()
     };
     resistance::compute(&inputs)
@@ -2219,6 +2240,8 @@ struct HullAt {
     cb: f64,
     lwl: f64,
     midship_m2: f64,
+    /// Issue #723: the waterplane coefficient, for Holtrop–Mennen.
+    cwp: f64,
 }
 
 fn hull_at(hull: &Hull, t: f64, rho: f64) -> R<HullAt> {
@@ -2226,6 +2249,7 @@ fn hull_at(hull: &Hull, t: f64, rho: f64) -> R<HullAt> {
         cb: 0.0,
         lwl: 0.0,
         midship_m2: 0.0,
+        cwp: 0.0,
     };
     if t <= 0.0 {
         // No draught: nothing to read (the resistance has no curve then).
@@ -2241,6 +2265,7 @@ fn hull_at(hull: &Hull, t: f64, rho: f64) -> R<HullAt> {
         cb: u.cb,
         lwl: u.immersed.l_wl_m,
         midship_m2: u.immersed.midship_area_m2,
+        cwp: u.cwp,
     })
 }
 
@@ -3484,6 +3509,8 @@ pub(crate) fn formation_curves(
         cb,
         lwl: l,
         midship_m2: b * t * cm,
+        // No waterplane: Holtrop–Mennen estimates it from Cb (issue #723).
+        cwp: 0.0,
     };
     resistance_of(p, l, b, t, (hull, 0.0), disp, rho)
         .map(|r| r.map(|r| powering_curves(&r)))

@@ -185,6 +185,10 @@
           "value": 0.45,
           "source": "default"
         },
+        "resistance_method": {
+          "value": "barge_fit",
+          "source": "default"
+        },
         "max_speed_kn": {
           "value": 10.0,
           "source": "default"

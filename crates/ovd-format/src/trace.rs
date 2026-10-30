@@ -919,6 +919,11 @@ pub const CHECK_RULES: &[(&str, &str)] = &[
         "ovd/resistance/service-clears-squat",
     ),
     ("lackenby fit subcritical", "ovd/resistance/lackenby-fit"),
+    // Issue #723: only a Design that chose a resistance method has this check.
+    (
+        "resistance method in range",
+        "ovd/resistance/method-in-range",
+    ),
     (
         "coefficients are first order",
         "ovd/resistance/first-order-coefficients",

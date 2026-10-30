@@ -182,6 +182,9 @@ OPTIONAL_INPUT_CASES = (
     # Where the opening setback is measured from (issue #381), set to the Defaults Profile value.
     ("opening_setback_basis", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"opening_setback_basis": "cargo_area"}),
+    # The resistance method (issue #723), set to the Defaults Profile value.
+    ("resistance_method", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"resistance_method": "barge_fit"}),
     # The angle of down-flooding (issue #282): an angle of 40 degrees or more ends no area sooner, so
     # a design that types one has the same results as one that gives none.
     ("downflooding_angle_deg", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,

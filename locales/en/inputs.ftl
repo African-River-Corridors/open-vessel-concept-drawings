@@ -415,6 +415,11 @@ input-notch-width-m = Notch width
 
 input-propulsive-efficiency = Propulsive efficiency
 
+input-resistance-method = Resistance method
+choice-resistance-method-barge-fit = Bluff-barge fit (no hull-form term)
+choice-resistance-method-holtrop-mennen = Holtrop-Mennen 1984
+choice-resistance-method-by-block-coefficient = Holtrop-Mennen up to Cp 0.85, bluff-barge fit above
+
 input-max-speed-kn = Maximum speed
 
 input-thruster-count = Thruster count (most)
