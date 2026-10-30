@@ -3021,7 +3021,7 @@ fn simulate_gas(
             "stability": stability,
             "stability_marks": stability_marks,
             "fit_tried": fit_tried,
-            "cost_masses": r.gas_basis.as_ref().map_or(Value::Null, |b| match &powering_block {
+            "cost_masses": r.gas_basis.as_ref().map_or(Value::Null, |b| crate::cost::with_hull_panels(match &powering_block {
                 // Issue #353: the Option's own battery and Installed Power, not a tug's.
                 Some(pw) => crate::cost::self_propelled_gas_masses(
                     &b.weights,
@@ -3029,7 +3029,7 @@ fn simulate_gas(
                     pw["installed_power_kw"].as_f64().unwrap_or(0.0),
                 ),
                 None => crate::cost::gas_masses(&b.weights),
-            }),
+            }, &gas_hull_panels(r, b))),
         }),
             (&r.stern_block_items, &r.trim_conditions),
         ),
@@ -3515,4 +3515,21 @@ pub(crate) fn formation_curves(
     resistance_of(p, l, b, t, (hull, 0.0), disp, rho)
         .map(|r| r.map(|r| powering_curves(&r)))
         .map_err(stop_text)
+}
+
+/// Issue #722: the panel model of a gas hull, with the block coefficient of its laden condition
+/// (ABS 3-1-1/31: the moulded displacement over L x B x d).
+fn gas_hull_panels(
+    r: &ovd_core::barge_capacity::BargeCapacityResult,
+    b: &ovd_core::barge_capacity::GasBasis,
+) -> ovd_core::hull_panels::HullPanelModel {
+    let i = &b.inputs;
+    let t = r.full_load_draft_m;
+    let cb = if t > 0.0 && i.loa > 0.0 && i.beam > 0.0 {
+        r.displacement_t / (i.water_density * i.loa * i.beam * t)
+    } else {
+        i.block_coefficient
+    };
+    let spec = ovd_core::hull_panels::gas_hull_spec(i, &b.tanks, cb);
+    ovd_core::hull_panels::double_hull_panels(&spec, &Default::default())
 }
