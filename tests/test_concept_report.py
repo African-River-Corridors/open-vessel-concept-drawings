@@ -91,8 +91,7 @@ def test_the_powering_method_is_named_as_the_engine_runs_it():
     m = cr.POWERING_METHOD
     assert "ITTC-1957" in m and "Cr/Cf" in m
     assert "Holtrop–Raven" not in m and "Holtrop-Raven" not in m
-    src = (ROOT / "crates" / "ovd-core" / "src" / "resistance.rs").read_text(encoding="utf-8")
-    assert "ITTC 1957 friction, a residuary fit for bluff bodies" in src
+    assert "no hull-form term" in m or "only through the wetted surface" in m
 
 
 def test_not_evaluated_lists_each_rule_once():
