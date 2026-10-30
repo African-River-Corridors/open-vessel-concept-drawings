@@ -189,5 +189,86 @@ fn a_group_of_no_triangles_has_no_node() {
     for n in doc["scenes"][0]["nodes"].as_array().unwrap() {
         names(&doc, n.as_u64().unwrap() as usize, &mut all);
     }
-    assert_eq!(all, ["hull"]);
+    assert_eq!(all, ["vessel", "hull"]);
+}
+
+/// The column-major 4 x 4 matrix of a node, or the identity when it has none.
+fn matrix(node: &Value) -> [f64; 16] {
+    match node["matrix"].as_array() {
+        Some(m) => core::array::from_fn(|k| m[k].as_f64().unwrap()),
+        None => core::array::from_fn(|k| if k % 5 == 0 { 1.0 } else { 0.0 }),
+    }
+}
+
+/// `a` times `b`, both column-major.
+fn mul(a: &[f64; 16], b: &[f64; 16]) -> [f64; 16] {
+    core::array::from_fn(|k| (0..4).map(|i| a[i * 4 + k % 4] * b[(k / 4) * 4 + i]).sum())
+}
+
+/// The world matrix of every node that holds a mesh, by mesh index.
+fn mesh_world(doc: &Value, i: usize, parent: &[f64; 16], out: &mut Vec<(usize, [f64; 16])>) {
+    let n = &doc["nodes"][i];
+    let world = mul(parent, &matrix(n));
+    if let Some(m) = n["mesh"].as_u64() {
+        out.push((m as usize, world));
+    }
+    for c in n["children"].as_array().into_iter().flatten() {
+        mesh_world(doc, c.as_u64().unwrap() as usize, &world, out);
+    }
+}
+
+/// Seam: the glTF root (spec 0009, "Axes and handedness", issue #682).
+///
+/// Label: property. The model axes (x forward, y to starboard, z up) are left-handed; glTF is
+/// right-handed with y up (glTF 2.0 Specification, version 2.0.1, 3.4 "Coordinate System and
+/// Units"). One root
+/// node maps model (x, y, z) to glTF (x, z, y): every mesh node sits under it, so a vertex to port
+/// (model y < 0) has glTF z < 0, a vertex above the base (model z > 0) has glTF y > 0, and the
+/// transform's determinant is -1: a mirror, so the winding is read clockwise and the faces still
+/// face out (glTF 2.0 Specification, version 2.0.1, 3.7.4 "Instantiation").
+#[test]
+fn the_root_node_maps_model_axes_to_right_handed_y_up() {
+    let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
+    let text = std::fs::read_to_string(dir.join("crude_integral_tanks_coastal.vdesign")).unwrap();
+    let design = check(&text, &Profile::built_in()).design.unwrap();
+    let option = &design.options[0];
+    let mesh = option_meshes(option).unwrap();
+    let (doc, _) = chunks(&option_glb(option).unwrap());
+    let scene = doc["scenes"][0]["nodes"].as_array().unwrap();
+    assert_eq!(scene.len(), 1, "one root node: {scene:?}");
+    let mut worlds = Vec::new();
+    let identity = matrix(&Value::Null);
+    mesh_world(
+        &doc,
+        scene[0].as_u64().unwrap() as usize,
+        &identity,
+        &mut worlds,
+    );
+    assert_eq!(
+        worlds.len(),
+        doc["meshes"].as_array().unwrap().len(),
+        "every mesh is under the root"
+    );
+    let apply = |m: &[f64; 16], p: [f64; 3]| -> [f64; 3] {
+        core::array::from_fn(|r| m[r] * p[0] + m[4 + r] * p[1] + m[8 + r] * p[2] + m[12 + r])
+    };
+    let det3 = |m: &[f64; 16]| {
+        m[0] * (m[5] * m[10] - m[9] * m[6]) - m[4] * (m[1] * m[10] - m[9] * m[2])
+            + m[8] * (m[1] * m[6] - m[5] * m[2])
+    };
+    let mut port = 0;
+    for (_, w) in &worlds {
+        assert_eq!(det3(w), -1.0);
+        assert_eq!(apply(w, [1.0, 2.0, 3.0]), [1.0, 3.0, 2.0]);
+        for v in mesh.positions.as_chunks::<3>().0 {
+            let p = v.map(f64::from);
+            if p[1] < -0.5 {
+                let g = apply(w, p);
+                assert!(g[2] < 0.0, "model {p:?} -> glTF {g:?}");
+                assert_eq!(g[1], p[2]);
+                port += 1;
+            }
+        }
+    }
+    assert!(port > 0, "the fixture has vertices to port");
 }

@@ -665,6 +665,23 @@ describe("OVCD app smoke tests", () => {
     }
   });
 
+  it("draws the model right-handed: bow right from starboard, port left with the bow up in plan (issue #682)", async () => {
+    await open(path.join(FIXTURES, "crude_integral_tanks_coastal.vdesign"), "crude_integral_tanks_coastal.vdesign");
+    await show("Drawings", "3D");
+    await until("the 3D view", async () => (await (await browser.$("[data-testid=model3d]")).getAttribute("data-status")) !== "loading", 60000);
+    if ((await (await browser.$("[data-testid=model3d]")).getAttribute("data-status")) !== "ready") return;
+    const probe = async (view) => {
+      await (await browser.$(`[data-testid=model3d-view-${view}]`)).click();
+      return JSON.parse(await (await browser.$("[data-testid=model3d-canvas]")).getAttribute("data-probe"));
+    };
+    const profile = await probe("profile");
+    assert.ok(profile.bow[0] > 0 && profile.stern[0] < 0, `profile: bow ${profile.bow}, stern ${profile.stern}`);
+    assert.ok(profile.port[2] > profile.starboard[2], `profile: port ${profile.port}, starboard ${profile.starboard}`);
+    const plan = await probe("plan");
+    assert.ok(plan.bow[1] > 0 && plan.stern[1] < 0, `plan: bow ${plan.bow}, stern ${plan.stern}`);
+    assert.ok(plan.port[0] < 0 && plan.starboard[0] > 0, `plan: port ${plan.port}, starboard ${plan.starboard}`);
+  });
+
   it("moves the section plane and shows a waterline when the 3D model can be drawn (issue #459)", async () => {
     await open(path.join(FIXTURES, "crude_integral_tanks_coastal.vdesign"), "crude_integral_tanks_coastal.vdesign");
     await show("Drawings", "3D");

@@ -8,6 +8,11 @@
 //! group is one node with one mesh of one triangle primitive; its indices accessor is the group's
 //! range of the shared index view. Normals are left to the viewer (flat, as the specification says
 //! for a primitive with none).
+//!
+//! Axes (spec 0009, "Axes and handedness"): the buffer holds the model's own axes, x forward, y to
+//! starboard, z up, which are left-handed. glTF is right-handed with y up (section 3.4). One root node
+//! holds every other node and maps model (x, y, z) to glTF (x, z, y): a mirror, determinant -1, so a
+//! viewer reads the winding clockwise and the faces still face out (section 3.7.4).
 
 use ovcd_core::mesh::Mesh;
 use serde_json::{Value, json};
@@ -19,6 +24,17 @@ const LAYERS: [(&str, &str); 5] = [
     ("bulkhead", "bulkheads"),
     ("space", "spaces"),
     ("waterline", "waterlines"),
+];
+
+/// The name of the root node, which maps model axes to glTF axes.
+const ROOT: &str = "vessel";
+
+/// The root node's matrix (column-major): model (x, y, z) to glTF (x, z, y).
+const MODEL_TO_GLTF: [f64; 16] = [
+    1.0, 0.0, 0.0, 0.0, //
+    0.0, 0.0, 1.0, 0.0, //
+    0.0, 1.0, 0.0, 0.0, //
+    0.0, 0.0, 0.0, 1.0,
 ];
 
 /// The colour of a layer: base colour factor (RGBA) and whether it blends.
@@ -35,7 +51,8 @@ fn material(layer: &str) -> ([f64; 4], bool) {
 /// The `.glb` of `mesh`: one node for each layer, named for it (`hull`, `decks`, `bulkheads`,
 /// `spaces`, `waterlines`), holding one child node for each part, named for the part (a deck or
 /// bulkhead key, a Space name, a loading condition). The hull is the layer's own node, with its mesh.
-/// One material for each layer. An empty mesh gives a scene with no nodes.
+/// One material for each layer. All of them sit under one root node, `vessel`, which maps the model
+/// axes to glTF's. An empty mesh gives a scene with no nodes.
 pub fn gltf_glb(mesh: &Mesh) -> Vec<u8> {
     let mut bin: Vec<u8> = Vec::with_capacity(4 * (mesh.positions.len() + mesh.indices.len()));
     for p in &mesh.positions {
@@ -124,6 +141,10 @@ pub fn gltf_glb(mesh: &Mesh) -> Vec<u8> {
             }
         }
     }
+    if !scene_nodes.is_empty() {
+        nodes.push(json!({ "name": ROOT, "matrix": MODEL_TO_GLTF, "children": scene_nodes }));
+        scene_nodes = vec![nodes.len() - 1];
+    }
     let mut root = json!({
         "asset": { "version": "2.0", "generator": "OVCD" },
         "scene": 0,
@@ -174,7 +195,9 @@ pub fn bytes_hash(bytes: &[u8]) -> String {
 // Binary STL ("StereoLithography Interface Specification", 3D Systems 1989: an 80 byte header, a
 // u32 triangle count, then per triangle a normal and three vertices as little-endian f32 and a u16
 // attribute) or Wavefront OBJ (text, `v` and `f` lines, one-based indices), of the hull to the deck
-// in hull axes: x forward from the aft end, y to starboard, z up from the base line, metres.
+// in hull axes: x forward from the aft end, y to starboard, z up from the base line, metres. These
+// axes are left-handed and the files keep them as they are: unlike the glTF, the panel mesh is not
+// mirrored, because a solver reads it in hull axes (spec 0008, #461; spec 0009, "Axes and handedness").
 // Triangles are counter-clockwise seen from outside, as in `ovcd_core::mesh`.
 
 use std::collections::BTreeMap;
