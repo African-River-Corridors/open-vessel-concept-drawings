@@ -85,6 +85,7 @@ app-source-default = default
 app-source-class = class
 app-reset = reset
 app-reset-title = Go back to the default
+app-choice-not-typed = { $value } ({ $source })
 app-range-and = { $first } and { $second }
 app-help-default = Default: { $value }
 app-help-default-by = Default by { $by }: { $values }

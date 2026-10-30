@@ -78,6 +78,53 @@ describe("OVCD web smoke tests", () => {
     assert.equal(await (await b.$("[data-testid=notice]")).isExisting(), false, "notice not shown again");
   });
 
+  it("marks a list field typed when the user picks the value it already shows (issue #670)", async () => {
+    const b = await start();
+    await b.url(`${origin}/ovcd/app`);
+    await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
+    await (await b.$("button=I understand")).click();
+    await until(b, "results", async () => (await outputs(b)).isExisting());
+    // The starter Design: Cargo Containment is a default.
+    const field = () => b.$('.field[data-input="cargo_containment"]');
+    const badge = async () => (await (await field()).$(".badge")).getAttribute("class");
+    await until(b, "the field", async () => (await field()).isExisting());
+    assert.match(await badge(), /\bdefault\b/);
+    const select = await (await field()).$("select");
+    const shown = await b.execute((el) => el.selectedOptions[0].textContent.trim(), select);
+    const value = await b.execute(
+      (el) => [...el.options].find((o) => !o.disabled && o.textContent.trim() === el.selectedOptions[0].textContent.trim().replace(/ \(default\)$/, ""))?.value,
+      select,
+    );
+    assert.ok(value, `a real entry for ${shown}`);
+    // The entry that holds the shown default cannot be picked.
+    const held = await b.execute((el) => [...el.options].filter((o) => o.disabled).map((o) => [o.value, o.textContent.trim(), o.selected]), select);
+    assert.equal(held.length, 1, JSON.stringify(held));
+    assert.equal(held[0][2], true, "the default entry is the one shown");
+    assert.match(held[0][1], / \(default\)$/);
+    // The user picks the same value from the list: the field is typed.
+    await select.selectByAttribute("value", value);
+    await until(b, "the field typed", async () => /\btyped\b/.test(await badge()));
+    assert.equal(await b.execute((el) => el.value, await (await field()).$("select")), value);
+    assert.equal(await b.execute((el) => [...el.options].filter((o) => o.disabled).length, await (await field()).$("select")), 0, "no default entry once typed");
+    if (SHOTS) {
+      fs.mkdirSync(SHOTS, { recursive: true });
+      await (await field()).scrollIntoView();
+      await b.saveScreenshot(path.join(SHOTS, "web-pick-default-typed.png"));
+    }
+    // Reset: back to the default, with its entry.
+    await (await (await field()).$("button=reset")).click();
+    await until(b, "the field default again", async () => /\bdefault\b/.test(await badge()));
+    assert.equal(await b.execute((el) => el.selectedOptions[0].disabled, await (await field()).$("select")), true);
+    if (SHOTS) {
+      for (const theme of ["Light", "Dark"]) {
+        await (await b.$(`button=${theme}`)).click();
+        await (await field()).scrollIntoView();
+        await new Promise((r) => setTimeout(r, 300));
+        await b.saveScreenshot(path.join(SHOTS, `web-pick-default-${theme.toLowerCase()}.png`));
+      }
+    }
+  });
+
   it("opens the gas example through the file picker; results hash equals ovcd run --json", async () => {
     const b = await start();
     await b.url(`${origin}/ovcd/app`);
