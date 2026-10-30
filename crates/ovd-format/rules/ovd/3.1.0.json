@@ -1006,7 +1006,8 @@
       "applies_when": {
         "resistance_method": [
           "holtrop_mennen",
-          "by_block_coefficient"
+          "by_block_coefficient",
+          "barge_form_factor"
         ]
       },
       "kind": "check",

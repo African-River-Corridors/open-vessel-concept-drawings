@@ -1,0 +1,42 @@
+# Calm-water resistance calibration cases for full-form barges (issue #735).
+# Every row is a towing-tank point at MODEL scale, as published. Methods are compared at model scale:
+# no correlation allowance, the test water's viscosity. Sources (see calibration/resistance_results.md):
+#   Z23 = L. Zentari, "Hydrodynamic Forces on Pusher-Barge Convoys in Deep and Shallow Water", Dr.-Ing.
+#         thesis, Universitat Duisburg-Essen, 2023 (DuEPublico, duepublico_derivate_00080959/Diss_Zentari.pdf,
+#         sha256 0c71312acfa45398b90183471d1e39a7c7058b33d3fee1ccd3b45f1670a3b74c, retrieved 2026-10-30).
+#         Hull data: Table 4.1 (full scale; model scale 1:16). Deep water: HSVA, Fig. 5.9 (18.9 C, h/T > 30).
+#         Shallow water: MARIN basin 15.8 m wide, Fig. 5.10 (U = 0.556 m/s). CT read from the vector
+#         figures: marker centres in the PDF's own coordinates, scaled on the grid lines (about 0.1 %).
+#         Convoy rows: pusher 32.00 x 11.00 x 1.60 m (V 405.286 m3, S 434.60 m2) plus barges
+#         76.45 x 11.36 x 2.80 m (V 2245.71 m3, S 1246.60 m2). L = sum of the lengths over all; T = barge
+#         draught; V and S = sums (the thesis does not state the S of CT; the sum is assumed).
+#   T18 = T. Tabaczek and M. Zawislak, "Hull resistance of an inland waterway vessel in model scale and in
+#         full scale", Polish Maritime Research 25 (S1) 2018, 80-84, doi 10.2478/pomr-2018-0027 (CC BY-NC-ND
+#         4.0; sha256 85dbd3706b377dbb8129838cc072706b331c573df12976b814a659b44eb8705b, retrieved
+#         2026-10-30). Table 1 (full scale; model 1:16, tank 60 x 7 m, h = 2.50 m full scale). CT from the
+#         authors' fit to the model data, CTM = (1 + 1.134) CF0M + 0.907 Fr^2.847 (the caption of Fig. 4; the text writes Frh, which gives a CT ten times the friction and cannot be meant), inside its data
+#         range 0.054 <= Fr <= 0.118; nu from Table 2 (CF0M 4.43E-03 at 0.347 m/s).
+# Columns: lengths m, volume m3, area m2, speed m/s, nu m2/s; depth_m 0 = deep water; ct = 1000 x CT.
+id,source,lwl_m,beam_m,draught_m,volume_m3,wetted_m2,speed_ms,nu_m2s,depth_m,width_m,ct_x1000
+z23-1x1-deep-a,Z23 Fig 5.9,6.778125,0.71,0.175,0.647217,6.567188,0.556,1.0309e-6,0,18.0,5.960
+z23-1x1-deep-b,Z23 Fig 5.9,6.778125,0.71,0.175,0.647217,6.567188,0.8329,1.0309e-6,0,18.0,5.752
+z23-1x1-deep-c,Z23 Fig 5.9,6.778125,0.71,0.175,0.647217,6.567188,1.106,1.0309e-6,0,18.0,5.801
+z23-2x1-deep-a,Z23 Fig 5.9,11.55625,0.71,0.175,1.195483,11.436719,0.556,1.0309e-6,0,18.0,4.436
+z23-2x1-deep-b,Z23 Fig 5.9,11.55625,0.71,0.175,1.195483,11.436719,0.8329,1.0309e-6,0,18.0,4.160
+z23-2x1-deep-c,Z23 Fig 5.9,11.55625,0.71,0.175,1.195483,11.436719,1.106,1.0309e-6,0,18.0,4.234
+z23-2x2-deep-a,Z23 Fig 5.9,11.55625,1.42,0.175,2.292024,21.175391,0.556,1.0309e-6,0,18.0,3.879
+z23-2x2-deep-b,Z23 Fig 5.9,11.55625,1.42,0.175,2.292024,21.175391,0.8329,1.0309e-6,0,18.0,3.575
+z23-2x2-deep-c,Z23 Fig 5.9,11.55625,1.42,0.175,2.292024,21.175391,1.106,1.0309e-6,0,18.0,3.612
+z23-1x1-h2.0,Z23 Fig 5.10,6.778125,0.71,0.175,0.647217,6.567188,0.556,1.0309e-6,0.35,15.8,6.275
+z23-1x1-h1.5,Z23 Fig 5.10,6.778125,0.71,0.175,0.647217,6.567188,0.556,1.0309e-6,0.2625,15.8,7.094
+z23-1x1-h1.2,Z23 Fig 5.10,6.778125,0.71,0.175,0.647217,6.567188,0.556,1.0309e-6,0.21,15.8,8.968
+z23-2x1-h2.0,Z23 Fig 5.10,11.55625,0.71,0.175,1.195483,11.436719,0.556,1.0309e-6,0.35,15.8,4.838
+z23-2x1-h1.5,Z23 Fig 5.10,11.55625,0.71,0.175,1.195483,11.436719,0.556,1.0309e-6,0.2625,15.8,5.388
+z23-2x1-h1.2,Z23 Fig 5.10,11.55625,0.71,0.175,1.195483,11.436719,0.556,1.0309e-6,0.21,15.8,5.819
+z23-2x2-h2.0,Z23 Fig 5.10,11.55625,1.42,0.175,2.292024,21.175391,0.556,1.0309e-6,0.35,15.8,4.847
+z23-2x2-h1.5,Z23 Fig 5.10,11.55625,1.42,0.175,2.292024,21.175391,0.556,1.0309e-6,0.2625,15.8,6.016
+z23-2x2-h1.2,Z23 Fig 5.10,11.55625,1.42,0.175,2.292024,21.175391,0.556,1.0309e-6,0.21,15.8,6.744
+t18-obm-h1.56-fr0.060,T18 Fig 4 fit,4.239375,0.5575,0.1,0.207080,3.019922,0.3869,1.130e-6,0.15625,7.0,9.541
+t18-obm-h1.56-fr0.080,T18 Fig 4 fit,4.239375,0.5575,0.1,0.207080,3.019922,0.5159,1.130e-6,0.15625,7.0,9.393
+t18-obm-h1.56-fr0.100,T18 Fig 4 fit,4.239375,0.5575,0.1,0.207080,3.019922,0.6449,1.130e-6,0.15625,7.0,9.619
+t18-obm-h1.56-fr0.118,T18 Fig 4 fit,4.239375,0.5575,0.1,0.207080,3.019922,0.7610,1.130e-6,0.15625,7.0,10.129

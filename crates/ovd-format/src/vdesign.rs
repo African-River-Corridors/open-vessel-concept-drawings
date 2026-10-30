@@ -1584,6 +1584,11 @@ pub const CHOICE_LABELS: &[(&str, &str)] = &[
         "by_block_coefficient",
         "Holtrop-Mennen up to Cp 0.85, bluff-barge fit above",
     ),
+    // Issue #735.
+    (
+        "barge_form_factor",
+        "Barge form factor (Holtrop 1+k, Millward shallow water)",
+    ),
     ("stern_form", "Largest the stern allows"),
     ("light_draught", "Immersed at the light draught"),
     ("river-only", "River only"),

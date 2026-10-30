@@ -419,6 +419,7 @@ input-resistance-method = Resistance method
 choice-resistance-method-barge-fit = Bluff-barge fit (no hull-form term)
 choice-resistance-method-holtrop-mennen = Holtrop-Mennen 1984
 choice-resistance-method-by-block-coefficient = Holtrop-Mennen up to Cp 0.85, bluff-barge fit above
+choice-resistance-method-barge-form-factor = Barge form factor (Holtrop 1+k, Millward shallow water)
 
 input-max-speed-kn = Maximum speed
 
