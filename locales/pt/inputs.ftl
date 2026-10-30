@@ -100,6 +100,9 @@ input-min-freeboard-m = Borda livre mínima
 input-bow-rake-length-to-depth-ratio = Comprimento do lançamento de proa sobre o pontal
 
 # status: draft
+input-bow-rake-max-length-m = Lançamento de proa máximo a partir do pontal
+
+# status: draft
 input-pushed-stern-void-m = Espaço vazio de popa da barcaça empurrada
 
 # status: draft

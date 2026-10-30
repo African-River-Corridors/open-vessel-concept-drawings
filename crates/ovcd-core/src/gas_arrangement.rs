@@ -97,6 +97,8 @@ pub struct FitOptions {
     pub max_tank_od_m: f64,
     /// Bow rake as a multiple of the moulded depth of each candidate.
     pub bow_rake_to_depth_ratio: f64,
+    /// Issue #661: the longest bow rake the ratio gives (m); `None`: no cap.
+    pub bow_rake_max_length_m: Option<f64>,
     /// Issue #446: a typed bow rake length (m) for every candidate; `None`: the ratio.
     pub bow_rake_length_m: Option<f64>,
     /// Issue #446: the keel height at the bow (m); `None`: each candidate's moulded depth.
@@ -355,6 +357,7 @@ impl Default for FitOptions {
             block_coefficient: 0.85,
             max_tank_od_m: DEFAULT_MAX_TANK_OD_M,
             bow_rake_to_depth_ratio: DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
+            bow_rake_max_length_m: None,
             bow_rake_length_m: None,
             bow_rake_rise_m: None,
             hull_shape: crate::hull::hull_form::HullShape::default(),
@@ -1114,6 +1117,7 @@ impl Search<'_> {
         inp.n_tanks_long = nl;
         inp.max_tank_od_m = self.o.max_tank_od_m;
         inp.bow_rake_to_depth_ratio = self.o.bow_rake_to_depth_ratio;
+        inp.bow_rake_max_length_m = self.o.bow_rake_max_length_m;
         inp.bow_rake_length_m = self.o.bow_rake_length_m;
         inp.bow_rake_rise_m = self.o.bow_rake_rise_m;
         inp.hull_shape = self.o.hull_shape.clone();

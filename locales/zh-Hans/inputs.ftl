@@ -86,6 +86,8 @@ input-min-freeboard-m = 最小干舷
 # status: draft
 input-bow-rake-length-to-depth-ratio = 首部斜升段长度与型深之比
 # status: draft
+input-bow-rake-max-length-m = 由型深得出的首部斜升段最大长度
+# status: draft
 input-pushed-stern-void-m = 顶推驳船尾部空舱
 # status: draft
 input-lightship-factor-t-per-m3 = 空船重量系数

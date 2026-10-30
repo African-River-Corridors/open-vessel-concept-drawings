@@ -134,6 +134,9 @@ OPTIONAL_INPUT_CASES = (
     # The hull end shapes (issue #4, slice 2), set to their defaults in the same way.
     ("bow_rake_length_to_depth_ratio", "bauxite", "sloped_hopper_hold", "self_propelled", 90.0, 14.0, 4.5,
      {"bow_rake_length_to_depth_ratio": 1.6}),
+    # Issue #661: the cap on the default rake. 6 m bites on this hull (1.6 x 4.5 = 7.2 m).
+    ("bow_rake_max_length_m", "bauxite", "sloped_hopper_hold", "self_propelled", 90.0, 14.0, 4.5,
+     {"bow_rake_max_length_m": 6.0}),
     ("pushed_stern_void_m", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
      {"pushed_stern_void_m": 3.0}),
     ("bulk_end_bulkhead_m", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,

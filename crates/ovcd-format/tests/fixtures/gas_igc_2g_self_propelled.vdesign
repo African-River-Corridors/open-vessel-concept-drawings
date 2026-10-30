@@ -69,6 +69,10 @@
           "value": 1.6,
           "source": "default"
         },
+        "bow_rake_max_length_m": {
+          "value": null,
+          "source": "default"
+        },
         "lpg_carriage_condition": {
           "value": "fully_pressurised",
           "source": "default"
