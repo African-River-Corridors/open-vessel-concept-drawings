@@ -13,6 +13,8 @@ export type {
   MeshGroup,
   SectionOutline,
   SpaceInfo,
+  DeckItem,
+  DeckItems,
   Waterline,
 } from "./types";
 

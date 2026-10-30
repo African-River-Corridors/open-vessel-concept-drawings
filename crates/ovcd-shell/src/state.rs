@@ -179,6 +179,11 @@ impl AppState {
         self.vessel(option).and_then(|k| vessel::space(k, name))
     }
 
+    /// The Deck Items of an Option and its wheelhouse's lift (spec 0009).
+    pub fn deck_items(&mut self, option: &str) -> Result<Value, String> {
+        self.vessel(option).map(vessel::deck_items)
+    }
+
     /// The waterline of each floating position of an Option.
     pub fn waterlines(&mut self, option: &str) -> Result<Value, String> {
         self.vessel(option).map(vessel::waterlines)

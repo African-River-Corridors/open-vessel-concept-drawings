@@ -128,6 +128,48 @@ pub(crate) fn space(k: &Kept, name: &str) -> Result<Value, String> {
     Ok(out)
 }
 
+/// The Deck Items of the Outfit (spec 0009): each one's mesh group id, kind, label and box (m, y to
+/// starboard), and the wheelhouse's lift and the light air draft, all from the core.
+pub(crate) fn deck_items(k: &Kept) -> Value {
+    use ovcd_core::mesh::PartSource;
+    use ovcd_core::vessel_model::{DeckItemKind, WheelhousePosition};
+    let outfit = &k.run.model.outfit;
+    let items: Vec<Value> = outfit
+        .deck_items
+        .iter()
+        .map(|d| {
+            let kind = match d.kind {
+                DeckItemKind::Unit { battery: true, .. } => "battery_unit",
+                DeckItemKind::Unit { battery: false, .. } => "accommodation_unit",
+                DeckItemKind::Wheelhouse(WheelhousePosition::Lowered) => "wheelhouse_lowered",
+                DeckItemKind::Wheelhouse(WheelhousePosition::Raised) => "wheelhouse_raised",
+                DeckItemKind::LiftColumn => "lift_column",
+            };
+            json!({
+                "id": PartSource::of_deck_item(d).id(),
+                "kind": kind,
+                "label": d.label,
+                "x_aft_m": d.x_aft_m,
+                "x_fwd_m": d.x_fwd_m,
+                "y_port_m": d.y_port_m,
+                "y_stbd_m": d.y_stbd_m,
+                "z_base_m": d.z_base_m,
+                "z_top_m": d.z_top_m,
+            })
+        })
+        .collect();
+    let lift = outfit.wheelhouse_lift.map(|w| {
+        json!({
+            "needed_m": w.needed_m,
+            "used_m": w.used_m,
+            "allowed_m": w.allowed_m,
+            "air_draft_light_m": w.air_draft_light_m,
+            "air_draft_navigating_light_m": w.air_draft_navigating_light_m,
+        })
+    });
+    json!({ "items": items, "wheelhouse": lift })
+}
+
 /// The waterline of each floating position: its draughts and trim, and the index of its mesh group.
 pub(crate) fn waterlines(k: &Kept) -> Value {
     Value::Array(

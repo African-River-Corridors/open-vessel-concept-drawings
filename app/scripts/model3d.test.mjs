@@ -1,7 +1,7 @@
 // Unit tests for src/lib/model3d.ts. Run: npm run test:unit
 import test from "node:test";
 import assert from "node:assert/strict";
-import { familyOf, flatShaded, groupSlice, homeView, seaPlane, kindLabelId, fixedView, orbitStep, toView, VIEW_MIRROR, FAMILY_TOKEN } from "../src/lib/model3d.ts";
+import { familyOf, flatShaded, groupSlice, homeView, seaPlane, kindLabelId, fixedView, orbitStep, toView, VIEW_MIRROR, FAMILY_TOKEN, PRESETS, presetState, presetOf, wheelhouseDraw, closedSolid } from "../src/lib/model3d.ts";
 
 // The default camera for the 76.5 x 11.4 x 3.5 m box, field of view 35 degrees, aspect 1.6: what homeView
 // printed (Label: snapshot).
@@ -130,4 +130,40 @@ test("the sea plane passes through the draughts at the hull's ends, and is flat 
     const [u, v] = [at(b).map((x, k) => x - at(a)[k]), at(c).map((x, k) => x - at(a)[k])];
     assert.ok(u[0] * v[1] - u[1] * v[0] > 0);
   }
+});
+
+test("the View Presets set the layers of the spec 0009 table, and a moved toggle is Custom (issue #689)", () => {
+  // Label: property (the table of spec 0009, "View Presets").
+  const kinds = ["cargo_hold", "cargo_tank", "wing_ballast", "double_bottom_ballast", "peak_ballast", "cofferdam", "machinery"];
+  const ext = presetState("exterior", kinds);
+  assert.equal(ext.sea, true);
+  assert.equal(ext.hullTranslucent, false);
+  assert.equal(ext.visible.weather_shield, true);
+  assert.equal(ext.visible.dome, true);
+  for (const k of kinds) assert.equal(ext.visible[`kind:${k}`], false, k);
+  const cargo = presetState("cargo", kinds);
+  assert.equal(cargo.halfCut && cargo.deckCut, true);
+  assert.deepEqual(kinds.filter((k) => cargo.visible[`kind:${k}`]), ["cargo_tank", "wing_ballast", "double_bottom_ballast"]);
+  assert.equal(cargo.visible.weather_shield, false);
+  assert.equal(cargo.visible.propulsor, false);
+  assert.equal(cargo.sea, false);
+  const arr = presetState("arrangement", kinds);
+  assert.equal(arr.hullTranslucent, true);
+  for (const k of kinds) assert.equal(arr.visible[`kind:${k}`], true, k);
+  assert.equal(arr.visible.weather_shield, false);
+  for (const p of PRESETS) assert.equal(presetOf(presetState(p, kinds), kinds), p, p);
+  const moved = presetState("cargo", kinds);
+  moved.visible["kind:cofferdam"] = true;
+  assert.equal(presetOf(moved, kinds), null);
+});
+
+test("the wheelhouse switch draws it lowered, raised, or both with the raised one a ghost", () => {
+  // Label: property.
+  assert.deepEqual(wheelhouseDraw("wheelhouse_lowered", "raised"), { on: false, opacity: 1 });
+  assert.deepEqual(wheelhouseDraw("wheelhouse_raised", "lowered"), { on: false, opacity: 1 });
+  assert.deepEqual(wheelhouseDraw("wheelhouse_raised", "both"), { on: true, opacity: 0.4 });
+  assert.deepEqual(wheelhouseDraw("lift_column", "lowered"), { on: false, opacity: 1 });
+  assert.deepEqual(wheelhouseDraw("unit_1", "lowered"), { on: true, opacity: 1 });
+  assert.equal(closedSolid("deck"), false);
+  assert.equal(closedSolid("deck_item"), true);
 });

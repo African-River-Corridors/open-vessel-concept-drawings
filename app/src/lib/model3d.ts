@@ -178,3 +178,96 @@ export function seaPlane(x0: number, x1: number, aft: number, fwd: number, reach
   const positions = new Float32Array([xa, -reach, z(xa), xf, -reach, z(xf), xf, reach, z(xf), xa, reach, z(xa)]);
   return { positions, indices: new Uint32Array([0, 1, 2, 0, 2, 3]), z };
 }
+
+/** A View Preset (spec 0009, "View Presets"): a named set of layer toggles, cuts and the sea. */
+export type Preset = "exterior" | "cargo" | "arrangement";
+
+export const PRESETS: Preset[] = ["exterior", "cargo", "arrangement"];
+
+/** What a preset sets. `visible` keys are layers (`hull`, `deck`, `dome`, ...) and `kind:<Space kind>`. */
+export interface PresetState {
+  visible: Record<string, boolean>;
+  halfCut: boolean;
+  deckCut: boolean;
+  sea: boolean;
+  hullTranslucent: boolean;
+}
+
+/** The Space kinds the presets name: the cargo tanks, the hold around them, and the ballast and voids. */
+const TANK_KINDS = ["cargo_tank", "slop"];
+const HOLD_KINDS = ["cargo_hold"];
+const WING_AND_BOTTOM = ["wing_ballast", "double_bottom_ballast"];
+
+/**
+ * The state of a preset for a model with the Space kinds `kinds`, as the table of spec 0009 gives it.
+ * Exterior: the hull opaque on the sea, the deck, the domes, the Deck Items and the weather shield;
+ * no Space. Cargo: the hull cut in half and the deck lifted off; the tanks, the wing and
+ * double-bottom ballast and the Deck Items. Arrangement: the hull translucent over every Space and
+ * the Deck Items; no shield, no sea.
+ */
+export function presetState(preset: Preset, kinds: string[]): PresetState {
+  const kind = (on: (k: string) => boolean) => Object.fromEntries(kinds.map((k) => [`kind:${k}`, on(k)]));
+  switch (preset) {
+    case "exterior":
+      return {
+        visible: { hull: true, deck: true, bulkhead: true, dome: true, deck_item: true, propulsor: true, weather_shield: true, ...kind(() => false) },
+        halfCut: false,
+        deckCut: false,
+        sea: true,
+        hullTranslucent: false,
+      };
+    case "cargo":
+      return {
+        visible: {
+          hull: true,
+          deck: false,
+          bulkhead: true,
+          dome: true,
+          deck_item: true,
+          propulsor: false,
+          weather_shield: false,
+          ...kind((k) => TANK_KINDS.includes(k) || WING_AND_BOTTOM.includes(k)),
+        },
+        halfCut: true,
+        deckCut: true,
+        sea: false,
+        hullTranslucent: false,
+      };
+    case "arrangement":
+      return {
+        visible: { hull: true, deck: true, bulkhead: true, dome: true, deck_item: true, propulsor: true, weather_shield: false, ...kind(() => true) },
+        halfCut: false,
+        deckCut: false,
+        sea: false,
+        hullTranslucent: true,
+      };
+  }
+}
+
+/** The preset a state is, or null ("Custom") when a toggle has moved off every preset. A model with no
+ * waterline (`hasSea` false) has no sea to show, so the sea does not decide. */
+export function presetOf(state: PresetState, kinds: string[], hasSea = true): Preset | null {
+  const same = (a: PresetState, b: PresetState) =>
+    a.halfCut === b.halfCut &&
+    a.deckCut === b.deckCut &&
+    (!hasSea || a.sea === b.sea) &&
+    a.hullTranslucent === b.hullTranslucent &&
+    Object.keys(b.visible).every((k) => (a.visible[k] ?? true) === b.visible[k]);
+  return PRESETS.find((p) => same(state, presetState(p, kinds))) ?? null;
+}
+
+/** The wheelhouse drawn: lowered, raised, or both (the raised one as a ghost). */
+export type WheelhouseShown = "lowered" | "raised" | "both";
+
+/** Whether a Deck Item group is drawn for the wheelhouse switch, and its opacity. */
+export function wheelhouseDraw(id: string, shown: WheelhouseShown): { on: boolean; opacity: number } {
+  if (id === "wheelhouse_lowered") return { on: shown !== "raised", opacity: 1 };
+  if (id === "wheelhouse_raised") return { on: shown !== "lowered", opacity: shown === "both" ? 0.4 : 1 };
+  if (id === "lift_column") return { on: shown !== "lowered", opacity: shown === "both" ? 0.4 : 1 };
+  return { on: true, opacity: 1 };
+}
+
+/** The layers whose meshes are closed solids: a cut through one shows its inside in `--model-cut`. */
+export function closedSolid(layer: string): boolean {
+  return ["hull", "space", "dome", "deck_item", "weather_shield"].includes(layer);
+}

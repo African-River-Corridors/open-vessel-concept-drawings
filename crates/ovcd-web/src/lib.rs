@@ -203,6 +203,11 @@ impl Session {
         ok(self.state.space_info(option, name)).map(|v| v.to_string())
     }
 
+    /// The Deck Items and the wheelhouse's lift, as JSON (spec 0009).
+    pub fn deck_items(&mut self, option: &str) -> Js<String> {
+        ok(self.state.deck_items(option)).map(|v| v.to_string())
+    }
+
     /// The waterline of each floating position, as JSON.
     pub fn waterlines(&mut self, option: &str) -> Js<String> {
         ok(self.state.waterlines(option)).map(|v| v.to_string())
