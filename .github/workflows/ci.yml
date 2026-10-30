@@ -121,9 +121,11 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-  # pytest runs in four shards (issue #716): tools/pytest_shard.py gives each test to one shard by a hash
-  # of its node id, and `test` below proves every collected test ran in exactly one shard. The checks
-  # that need to run only once (Calibration Bands, evaluation harness, mutants) run in shard 1.
+  # pytest runs in four shards (issue #716). tools/pytest_shard.py gives each test to one shard by its
+  # node id, so each collected test is in exactly one shard, and `test` below needs all four to pass.
+  # tools/check_pytest_shards.py proves the split on a machine; it is not a CI step, so the gate does
+  # not depend on artifact storage. The checks that run once (Calibration Bands, evaluation harness,
+  # mutants) run in shard 1.
   gate-python:
     name: gate-python (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
@@ -145,15 +147,7 @@ jobs:
           PYTHONPATH: tools
           PYTEST_ADDOPTS: -p pytest_shard
           PYTEST_SHARD: ${{ matrix.shard }}/4
-          PYTEST_SHARD_IDS: ${{ runner.temp }}/ids-${{ matrix.shard }}.txt
         run: bash tools/gates.sh
-      - name: Keep the list of this shard's tests
-        uses: actions/upload-artifact@v4
-        with:
-          name: pytest-shard-${{ matrix.shard }}
-          path: ${{ runner.temp }}/ids-${{ matrix.shard }}.txt
-          if-no-files-found: error
-          retention-days: 3
       # Calibration Bands (issue #119): one warning annotation per case outside its band. A band miss
       # never fails the build; a crash does. It takes about a second.
       - name: Calibration against the Calibration Bands (warning only)
@@ -198,7 +192,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
       - name: Every part of the gate passed
         env:
           RESULTS: ${{ toJSON(needs) }}
@@ -214,16 +207,6 @@ jobs:
           if bad:
               sys.exit(f"the gate failed: {bad}")
           PY
-      # Every collected pytest test ran in exactly one shard (issue #716). The shards are disjoint,
-      # all four are present, and together they hold the whole collected count.
-      - name: Download the shard lists
-        uses: actions/download-artifact@v4
-        with:
-          pattern: pytest-shard-*
-          path: ${{ runner.temp }}/shards
-          merge-multiple: true
-      - name: Every pytest test ran in exactly one shard
-        run: python3 tools/check_pytest_shards.py "$RUNNER_TEMP/shards"
 
   # The drawing crate against the Python implementation of the same standard (spec 0003): the views
   # of every fixture Design give equal normalised content in both. The Python tool is installed at
