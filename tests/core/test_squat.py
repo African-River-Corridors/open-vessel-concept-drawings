@@ -4,7 +4,7 @@ Run with pytest: python -m pytest tests/core/test_squat.py
 """
 import math
 
-from vessel_designer.core.squat import (
+from ovd.core.squat import (
     FNH_VALID_MAX,
     SquatInputs,
     compute,

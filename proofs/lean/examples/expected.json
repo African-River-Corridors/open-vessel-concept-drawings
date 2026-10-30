@@ -20,13 +20,13 @@
    "governing": {"gm0@laden|lower": "is2008/A.2.2.4/gm0"}},
   {"sized": {},
    "outcomes":
-   {"ovcd/gas-arrangement/tank-l-over-d": "pass",
+   {"ovd/gas-arrangement/tank-l-over-d": "pass",
     "is2008/A.2.3/weather": "not evaluated"},
    "ok": true,
    "name": "a not evaluated blocking rule does not fail the Option",
    "governing":
    {"weather.ratio@laden|lower": "is2008/A.2.3/weather",
-    "tank.l_over_d@tank1|upper": "ovcd/gas-arrangement/tank-l-over-d"}},
+    "tank.l_over_d@tank1|upper": "ovd/gas-arrangement/tank-l-over-d"}},
   {"sized":
    {"speed@reach|upper":
     {"strict": true, "rule": "fixture/3.2/speed-b", "limit": 9},

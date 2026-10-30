@@ -1,0 +1,353 @@
+//! Seam: `ovd_format::export::gltf_glb` and `option_glb` (issue #460, spec 0008 "Phase 2: exports").
+//!
+//! Label: property. For every fixture Option the `.glb` is a well-formed binary glTF 2.0 container
+//! (glTF 2.0 Specification, "Binary glTF Layout": a header of magic `glTF`, version 2 and the total
+//! length, then a JSON chunk and a BIN chunk, each length-prefixed and padded to four bytes); its
+//! buffer holds the mesh's positions and indices byte for byte; each part is a named node whose
+//! indices accessor is the part's range; node names are the layer names and the part names (the
+//! Space names among them); the bytes are the same twice. The Khronos validator runs in CI
+//! (`tools/gltf_validate.mjs`).
+
+use std::path::Path;
+
+use ovd_core::mesh::{Mesh, PartSource};
+use ovd_format::export::{bytes_hash, gltf_glb, option_glb};
+use ovd_format::{Profile, check, option_meshes};
+use serde_json::Value;
+
+/// The JSON and BIN chunks of a `.glb`, after the container checks.
+fn chunks(glb: &[u8]) -> (Value, Vec<u8>) {
+    assert_eq!(&glb[0..4], b"glTF");
+    assert_eq!(u32::from_le_bytes(glb[4..8].try_into().unwrap()), 2);
+    assert_eq!(
+        u32::from_le_bytes(glb[8..12].try_into().unwrap()) as usize,
+        glb.len()
+    );
+    let mut at = 12;
+    let mut out = Vec::new();
+    while at < glb.len() {
+        let len = u32::from_le_bytes(glb[at..at + 4].try_into().unwrap()) as usize;
+        let kind = &glb[at + 4..at + 8];
+        assert_eq!(len % 4, 0, "chunk of type {kind:?} is not padded");
+        out.push((kind.to_vec(), glb[at + 8..at + 8 + len].to_vec()));
+        at += 8 + len;
+    }
+    assert_eq!(at, glb.len());
+    assert_eq!(out[0].0, b"JSON");
+    assert_eq!(out[1].0, b"BIN\0");
+    (serde_json::from_slice(&out[0].1).unwrap(), out[1].1.clone())
+}
+
+/// The names of the nodes under `node` (itself first).
+fn names(doc: &Value, i: usize, out: &mut Vec<String>) {
+    let n = &doc["nodes"][i];
+    out.push(n["name"].as_str().unwrap().to_string());
+    for c in n["children"].as_array().into_iter().flatten() {
+        names(doc, c.as_u64().unwrap() as usize, out);
+    }
+}
+
+fn check_glb(mesh: &Mesh, glb: &[u8]) -> Vec<String> {
+    let (doc, bin) = chunks(glb);
+    assert_eq!(doc["asset"]["version"], "2.0");
+    assert_eq!(
+        doc["buffers"][0]["byteLength"].as_u64().unwrap() as usize,
+        bin.len()
+    );
+    // The buffer holds the positions, then the indices, as little-endian f32 and u32.
+    let pos_bytes = 4 * mesh.positions.len();
+    for (k, p) in mesh.positions.iter().enumerate() {
+        assert_eq!(&bin[4 * k..4 * k + 4], &p.to_le_bytes());
+    }
+    for (k, i) in mesh.indices.iter().enumerate() {
+        assert_eq!(
+            &bin[pos_bytes + 4 * k..pos_bytes + 4 * k + 4],
+            &i.to_le_bytes()
+        );
+    }
+    // The position accessor: count, and the min and max over the positions.
+    let pos = &doc["accessors"][0];
+    assert_eq!(
+        pos["count"].as_u64().unwrap() as usize,
+        mesh.positions.len() / 3
+    );
+    for k in 0..3 {
+        let col = mesh
+            .positions
+            .iter()
+            .skip(k)
+            .step_by(3)
+            .map(|v| f64::from(*v));
+        let (lo, hi) = col.fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), v| {
+            (a.min(v), b.max(v))
+        });
+        assert_eq!(pos["min"][k].as_f64().unwrap(), lo);
+        assert_eq!(pos["max"][k].as_f64().unwrap(), hi);
+    }
+    // Each mesh is one triangle primitive over its group's range of the index view.
+    let mut meshed = 0;
+    for m in doc["meshes"].as_array().unwrap() {
+        let p = &m["primitives"][0];
+        assert_eq!(p["mode"], 4);
+        assert_eq!(p["attributes"]["POSITION"], 0);
+        let a = &doc["accessors"][p["indices"].as_u64().unwrap() as usize];
+        let (offset, count) = (
+            a["byteOffset"].as_u64().unwrap() as u32 / 4,
+            a["count"].as_u64().unwrap() as u32,
+        );
+        assert_eq!(count % 3, 0);
+        let name = m["name"].as_str().unwrap();
+        assert!(
+            mesh.groups.iter().any(|g| g.start == offset
+                && g.count == count
+                && (g.id == name || g.layer == name)),
+            "{name}: {offset} {count}"
+        );
+        meshed += 1;
+    }
+    assert!(meshed > 0);
+    let mut all = Vec::new();
+    for n in doc["scenes"][0]["nodes"].as_array().unwrap() {
+        names(&doc, n.as_u64().unwrap() as usize, &mut all);
+    }
+    all
+}
+
+#[test]
+fn every_fixture_option_writes_a_well_formed_glb_with_named_nodes() {
+    let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
+    let mut files: Vec<_> = std::fs::read_dir(&dir)
+        .unwrap()
+        .map(|e| e.unwrap().path())
+        .filter(|p| p.extension().is_some_and(|e| e == "vdesign"))
+        .collect();
+    files.sort();
+    let mut written = 0;
+    for path in files {
+        let text = std::fs::read_to_string(&path).unwrap();
+        let design = check(&text, &Profile::built_in())
+            .design
+            .expect("a valid fixture");
+        for option in &design.options {
+            let Ok(mesh) = option_meshes(option) else {
+                continue;
+            };
+            let at = format!("{} / {}", path.display(), option.name);
+            let glb = option_glb(option).unwrap();
+            let nodes = check_glb(&mesh, &glb);
+            // Node names: the layer of the hull, and each part and layer of the others.
+            assert!(nodes.contains(&"hull".to_string()), "{at}: {nodes:?}");
+            for g in &mesh.groups {
+                if g.count > 0 && g.layer != "hull" {
+                    assert!(nodes.contains(&g.id), "{at}: no node {}: {nodes:?}", g.id);
+                }
+            }
+            for (layer, node) in [
+                ("deck", "decks"),
+                ("space", "spaces"),
+                ("bulkhead", "bulkheads"),
+            ] {
+                let has = mesh.groups.iter().any(|g| g.layer == layer && g.count > 0);
+                assert_eq!(nodes.contains(&node.to_string()), has, "{at}: {node}");
+            }
+            // The same bytes twice.
+            assert_eq!(
+                bytes_hash(&glb),
+                bytes_hash(&option_glb(option).unwrap()),
+                "{at}"
+            );
+            written += 1;
+        }
+    }
+    assert!(written >= 8, "{written}");
+}
+
+#[test]
+fn an_empty_mesh_gives_a_scene_with_no_nodes() {
+    let glb = gltf_glb(&Mesh::default());
+    let (doc, bin) = chunks(&glb);
+    assert!(bin.is_empty());
+    assert_eq!(doc["scenes"][0]["nodes"].as_array().unwrap().len(), 0);
+    assert!(doc.get("meshes").is_none());
+}
+
+#[test]
+fn a_group_of_no_triangles_has_no_node() {
+    let mut m = Mesh::default();
+    m.append(
+        PartSource::Hull,
+        &Mesh {
+            positions: vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+            indices: vec![0, 1, 2],
+            groups: Vec::new(),
+        },
+    );
+    m.append(PartSource::Space("Empty".to_string()), &Mesh::default());
+    let (doc, _) = chunks(&gltf_glb(&m));
+    let mut all = Vec::new();
+    for n in doc["scenes"][0]["nodes"].as_array().unwrap() {
+        names(&doc, n.as_u64().unwrap() as usize, &mut all);
+    }
+    assert_eq!(all, ["vessel", "hull"]);
+}
+
+/// The column-major 4 x 4 matrix of a node, or the identity when it has none.
+fn matrix(node: &Value) -> [f64; 16] {
+    match node["matrix"].as_array() {
+        Some(m) => core::array::from_fn(|k| m[k].as_f64().unwrap()),
+        None => core::array::from_fn(|k| if k % 5 == 0 { 1.0 } else { 0.0 }),
+    }
+}
+
+/// `a` times `b`, both column-major.
+fn mul(a: &[f64; 16], b: &[f64; 16]) -> [f64; 16] {
+    core::array::from_fn(|k| (0..4).map(|i| a[i * 4 + k % 4] * b[(k / 4) * 4 + i]).sum())
+}
+
+/// The world matrix of every node that holds a mesh, by mesh index.
+fn mesh_world(doc: &Value, i: usize, parent: &[f64; 16], out: &mut Vec<(usize, [f64; 16])>) {
+    let n = &doc["nodes"][i];
+    let world = mul(parent, &matrix(n));
+    if let Some(m) = n["mesh"].as_u64() {
+        out.push((m as usize, world));
+    }
+    for c in n["children"].as_array().into_iter().flatten() {
+        mesh_world(doc, c.as_u64().unwrap() as usize, &world, out);
+    }
+}
+
+/// Seam: the glTF root (spec 0009, "Axes and handedness", issue #682).
+///
+/// Label: property. The model axes (x forward, y to starboard, z up) are left-handed; glTF is
+/// right-handed with y up (glTF 2.0 Specification, version 2.0.1, 3.4 "Coordinate System and
+/// Units"). One root
+/// node maps model (x, y, z) to glTF (x, z, y): every mesh node sits under it, so a vertex to port
+/// (model y < 0) has glTF z < 0, a vertex above the base (model z > 0) has glTF y > 0, and the
+/// transform's determinant is -1: a mirror, so the winding is read clockwise and the faces still
+/// face out (glTF 2.0 Specification, version 2.0.1, 3.7.4 "Instantiation").
+#[test]
+fn the_root_node_maps_model_axes_to_right_handed_y_up() {
+    let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
+    let text = std::fs::read_to_string(dir.join("crude_integral_tanks_coastal.vdesign")).unwrap();
+    let design = check(&text, &Profile::built_in()).design.unwrap();
+    let option = &design.options[0];
+    let mesh = option_meshes(option).unwrap();
+    let (doc, _) = chunks(&option_glb(option).unwrap());
+    let scene = doc["scenes"][0]["nodes"].as_array().unwrap();
+    assert_eq!(scene.len(), 1, "one root node: {scene:?}");
+    let mut worlds = Vec::new();
+    let identity = matrix(&Value::Null);
+    mesh_world(
+        &doc,
+        scene[0].as_u64().unwrap() as usize,
+        &identity,
+        &mut worlds,
+    );
+    assert_eq!(
+        worlds.len(),
+        doc["meshes"].as_array().unwrap().len(),
+        "every mesh is under the root"
+    );
+    let apply = |m: &[f64; 16], p: [f64; 3]| -> [f64; 3] {
+        core::array::from_fn(|r| m[r] * p[0] + m[4 + r] * p[1] + m[8 + r] * p[2] + m[12 + r])
+    };
+    let det3 = |m: &[f64; 16]| {
+        m[0] * (m[5] * m[10] - m[9] * m[6]) - m[4] * (m[1] * m[10] - m[9] * m[2])
+            + m[8] * (m[1] * m[6] - m[5] * m[2])
+    };
+    let mut port = 0;
+    for (_, w) in &worlds {
+        assert_eq!(det3(w), -1.0);
+        assert_eq!(apply(w, [1.0, 2.0, 3.0]), [1.0, 3.0, 2.0]);
+        for v in mesh.positions.as_chunks::<3>().0 {
+            let p = v.map(f64::from);
+            if p[1] < -0.5 {
+                let g = apply(w, p);
+                assert!(g[2] < 0.0, "model {p:?} -> glTF {g:?}");
+                assert_eq!(g[1], p[2]);
+                port += 1;
+            }
+        }
+    }
+    assert!(port > 0, "the fixture has vertices to port");
+}
+
+/// Label: property - every tank, dome, weather shield and Deck Item of every fixture and example is a
+/// glTF node named as the part is named in the 3D view's pick panel (its mesh group id), and takes
+/// the material of its kind (issue #690).
+#[test]
+fn every_tank_and_deck_item_is_a_named_node_with_its_material() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let mut files: Vec<_> = std::fs::read_dir(root.join("tests/fixtures"))
+        .unwrap()
+        .map(|e| e.unwrap().path())
+        .filter(|p| p.extension().is_some_and(|e| e == "vdesign"))
+        .collect();
+    files.push(root.join("../../website/assets/examples/lrg-gas-89.vdesign"));
+    let (mut tanks, mut items) = (0, 0);
+    for path in files {
+        let design = check(
+            &std::fs::read_to_string(&path).unwrap(),
+            &Profile::built_in(),
+        )
+        .design
+        .expect("a valid fixture");
+        for option in &design.options {
+            let Ok(mesh) = option_meshes(option) else {
+                continue;
+            };
+            let (doc, _) = chunks(&option_glb(option).unwrap());
+            let nodes = doc["nodes"].as_array().unwrap();
+            let material_of = |name: &str| -> Option<String> {
+                let node = nodes.iter().find(|n| n["name"] == name)?;
+                let mesh = &doc["meshes"][node["mesh"].as_u64()? as usize];
+                let m = mesh["primitives"][0]["material"].as_u64()? as usize;
+                doc["materials"][m]["name"].as_str().map(str::to_string)
+            };
+            for g in &mesh.groups {
+                let want = match g.source {
+                    PartSource::Tank { .. } => "tank",
+                    PartSource::Dome { .. } => "dome",
+                    PartSource::WeatherShield => "weather_shield",
+                    PartSource::Unit(_) => "deck_unit",
+                    PartSource::Wheelhouse(_) | PartSource::LiftColumn => "wheelhouse",
+                    _ => continue,
+                };
+                let got = material_of(&g.id)
+                    .unwrap_or_else(|| panic!("{}: no node {}", path.display(), g.id));
+                assert_eq!(got, want, "{}: {}", path.display(), g.id);
+                match g.source {
+                    PartSource::Tank { .. } => tanks += 1,
+                    _ => items += 1,
+                }
+            }
+            // The two wheelhouse positions are two nodes.
+            if mesh.groups.iter().any(|g| g.layer == "deck_item") {
+                assert!(material_of("wheelhouse_lowered").is_some());
+                assert!(material_of("wheelhouse_raised").is_some());
+            }
+        }
+    }
+    assert!(
+        tanks >= 12 && items >= 12,
+        "{tanks} tanks, {items} other parts"
+    );
+}
+
+/// Label: property - the glTF colours of the parts of spec 0009 are the Light theme tokens of the
+/// app's stylesheet (`:root`), so the export and the 3D view do not drift apart.
+#[test]
+fn the_part_colours_are_the_light_theme_tokens() {
+    let css = std::fs::read_to_string(
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../app/src/app.css"),
+    )
+    .unwrap();
+    for (token, hex) in ovd_format::export::LIGHT_PART_COLOURS {
+        // The first definition is the Light one (`:root`); the Dark blocks come after it.
+        let at = css
+            .find(&format!("{token}:"))
+            .unwrap_or_else(|| panic!("{token} is not in app.css"));
+        let value = css[at + token.len() + 1..].trim_start();
+        assert_eq!(&value[..7], hex, "{token}");
+    }
+}

@@ -41,7 +41,7 @@ S = {
  "kieffer": "https://www.workboat.com/news/shipbuilding/master-marine-delivers-z-drive-towboat/ (search summary)",
  "troy": "https://www.marinelog.com/inland-coastal/inland/maritime-partners-welcomes-m-v-troy-bernier-to-its-fleet/ (search summary)",
  "dalles": "https://www.asce.org/about-civil-engineering/history-and-heritage/historic-landmarks/the-dalles-lock-and-dam (search summary)",
- "pianc141": "PIANC WG 141 (2019) Table 2.3 p16 + Table A.2 p163, as transcribed in src/vessel_designer/core/vessel_standards.py",
+ "pianc141": "PIANC WG 141 (2019) Table 2.3 p16 + Table A.2 p163, as transcribed in src/ovd/core/vessel_standards.py",
  "gb50139": "GB 50139-2014 Navigation Standard of Inland Waterway, class tonnage list via https://www.chinabaogao.com/free/202606/801029.html (search summary; standard text not read)",
  "gezhouba": "https://www.bairdmaritime.com/shipping/dry-cargo/bulkers/chinese-builder-delivers-electric-inland-bulk-carrier ; https://www.hellenicshippingnews.com/chinas-largest-all-electric-bulk-carrier-launched-in-central-china/",
  "cjsr7500": "https://www.researching.cn/articles/OJ3c6081a53ee288df/figureandtable (Chinese Journal of Ship Research; read via search summary only, site TLS failed)",

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Run `ovcd run --json` on the pinned fixture designs and fail on any results-hash mismatch.
+"""Run `ovd run --json` on the pinned fixture designs and fail on any results-hash mismatch.
 
-    python3 tools/check_fixture_hashes.py <path to ovcd> [<fixtures directory>]
-    python3 tools/check_fixture_hashes.py --wasmtime <path to wasmtime> <path to ovcd.wasm> [<fixtures directory>]
+    python3 tools/check_fixture_hashes.py <path to ovd> [<fixtures directory>]
+    python3 tools/check_fixture_hashes.py --wasmtime <path to wasmtime> <path to ovd.wasm> [<fixtures directory>]
 
-The fixtures in crates/ovcd-format/tests/fixtures/*.vdesign store the results hash of each Option. With no
+The fixtures in crates/ovd-format/tests/fixtures/*.vdesign store the results hash of each Option. With no
 fixtures directory given, the website examples (website/assets/examples/*.vdesign) and the worked
 examples (examples/*/*.vdesign) are checked too: a results change that does not re-stamp them must fail
 here, not on the website or in a reader's run.
@@ -14,7 +14,7 @@ macOS, with the release binary, and on WebAssembly: the same CLI built for `wasm
 under `wasmtime` (issue #168). So a platform whose maths differs cannot be released.
 
 It fails when an Option's `hash_status` is anything but "matches", when a fixture that should compute
-does not, when `ovcd` exits non-zero (except for a convoy), or when fewer than MIN_MATCHED Options matched (so an empty
+does not, when `ovd` exits non-zero (except for a convoy), or when fewer than MIN_MATCHED Options matched (so an empty
 fixture directory cannot pass). A pushed convoy has no numbers yet and is the one allowed exception.
 """
 from __future__ import annotations
@@ -25,7 +25,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-FIXTURES = ROOT / "crates" / "ovcd-format" / "tests" / "fixtures"
+FIXTURES = ROOT / "crates" / "ovd-format" / "tests" / "fixtures"
 EXAMPLES = ROOT / "website" / "assets" / "examples"
 WORKED_EXAMPLES = ROOT / "examples"
 NO_RESULTS_YET = {"pushed_convoy.vdesign"}      # convoy results are not available yet
@@ -37,7 +37,7 @@ def find_binary(path: str) -> Path:
     for candidate in (p, p.with_name(p.name + ".exe")):
         if candidate.is_file():
             return candidate
-    raise SystemExit(f"check_fixture_hashes: no ovcd binary at {path}")
+    raise SystemExit(f"check_fixture_hashes: no ovd binary at {path}")
 
 
 def worked_examples() -> list[Path]:
@@ -68,14 +68,14 @@ def check(binary: Path, fixtures: Path, wasmtime: Path | None = None, also: tupl
     for f in files:
         r = subprocess.run(command_for(binary, fixtures, wasmtime, f), capture_output=True,
                            encoding="utf-8", errors="replace")
-        # A pushed convoy has no results, so `ovcd run` exits 1 for it (not every Option computed).
+        # A pushed convoy has no results, so `ovd run` exits 1 for it (not every Option computed).
         if r.returncode != 0 and f.name not in NO_RESULTS_YET:
-            problems.append(f"{f.name}: ovcd exited {r.returncode}: {r.stderr.strip()[-200:]}")
+            problems.append(f"{f.name}: ovd exited {r.returncode}: {r.stderr.strip()[-200:]}")
             continue
         try:
             options = json.loads(r.stdout)["options"]
         except (ValueError, KeyError):
-            problems.append(f"{f.name}: ovcd printed no options")
+            problems.append(f"{f.name}: ovd printed no options")
             continue
         for o in options:
             name, status = o.get("name"), o.get("hash_status")

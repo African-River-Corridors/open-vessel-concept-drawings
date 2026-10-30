@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 // Hash parity (issue #245): every Option of every .vdesign fixture gets the same results hash from
-// the wasm Design session as from native `ovcd run --json`, and the same Rule Trace (issue #269),
-// and the same mesh hash as native `ovcd mesh --hash` (issue #456).
+// the wasm Design session as from native `ovd run --json`, and the same Rule Trace (issue #269),
+// and the same mesh hash as native `ovd mesh --hash` (issue #456).
 // No npm dependencies.
 //
-//   bash tools/build_web.sh && cargo build -p ovcd-cli && node tools/web_parity.mjs
+//   bash tools/build_web.sh && cargo build -p ovd-cli && node tools/web_parity.mjs
 //
-// OVCD_BIN overrides the native binary (default target/debug/ovcd).
+// OVD_BIN overrides the native binary (default target/debug/ovd).
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -15,16 +15,16 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const pkg = join(root, "app", "wasm-pkg");
-const fixtures = join(root, "crates", "ovcd-format", "tests", "fixtures");
-const bin = process.env.OVCD_BIN || join(root, "target", "debug", process.platform === "win32" ? "ovcd.exe" : "ovcd");
+const fixtures = join(root, "crates", "ovd-format", "tests", "fixtures");
+const bin = process.env.OVD_BIN || join(root, "target", "debug", process.platform === "win32" ? "ovd.exe" : "ovd");
 
-if (!existsSync(join(pkg, "ovcd_web.js"))) throw new Error("no wasm build: run tools/build_web.sh first");
-if (!existsSync(bin)) throw new Error(`no native ovcd at ${bin}: run cargo build -p ovcd-cli`);
+if (!existsSync(join(pkg, "ovd_web.js"))) throw new Error("no wasm build: run tools/build_web.sh first");
+if (!existsSync(bin)) throw new Error(`no native ovd at ${bin}: run cargo build -p ovd-cli`);
 
-const { default: init, Session, engine_version } = await import(join(pkg, "ovcd_web.js"));
-await init({ module_or_path: readFileSync(join(pkg, "ovcd_web_bg.wasm")) });
+const { default: init, Session, engine_version } = await import(join(pkg, "ovd_web.js"));
+await init({ module_or_path: readFileSync(join(pkg, "ovd_web_bg.wasm")) });
 
-// `ovcd mesh --hash`: name -> mesh hash, or "-" when the Option has no meshes.
+// `ovd mesh --hash`: name -> mesh hash, or "-" when the Option has no meshes.
 function nativeMeshes(file) {
   const r = spawnSync(bin, ["mesh", "--hash", file], { encoding: "utf8", maxBuffer: 1 << 24 });
   if (r.error) throw r.error;
@@ -42,14 +42,14 @@ function native(file) {
   return JSON.parse(r.stdout);
 }
 
-// `ovcd run --json` calls a convoy "not_yet_supported"; the session JSON calls it "not_available".
+// `ovd run --json` calls a convoy "not_yet_supported"; the session JSON calls it "not_available".
 const webStatus = (s) => (s === "not_available" ? "not_yet_supported" : s);
 const rows = [];
 let bad = 0;
 let compared = 0;
 const EXPORT_FORMATS = ["gltf", "stl", "obj", "offsets-csv"];
 
-// `ovcd export --format <f> --hash`: name -> SHA-256 of the bytes, or "-".
+// `ovd export --format <f> --hash`: name -> SHA-256 of the bytes, or "-".
 function nativeGlb(file, format) {
   const r = spawnSync(bin, ["export", "--format", format, "--hash", file], { encoding: "utf8", maxBuffer: 1 << 24 });
   if (r.error) throw r.error;

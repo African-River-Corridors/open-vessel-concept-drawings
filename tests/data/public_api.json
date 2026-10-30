@@ -1,5 +1,5 @@
 {
- "vessel_designer.calibration": {
+ "ovd.calibration": {
   "BANDS": {
    "kind": "constant"
   },
@@ -269,8 +269,8 @@
    ]
   }
  },
- "vessel_designer.core": {},
- "vessel_designer.core.aft_arrangement": {
+ "ovd.core": {},
+ "ovd.core.aft_arrangement": {
   "AftArrangementInputs": {
    "fields": [
     "beam",
@@ -397,7 +397,7 @@
    ]
   }
  },
- "vessel_designer.core.barge_capacity": {
+ "ovd.core.barge_capacity": {
   "BargeCapacityInputs": {
    "fields": [
     "loa",
@@ -543,7 +543,7 @@
    ]
   }
  },
- "vessel_designer.core.barge_cost": {
+ "ovd.core.barge_cost": {
   "BargeCostInputs": {
    "fields": [
     "hull_steel_t",
@@ -646,7 +646,7 @@
    ]
   }
  },
- "vessel_designer.core.cargo": {
+ "ovd.core.cargo": {
   "CARGO_DATABASE": {
    "kind": "constant"
   },
@@ -708,7 +708,7 @@
    ]
   }
  },
- "vessel_designer.core.checks": {
+ "ovd.core.checks": {
   "Check": {
    "fields": [
     "name",
@@ -733,7 +733,7 @@
    ]
   }
  },
- "vessel_designer.core.design_grid": {
+ "ovd.core.design_grid": {
   "BOW_NON_TANK_PCT": {
    "kind": "constant"
   },
@@ -805,7 +805,7 @@
    ]
   }
  },
- "vessel_designer.core.electric_energy": {
+ "ovd.core.electric_energy": {
   "EnergyEnvironment": {
    "fields": [
     "name",
@@ -894,7 +894,7 @@
    ]
   }
  },
- "vessel_designer.core.ga_adapter": {
+ "ovd.core.ga_adapter": {
   "is_gas": {
    "kind": "function",
    "params": [
@@ -931,7 +931,7 @@
    ]
   }
  },
- "vessel_designer.core.gas_arrangement": {
+ "ovd.core.gas_arrangement": {
   "ArrangementFit": {
    "fields": [
     "loa_m",
@@ -1114,7 +1114,7 @@
    ]
   }
  },
- "vessel_designer.core.gas_separation": {
+ "ovd.core.gas_separation": {
   "COFFERDAM_MIN_M": {
    "kind": "constant"
   },
@@ -1167,7 +1167,7 @@
    ]
   }
  },
- "vessel_designer.core.gas_stability": {
+ "ovd.core.gas_stability": {
   "ANGLES_DEG": {
    "kind": "constant"
   },
@@ -1309,7 +1309,7 @@
    ]
   }
  },
- "vessel_designer.core.hull": {
+ "ovd.core.hull": {
   "HullGeometry": {
    "fields": [
     "loa",
@@ -1342,7 +1342,7 @@
    ]
   }
  },
- "vessel_designer.core.hydrostatics": {
+ "ovd.core.hydrostatics": {
   "calculate_stability": {
    "kind": "function",
    "params": [
@@ -1454,7 +1454,7 @@
    ]
   }
  },
- "vessel_designer.core.journey_derating": {
+ "ovd.core.journey_derating": {
   "JourneyDeratingInputs": {
    "fields": [
     "capacity",
@@ -1501,7 +1501,7 @@
    ]
   }
  },
- "vessel_designer.core.models": {
+ "ovd.core.models": {
   "BargeInputs": {
    "fields": [
     "loa",
@@ -1677,7 +1677,7 @@
    "methods": []
   }
  },
- "vessel_designer.core.pressure_vessel": {
+ "ovd.core.pressure_vessel": {
   "TANK_MATERIAL_DATABASE": {
    "kind": "constant"
   },
@@ -1810,7 +1810,7 @@
    ]
   }
  },
- "vessel_designer.core.protective_location": {
+ "ovd.core.protective_location": {
   "ProtectiveLocationResult": {
    "fields": [
     "vessel_type",
@@ -1953,7 +1953,7 @@
    ]
   }
  },
- "vessel_designer.core.resistance": {
+ "ovd.core.resistance": {
   "EnvironmentInputs": {
    "fields": [
     "name",
@@ -2092,7 +2092,7 @@
    "params": []
   }
  },
- "vessel_designer.core.squat": {
+ "ovd.core.squat": {
   "DEFAULT_SAFETY_MARGIN_M": {
    "kind": "constant"
   },
@@ -2199,7 +2199,7 @@
    ]
   }
  },
- "vessel_designer.core.tanks": {
+ "ovd.core.tanks": {
   "calculate_tank_arrangement": {
    "kind": "function",
    "params": [
@@ -2236,7 +2236,7 @@
    ]
   }
  },
- "vessel_designer.core.vessel_standards": {
+ "ovd.core.vessel_standards": {
   "VESSEL_STANDARDS": {
    "kind": "constant"
   },
@@ -2303,7 +2303,7 @@
    ]
   }
  },
- "vessel_designer.core.waves": {
+ "ovd.core.waves": {
   "GRAVITY": {
    "kind": "constant"
   },
@@ -2357,7 +2357,7 @@
    ]
   }
  },
- "vessel_designer.core.weights": {
+ "ovd.core.weights": {
   "calculate_weights": {
    "kind": "function",
    "params": [
@@ -2379,7 +2379,7 @@
    ]
   }
  },
- "vessel_designer.simulate": {
+ "ovd.simulate": {
   "FILL_BY_RULESET": {
    "kind": "constant"
   },

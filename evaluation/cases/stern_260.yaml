@@ -66,7 +66,7 @@ expected:
     value: 300.0
     limit: 350.0
     margin: 50.0
-  ovcd/powering/installed-covers-design-speed:
+  ovd/powering/installed-covers-design-speed:
     rule: spec 0007
     what: service speed over the Design Speed
     unit: '-'
@@ -74,7 +74,7 @@ expected:
     value: 1.001981697
     limit: 1.0
     margin: 0.001981697134
-  ovcd/propulsion/propeller-fits-stern:
+  ovd/propulsion/propeller-fits-stern:
     rule: spec 0007
     what: propeller diameter over the largest the stern allows
     unit: '-'
@@ -82,7 +82,7 @@ expected:
     value: 0.8108108108
     limit: 1.0
     margin: 0.1891891892
-  ovcd/propulsion/immersion-light:
+  ovd/propulsion/immersion-light:
     rule: spec 0007
     what: shaft submergence over the diameter, over its limit
     unit: '-'
@@ -90,7 +90,7 @@ expected:
     value: 1.052631579
     limit: 1.0
     margin: 0.05263157895
-  ovcd/propulsion/blade-load:
+  ovd/propulsion/blade-load:
     rule: spec 0007
     what: blade load over its limit
     unit: '-'

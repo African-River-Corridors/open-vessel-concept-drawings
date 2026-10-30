@@ -5,10 +5,10 @@ import dataclasses
 
 import pytest
 
-from vessel_designer.core.aft_arrangement import (PROPULSION_OPTIONS, AftArrangementInputs,
+from ovd.core.aft_arrangement import (PROPULSION_OPTIONS, AftArrangementInputs,
                                                   compute, GAS_GENSETS)
-from vessel_designer.core.barge_capacity import BargeCapacityInputs
-from vessel_designer.core.barge_capacity import compute as capacity
+from ovd.core.barge_capacity import BargeCapacityInputs
+from ovd.core.barge_capacity import compute as capacity
 
 
 def _gas(**kw):

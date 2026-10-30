@@ -1,7 +1,7 @@
-# OVCD engine messages, Portuguese (Brazil). Draft: machine-translated, for native review (locales/REVIEWING.md).
+# OVD engine messages, Portuguese (Brazil). Draft: machine-translated, for native review (locales/REVIEWING.md).
 
 
-## crates/ovcd-core/src/aft_arrangement.rs
+## crates/ovd-core/src/aft_arrangement.rs
 
 # status: draft
 check-thrusters-fit-beam = { $count } x propulsores de { $envelope } m precisam de { $needed } m em uma boca de { $beam } m
@@ -30,7 +30,7 @@ check-wheelhouse-sees-over-cargo = olho elevado { $eye } m >= obstrução { $obs
 # status: draft
 warn-aft-sightline-lift = A linha de visada precisa de { $lift } m de elevação; a coluna dá { $max_lift } m. Eleve a coluna ou baixe o topo da carga.
 
-## crates/ovcd-core/src/barge_capacity.rs
+## crates/ovd-core/src/barge_capacity.rs
 
 # status: draft
 check-feasible-geometry = o volume de carga deve ser positivo (o tanque/porão cabe)
@@ -57,7 +57,7 @@ check-intact-gm-reported-cargo = GM intacto { $gm } m >= 0.15 m com a carga indi
 # status: draft
 warn-barge-bulk-gm = O GM de granel é de primeira ordem (KG de peso leve suposto); deslocamento da carga e ângulo de repouso não modelados — confirme com um caderno completo de estabilidade intacta.
 
-## crates/ovcd-core/src/barge_cost.rs
+## crates/ovd-core/src/barge_cost.rs
 
 # status: draft
 check-masses-positive = entradas do modelo de massas presentes
@@ -66,7 +66,7 @@ check-no-reliquefaction-in-scope = o sistema de carga exclui a planta de relique
 # status: draft
 check-fabrication-rates-are-estimates = as taxas de fabricação/fornecimento são estimativas do usuário; substitua-as por cotações do estaleiro antes de confiar no total
 
-## crates/ovcd-core/src/electric_energy.rs
+## crates/ovd-core/src/electric_energy.rs
 
 # status: draft
 check-service-below-schijf = serviço { $service } kn fica abaixo do limite de Schijf { $limit } kn
@@ -77,7 +77,7 @@ check-energy-positive = energia { $energy } kWh/km na velocidade de serviço
 # status: draft
 check-resistance-coeffs-first-order = a resistência em águas confinadas (residual/Lackenby/bloqueio) é uma estimativa de primeira ordem (RS1) — o atrito ITTC-1957 é padrão; calibre com ensaio de modelo/CFD antes do uso para classificação.
 
-## crates/ovcd-core/src/gas_arrangement.rs
+## crates/ovd-core/src/gas_arrangement.rs
 
 # status: draft
 check-tank-length-over-inner-diameter = comprimento do tanque { $length } m / diâmetro interno { $diameter } m = { $ratio } <= { $max }
@@ -90,7 +90,7 @@ check-stability-fails = GM { $gm } m (fluido), GZ máx. { $max_gz } m a { $angle
 # status: draft
 check-stability-not-assessed = não foi possível avaliar a estabilidade: { $reason }
 
-## crates/ovcd-core/src/gas_separation.rs
+## crates/ovd-core/src/gas_separation.rs
 
 # status: draft
 check-opening-setback = separação a ré { $aft } m >= { $min } m da área de carga até qualquer entrada ou janela que abra (cl. 3.3.7 / 3.3.11)
@@ -103,7 +103,7 @@ check-fwd-end-bulkhead-space-plane-ends = extremidades de tanque planas
 # status: draft
 warn-separation-clauses = As cláusulas de separação são citadas das regras de classificação para embarcações de vias navegáveis interiores (Pt 4 Ch 4 Sec 3, Jul 2022). Confirme com o texto do ADN antes da liberação.
 
-## crates/ovcd-core/src/gas_stability.rs
+## crates/ovd-core/src/gas_stability.rs
 
 # status: draft
 stab-limit-concept-stage = Fase conceitual: seção prismática em caixa, alturas de pesos de primeira ordem, sem aberturas de alagamento progressivo.
@@ -114,7 +114,7 @@ stab-limit-stern-block-mass = A massa do bloco de popa autopropulsado não está
 # status: draft
 stab-limit-weight-split = A divisão de pesos soma { $split } t contra peso leve { $lightship } t.
 
-## crates/ovcd-core/src/journey_derating.rs
+## crates/ovd-core/src/journey_derating.rs
 
 # status: draft
 check-capacity-is-volume-bound = a capacidade de entrada deve ser um projeto viável limitado por volume (não sobrecarregado)
@@ -127,7 +127,7 @@ check-utilisation-reasonable = utilização do volume { $utilisation } >= mínim
 # status: draft
 warn-journey-draft-bound = Limitado pelo calado: retire { $shed } t de { $capacity } t de capacidade em volume para flutuar com T_max = { $t_max } m (calado a plena carga { $full_load_draft } m).
 
-## crates/ovcd-core/src/resistance.rs
+## crates/ovd-core/src/resistance.rs
 
 # status: draft
 check-service-speed-below-limiting = { $environment }: serviço { $service } kn <= 0.95 x limite de Schijf { $limit } kn
@@ -138,7 +138,7 @@ check-blockage-in-range = { $environment }: fator de bloqueio n = { $blockage } 
 # status: draft
 check-coefficients-are-first-order = O ajuste residual Cr/Cf, Lackenby em águas rasas, o fator de bloqueio e o fator de forma 1.02 são estimativas de primeira ordem não calibradas (RS1) — o atrito ITTC-1957 é padrão.
 
-## crates/ovcd-core/src/squat.rs
+## crates/ovd-core/src/squat.rs
 
 # status: draft
 check-keel-clears-bed = UKC dinâmica { $ukc } m = estática { $static_ukc } m - squat { $squat } m ({ $method }) a { $speed } kn
@@ -155,7 +155,7 @@ warn-squat-icorels-not-evaluated = ICORELS não avaliado: Froude de profundidade
 # status: draft
 warn-squat-open-water = nenhuma área de canal informada, então o fator de bloqueio é 0 e Barrass retorna 0 — este é o caso de ÁGUAS ABERTAS e o squat é então apenas ICORELS
 
-## crates/ovcd-core/src/vessel_standards.rs
+## crates/ovd-core/src/vessel_standards.rs
 
 # status: draft
 check-unique-ids = cada chave corresponde ao seu standard_id
@@ -178,7 +178,7 @@ check-source-cited = cada classe cita sua tabela
 # status: draft
 check-source-cited-missing = sem fonte: { $keys }
 
-## crates/ovcd-core/src/waves.rs
+## crates/ovd-core/src/waves.rs
 
 # status: draft
 check-stawave1-short-wave-validity = lambda/Lpp = { $ratio } (lambda { $wavelength } m em Lpp { $lpp } m). O STAwave-1 supõe ondas curtas, lambda/Lpp < 0.5; fora disso ele SUBESTIMA, e perto de lambda/Lpp = 1 pode subestimar em mais de 2x
@@ -191,7 +191,7 @@ warn-waves-period-estimated = nenhum período de onda informado; T_p estimado em
 # status: draft
 warn-waves-beam-seas-floor = mar de través: este módulo retorna um PISO, porque a perda por deriva, leme e manutenção de rumo não é modelada e domina fora da proa
 
-## crates/ovcd-format/src/class_input.rs
+## crates/ovd-format/src/class_input.rs
 
 # status: draft
 msg-class-scheme = { $input } { $class } pertence ao esquema { $family }, não a { $scheme }
@@ -206,12 +206,12 @@ msg-class-draught-above = { $input } = { $value } está acima do calado da class
 # status: draft
 msg-class-clearance-above = { $input } = { $value } está acima da menor altura livre sob ponte da classe { $class } ({ $limit } m)
 
-## crates/ovcd-format/src/run.rs
+## crates/ovd-format/src/run.rs
 
 # status: draft
 msg-convoy-not-available = resultados do comboio ainda não disponíveis
 
-## crates/ovcd-format/src/simulate.rs
+## crates/ovd-format/src/simulate.rs
 
 # status: draft
 warn-channel-no-bottom-width = O canal tem profundidade mas não tem largura de fundo, por isso o afundamento dinâmico (squat), a velocidade limite de Schijf e o fator de bloqueio não são verificados, e as curvas de velocidade são só para águas profundas. O limite de calado usa a profundidade. Indique a largura de fundo do canal para os verificar.
@@ -220,7 +220,7 @@ name-governs-draught = calado — { $limit }
 # status: draft
 check-feasible-arrangement = Nenhum arranjo passa em todas as verificações neste casco. O mais próximo é mostrado. Ele reprova em: { $fails }.
 
-## crates/ovcd-format/src/text_ids.rs
+## crates/ovd-format/src/text_ids.rs
 
 # status: draft
 name-condition-laden = Carregado
@@ -277,7 +277,7 @@ name-cargo-lightship-alone = O peso leve sozinho excede o calado permitido.
 # status: draft
 name-cargo-nothing-fits = Nada cabe: alongue ou alargue o casco.
 
-## crates/ovcd-format/src/vdesign.rs
+## crates/ovd-format/src/vdesign.rs
 
 # status: draft
 msg-file-not-json = o arquivo não é JSON: { $error }
@@ -354,7 +354,7 @@ msg-legacy-fixed-one = este arquivo não tem { $input }; agora ela contém o val
 # status: draft
 msg-legacy-fixed-many = este arquivo não tem { $inputs }; cada uma agora contém o valor fixo que o motor usava antes de ser uma entrada (marcada como padrão), então os resultados não mudam
 # status: draft
-msg-inputs-not-stored = entradas não gravadas no arquivo: { $inputs }. Um projeto salvo contém cada entrada como usada, então uma edição do perfil de valores padrão não pode alterá-lo; execute `ovcd fill` para gravá-las a partir do perfil de valores padrão, marcadas como padrão
+msg-inputs-not-stored = entradas não gravadas no arquivo: { $inputs }. Um projeto salvo contém cada entrada como usada, então uma edição do perfil de valores padrão não pode alterá-lo; execute `ovd fill` para gravá-las a partir do perfil de valores padrão, marcadas como padrão
 # status: draft
 msg-profile-case-keyed = `default_by_{ $by }` para { $key }
 # status: draft
@@ -380,11 +380,11 @@ msg-currency = { $input } deve ser um código de moeda de três letras maiúscul
 # status: draft
 msg-price-base-date = { $input } deve ser uma data como AAAA, AAAA-MM ou AAAA-MM-DD, ou null (nenhuma)
 # status: draft
-msg-scheme = { $input } = { $value } não é um esquema com uma classe de embarcação que possa definir uma embarcação (veja `ovcd schema`)
+msg-scheme = { $input } = { $value } não é um esquema com uma classe de embarcação que possa definir uma embarcação (veja `ovd schema`)
 # status: draft
 msg-class-cannot-define = { $input } = { $value } não pode definir uma embarcação: a classe { $class } não dá comprimento nem boca, ou sua formação ({ $formation }) não é uma que um projeto tenha
 # status: draft
-msg-class-unknown = { $input } = { $value } não é uma classe de embarcação (veja `ovcd schema`)
+msg-class-unknown = { $input } = { $value } não é uma classe de embarcação (veja `ovd schema`)
 # status: draft
 msg-class-id = { $input } deve ser um id de classe ou null
 # status: draft

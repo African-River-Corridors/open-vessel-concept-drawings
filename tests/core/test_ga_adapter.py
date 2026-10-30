@@ -3,8 +3,8 @@ import math
 
 import pytest
 
-from vessel_designer.core.barge_capacity import BargeCapacityInputs, compute
-from vessel_designer.core.ga_adapter import is_gas, to_ga
+from ovd.core.barge_capacity import BargeCapacityInputs, compute
+from ovd.core.ga_adapter import is_gas, to_ga
 
 
 def _gas_case():

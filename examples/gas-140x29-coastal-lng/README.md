@@ -1,6 +1,6 @@
 # 140 x 29 m coastal LNG gas barge: review run
 
-**Concept and preliminary design only. Not verified. Never for approval.** This folder is a worked example run on `main` (`ovcd` 0.2.4, commit f9a4ef7e, 2026-10-29) for an expert review of the tool. The numbers are what the tool prints; nothing here is a design.
+**Concept and preliminary design only. Not verified. Never for approval.** This folder is a worked example run on `main` (`ovd` 0.2.4, commit f9a4ef7e, 2026-10-29) for an expert review of the tool. The numbers are what the tool prints; nothing here is a design.
 
 ## The design
 
@@ -62,13 +62,13 @@ The river blind-distance Rule (ES-TRIN 7.02(2), 250 m) with the 6 m lift cap is 
 ## Reproduce
 
 ```
-ovcd run examples/gas-140x29-coastal-lng/gas-140x29-coastal-lng.vdesign
-ovcd run --json examples/gas-140x29-coastal-lng/gas-140x29-coastal-lng.vdesign > results.json
-ovcd draw --out ga examples/gas-140x29-coastal-lng/gas-140x29-coastal-lng.vdesign
+ovd run examples/gas-140x29-coastal-lng/gas-140x29-coastal-lng.vdesign
+ovd run --json examples/gas-140x29-coastal-lng/gas-140x29-coastal-lng.vdesign > results.json
+ovd draw --out ga examples/gas-140x29-coastal-lng/gas-140x29-coastal-lng.vdesign
 ```
 
 `trace.md` lists every Rule of Option A with its outcome, value, limit, status and citation (from `rule_trace` in `results.json`). `ga/` holds the three GA views of each Option as PDF and SVG.
 
 ## Findings from this run
 
-Filed on the register (#121): the ICLL freeboard Measure; `ovcd draw` and Option names over 15 characters; the bow rake default and the river sightline Rule on a coastal hull. See the register for the ticket numbers.
+Filed on the register (#121): the ICLL freeboard Measure; `ovd draw` and Option names over 15 characters; the bow rake default and the river sightline Rule on a coastal hull. See the register for the ticket numbers.

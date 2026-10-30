@@ -1,4 +1,4 @@
-"""The public API of `vessel_designer` is the one the pure-Python package had (ticket 27).
+"""The public API of `ovd` is the one the pure-Python package had (ticket 27).
 
 `tests/data/public_api.json` was taken from the pure-Python package just before the switch to the
 Rust core: every module, and in each module the public classes (dataclass fields, frozen flag,
@@ -15,7 +15,7 @@ import json
 import pkgutil
 from pathlib import Path
 
-import vessel_designer
+import ovd
 
 
 def sig(f):
@@ -62,7 +62,7 @@ DATA = Path(__file__).parent / "data" / "public_api.json"
 
 def current() -> dict:
     snap = {}
-    for m in pkgutil.walk_packages(vessel_designer.__path__, "vessel_designer."):
+    for m in pkgutil.walk_packages(ovd.__path__, "ovd."):
         if m.name.split(".")[-1].startswith("_"):
             continue
         snap[m.name] = describe(importlib.import_module(m.name))
@@ -71,7 +71,7 @@ def current() -> dict:
 
 def test_the_snapshot_covers_the_whole_package():
     expected = json.loads(DATA.read_text(encoding="utf-8"))
-    assert len(expected) >= 20 and "vessel_designer.core.barge_capacity" in expected
+    assert len(expected) >= 20 and "ovd.core.barge_capacity" in expected
     # Was 150. Issue #175 removed 20 names (see REMOVED_ON_PURPOSE), so the floor moved with them.
     assert sum(len(v) for v in expected.values()) > 130
 
@@ -92,7 +92,7 @@ def test_public_modules_names_signatures_and_result_fields_are_unchanged():
 # --- names importable in 0.1.0 (issue #143) --------------------------------------------------
 #
 # The snapshot above lists what each module defines. A script also imports what a module only
-# imported itself (`from vessel_designer.simulate import RULESETS`). `importable_names_0_1_0.json`
+# imported itself (`from ovd.simulate import RULESETS`). `importable_names_0_1_0.json`
 # holds every name each public module of the 0.1.0 package had (made by
 # `tests/data/make_importable_names_0_1_0.py` from commit ce96e66). Every name of the package must
 # still import. Names that came from the standard library, typing or numpy are not kept when the
@@ -134,14 +134,14 @@ OPTIONAL_NOW = {("core.vessel_standards", "VesselStandard", f) for f in ("loa_m"
 
 
 def test_the_name_list_covers_every_public_module():
-    assert sorted(NAMES) == sorted(m.removeprefix("vessel_designer.") for m in json.loads(DATA.read_text(encoding="utf-8")) if m != "vessel_designer.calibration")
+    assert sorted(NAMES) == sorted(m.removeprefix("ovd.") for m in json.loads(DATA.read_text(encoding="utf-8")) if m != "ovd.calibration")
     assert sum(len(v) for v in NAMES.values()) > 300
 
 
 def test_every_package_name_importable_in_0_1_0_still_imports():
     lost = []
     for module, names in NAMES.items():
-        mod = importlib.import_module(f"vessel_designer.{module}")
+        mod = importlib.import_module(f"ovd.{module}")
         for name, entry in names.items():
             if entry["kind"] != "package":
                 continue
@@ -154,14 +154,14 @@ def test_every_package_name_importable_in_0_1_0_still_imports():
     assert lost == []
     # The list of removals is not a way to hide a loss: each name on it really is gone.
     for module, gone in REMOVED_ON_PURPOSE.items():
-        mod = importlib.import_module(f"vessel_designer.{module}")
+        mod = importlib.import_module(f"ovd.{module}")
         assert not [n for n in gone if hasattr(mod, n)]
 
 
 def test_the_names_that_are_not_kept_are_only_standard_library_and_numpy_helpers():
     missing = set()
     for module, names in NAMES.items():
-        mod = importlib.import_module(f"vessel_designer.{module}")
+        mod = importlib.import_module(f"ovd.{module}")
         missing |= {n for n, e in names.items() if e["kind"] == "incidental" and not hasattr(mod, n)}
     assert missing <= NOT_KEPT, sorted(missing - NOT_KEPT)
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
@@ -177,9 +177,9 @@ def test_every_name_removed_on_purpose_is_in_the_changelog():
 
 
 def test_a_restored_name_is_the_object_of_its_defining_module():
-    from vessel_designer import simulate
-    from vessel_designer.core import barge_capacity, design_grid, electric_energy, gas_arrangement
-    from vessel_designer.core import hull, hydrostatics, journey_derating, protective_location, resistance, tanks
+    from ovd import simulate
+    from ovd.core import barge_capacity, design_grid, electric_energy, gas_arrangement
+    from ovd.core import hull, hydrostatics, journey_derating, protective_location, resistance, tanks
     assert simulate.BargeCapacityInputs is barge_capacity.BargeCapacityInputs
     assert simulate.gas_fit is gas_arrangement.fit and simulate.capacity is barge_capacity.compute
     assert barge_capacity.HullGeometry is hull.HullGeometry is journey_derating.HullGeometry
@@ -196,7 +196,7 @@ def test_field_types_are_the_types_of_0_1_0():
     assert sum(len(c) for c in expected.values()) > 30, "scanning too little"
     wrong = []
     for module, classes in expected.items():
-        mod = importlib.import_module(f"vessel_designer.{module}")
+        mod = importlib.import_module(f"ovd.{module}")
         for cls_name, fields in classes.items():
             hints = typing.get_type_hints(getattr(mod, cls_name))
             for name, text in fields.items():

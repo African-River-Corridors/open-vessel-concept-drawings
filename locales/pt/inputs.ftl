@@ -1,4 +1,4 @@
-# OVCD inputs, Portuguese (Brazil). Draft: machine-translated, for native review (locales/REVIEWING.md).
+# OVD inputs, Portuguese (Brazil). Draft: machine-translated, for native review (locales/REVIEWING.md).
 
 ## Grupos
 

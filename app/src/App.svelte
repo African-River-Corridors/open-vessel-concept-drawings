@@ -226,7 +226,7 @@
 
 <div class="shell">
   <header>
-    <!-- The 32 px OVCD mark, drawn in the text colour so it reads in both themes. -->
+    <!-- The 32 px OVD mark, drawn in the text colour so it reads in both themes. -->
     <svg class="mark" viewBox="0 0 64 64" width="32" height="32" aria-hidden="true" focusable="false">
       <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
         <path d="M5.5 34 H58.5" stroke-width="3" />
@@ -235,13 +235,13 @@
         <path d="M32 48 H18 Q10 48 10 40 V16 M32 48 H46 Q54 48 54 40 V16" stroke-width="5" />
       </g>
     </svg>
-    <span class="brand">OVCD</span>
+    <span class="brand">OVD</span>
     <button onclick={() => fileAction(api.newFile, true)}>{t("app-new")}</button>
     <button onclick={() => fileAction(api.openFile, true)}>{t("app-open")}</button>
     <button onclick={() => fileAction(api.save, false)}>{t("app-save")}</button>
     <button onclick={() => fileAction(api.saveAs, false)}>{t("app-save-as")}</button>
     <button onclick={() => (noticeOpen = true)}>{t("app-about")}</button>
-    {#if web}<span class="web-badge" data-testid="web-label">{t("app-web-version")}</span> <a href="/ovcd#install">{t("app-download-desktop")}</a>{/if}
+    {#if web}<span class="web-badge" data-testid="web-label">{t("app-web-version")}</span> <a href="/ovd#install">{t("app-download-desktop")}</a>{/if}
     <span class="grow"></span>
     <button type="button" aria-label={t(showInput ? "app-input-panel-hide" : "app-input-panel-show")} aria-pressed={showInput} onclick={() => (showInput = !showInput)}>{t("app-input-panel")}</button>
     <button type="button" aria-label={t(showOutputs ? "app-outputs-panel-hide" : "app-outputs-panel-show")} aria-pressed={showOutputs} onclick={() => (showOutputs = !showOutputs)}>{t("app-outputs-panel")}</button>

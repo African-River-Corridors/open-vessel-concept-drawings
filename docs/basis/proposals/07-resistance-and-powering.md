@@ -1,7 +1,7 @@
 # Proposals: 07 Resistance and powering
 
 Not published. Companion to `docs/basis/07-resistance-and-powering.md`. Errors become findings for the register
-(#121) only after maintainer triage. A bare file name such as `resistance.rs:380` is in `crates/ovcd-core/src/`.
+(#121) only after maintainer triage. A bare file name such as `resistance.rs:380` is in `crates/ovd-core/src/`.
 
 Effect on results: **none** (text or new output only), **small** (under about 5 % on a power or speed value),
 **large** (more than that, or a different governing limit).
@@ -11,7 +11,7 @@ Effect on results: **none** (text or new output only), **small** (under about 5 
 ### E1. The limiting speed formula does not match the one-dimensional Schijf solution
 
 - **Code:** `resistance.rs:380`: Fnh,lim = √(2/3) × (1 − n)^(1/3), with Fnh on the full depth h (`resistance.rs:381`).
-- **Cited source:** "Schijf (1949) limiting speed in confined waterways" (`src/vessel_designer/core/resistance.py:10`).
+- **Cited source:** "Schijf (1949) limiting speed in confined waterways" (`src/ovd/core/resistance.py:10`).
   The paper was not read for this page. The check below is a derivation, not a quote.
 - **Check:** one-dimensional continuity and Bernoulli for the return flow give the critical condition
   1 − n + Fnh²/2 − 1.5 Fnh^(2/3) = 0, with Fnh on the mean depth Ac / (surface width). At n = 0 its root is
@@ -34,7 +34,7 @@ Effect on results: **none** (text or new output only), **small** (under about 5 
 ### E2. The residuary method does not use its cited source, and it has a step at Fn = 0.20
 
 - **Code:** `resistance.rs:349-355`: Rr = Rf × k(Fn), a three-piece fit with no source.
-- **Cited source:** `src/vessel_designer/core/resistance.py:12` lists "Guldhammer-Harvald residuary resistance
+- **Cited source:** `src/ovd/core/resistance.py:12` lists "Guldhammer-Harvald residuary resistance
   charts". The code does not look up those charts. The standing check calls the fit an "uncalibrated first-order
   estimate (RS1)" (`resistance.rs:733-734`).
 - **Step:** k = 0.10 + 2.5 × 0.1^1.5 = 0.179 just below Fn = 0.20, and k = 0.150 at Fn = 0.20. Residuary
@@ -54,7 +54,7 @@ Effect on results: **none** (text or new output only), **small** (under about 5 
 
 - **Code:** `electric_energy.rs:277-278`: installed = battery power of the environment with the lowest service
   speed × 1.20. The Python note says this environment "sizes propulsion"
-  (`src/vessel_designer/core/resistance.py:180-183`).
+  (`src/ovd/core/resistance.py:180-183`).
 - **Problem:** the rule is right only if the slowest leg also needs the most power. When the channel cap
   (0.9 V_lim) cuts the channel speed below the target, an open-sea leg at the full target speed can need more.
   With the code's V_lim the default case does not show this; with E1 fixed it can.
@@ -63,7 +63,7 @@ Effect on results: **none** (text or new output only), **small** (under about 5 
 ### E5. "Governed by power" is reported when the top of the speed grid governs
 
 - **Code:** `resistance.rs:625-635`. With no next grid point and no channel limit, the label stays "power".
-  The test `crates/ovcd-core/tests/resistance.rs:36-38` asserts "power" for the open sea at the grid top of
+  The test `crates/ovd-core/tests/resistance.rs:36-38` asserts "power" for the open sea at the grid top of
   12.0 kn.
 - **Effect:** none on numbers. The label misleads a reader about what limits speed.
 
@@ -82,7 +82,7 @@ Effect on results: **none** (text or new output only), **small** (under about 5 
 
 ### E8. Comments claim links that the code does not make
 
-- `src/vessel_designer/core/resistance.py:190-194` says the binding power "feeds `electric_barge` battery
+- `src/ovd/core/resistance.py:190-194` says the binding power "feeds `electric_barge` battery
   sizing, replacing its hard-coded 600 kW". No such module exists. The stern has a fixed count of battery units
   (`aft_arrangement.rs:26-27`), and the cost uses a fixed 620 kWh and 230 kW (`barge_cost.rs:51-52`).
 - `resistance.rs:1-7` says "Nothing is fixed in the port". Many coefficients are fixed in code (page rows
@@ -101,7 +101,7 @@ Effect on results: **none** (text or new output only), **small** (under about 5 
 
 ## References not checked
 
-- **Lackenby (1963)** (`src/vessel_designer/core/resistance.py:11`): the code form δ = 1.4(T/h)^1.5 Fnh^2.5 is
+- **Lackenby (1963)** (`src/ovd/core/resistance.py:11`): the code form δ = 1.4(T/h)^1.5 Fnh^2.5 is
   marked "fitted" (`resistance.rs:402`). No one has traced it to the paper. The β term has no source.
 - **STAwave-1** (`waves.rs:3`): owned by page 08.
 - **Genset data** (`aft_arrangement.rs:129-135`): a maker's product presentation, April 2023. Not read for this
@@ -142,7 +142,7 @@ Effect on results: **none** (text or new output only), **small** (under about 5 
 | C3 | Fix the comments and docstrings: residuary reference, battery sizing claim, "nothing is fixed". | E2 (text), E8 | None | 2 |
 | C4 | Add a "speed grid" governing label; flag a service speed that fails squat. | E5, E6 | None | 2 |
 | C5 | Size electric installed power on the highest battery power over all environments at their service speeds. | E4 | Latent; large after C1 for some cases | 2 |
-| C6 | Add validity-range OVCD Checks for each fit (Fn, Fnh, n, Cb). | Gap 5 | None (warnings only) | 3 |
+| C6 | Add validity-range OVD Checks for each fit (Fn, Fnh, n, Cb). | Gap 5 | None (warnings only) | 3 |
 | C7 | Choose a sourced residuary method valid for full inland hulls; until then, make the fit continuous at Fn = 0.20. | E2 | Small (continuity); large (new method) | 4, after reviewer answer |
 | C8 | Add (1 + k) and ΔCF as Estimate inputs, defaults from the chosen source. | Gap 4 | Large | 4 (with C7) |
 | C9 | Report P_B = P_D / η_transmission and installed power with sea margin and MCR fraction as inputs; take fuel on P_B. | E7, gap 3 | New outputs; fuel small | 5 |

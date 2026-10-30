@@ -152,7 +152,7 @@ jobs:
       - name: Keep the installer
         uses: actions/upload-artifact@v4
         with:
-          name: ovcd-${{ matrix.name }}
+          name: ovd-${{ matrix.name }}
           path: ${{ matrix.glob }}
           if-no-files-found: error
 
@@ -167,7 +167,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: installers
-          pattern: ovcd-*
+          pattern: ovd-*
           merge-multiple: true
       - name: Checksums
         working-directory: installers
@@ -199,7 +199,7 @@ jobs:
           {
             echo
             echo "These installers are not signed. Windows SmartScreen and macOS show a warning on first start; the README says what to click."
-            echo "OVCD is a concept design tool. Its results are not verified. There is no warranty."
+            echo "OVD is a concept design tool. Its results are not verified. There is no warranty."
           } >> notes.md
           cat notes.md
       - name: Publish the pre-release

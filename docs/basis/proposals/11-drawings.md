@@ -8,10 +8,10 @@ maintainer triage.
 
 ### E1. The hopper slope in the section is not the slope the volume model uses
 
-- **Code:** `crates/ovcd-core/src/barge_capacity.rs`, `bulk_volumetric`: the hold is a trapezoid of height
+- **Code:** `crates/ovd-core/src/barge_capacity.rs`, `bulk_volumetric`: the hold is a trapezoid of height
   `h_hold = (depth − double bottom) + coaming`. The top width `w_top = beam − 2 × wing void` is at the
   coaming top. `w_bot = w_top − 2 × slope × h_hold`. Area = `0.5 × (w_top + w_bot) × h_hold`.
-- **Drawing:** `crates/ovcd-format/src/ga.rs`, `midship_section`: the slope runs from `(w_top / 2, depth)`
+- **Drawing:** `crates/ovd-format/src/ga.rs`, `midship_section`: the slope runs from `(w_top / 2, depth)`
   to `(w_bot / 2, inner bottom)`, and the coaming stands vertical at `w_top` above the deck.
 - **Example** (fixture `dry_bulk_sloped_hopper.vdesign`: 76.5 × 11.4 × 3.5 m, defaults): `w_top` 9.4 m,
   `h_hold` 3.3 m, `w_bot` 2.8 m. Computed section area 20.13 m². Drawn slope 1.43 H:V, not the input 1.0.
@@ -23,11 +23,11 @@ maintainer triage.
 
 ### E2. The wing tank top is cut at the deck, but the weights build the hull up to it
 
-- **Code:** `crates/ovcd-core/src/weights.rs` (wing plate block): wing tank top = tank bottom +
+- **Code:** `crates/ovd-core/src/weights.rs` (wing plate block): wing tank top = tank bottom +
   `wing_tank_height_ratio` × OD. When it is above the deck, the weights add side plating from the deck up
   to it over the full LOA, a full-beam wing plate at that level, and take the moulded depth for the
   top-down steel as `max(depth, wing tank top)`. The weather shield (6 mm, 1.5 m above the tank top, over
-  the tank zone) is also weighed and costed (`crates/ovcd-format/src/cost.rs`).
+  the tank zone) is also weighed and costed (`crates/ovd-format/src/cost.rs`).
 - **Drawing:** `ga.rs`, `Hull::wing_tank`: `top = (tank bottom + ratio × OD).min(depth)`. The hull side
   stops at the depth. No wing plate, side extension or weather shield is drawn.
 - **Example** (website example `lrg-gas-89.vdesign`): depth 5.70 m, tank OD 9.55 m, tank bottom 0.50 m.
@@ -38,7 +38,7 @@ maintainer triage.
 
 ### E3. The wing tank width is always 0.4 m (core), so the drawn void does not match the clearance
 
-- **Code:** `crates/ovcd-core/src/barge_capacity.rs`: `base.post_init()` runs before the clearance loop.
+- **Code:** `crates/ovd-core/src/barge_capacity.rs`: `base.post_init()` runs before the clearance loop.
   At that time `side_clearance` is `None`, so `models.rs` `post_init` sets it to 1.0 m and
   `wing_tank_width = 1.0 − wing_tank_gap = 0.4 m`. Inside the loop `bi.post_init()` runs again, but
   `wing_tank_width` is already set, so it never follows the real clearance.
@@ -50,7 +50,7 @@ maintainer triage.
 
 ### E4. The dome is drawn wider than the dome the volume model uses, and the views disagree
 
-- **Code:** `crates/ovcd-core/src/barge_capacity.rs`: the dome is a cylinder of `tank_dome_diameter_m`
+- **Code:** `crates/ovd-core/src/barge_capacity.rs`: the dome is a cylinder of `tank_dome_diameter_m`
   (default 2.0 m, no source) and `tank_dome_height_m` (default 2.0 m). Its volume counts in Vc.
 - **Drawing:** `ga.rs`: the dome is a curve with rise = dome height. Its base is 0.30 × OD in the section
   (`DOME_HALF_BASE_OF_OD`) and 2 × max(0.06 × tank length, 1.2 m) in the elevation
@@ -60,12 +60,12 @@ maintainer triage.
 
 ### E5. `ga_adapter.rs` gives a tank length that disagrees with `tanks.rs` (no effect on drawings)
 
-- **Code:** `crates/ovcd-core/src/ga_adapter.rs`, `tank_result`: `cylinder = volume per tank / (π r²)`,
+- **Code:** `crates/ovd-core/src/ga_adapter.rs`, `tank_result`: `cylinder = volume per tank / (π r²)`,
   then `overall length = cylinder + 2 × head`. The cylinder already holds the whole volume, so the head
-  volume counts twice and the length is too long. `crates/ovcd-core/src/tanks.rs` takes
+  volume counts twice and the length is too long. `crates/ovd-core/src/tanks.rs` takes
   `overall length = (cargo zone − gaps) / n_long` and `cylinder = overall − 2 × head`.
 - **Effect:** none on the drawings: the view builder does not call `ga_adapter`. It feeds the parity
-  harness (`crates/ovcd-format/src/eval.rs`) and `crates/ovcd-core/tests/design_grid.rs`. Risk: a reader
+  harness (`crates/ovd-format/src/eval.rs`) and `crates/ovd-core/tests/design_grid.rs`. Risk: a reader
   takes it for the drawing path.
 
 ## Gaps

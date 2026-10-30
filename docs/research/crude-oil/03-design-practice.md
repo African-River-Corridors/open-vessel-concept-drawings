@@ -1,15 +1,15 @@
-# OVCD crude oil cargo — 03 Design practice and published data
+# OVD crude oil cargo — 03 Design practice and published data
 
 Scope: crude oil tank barges (inland, push-tow, ATB) and small coastal and river-sea tankers (about 500 to 12,000 dwt).
-Written 2026-10-20 for OVCD (public, open-source). Simplified Technical English.
+Written 2026-10-20 for OVD (public, open-source). Simplified Technical English.
 
 **How to read this file**
 
 - Each number has a source tag, for example [S7]. The source list is at the end.
 - **(est.)** = my estimate or my calculation from source figures. The method is given next to it.
 - **(unverified)** = seen only in a search-engine extract. I could not open the page. Do not calibrate on it.
-- PDFs are saved under `~/Dev/ovcd-rule-sources/crude-oil/practice/<dir>/` and logged in
-  `~/Dev/ovcd-rule-sources/crude-oil/SOURCES.md`, section "Design practice and reference vessels". Web pages
+- PDFs are saved under `~/Dev/ovd-rule-sources/crude-oil/practice/<dir>/` and logged in
+  `~/Dev/ovd-rule-sources/crude-oil/SOURCES.md`, section "Design practice and reference vessels". Web pages
   (no PDF) are cited by URL only.
 - Rule texts that other agents own (ADN, MARPOL, ES-TRIN, CFR) are quoted here only where they set a design
   number that practice follows. See those agents' notes for the full rules.
@@ -40,7 +40,7 @@ Written 2026-10-20 for OVCD (public, open-source). Simplified Technical English.
   - Designer practice (Marine Engineering Bureau, river-sea tankers): "crude oil and petroleum products with
     density up to 1.015 t/m³" (RST12, RST12C, RST43C) and "0.7 up to 1.015 t/m³" (RST27M) [S30].
     A fuel-oil barge design states a density range of 0.92 to 1.015 t/m³ (ROB20) [S30].
-- **Recommendation for OVCD (est.):** use SG 1.015 to 1.025 for tank scantlings and SG 0.85 (nominal) with a
+- **Recommendation for OVD (est.):** use SG 1.015 to 1.025 for tank scantlings and SG 0.85 (nominal) with a
   range of 0.77 to 0.97 for capacity and stability. Check stability at both ends of the range.
 - Capacity ratio in built vessels (cargo m³ per tonne dwt): 1.00 to 1.27 m³/t (table in section 3, est.).
   A ratio near 1.18 means the vessel is full by volume at about SG 0.85 (est.).
@@ -92,7 +92,7 @@ Written 2026-10-20 for OVCD (public, open-source). Simplified Technical English.
   0.022 kW/m³ (est.). The same study sizes coils for a heat-up from 44 to 66 °C in 4 days [S31]. That needs
   about 0.12 kW/m³ (est.: SG 0.99, cp 1.9 kJ/kg·K). Coil area was 82 m², or 0.011 m²/m³ (est.) [S31].
   Small barge tanks have more surface per m³, so expect higher loss per m³ (est.).
-- **OVCD method (est.):** Q = Σ(U·A·ΔT) for hold, plus m·cp·ΔT / t for heat-up. Size the heater for the larger
+- **OVD method (est.):** Q = Σ(U·A·ΔT) for hold, plus m·cp·ΔT / t for heat-up. Size the heater for the larger
   of heat-up and "heat while you discharge". Use the installed-heat table above as a sanity band
   (0.15 to 0.65 kW/m³).
 
@@ -313,7 +313,7 @@ Lightship estimates from published hydrostatics (all est.):
 | MEB 1635T Danube barge | light draught 0.77 m × about 855 t/m (1,907 t over 2.23 m) [S30] | about 600–660 | 0.30–0.33 | 0.31–0.35 |
 | MEB RT63 tanker-pusher (self-prop.) | dwt table, 1,359 t/m, zero dwt at T = 0.83 m [S30] | about 1,130 | 0.46 | 0.55 |
 
-- **Band for OVCD (est.):** non-self-propelled river tank barge lightship 0.22 to 0.33 t per m³ of cargo.
+- **Band for OVD (est.):** non-self-propelled river tank barge lightship 0.22 to 0.33 t per m³ of cargo.
   Self-propelled shallow-draught tanker about 0.45 t/m³. These include outfit; the barges have little machinery.
 - A Kirby fleet record (search extract only) gives a 297 × 54 × 12 ft, 30,481 bbl barge with 2,515 t at 7 ft,
   3,456 t at 9 ft and 4,935 t at 12 ft (unverified; site refused connection). If confirmed, it would give a
@@ -348,7 +348,7 @@ Lightship estimates from published hydrostatics (all est.):
   bulkhead makes two tanks of b/2, so the total moment falls to 1/4. Two longitudinal bulkheads (three tanks of
   b/3) cut it to 1/9.
 - US inland barges load to draught, not to volume (section 1.1). So most cargo tanks are slack in the loaded
-  condition. OVCD should compute free surface for all slack tanks in every loaded case, not only in transit
+  condition. OVD should compute free surface for all slack tanks in every loaded case, not only in transit
   stages (est.).
 
 ### 5.2 Effect of the centreline bulkhead
@@ -365,7 +365,7 @@ Lightship estimates from published hydrostatics (all est.):
   slack (MEPC.117(52)).
 - BV NR217 needs a loading manual with permitted still-water bending moments and shear forces, and a loading
   instrument where required [S21, Pt B Ch 2 / Ch 3].
-- OVCD should model at least: departure full, arrival, ballast, and 25/50/75 % intermediate stages of a
+- OVD should model at least: departure full, arrival, ballast, and 25/50/75 % intermediate stages of a
   sequential discharge, with the worst free surface (est.).
 
 ### 5.4 Sloshing at partial fills
@@ -418,7 +418,7 @@ Lightship estimates from published hydrostatics (all est.):
 
 ## Sources
 
-Saved PDFs (`~/Dev/ovcd-rule-sources/crude-oil/practice/`, logged with sha256 in `crude-oil/SOURCES.md`):
+Saved PDFs (`~/Dev/ovd-rule-sources/crude-oil/practice/`, logged with sha256 in `crude-oil/SOURCES.md`):
 
 - [S4] AFPM, *A Survey of Bakken Crude Oil Characteristics* (2014), EPA NRT copy — `afpm-crude-survey/`
 - [S5] NOAA, Bakken first responders guide (2016) — `noaa-bakken-guide/` (background only)

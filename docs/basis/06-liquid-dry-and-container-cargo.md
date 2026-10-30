@@ -4,19 +4,19 @@
 >
 > Code state: written against `main` at commit `f6d446c` (2026-10-20).
 
-**For:** Barge designer  ·  **Code:** `crates/ovcd-core/src/cargo.rs`, `barge_capacity.rs`, `tanks.rs` (volumes and free
-surface), `journey_derating.rs`, `checks.rs`, `models.rs`; `crates/ovcd-format/src/simulate.rs`, `vdesign.rs`, `run.rs`,
+**For:** Barge designer  ·  **Code:** `crates/ovd-core/src/cargo.rs`, `barge_capacity.rs`, `tanks.rs` (volumes and free
+surface), `journey_derating.rs`, `checks.rs`, `models.rs`; `crates/ovd-format/src/simulate.rs`, `vdesign.rs`, `run.rs`,
 `builtin_profile.json`  ·  **Rule Sets:** none. No Rule Set is in the code yet (spec 0004 is a design). Every limit on
 this page is a constant or a Defaults Profile value.
 
-This page describes the code on 2026-10-20. "Liquid cargo" in OVCD today means liquefied gas in IMO Type C tanks only.
+This page describes the code on 2026-10-20. "Liquid cargo" in OVD today means liquefied gas in IMO Type C tanks only.
 The tank design, the fit of the tanks and the gas clauses are on pages 04 and 05. This page covers what is common to all
 Cargo: the cargo data, the cargo volume, the cargo mass, the capacity and deadweight, the dry bulk hold, the double
 bottom and wing spaces, and the cargo zone checks.
 
-## What OVCD computes here
+## What OVD computes here
 
-For each Option, `ovcd run` gives these results (`simulate.rs`, `simulate` for dry bulk, `simulate_gas` for gas):
+For each Option, `ovd run` gives these results (`simulate.rs`, `simulate` for dry bulk, `simulate_gas` for gas):
 
 - `cargo_t`: the cargo mass the Option carries, the lesser of the volume-bound and the weight-bound cargo.
 - `cargo_volume_bound_t` and `cargo_weight_bound_t` (dry bulk), or `payload_t` and `volume_capacity_t` (gas).
@@ -28,7 +28,7 @@ For each Option, `ovcd run` gives these results (`simulate.rs`, `simulate` for d
 - Checks: "Cargo > 0", "feasible geometry", "cargo zone positive", "gm positive" (dry bulk, warning only), the light
   air draft check, and the stern block and gas checks rolled up from other modules.
 
-OVCD does **not** compute today:
+OVD does **not** compute today:
 
 - **Liquid cargo other than liquefied gas.** No oil, chemical or other liquid Cargo exists. There is no integral or
   independent tank for these cargoes, no ADN tank vessel type, no tank capacity limit and no cofferdam rule for them.
@@ -36,7 +36,7 @@ OVCD does **not** compute today:
 - **Container stowage.** There is no container Cargo, no TEU count, no tier count, no stack weight and no
   container stability. The core has a `"container"` hold type (`barge_capacity.rs` line 621), but no Design can select
   it (see "How it works today", step 1). The catalogue holds TEU figures for Vessel Classes, but the generated core
-  table drops them (`crates/ovcd-core/src/vessel_classes.rs` lines 25 to 46 have no `teu` field).
+  table drops them (`crates/ovd-core/src/vessel_classes.rs` lines 25 to 46 have no `teu` field).
 - **Dry bulk holds are work in development.** The method is a first estimate, with one Cargo (bauxite), no cargo
   shift and a first-order GM only.
 
@@ -48,7 +48,7 @@ OVCD does **not** compute today:
    temperature, a storage pressure and a phase: `liquid_gas` or `dry_bulk`. Six Cargos exist: `LNG`, `LNG_ethane`,
    `LPG_propane`, `LPG_butane`, `LPG_mix` (all `liquid_gas`) and `bauxite` (`dry_bulk`). `get_cargo` (line 97) refuses
    any other key. Label: **Fixed in code**.
-2. The storage temperature and pressure feed no calculation. Only the API echoes them (`crates/ovcd-format/src/eval.rs`
+2. The storage temperature and pressure feed no calculation. Only the API echoes them (`crates/ovd-format/src/eval.rs`
    lines 223 to 224).
 3. The Cargo Containment is one of `box_hold`, `sloped_hopper_hold` or `type_c_tanks` (`vdesign.rs` lines 46 to 50).
    A dry bulk Cargo goes only in a hold; a gas Cargo goes only in Type C tanks. A file that breaks this is refused
@@ -73,7 +73,7 @@ The cargo zone is the hull length that is left after the two end spaces (`barge_
   cofferdam and end spaces of `gas_separation.rs` (line 795; page 05).
 - `bow void = rake + forward separation`; `stern void = stern block + aft separation` (lines 802 to 803).
 - `cargo zone = LOA − bow void − stern void` (line 833). The check `cargo_zone_positive` needs it above zero
-  (lines 949 to 959). Label: **Method** (OVCD Check).
+  (lines 949 to 959). Label: **Method** (OVD Check).
 
 ### 3. Dry bulk hold volume (work in development)
 
@@ -92,7 +92,7 @@ The cargo zone is the hull length that is left after the two end spaces (`barge_
 6. Hold volume `V_hold = A × L_c`; cargo volume `V_c = V_hold × hold fill` (lines 631 to 632). Hold fill is
    `hold_fill_ratio` (default 0.95).
 
-Labels: the geometry is a **Method** with no reference (an OVCD estimate). Each default is an **Estimate**.
+Labels: the geometry is a **Method** with no reference (an OVD estimate). Each default is an **Estimate**.
 
 ### 4. Dry bulk lightship (work in development)
 
@@ -118,7 +118,7 @@ Labels: the geometry is a **Method** with no reference (an OVCD estimate). Each 
 `V_total = n_tanks × V_tank`; `V_c = V_total × fill`. The fill is `fill_ratio`, 0.98 by default
 (`builtin_profile.json` lines 95 to 112; `simulate.rs`, `fill_by_ruleset`, line 814). The source is IGC Code
 (MSC.370(93)) paragraph 15.3: the default filling limit is 98 % at the reference temperature. Label: **Sourced
-default**. OVCD applies the filling limit to the volume. It does not apply the loading limit of IGC 15.5.1
+default**. OVD applies the filling limit to the volume. It does not apply the loading limit of IGC 15.5.1
 (`LL = FL × ρR / ρL`). The core default is 0.95 (`barge_capacity.rs` line 230; `models.rs` line 206), but a Design
 always passes the profile value. The dome counts in Vc only, not in the cargo volume (line 523; page 04).
 
@@ -158,7 +158,7 @@ draught is below `T_max`, the volume governs. Otherwise the cargo is `min(volume
 A warning `utilisation_reasonable` fires below 50 % volume utilisation (lines 160 to 167; default 0.5, line 51).
 
 There is no utilisation against a Vessel Class deadweight. The app only shows the class reference deadweight beside the
-cargo (`crates/ovcd-format/src/session.rs` line 153).
+cargo (`crates/ovd-format/src/session.rs` line 153).
 
 ### 9. Double bottom and wing spaces
 
@@ -168,7 +168,7 @@ cargo (`crates/ovcd-format/src/session.rs` line 153).
 - **Gas tanks:** the side and bottom clearances come from IGC 2.4 and set a double bottom of `max(0, cb − saddle
   height)` (`barge_capacity.rs` line 541). See page 05.
 - A file whose wing voids or double bottom leave a negative hold width or height is refused (`vdesign.rs`,
-  `impossible_results`, lines 2806 to 2860). Label: **Method** (OVCD Check, physical).
+  `impossible_results`, lines 2806 to 2860). Label: **Method** (OVD Check, physical).
 
 ### 10. Dry bulk stability (first order, warning only)
 
@@ -180,7 +180,7 @@ cargo (`crates/ovcd-format/src/session.rs` line 153).
   of the full hold section (the hold taken as full to the coaming top).
 - The check `gm_positive` is `GM ≥ 0.15 m`, severity warning (line 1006). The value equals IS Code 2008 Part A 2.2.4
   ("not less than 0.15 m"), but the code cites no rule.
-- The check runs only if the volume-bound load is not overloaded and the draught is above zero (line 1002). Since #415 a Design's results carry the check `intact gm at reported cargo` instead: the same first-order GM at the cargo and draught the Design reports, in every dry bulk Option (Rule `ovcd/capacity/intact-gm`, `ovcd` 2.0.0).
+- The check runs only if the volume-bound load is not overloaded and the draught is above zero (line 1002). Since #415 a Design's results carry the check `intact gm at reported cargo` instead: the same first-order GM at the cargo and draught the Design reports, in every dry bulk Option (Rule `ovd/capacity/intact-gm`, `ovd` 2.0.0).
 - A fixed warning says cargo shift and angle of repose are not modelled (lines 814 to 815).
 
 ### 11. Free surface of a cylindrical tank (API only)
@@ -219,7 +219,7 @@ adds "Cargo > 0" (line 755) and the light air draft check (lines 383 to 392).
 | CG-A16 | Dry bulk end bulkhead allowance | 0.5 m at each end | Estimate | Carried over from the original engine | `barge_capacity.rs` line 798; `builtin_profile.json` line 362 | Unknown; small |
 | CG-A17 | 40 ft units in the stern block | Dry: 2 battery, 1 accommodation; gas: 1 and 2 | Estimate | Carried over from the original engine | `builtin_profile.json` lines 542 to 555; `barge_capacity.rs` lines 764 to 774 | Sets cargo zone length |
 | CG-A18 | Cargo zone | `LOA − bow void − stern void` | Method | — | `barge_capacity.rs` line 833 | — |
-| CG-A19 | Cargo zone check | Cargo zone > 0, error | Method (OVCD Check) | Physical | `barge_capacity.rs` lines 949 to 959 | — |
+| CG-A19 | Cargo zone check | Cargo zone > 0, error | Method (OVD Check) | Physical | `barge_capacity.rs` lines 949 to 959 | — |
 | CG-A20 | Hold height | `(D − DB) + coaming` | Method | No reference | `barge_capacity.rs` line 617 | Non-conservative (volume high): the coaming part takes the full hold width |
 | CG-A21 | Hold top width | `B − 2 × wing void` | Method | No reference | `barge_capacity.rs` line 618 | — |
 | CG-A22 | Hopper bottom width | `max(1.0, w_top − 2 s h)`, slope over the full height | Method | No reference | `barge_capacity.rs` line 620 | Conservative (volume low) if real hoppers are only at the lower corners |
@@ -250,7 +250,7 @@ adds "Cargo > 0" (line 755) and the light air draft check (lines 383 to 392).
 | CG-A47 | Water density | 1.0 t/m³ | Estimate | Fresh water, as the original engine | `builtin_profile.json` line 634 | Conservative in salt water |
 | CG-A48 | Draught solver | Bisection 0 to 1.5 D, tolerance 0.001 × B on volume, 100 rounds | Fixed in code | — | `hydrostatics.rs` lines 21 to 56 | Small |
 | CG-A49 | Draught clamp | `T ≤ D` | Method | Physical | `barge_capacity.rs` line 904 | — |
-| CG-A50 | Overloaded | Required volume > box volume at D | Method (OVCD Check) | Physical | `barge_capacity.rs` lines 895 to 901 | — |
+| CG-A50 | Overloaded | Required volume > box volume at D | Method (OVD Check) | Physical | `barge_capacity.rs` lines 895 to 901 | — |
 | CG-A51 | Minimum freeboard | 0.3 m | Estimate | No source in the profile | `simulate.rs` lines 682, 732; `builtin_profile.json` line 60 | Unknown; see page 08 |
 | CG-A52 | Maximum draught | Least of `D − freeboard`, draught limit, channel depth − UKC | Method | — | `simulate.rs` lines 730 to 739 | — |
 | CG-A53 | Weight-bound cargo | `max(0, Cb LOA B T_max ρ_w − lightship)` | Method | — | `simulate.rs` lines 741 to 742 | — |
@@ -259,7 +259,7 @@ adds "Cargo > 0" (line 755) and the light air draft check (lines 383 to 392).
 | CG-A56 | Gas payload | Journey derating: volume, or `Δ(T_max) − lightship` | Method | — | `journey_derating.rs` lines 115 to 135 | — |
 | CG-A57 | Volume utilisation floor | 0.5, warning | Fixed in code | None | `journey_derating.rs` lines 51, 160 to 167 | Advisory only |
 | CG-A58 | Dry cargo top | `D + coaming` | Method | Cargo not above the coaming | `barge_capacity.rs` line 662 | Non-conservative for a heaped cargo |
-| CG-A59 | Air draft check | Light (or ballasted light) condition governs, not laden | Method (OVCD Check) | — | `barge_capacity.rs` lines 971 to 993; `simulate.rs` lines 383 to 392 | — |
+| CG-A59 | Air draft check | Light (or ballasted light) condition governs, not laden | Method (OVD Check) | — | `barge_capacity.rs` lines 971 to 993; `simulate.rs` lines 383 to 392 | — |
 | CG-A60 | Ballast | 0 t; no Design input | Fixed in code | — | `barge_capacity.rs` line 212 | Conservative for the air draft check |
 | CG-A61 | Bulk GM method | `KB + BM_t − KG`, box hull, volume-bound draught | Method | No reference | `barge_capacity.rs` lines 685 to 712 | Unknown |
 | CG-A62 | Lightship KG | 0.5 × D | Fixed in code | None | `barge_capacity.rs` line 704 | Unknown |
@@ -270,8 +270,8 @@ adds "Cargo > 0" (line 755) and the light air draft check (lines 383 to 392).
 | CG-A67 | Free surface liquid height | `fill × 2r` (volume fraction used as height fraction) | Method | No reference | `tanks.rs` line 280 | Non-conservative (API only) |
 | CG-A68 | Free surface shape | Rectangle `chord × L_cyl`; heads left out | Method | No reference | `tanks.rs` line 292 | Non-conservative; small (API only) |
 | CG-A69 | Check severity | Only `"error"` gates | Fixed in code | — | `checks.rs` lines 41 to 49 | — |
-| CG-A70 | Feasible geometry | Cargo volume > 0, error | Method (OVCD Check) | Physical | `barge_capacity.rs` line 934 | — |
-| CG-A71 | Impossible hold | Hold width or height < 0 refused | Method (OVCD Check) | Physical | `vdesign.rs` lines 2806 to 2860 | — |
+| CG-A70 | Feasible geometry | Cargo volume > 0, error | Method (OVD Check) | Physical | `barge_capacity.rs` line 934 | — |
+| CG-A71 | Impossible hold | Hold width or height < 0 refused | Method (OVD Check) | Physical | `vdesign.rs` lines 2806 to 2860 | — |
 | CG-A72 | Dry checks dropped in Design path | `not_overloaded` and `freeboard_ok` removed | Fixed in code | Weight-bound cargo replaces them | `simulate.rs` lines 368 to 381 | — |
 | CG-A73 | Liquid cargo other than gas | Not modelled | — | — | — | Gap |
 | CG-A74 | Container stowage (TEU, tiers, weights) | Not modelled; TEU dropped from the core table | — | — | `vessel_classes.rs` lines 25 to 46 | Gap |
@@ -308,7 +308,7 @@ files, so an old file keeps its results.
 
 ## Limits and known findings
 
-- **No liquid cargo other than liquefied gas, and no container cargo.** See "What OVCD computes here". The catalogue
+- **No liquid cargo other than liquefied gas, and no container cargo.** See "What OVD computes here". The catalogue
   carries `cargo_modes` such as `liquid` and `container` and TEU figures, but no calculation uses them.
 - **The dense dry bulk case gets no stability check.** For bauxite in a box hold, the volume-bound load is often heavier
   than the hull can float. Hand calculation for the default box hold on LOA 100 m, B 16 m, D 6 m, self-propelled
@@ -345,8 +345,8 @@ files, so an old file keeps its results.
 - **Unit and golden tests:** `tests/core/test_barge_capacity.py`: `test_bauxite_golden_example` (sloped hopper,
   4,711 t, draught 4.60 m, snapshot), `test_cargo_volume_is_inner_volume_times_fill`, `test_wing_void_widens_cuts_bulk_volume`,
   `test_bulk_gm_computed_and_positive`, `test_air_draft_check_gates_on_light_not_laden` and others.
-  `crates/ovcd-format/tests/dry_hold_inputs.rs`: each dry hold input reaches the core, and the impossible hold check.
-  `crates/ovcd-core/tests/barge_capacity.rs`: parity with the Python reference.
+  `crates/ovd-format/tests/dry_hold_inputs.rs`: each dry hold input reaches the core, and the impossible hold check.
+  `crates/ovd-core/tests/barge_capacity.rs`: parity with the Python reference.
 - **Evaluation harness (`evaluation/results.md`):** covers IS Code Part A 2.2 on box sections (page 03). It does not
   cover the bulk GM warning.
 - No case checks bauxite density, hold fill or the hopper geometry against a built hopper barge.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Write `crates/ovcd-core/src/pystr_tables.rs`: the Unicode tables behind `ovcd_core::pystr`.
+"""Write `crates/ovd-core/src/pystr_tables.rs`: the Unicode tables behind `ovd_core::pystr`.
 
     python3.12 tools/gen_pystr_tables.py          # rewrite the file
     python3.12 tools/gen_pystr_tables.py --check  # exit 1 if the file is out of date
@@ -13,7 +13,7 @@ import sys
 import unicodedata
 from pathlib import Path
 
-OUT = Path(__file__).resolve().parents[1] / "crates" / "ovcd-core" / "src" / "pystr_tables.rs"
+OUT = Path(__file__).resolve().parents[1] / "crates" / "ovd-core" / "src" / "pystr_tables.rs"
 MAX = 0x110000
 
 

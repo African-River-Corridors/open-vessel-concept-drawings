@@ -1,5 +1,5 @@
 // What the bottom panel shows and how it rounds. Each value is read straight from the results
-// object that `ovcd run --json` gives; nothing here computes a result. Rounding is one rule per
+// object that `ovd run --json` gives; nothing here computes a result. Rounding is one rule per
 // quantity type, and the full value is always on hover.
 import { num, say, t, type TextIds } from "./i18n.svelte";
 

@@ -1,6 +1,6 @@
 // Web smoke test (issue #246): the built web app, in headless Chrome, served like the live site.
 // Run by e2e/run-web.sh. Checks: the first-run notice, the starter Design evaluates, the gas example
-// opens through the file picker and its results hash equals `ovcd run --json`, and a browser with
+// opens through the file picker and its results hash equals `ovd run --json`, and a browser with
 // storage blocked still loads.
 import { after, before, describe, it } from "node:test";
 import assert from "node:assert/strict";
@@ -11,14 +11,14 @@ import { remote } from "webdriverio";
 import { serve } from "./web-server.mjs";
 
 const here = import.meta.dirname;
-const FIXTURE = path.resolve(here, "../../crates/ovcd-format/tests/fixtures/gas_igc_2g_self_propelled.vdesign");
-const BALLAST_FIXTURE = path.resolve(here, "../../crates/ovcd-format/tests/fixtures/crude_integral_tanks_coastal.vdesign");
-const CONVOY_FIXTURE = path.resolve(here, "../../crates/ovcd-format/tests/fixtures/pushed_convoy.vdesign");
-const DRY_FIXTURE = path.resolve(here, "../../crates/ovcd-format/tests/fixtures/dry_bulk_box_hold.vdesign");
+const FIXTURE = path.resolve(here, "../../crates/ovd-format/tests/fixtures/gas_igc_2g_self_propelled.vdesign");
+const BALLAST_FIXTURE = path.resolve(here, "../../crates/ovd-format/tests/fixtures/crude_integral_tanks_coastal.vdesign");
+const CONVOY_FIXTURE = path.resolve(here, "../../crates/ovd-format/tests/fixtures/pushed_convoy.vdesign");
+const DRY_FIXTURE = path.resolve(here, "../../crates/ovd-format/tests/fixtures/dry_bulk_box_hold.vdesign");
 const DIST = path.resolve(here, "../dist-web-test");
-const CLI = process.env.OVCD_CLI;
-assert.ok(CLI, "OVCD_CLI must be set (run e2e/run-web.sh)");
-const SHOTS = process.env.OVCD_WEB_SHOTS;
+const CLI = process.env.OVD_CLI;
+assert.ok(CLI, "OVD_CLI must be set (run e2e/run-web.sh)");
+const SHOTS = process.env.OVD_WEB_SHOTS;
 
 const nativeHashes = () =>
   JSON.parse(execFileSync(CLI, ["run", "--json", FIXTURE], { encoding: "utf8", maxBuffer: 1 << 28 })).options.map(
@@ -68,10 +68,10 @@ after(async () => {
   server?.close();
 });
 
-describe("OVCD web smoke tests", () => {
+describe("OVD web smoke tests", () => {
   it("shows the notice, then the starter Design evaluated, with the web label and desktop link", async () => {
     const b = await start();
-    await b.url(`${origin}/ovcd/app`);
+    await b.url(`${origin}/ovd/app`);
     await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
     await (await b.$("button=I understand")).click();
     await until(b, "the notice to close", async () => !(await (await b.$("[data-testid=notice]")).isExisting()));
@@ -79,16 +79,16 @@ describe("OVCD web smoke tests", () => {
     assert.ok((await (await outputs(b)).getText()).length > 0, "outputs have text");
     // The style sheet sets the label in capitals.
     assert.equal((await (await b.$("[data-testid=web-label]")).getText()).toLowerCase(), "web version");
-    assert.equal(await (await b.$("a=Download the desktop app")).getAttribute("href"), "/ovcd#install");
+    assert.equal(await (await b.$("a=Download the desktop app")).getAttribute("href"), "/ovd#install");
     // Reload: the notice was remembered.
-    await b.url(`${origin}/ovcd/app`);
+    await b.url(`${origin}/ovd/app`);
     await until(b, "results after reload", async () => (await outputs(b)).isExisting());
     assert.equal(await (await b.$("[data-testid=notice]")).isExisting(), false, "notice not shown again");
   });
 
   it("marks a list field typed when the user picks the value it already shows (issue #670)", async () => {
     const b = await start();
-    await b.url(`${origin}/ovcd/app`);
+    await b.url(`${origin}/ovd/app`);
     await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
     await (await b.$("button=I understand")).click();
     await until(b, "results", async () => (await outputs(b)).isExisting());
@@ -133,9 +133,9 @@ describe("OVCD web smoke tests", () => {
     }
   });
 
-  it("opens the gas example through the file picker; results hash equals ovcd run --json", async () => {
+  it("opens the gas example through the file picker; results hash equals ovd run --json", async () => {
     const b = await start();
-    await b.url(`${origin}/ovcd/app`);
+    await b.url(`${origin}/ovd/app`);
     await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
     await (await b.$("button=I understand")).click();
     await until(b, "results", async () => (await outputs(b)).isExisting());
@@ -150,7 +150,7 @@ describe("OVCD web smoke tests", () => {
     await until(b, "the file name", async () => (await b.$("header")).getText().then((t) => t.includes("gas_igc_2g_self_propelled.vdesign")));
     await until(b, "results", async () => (await outputs(b)).isExisting());
     const ours = await b.execute(async () => {
-      const ev = await window.__ovcdPlatform.evaluate();
+      const ev = await window.__ovdPlatform.evaluate();
       return ev.options.map((o) => [o.name, o.outcome.results_hash]);
     });
     assert.deepEqual(ours, nativeHashes());
@@ -169,12 +169,12 @@ describe("OVCD web smoke tests", () => {
       }
       await (await b.$("button=Light")).click();
     }
-    // Issue #457: the meshes reach the front end typed, with the mesh hash of `ovcd mesh --hash`.
+    // Issue #457: the meshes reach the front end typed, with the mesh hash of `ovd mesh --hash`.
     const meshes = await b.execute(async () => {
-      const ev = await window.__ovcdPlatform.evaluate();
+      const ev = await window.__ovdPlatform.evaluate();
       return Promise.all(
         ev.options.map(async (o) => {
-          const m = await window.__ovcdPlatform.meshes(o.name);
+          const m = await window.__ovdPlatform.meshes(o.name);
           return [o.name, m.hash, m.positions instanceof Float32Array && m.indices instanceof Uint32Array];
         }),
       );
@@ -186,18 +186,18 @@ describe("OVCD web smoke tests", () => {
       await b.saveScreenshot(path.join(SHOTS, "web-gas-self-propelled.png"));
     }
     // The Design is kept: a reload brings it back.
-    await b.url(`${origin}/ovcd/app`);
+    await b.url(`${origin}/ovd/app`);
     await until(b, "the restored Design", async () => (await b.$("header")).getText().then((t) => t.includes("gas_igc_2g_self_propelled.vdesign")));
   });
 
   it("gives a 100 m barge's meshes, a section, a Space and the waterlines (issue #457)", async () => {
     const b = await start();
-    await b.url(`${origin}/ovcd/app`);
+    await b.url(`${origin}/ovd/app`);
     await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
     await (await b.$("button=I understand")).click();
     await until(b, "results", async () => (await outputs(b)).isExisting());
     const r = await b.execute(async () => {
-      const p = window.__ovcdPlatform;
+      const p = window.__ovdPlatform;
       const option = (await p.snapshot()).active_option;
       await p.setInput(option, "length_overall_m", 100);
       const t0 = performance.now();
@@ -216,7 +216,7 @@ describe("OVCD web smoke tests", () => {
 
   it("lists the ballast tanks and the ballast plan of a Design in the IS Code conditions (issue #426)", async () => {
     const b = await start();
-    await b.url(`${origin}/ovcd/app`);
+    await b.url(`${origin}/ovd/app`);
     await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
     await (await b.$("button=I understand")).click();
     await until(b, "results", async () => (await outputs(b)).isExisting());
@@ -245,7 +245,7 @@ describe("OVCD web smoke tests", () => {
 
   it("shows the convoy totals of a pushed convoy, and no Convoy tab for any other Formation (issue #551)", async () => {
     const b = await start();
-    await b.url(`${origin}/ovcd/app`);
+    await b.url(`${origin}/ovd/app`);
     await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
     await (await b.$("button=I understand")).click();
     await until(b, "results", async () => (await outputs(b)).isExisting());
@@ -264,7 +264,7 @@ describe("OVCD web smoke tests", () => {
     await until(b, "the Convoy tab", async () => (await tab("Convoy totals")).isExisting());
     await (await tab("Convoy totals")).click();
     await until(b, "the totals", async () => (await b.$("[data-testid=convoy-table]")).isExisting());
-    const convoy = await b.execute(async () => (await window.__ovcdPlatform.evaluate()).options[0].outcome.results.convoy);
+    const convoy = await b.execute(async () => (await window.__ovdPlatform.evaluate()).options[0].outcome.results.convoy);
     assert.match(await (await b.$("[data-testid=convoy-summary]")).getText(), new RegExp(`^${convoy.abreast} abreast, ${convoy.in_line} in line: ${convoy.barges} barges$`));
     const want = { cargo: ["cargo_t"], lightship: ["lightship_t"], deadweight: ["deadweight_t"], displacement: ["displacement_t"], volume: ["cargo_volume_m3"], length: ["overall_length_m"], beam: ["overall_beam_m"] };
     for (const [row, [key]] of Object.entries(want)) {
@@ -285,7 +285,7 @@ describe("OVCD web smoke tests", () => {
 
   it("shows the 3D model: toggles every layer, picks a Space and reads its volume (issue #458)", async () => {
     const b = await start();
-    await b.url(`${origin}/ovcd/app`);
+    await b.url(`${origin}/ovd/app`);
     await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
     await (await b.$("button=I understand")).click();
     await until(b, "results", async () => (await outputs(b)).isExisting());
@@ -329,7 +329,7 @@ describe("OVCD web smoke tests", () => {
     await (await b.$(`[data-testid="space-${name}"]`)).click();
     await until(b, "the Space info", async () => (await b.$("[data-testid=space-info]")).isExisting());
     const shownVolume = Number(await (await b.$("[data-testid=space-info-volume]")).getAttribute("data-value"));
-    const core = await b.execute(async (n) => (await window.__ovcdPlatform.spaceInfo("Option 1", n)).volume_m3, name);
+    const core = await b.execute(async (n) => (await window.__ovdPlatform.spaceInfo("Option 1", n)).volume_m3, name);
     assert.equal(shownVolume, core);
     if (SHOTS) {
       fs.mkdirSync(SHOTS, { recursive: true });
@@ -343,7 +343,7 @@ describe("OVCD web smoke tests", () => {
 
   it("draws the Type C tanks, their domes and the weather shield, and picks a tank's values from the core (issue #686)", async () => {
     const b = await start();
-    await b.url(`${origin}/ovcd/app`);
+    await b.url(`${origin}/ovd/app`);
     await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
     await (await b.$("button=I understand")).click();
     await until(b, "results", async () => (await outputs(b)).isExisting());
@@ -377,7 +377,7 @@ describe("OVCD web smoke tests", () => {
     // Pick a tank: its outer diameter and length are the core's.
     await (await b.$('[data-testid="space-CT1C"]')).click();
     await until(b, "the tank info", async () => (await b.$("[data-testid=space-info-tank-od]")).isExisting());
-    const core = await b.execute(async () => (await window.__ovcdPlatform.spaceInfo("Option 1", "CT1C")).tank);
+    const core = await b.execute(async () => (await window.__ovdPlatform.spaceInfo("Option 1", "CT1C")).tank);
     assert.equal(Number(await (await b.$("[data-testid=space-info-tank-od]")).getAttribute("data-value")), core.outer_diameter_m);
     assert.equal(Number(await (await b.$("[data-testid=space-info-tank-length]")).getAttribute("data-value")), core.length_m);
     assert.equal(core.head_type, "hemisphere");
@@ -394,7 +394,7 @@ describe("OVCD web smoke tests", () => {
   it("opens on Exterior; sets each View Preset, both cuts and the wheelhouse three ways; picks a tank and the wheelhouse (issue #689)", async () => {
     for (const [file, name] of [[FIXTURE, "gas_igc_2g_self_propelled.vdesign"], [DRY_FIXTURE, "dry_bulk_box_hold.vdesign"]]) {
       const b = await start();
-      await b.url(`${origin}/ovcd/app`);
+      await b.url(`${origin}/ovd/app`);
       await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
       await (await b.$("button=I understand")).click();
       await until(b, "results", async () => (await outputs(b)).isExisting());
@@ -449,7 +449,7 @@ describe("OVCD web smoke tests", () => {
           if (raised) assert.equal((await data("wheelhouse")).raised.opacity, opacity, w);
         }
         // Pick a tank and the raised wheelhouse: their values are the results'.
-        const results = await b.execute(async () => (await window.__ovcdPlatform.evaluate()).options[0].outcome.results);
+        const results = await b.execute(async () => (await window.__ovdPlatform.evaluate()).options[0].outcome.results);
         await (await b.$('[data-testid="space-CT1C"]')).click();
         await until(b, "the tank info", async () => (await b.$("[data-testid=space-info-tank-od]")).isExisting());
         assert.equal(Number(await (await b.$("[data-testid=space-info-tank-od]")).getAttribute("data-value")), results.drawing.tank.tank_outer_diameter_m);
@@ -493,7 +493,7 @@ describe("OVCD web smoke tests", () => {
 
   it("opens opaque, and the section plane clips the hull, its edges and the Spaces (issue #683)", async () => {
     const b = await start();
-    await b.url(`${origin}/ovcd/app`);
+    await b.url(`${origin}/ovd/app`);
     await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
     await (await b.$("button=I understand")).click();
     await until(b, "results", async () => (await outputs(b)).isExisting());
@@ -524,7 +524,7 @@ describe("OVCD web smoke tests", () => {
     console.log(`draw calls, every layer on: ${await (await canvas()).getAttribute("data-calls")}`);
     // The section plane clips the hull, its edges and the Spaces: none of them is drawn on the bow side.
     await (await b.$("[data-testid=model3d-view-profile]")).click();
-    const coverage = (part) => b.execute((part) => document.querySelector("[data-testid=model3d-canvas]").ovcdCoverage(part), part);
+    const coverage = (part) => b.execute((part) => document.querySelector("[data-testid=model3d-canvas]").ovdCoverage(part), part);
     const whole = await coverage("hull");
     assert.ok(whole.beyond > 0, `without the plane the hull reaches the bow: ${JSON.stringify(whole)}`);
     await (await b.$("[data-testid=section-on]")).click();
@@ -557,7 +557,7 @@ describe("OVCD web smoke tests", () => {
 
   it("puts the sea plane at each loading condition's draughts, and repaints on a theme switch (issue #684)", async () => {
     const b = await start();
-    await b.url(`${origin}/ovcd/app`);
+    await b.url(`${origin}/ovd/app`);
     await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
     await (await b.$("button=I understand")).click();
     await until(b, "results", async () => (await outputs(b)).isExisting());
@@ -576,7 +576,7 @@ describe("OVCD web smoke tests", () => {
     const data = async (name) => JSON.parse(await (await b.$("[data-testid=model3d-canvas]")).getAttribute(`data-${name}`));
     // Each loading condition: the plane, read back from its drawn corners, is at the results' draughts.
     const conditions = await b.execute(async () => {
-      const ev = await window.__ovcdPlatform.evaluate();
+      const ev = await window.__ovdPlatform.evaluate();
       return ev.options[0].outcome.results.loading_conditions.conditions.map((c) => ({ name: c.name, aft: c.draught_aft_m ?? c.draught_m, fwd: c.draught_fwd_m ?? c.draught_m }));
     });
     assert.ok(conditions.some((c) => Math.abs(c.aft - c.fwd) > 0.05), "a trimmed condition is among them");
@@ -633,7 +633,7 @@ describe("OVCD web smoke tests", () => {
 
   it("draws the model right-handed: bow right from starboard, port left with the bow up in plan (issue #682)", async () => {
     const b = await start();
-    await b.url(`${origin}/ovcd/app`);
+    await b.url(`${origin}/ovd/app`);
     await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
     await (await b.$("button=I understand")).click();
     await until(b, "results", async () => (await outputs(b)).isExisting());
@@ -679,7 +679,7 @@ describe("OVCD web smoke tests", () => {
 
   it("moves the section plane and shows the waterline of each loading condition (issue #459)", async () => {
     const b = await start();
-    await b.url(`${origin}/ovcd/app`);
+    await b.url(`${origin}/ovd/app`);
     await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
     await (await b.$("button=I understand")).click();
     await until(b, "results", async () => (await outputs(b)).isExisting());
@@ -708,7 +708,7 @@ describe("OVCD web smoke tests", () => {
         return d !== null && JSON.parse(d).x === x;
       });
       const drawn = JSON.parse(await (await b.$("[data-testid=model3d-canvas]")).getAttribute("data-section"));
-      const core = await b.execute(async (x) => (await window.__ovcdPlatform.sectionAt("Option 1", x)).rings, x);
+      const core = await b.execute(async (x) => (await window.__ovdPlatform.sectionAt("Option 1", x)).rings, x);
       assert.ok(core.length >= 1);
       assert.deepEqual(drawn.rings, core.map((ring) => ring.map(([y, z]) => [Math.fround(y), Math.fround(z)])), `the outline at ${x}`);
     }
@@ -716,7 +716,7 @@ describe("OVCD web smoke tests", () => {
     await until(b, "the outline gone", async () => (await (await b.$("[data-testid=model3d-canvas]")).getAttribute("data-section")) === null);
     // The waterline of each loading condition: its draughts are the results'.
     const results = await b.execute(async () => {
-      const ev = await window.__ovcdPlatform.evaluate();
+      const ev = await window.__ovdPlatform.evaluate();
       const c = ev.options[0].outcome.results.loading_conditions.conditions;
       return c.map((x) => ({ name: x.name, draught: x.draught_m, aft: x.draught_aft_m ?? x.draught_m, fwd: x.draught_fwd_m ?? x.draught_m }));
     });
@@ -745,7 +745,7 @@ describe("OVCD web smoke tests", () => {
 
   it("gives the same results hashes and saved bytes in every language, and keeps the choice", async () => {
     const b = await start();
-    await b.url(`${origin}/ovcd/app`);
+    await b.url(`${origin}/ovd/app`);
     await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
     await (await b.$("button=I understand")).click();
     await until(b, "results", async () => (await outputs(b)).isExisting());
@@ -769,8 +769,8 @@ describe("OVCD web smoke tests", () => {
       await until(b, `the header in ${tag}`, async () => (await b.$(`button=${open}`)).isExisting());
       assert.equal(await b.execute(() => document.documentElement.lang), tag);
       seen[tag] = await b.execute(async () => {
-        const ev = await window.__ovcdPlatform.evaluate();
-        await window.__ovcdPlatform.save();
+        const ev = await window.__ovdPlatform.evaluate();
+        await window.__ovdPlatform.save();
         const text = await window.__saved.at(-1).text();
         return { hashes: ev.options.map((o) => [o.name, o.outcome.results_hash]), text };
       });
@@ -783,7 +783,7 @@ describe("OVCD web smoke tests", () => {
     assert.ok(!seen.en.text.includes("language"), "the language is not in the file");
     // The choice is kept: after a reload the app is in the last language picked.
     await inSettings(b, async () => (await b.$("[data-testid=language]")).selectByAttribute("value", "pt"));
-    await b.url(`${origin}/ovcd/app`);
+    await b.url(`${origin}/ovd/app`);
     await until(b, "the app in Portuguese again", async () => (await b.$("button=Abrir")).isExisting());
     assert.equal(await b.execute(() => document.documentElement.lang), "pt");
     if (!SHOTS) return;
@@ -817,9 +817,9 @@ describe("OVCD web smoke tests", () => {
   });
 
   it("shows every message in one line, steps through them, lists them all, and drops an Option's notes with it", async () => {
-    const OLD = path.resolve(here, "../../crates/ovcd-format/tests/legacy/v1_adn_g_self_propelled.vdesign");
+    const OLD = path.resolve(here, "../../crates/ovd-format/tests/legacy/v1_adn_g_self_propelled.vdesign");
     const b = await start();
-    await b.url(`${origin}/ovcd/app`);
+    await b.url(`${origin}/ovd/app`);
     await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
     await (await b.$("button=I understand")).click();
     await until(b, "results", async () => (await outputs(b)).isExisting());
@@ -882,7 +882,7 @@ describe("OVCD web smoke tests", () => {
     // The dry bulk example is overloaded at its volume-bound load: `not overloaded` fails, and it is a
     // warning (issue #418), so it does not gate the result.
     const b = await start();
-    await b.url(`${origin}/ovcd/app`);
+    await b.url(`${origin}/ovd/app`);
     await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
     await (await b.$("button=I understand")).click();
     await until(b, "results", async () => (await outputs(b)).isExisting());
@@ -923,7 +923,7 @@ describe("OVCD web smoke tests", () => {
 
   it("keeps the Outputs, Checks and Compare columns apart, and the Outputs whole, at 1500, 1100 and 800 px (issue #669)", async () => {
     const b = await start();
-    await b.url(`${origin}/ovcd/app`);
+    await b.url(`${origin}/ovd/app`);
     await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
     await (await b.$("button=I understand")).click();
     await until(b, "results", async () => (await outputs(b)).isExisting());
@@ -968,12 +968,12 @@ describe("OVCD web smoke tests", () => {
 
   it("names the load of the laden draught and freeboard, and of the freeboard checks (issue #668)", async () => {
     const b = await start();
-    await b.url(`${origin}/ovcd/app`);
+    await b.url(`${origin}/ovd/app`);
     await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
     await (await b.$("button=I understand")).click();
     await until(b, "results", async () => (await outputs(b)).isExisting());
     await openDesign(b, FIXTURE);
-    const consumables = await b.execute(async () => (await window.__ovcdPlatform.evaluate()).options[0].outcome.results.loading_conditions.consumables_t);
+    const consumables = await b.execute(async () => (await window.__ovdPlatform.evaluate()).options[0].outcome.results.loading_conditions.consumables_t);
     assert.ok(consumables > 0, "the gas fixture carries consumables");
     const note = await (await b.$("[data-testid=load-basis]")).getText();
     assert.ok(note.includes(`${consumables.toFixed(1)} t of stores and fuel`), note);
@@ -998,7 +998,7 @@ describe("OVCD web smoke tests", () => {
 
   it("writes the GZ curve names apart from each other (issue #667)", async () => {
     const b = await start();
-    await b.url(`${origin}/ovcd/app`);
+    await b.url(`${origin}/ovd/app`);
     await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
     await (await b.$("button=I understand")).click();
     await until(b, "results", async () => (await outputs(b)).isExisting());
@@ -1015,7 +1015,7 @@ describe("OVCD web smoke tests", () => {
     const tab = (label) => b.$(`//button[@role="tab" and normalize-space()="${label}"]`);
     await (await tab("Stability & Propulsion")).click();
     await (await tab("Intact stability")).click();
-    const names = await b.execute(async () => (await window.__ovcdPlatform.evaluate()).options[0].outcome.results.stability.conditions.map((c) => c.name));
+    const names = await b.execute(async () => (await window.__ovdPlatform.evaluate()).options[0].outcome.results.stability.conditions.map((c) => c.name));
     await until(b, "the curve names", async () => b.execute((n) => n.every((name) => window.__written.some((w) => w.text === name && w.align === "right")), names));
     const { ys, dpr } = await b.execute((n) => {
       const last = new Map();
@@ -1035,7 +1035,7 @@ describe("OVCD web smoke tests", () => {
   it("still loads when browser storage is blocked", async () => {
     // Blocking cookies and site data makes `localStorage` throw.
     const b = await start({ prefs: { "profile.default_content_setting_values.cookies": 2 } });
-    await b.url(`${origin}/ovcd/app`);
+    await b.url(`${origin}/ovd/app`);
     const blocked = await b.execute(() => {
       try {
         window.localStorage.getItem("x");

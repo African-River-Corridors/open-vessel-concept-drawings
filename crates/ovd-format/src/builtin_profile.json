@@ -1,0 +1,1635 @@
+{
+  "name": "built-in",
+  "profile_version": 1,
+  "about": "The built-in Defaults Profile. Copy it (ovd profile > my.profile.json), edit it, and pass it with --profile. All values are SI, except speeds, which are in knots. A 'hard' range refuses an input; a 'soft' range accepts it with a warning. Hard ranges are physical limits, and keep every input inside what the engine can compute; a copy may tighten a hard range but never loosen it. Soft ranges are the catalogue's Vessel Class envelopes with headroom.",
+  "inputs": {
+    "length_overall_m": {
+      "unit": "m",
+      "hard": { "ge": 1, "le": 1000 },
+      "soft": { "min": 20.0, "max": 250.0 },
+      "basis": "catalogue single-hull classes span 32 to 225.5 m"
+    },
+    "beam_m": {
+      "unit": "m",
+      "hard": { "ge": 1, "le": 200 },
+      "soft": { "min": 4.0, "max": 35.0 },
+      "basis": "catalogue single-hull classes span 4.7 to 28.8 m"
+    },
+    "moulded_depth_m": {
+      "unit": "m",
+      "hard": { "ge": 0.1, "le": 100 },
+      "soft": { "min": 1.0, "max": 15.0 },
+      "basis": "moulded depth is keel to main deck at the side. Left out, it is the depth-to-beam ratio of the Cargo times the beam (see depth_to_beam_ratio); the 41 reference vessels with a published depth span 2.2 to 12.5 m"
+    },
+    "depth_to_beam_ratio": {
+      "default_by_cargo_group": { "dry_bulk": 0.33, "liquid": 0.30, "gas": 0.55 },
+      "unit": "-",
+      "hard": { "gt": 0, "le": 2 },
+      "soft": { "min": 0.2, "max": 0.7 },
+      "basis": "the default moulded depth is this ratio times the beam, at the midpoint of the range in the reference vessels with a published depth: dry bulk and container 0.22 to 0.44 (inland and pushed), liquid 0.22 to 0.38 (inland and pushed), gas 0.44 to 0.66 (nearly all sea-going). Dry bulk, gas and liquid (crude oil) Cargo exist; the liquid ratio is the one the reference vessels give, until crude oil designs are calibrated. catalogue/depth_rule.md lists every vessel against the rule"
+    },
+    "length_to_depth_ratio": {
+      "unit": "-",
+      "hard": { "gt": 0 },
+      "soft": { "min": 0.0, "max": 25.0 },
+      "basis": "length over moulded depth above about 25 is a very slender hull for its depth; the reference vessels with a published depth are below it"
+    },
+    "formation_abreast": {
+      "unit": "barges",
+      "hard": { "ge": 1 },
+      "soft": { "min": 1.0, "max": 6.0 },
+      "basis": "catalogue pushed convoys are at most 4 abreast"
+    },
+    "formation_in_line": {
+      "unit": "barges",
+      "hard": { "ge": 1 },
+      "soft": { "min": 1.0, "max": 7.0 },
+      "basis": "catalogue pushed convoys are at most 5 in line"
+    },
+    "cargo_containment": {
+      "default_by_cargo_phase": { "dry_bulk": "box_hold", "liquid_gas": "type_c_tanks", "liquid_bulk": "integral_tanks" }
+    },
+    "bow_rake_length_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 100 },
+      "soft": { "min": 0.0, "max": 20.0 },
+      "status": "estimate",
+      "basis": "The horizontal length of the bow rake: the keel rises in a straight line from the base at L - this length to the bow rake rise at the bow (spec 0008, \"Hull Forms\"). none: today's rule, bow_rake_length_to_depth_ratio x moulded depth. A file saved before keeps none. The hull's sections and so its hydrostatics take it (issue #448)."
+    },
+    "bow_rake_rise_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 30 },
+      "soft": { "min": 0.0, "max": 10.0 },
+      "status": "estimate",
+      "basis": "The height of the keel above base at the bow. none: the moulded depth, the rake the drawings show today (a straight line from the base up to the deck at the bow). A file saved before keeps none. The hull's sections and so its hydrostatics take it (issue #448)."
+    },
+    "bilge_radius_m": {
+      "default": 0.0,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 15 },
+      "soft": { "min": 0.0, "max": 1.5 },
+      "status": "estimate",
+      "basis": "The radius of the bilge, from 0 (a square bilge) to half the beam. 0: a square bilge with a chine bar or angle, which BV NR217 (June 2025) Pt B Ch 5 Sec 2 [2.2.2] and LR Rules for Inland Waterways Ships (Nov 2015) Pt 4 Ch 1 5.4.3 and Ch 6 3.4.3 permit; no rule gives a default value, so the default stays the square bilge of today's box (issue #450). The generator writes the arc as 16 chords per quarter circle; the hull's sections and so its hydrostatics take it (issue #449). A file saved before keeps 0."
+    },
+    "sheer_aft_m": {
+      "default": 0.0,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.0, "max": 2.0 },
+      "status": "estimate",
+      "basis": "The rise of the deck edge above the moulded depth at the aft end: a parabola, zero at mid-length (spec 0008, \"Hull Forms\"). 0: a straight deck edge, today's box. The hull's sections take it above the deck edge, so the GZ past deck immersion moves; the freeboard stays at mid-length, where the sheer is 0 (issue #449). A file saved before keeps 0."
+    },
+    "sheer_fwd_m": {
+      "default": 0.0,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.0, "max": 2.0 },
+      "status": "estimate",
+      "basis": "The rise of the deck edge above the moulded depth at the forward end: a parabola, zero at mid-length (spec 0008, \"Hull Forms\"). 0: a straight deck edge, today's box. The hull's sections take it above the deck edge, so the GZ past deck immersion moves; the freeboard stays at mid-length, where the sheer is 0 (issue #449). A file saved before keeps 0."
+    },
+    "camber_m": {
+      "default": 0.0,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 5 },
+      "soft": { "min": 0.0, "max": 0.5 },
+      "status": "estimate",
+      "basis": "The rise of the deck at the centre line above the deck edge: a parabola across the deck (spec 0008, \"Hull Forms\"). 0: a flat deck, today's box. The generator writes it as 16 chords on each half; the hull's sections take it above the deck edge, so the GZ past deck immersion moves (issue #449). A file saved before keeps 0."
+    },
+    "deadrise_deg": {
+      "default": 5.0,
+      "unit": "deg",
+      "hard": { "ge": 0, "le": 45 },
+      "soft": { "min": 0.0, "max": 25.0 },
+      "status": "estimate",
+      "basis": "For a V-bottom or chine hull: the angle of the bottom to the horizontal. 5 degrees: a starting value for a shallow-draught hull, not from a source; no source held gives a value, so it stays an estimate for the maintainer to set (spec 0008, \"Decisions taken and open questions\"). The hull's sections take it (issue #450)."
+    },
+    "keel_half_width_m": {
+      "default": 0.5,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 15 },
+      "soft": { "min": 0.0, "max": 2.0 },
+      "status": "estimate",
+      "basis": "For a V-bottom or chine hull: half the width of the flat keel on the centre line, from which the bottom rises at the deadrise. 0.5 m: a starting value, not from a source; no source held gives a value, so it stays an estimate for the maintainer to set. The hull's sections take it (issue #450). A tunnel stern needs a flat bottom wider than its tunnels."
+    },
+    "chine_half_breadth_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 15 },
+      "soft": { "min": 0.0, "max": 12.0 },
+      "status": "estimate",
+      "basis": "For a chine hull: the distance of the chine from the centre line. none: half the beam, a hard chine at the side, which is the V-bottom. A straight side runs from the chine to the deck edge at half the beam (issue #450)."
+    },
+    "chine_height_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 30 },
+      "soft": { "min": 0.0, "max": 5.0 },
+      "status": "estimate",
+      "basis": "For a chine hull: the height of the chine above base. none: where the bottom at the deadrise meets the chine half-breadth. With a typed height the bottom runs straight from the flat keel to the chine, and the deadrise sets only the default height (issue #450)."
+    },
+    "shipd_parameters": {
+      "default": {"Lb": 0.448934650755608, "Ls": 0.543911040631986, "Bs": 0.116329176691602, "WL": 0.622675917926474, "Bc": 0.154697683655, "Beta": 0.822625038981057, "Rc": 0.289999712200032, "Rk": 0.475932129102236, "Abow": 3.44128392444005, "Bbow": -3.4132193144145, "BK_z": 0.95316528882128, "Kappa_bow": 0.779019547064257, "Adel bow": -1.95048354846558, "Bdel bow": 1.34902994866912, "Adrft": -1.48552318102814, "Bdrft": 1.7436127628757, "Cdrft": 0.655521667492138, "bit_EP_S": 0.0, "bit_EP_T": 0.0, "Atrans": -2.85874134834807, "SK_z": 0.729495778733818, "Kappa_stern": 0.176802265929974, "Adel stern": -0.5144029271561, "Bdel stern": 0.833853540537704, "Beta trans": 32.6659685663813, "Bc trans": 0.0230787270058602, "Rc Trans": 0.148893077704097, "Rk trans": -0.0130611765932769, "bit_BB": 0.0, "bit_SB": 0.0, "Lbb": 0.110930750129359, "Hbb": 0.403854019894644, "Bbb": 0.404560539715575, "Lbbm": -0.000408053177279877, "Rbb": 0.0557179202422023, "Kappa_SB": 0.107664983215122, "Lsb": 0.19964943665274, "HSBOA": 0.383693585212329, "Hsb": 0.445040554814405, "Bsb": 0.610800513753723, "Lsbm": 0.332766795996687, "Rsb": 0.268086740934822},
+      "status": "estimate",
+      "basis": "For a ShipD-style hull: the parameters of the Ship-D dataset (its sources are cited in spec 0008 and NOTICE), under the dataset's header names, in its non-dimensional form. LOA, Bd and Dd are not held: they come from the length, beam and moulded depth. The default is a hull of the committed benchmark sample (Constrained Randomized Set 2, row 1906; calibration/shipd/) with a shallow, nearly flat-bottomed section, so it fits barge proportions; a starting shape, not a recommendation. Its lengths and breadths are fractions of LOA, so a hull of other proportions may fail a constraint, and the check names which (issue #452)."
+    },
+    "hull_offsets": {
+      "default": null,
+      "status": "estimate",
+      "basis": "For an offsets hull: the typed or imported offsets table, one row per point (station_x_m, y_m, z_m), keel to deck centre line at each station (spec 0008, \"Offsets table\"). none: no table. `ovd hull import` or the app's Import button reads an offsets CSV into it, and the Option's length, beam and depth take the table's values (issue #451)."
+    },
+    "min_freeboard_m": {
+      "default": 0.3,
+      "unit": "m",
+      "hard": { "ge": 0 },
+      "soft": { "min": 0.15, "max": 1.5 },
+      "basis": "the safety clearance: the least distance from the plane of maximum draught to the deck at side. For an open hold the Rules add the hatch coaming height, because ES-TRIN 2025/1 Article 4.01 measures to the lowest point that is not watertight. 0.3 m is ES-TRIN 2025/1 Article 4.01(1), at least 300 mm; es-trin-2025 checks the value (in both default stacks). It is not an ICLL freeboard: on a coast, icll-freeboard 2.0.0 checks the freeboard at the laden draught against the ICLL type A table, which for a long hull is far larger (984 mm at 90 m), so a hull that loads down to this clearance fails there (issue #659). It must also be less than the moulded depth (hard)"
+    },
+    "hold_covering": {
+      "default": "covered",
+      "status": "estimate",
+      "basis": "Whether the holds sail covered or open. ES-TRIN 2025/1 Article 4.01(2) asks for a safety clearance of at least 500 mm for a vessel that sails with its holds uncovered, and the es-trin-2025 Rule for it applies only to an open hold, measured to the top of the hatch coaming. The same Article applies where an opening cannot be closed spray-proof and weathertight: type open for that case too. No source says which a barge does; the default is covered, so a new Option is checked against 300 mm. Type open for an uncovered hold. A file saved before reads covered"
+    },
+    "bow_rake_length_to_depth_ratio": {
+      "default": 1.6,
+      "unit": "-",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 1.0, "max": 2.5 },
+      "status": "estimate",
+      "basis": "carried over from the original engine: the horizontal length of the bow rake as a multiple of the moulded depth. The bow void is this rake plus the forward separation or end bulkhead space. No published source was found for the ratio, for any Service Area (issue #661). It scales with the depth, so on a deep hull whose depth is set by its tanks the rake takes a large share of the length: type bow_rake_length_m when the bow is known"
+    },
+    "bow_rake_max_length_m": {
+      "default": 10.0,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 100 },
+      "soft": { "min": 5.0, "max": 20.0 },
+      "status": "estimate",
+      "basis": "The longest bow rake that bow_rake_length_to_depth_ratio x moulded depth gives, so a deep hull does not lose its cargo length to the rake (issue #661). none: no cap, the rule before. A working value set by the maintainer on 2026-10-30, with no published source. For scale: a 195 x 35 x 12 ft jumbo hopper barge has a rake of 27 ft 6 in, 8.4 m (Jeffboat advertisement, Maritime Reporter, 15 October 1977, p. 9). A typed bow_rake_length_m is not capped. A file saved before keeps none"
+    },
+    "pushed_stern_void_m": {
+      "default": 3.0,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 100 },
+      "soft": { "min": 1.0, "max": 6.0 },
+      "basis": "carried over from the original engine: the aft void of a pushed barge, which has no stern block (the crew, battery and propulsion are on the tug). Used for a pushed Formation only"
+    },
+    "lightship_factor_t_per_m3": {
+      "default_by_cargo_containment": { "box_hold": 0.1086, "integral_tanks": 0.1134 },
+      "unit": "t/m3",
+      "hard": { "gt": 0, "le": 1 },
+      "soft": { "min": 0.08, "max": 0.15 },
+      "basis": "box hold: calibrated box barges span 0.095 to 0.1223 t/m3 (calibration/factors.yaml). Integral tanks: 0.1141 t/m3, the mean implied k of 15 declared tank-barge records (calibration/tank_lightship.yaml, fitted by tools/fit_tank_lightship.py); an estimate, because a record gives a deadweight, not a lightship. The pumps, piping, vents and heating are added on top"
+    },
+    "service_area": {
+      "default": "river-only",
+      "status": "estimate",
+      "basis": "Where the vessel operates: river-only or coastal-and-river (ADR 0011; spec 0004, \"Service Area and default stacks\"). river-only was confirmed as the default by the maintainer on 2026-10-16. Both give the same Rule Set stacks for now. A file saved before holds none and is read as river-only"
+    },
+    "rule_sets": {
+      "default_stacks": {
+        "river-only": {
+          "gas": ["igc-2g", "is2008-a", "lr-inland-gas", "es-trin-2025", "ovd"],
+          "other": ["is2008-a", "es-trin-2025", "ovd"],
+          "liquid_bulk": ["is2008-a", "es-trin-2025", "adn-tank", "ovd"]
+        },
+        "coastal-and-river": {
+          "gas": ["igc-2g", "is2008-a", "lr-inland-gas", "es-trin-2025", "icll-freeboard", "solas-v22", "abs-barges", "ovd"],
+          "other": ["is2008-a", "es-trin-2025", "icll-freeboard", "solas-v22", "abs-barges", "ovd"],
+          "liquid_bulk": ["is2008-a", "es-trin-2025", "icll-freeboard", "solas-v22", "abs-barges", "adn-tank", "marpol-i", "ovd"]
+        }
+      },
+      "status": "estimate",
+      "basis": "The Rule Set stack a new Option takes, by Service Area and Cargo (gas: a Type C tank Cargo Containment; other: the rest), each set at its highest built-in version with its content hash, marked default (spec 0004, \"Service Area and default stacks\"). Liquid bulk (crude oil in integral tanks, spec 0006) takes the other stack and adds the liquid Rule Sets: ADN 2025 (adn-tank) on any Service Area, and MARPOL Annex I (marpol-i) with the ICLL freeboard where the vessel goes to sea; normam-202, a national set, is never in a default stack (issue #339). River only adds ES-TRIN 2025/1 safety clearance and freeboard (es-trin-2025); coastal and river adds the ICLL type A tabular freeboard (icll-freeboard) and the SOLAS V/22 blind distance (solas-v22, issue #355) and keeps ES-TRIN, as a coastal vessel also sails on rivers and the strictest governs (issue #428); it also adds the ABS Steel Barges notes for an ATB (abs-barges, issue #363: two notes, only for an ATB Formation). Target stacks (later specs): river only adds an inland class stability set; coastal and river adds IS Code Part B 2.2 for barges. A file saved before holds none and is read as the river-only stack, which is what the engine checked"
+    },
+    "lpg_carriage_condition": {
+      "default": "fully_pressurised",
+      "basis": "How an LPG Cargo is carried: fully pressurised (ambient temperature, the vapour pressure of the cargo), semi-pressurised or semi-refrigerated (cooled, at a middle pressure), or fully refrigerated or cryogenic (cooled to near atmospheric pressure). The input is for LPG Cargos only, and the tank design defaults below follow it. A file that names none is read as fully pressurised"
+    },
+    "lpg_loading_limit_basis": {
+      "default": "igc_15_1_3",
+      "basis": "How the density and the loading limit of an LPG Cargo are worked out. igc_15_1_3: the cargo is loaded at the loading temperature, at the saturated liquid density there (NIST Chemistry WebBook, propane and n-butane; the 60/40 mix as an ideal solution of the two, an estimate), to the loading limit of IGC 15.5.1, LL = FL x rhoR / rhoL, FL the fill ratio. The reference temperature is that of IGC 15.1.3: for a fully pressurised tank (no temperature control) the temperature at which the vapour pressure equals the MARVS (15.1.3.1, from the tank design pressure); for semi-pressurised and fully refrigerated tanks (with temperature control) the loading temperature (15.1.3.2), so LL = FL. igc_15_5_2: the same, but a fully pressurised tank takes 45 C, the air temperature of the ambient design conditions of 15.1.4, as its reference (IGC 15.5.2, which the Administration may allow for Type C tanks with an approved vent system). refrigerated_density: what the engine did before, the fully refrigerated density of the cargo data, loaded to the fill ratio in every carriage condition; a file saved before the input existed keeps it. The cargo mass is the tank volume x LL x rhoL = tank volume x FL x rhoR"
+    },
+    "lpg_loading_temperature_c": {
+      "default_by_table": {
+        "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
+        "rows": [
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_pressurised" },
+            "value": 15.0,
+            "status": "estimate",
+            "basis": "No source gives the loading temperature of a fully pressurised LPG barge. 15 C is an estimate of ambient loading. With the reference temperature set by the MARVS (IGC 15.1.3.1) the loading temperature moves the loading limit, not the cargo mass"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "semi_pressurised" },
+            "value": -10.0,
+            "status": "estimate",
+            "basis": "No source gives the carriage temperature of a semi-pressurised LPG tank. -10 C is an estimate between fully refrigerated (about -42 C for propane) and ambient; the propane vapour pressure there is 3.5 bar (NIST)"
+          },
+          {
+            "when": { "cargo": ["LPG_propane"], "lpg_carriage_condition": "fully_refrigerated" },
+            "value": -42.1,
+            "status": "sourced",
+            "source": "NIST Chemistry WebBook, saturation properties of propane: vapour pressure 0.97424 bar at -43 C and 1.0183 bar at -42 C, so 1.01325 bar (one atmosphere) at -42.1 C",
+            "basis": "Fully refrigerated propane is carried at its boiling point at atmospheric pressure"
+          },
+          {
+            "when": { "cargo": ["LPG_butane"], "lpg_carriage_condition": "fully_refrigerated" },
+            "value": -0.5,
+            "status": "sourced",
+            "source": "NIST Chemistry WebBook, saturation properties of n-butane: vapour pressure 0.99377 bar at -1 C and 1.0323 bar at 0 C, so 1.01325 bar (one atmosphere) at -0.5 C",
+            "basis": "Fully refrigerated butane is carried at its boiling point at atmospheric pressure"
+          },
+          {
+            "when": { "cargo": ["LPG_mix"], "lpg_carriage_condition": "fully_refrigerated" },
+            "value": -34.3,
+            "status": "estimate",
+            "basis": "The bubble point at atmospheric pressure of the 60/40 propane/butane mix by mass, from the NIST vapour pressures of propane and n-butane by Raoult's law (an ideal solution, 66.4 % propane by moles)"
+          },
+          {
+            "when": {},
+            "value": 15.0,
+            "status": "estimate",
+            "basis": "Not used: the loading temperature is an input of the LPG Cargos only"
+          }
+        ]
+      },
+      "unit": "C",
+      "hard": { "ge": -50, "le": 80 },
+      "soft": { "min": -45, "max": 50 },
+      "basis": "The temperature at which an LPG Cargo is loaded. It gives the loaded density (rhoL) and, for a tank with temperature control, the reference temperature too. The default depends on the Cargo and the carriage condition. The range is that of the NIST saturation tables the engine holds"
+    },
+    "fill_ratio": {
+      "default_by_table": {
+        "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
+        "rows": [
+          {
+            "when": {},
+            "value": 0.98,
+            "status": "sourced",
+            "source": "IMO IGC Code, resolution MSC.370(93), paragraph 15.3 (default filling limit 98 %)",
+            "basis": "The limit is 98 % of the tank volume at the reference temperature. Owners' sheets agree: 98 % on 16 pressurised LPG carriers and 98.5 % on one 2022 LNG bunker vessel. For an LPG Cargo the tank is loaded to the loading limit of IGC 15.5.1, worked out from this filling limit (see lpg_loading_limit_basis)"
+          }
+        ]
+      },
+      "unit": "-",
+      "hard": { "ge": 0.1, "le": 1 },
+      "soft": { "min": 0.8, "max": 0.99 },
+      "basis": "The filling limit FL: the part of the gross tank volume that cargo fills at the reference temperature. The default is the IGC Code 15.3 limit, 98 %. An LPG Cargo is loaded to the loading limit LL = FL x rhoR / rhoL (IGC 15.5.1) unless lpg_loading_limit_basis is refrigerated_density. The original engine used 0.95 in its tank inputs; a Design never uses that value"
+    },
+    "max_tank_od_m": {
+      "default": 16.0,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 50 },
+      "soft": { "min": 4.0, "max": 20.0 },
+      "basis": "a design limit of this tool, not an IGC Code rule: a tank is never wider than this, so a wider hull gets more tanks across. The diameter is measured to the outside of the insulation, not to the steel: the steel diameter is smaller by twice the insulation thickness. Tank length is limited only by length over diameter, at most 7"
+    },
+    "tank_design_pressure_mpa": {
+      "default_by_table": {
+        "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
+        "rows": [
+          {
+            "when": { "cargo": ["LNG"] },
+            "value": 0.4,
+            "status": "sourced",
+            "source": "Owners' published spec sheets of a 12,000 m3 LNG bunker barge and a 5,000 m3 LNG bunker tug-barge design: 4 bar maximum tank pressure. TGE Marine, general presentation, 2018 (a Type C tank maker): design pressure 3 to 5 barg, tank steel 9 % Ni or 304L for LNG",
+            "basis": "4 bar, inside the 3.2 to 5.0 bar MARVS of built LNG bunker vessels and the 3 to 5 barg a Type C tank maker publishes"
+          },
+          {
+            "when": { "cargo": ["LNG_ethane"] },
+            "value": 0.4,
+            "status": "estimate",
+            "basis": "No published tank data for an LNG and ethane blend; taken as for LNG, 4 bar"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_pressurised" },
+            "value": 1.77,
+            "status": "sourced",
+            "source": "Owner's published Form C charter particulars of 16 fully pressurised LPG carriers built 2006 to 2020: design pressure 17.65 to 17.7 barg",
+            "basis": "The highest value printed (17.7 barg); the 2007 ship prints 17.65 barg. The same ships carry propane, butane and mixes"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "semi_pressurised" },
+            "value": 1.0,
+            "status": "estimate",
+            "source": "Trade-press report (SWZ Maritime, 2022) of a 3,300 m3 gas carrier built 2010 to 2014: 9.97 bar and -48 C; the carriage condition is not stated",
+            "basis": "No source gives a design pressure for a semi-pressurised LPG Type C tank. One trade-press report gives 9.97 bar at -48 C for a 3,300 m3 carrier whose carriage condition is not stated; rounded to 10 bar"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_refrigerated" },
+            "value": null,
+            "status": "estimate",
+            "source": "IGC Code, MSC.370(93), 4.23.1.2 (annex p. 63-64, as read): the design vapour pressure is not less than Po = 0.2 + A C (rho_r)^1.5 MPa, with A = 0.00185 (sigma_m / 55)^2 and C the greatest of h, 0.75 b and 0.45 l",
+            "basis": "The IGC 4.23.1.2 minimum of each tank, worked out for the design (like the dome rule): Po = 0.2 + A C (rho_r)^1.5 MPa, with A = 0.00185 (sigma_m / 55)^2, sigma_m the allowable stress of the wall formula, C the greatest of the tank outer diameter, 0.75 times it and 0.45 times the overall tank length, and rho_r the liquid density at the design temperature (t/m3). The vapour pressure of the cold cargo is near atmospheric, so no source gives a design pressure for a fully refrigerated LPG Type C tank, and the minimum sets it. The tank size does not depend on the wall, so the value needs no iteration. For 9 % nickel steel it is 0.33 MPa for a 12 m tank and about 0.54 MPa for a 45 m tank of butane. A saved file that stores a value keeps it; a file saved before this default keeps its own"
+          }
+        ]
+      },
+      "unit": "MPa",
+      "hard": { "gt": 0, "le": 5 },
+      "soft": { "min": 0.1, "max": 2.5 },
+      "basis": "The design pressure of the tank, the maximum allowable relief valve setting (MARVS), in MPa (1 MPa = 10 bar). It sets the wall thickness through the pressure-vessel formula. The engine adds no liquid head. The default depends on the Cargo and, for LPG, the carriage condition. none: the IGC 4.23.1.2 minimum of each tank, worked out for the design (fully refrigerated LPG)"
+    },
+    "tank_design_temperature_c": {
+      "default_by_table": {
+        "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
+        "rows": [
+          {
+            "when": { "cargo": ["LNG", "LNG_ethane"] },
+            "value": -163.0,
+            "status": "sourced",
+            "source": "Owner's published Form B particulars of a 2022 LNG bunker vessel: tank MARVS 3.6 barg, design temperature -163 C, filling limit 98.5 %",
+            "basis": "Lowest design temperature of the cargo, -163 C. Other LNG bunker vessels print -163 C or -165 C"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_pressurised" },
+            "value": 0.0,
+            "status": "sourced",
+            "source": "Owner's published Form C sheet and general arrangement drawing of a pressurised LPG carrier built 2007: 17.65 barg, 0 to 45 C, tanks not insulated",
+            "basis": "Lowest design temperature, 0 C (the sheet gives 0 to 45 C)"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "semi_pressurised" },
+            "value": -48.0,
+            "status": "estimate",
+            "source": "Trade-press report (SWZ Maritime, 2022) of a 3,300 m3 gas carrier built 2010 to 2014: 9.97 bar and -48 C; the carriage condition is not stated",
+            "basis": "From the one trade-press report of a gas carrier at -48 C; no source states a semi-pressurised design temperature"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_refrigerated" },
+            "value": -48.0,
+            "status": "estimate",
+            "source": "Trade-press report (SWZ Maritime, 2022) of a 3,300 m3 gas carrier built 2010 to 2014: 9.97 bar and -48 C; the carriage condition is not stated",
+            "basis": "Propane boils at -42.1 C (the storage temperature in the engine's cargo data); -48 C leaves a margin and matches the one report of a refrigerated gas carrier. Butane, which boils at about -1 C, is carried colder than it needs"
+          }
+        ]
+      },
+      "unit": "C",
+      "hard": { "gt": -273.15, "le": 200 },
+      "soft": { "min": -170, "max": 60 },
+      "basis": "The lowest design temperature of the tank. The engine does not use it in a calculation yet: it is recorded and shown with the results, and it says what steel the tank needs. The default depends on the Cargo and the carriage condition"
+    },
+    "tank_head_type": {
+      "default_by_table": {
+        "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
+        "rows": [
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_pressurised" },
+            "value": "ellipsoidal_2to1",
+            "status": "estimate",
+            "basis": "The published river LPG tank (Senjanovic et al., DESIGN 2006, 15.8 bar) has spherical dished ends with a toroidal connection; the engine's nearest head is the 2:1 semi-ellipsoidal one (its calibration case runs the same way)"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"] },
+            "value": "ellipsoidal_2to1",
+            "status": "estimate",
+            "basis": "The published tank of a 22,000 m3 LPG/NH3 carrier (Heo, Kang and Park 2017, design vapour pressure 5.3 barg) has torispherical heads; the engine's nearest head is the 2:1 semi-ellipsoidal one"
+          },
+          {
+            "when": {},
+            "value": "hemisphere",
+            "status": "estimate",
+            "basis": "The head the engine used before the head type was an input. No source read gives the head of a single cylindrical LNG cargo tank of this size; a hemispherical head needs the thinnest plate"
+          }
+        ]
+      },
+      "basis": "The shape of the tank ends. hemisphere: a half sphere, head length R, area 2 pi R^2. ellipsoidal_2to1: a 2:1 semi-ellipsoidal head, head length R/2, area 4.336 R^2 (half an oblate spheroid, issue #314), and the ASME 2:1 head formula for its thickness. The default depends on the Cargo and the carriage condition. A file saved before the input existed keeps hemisphere"
+    },
+    "tank_material": {
+      "default_by_table": {
+        "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
+        "rows": [
+          {
+            "when": { "cargo": ["LNG", "LNG_ethane"] },
+            "value": "9Ni",
+            "status": "sourced",
+            "source": "TGE Marine, general presentation, 2018 (a Type C tank maker): design pressure 3 to 5 barg, tank steel 9 % Ni or 304L for LNG",
+            "basis": "9 % nickel steel (allowable stress 230 MPa, IGC 4.23.3.1: Rm 690 MPa over 3, ASTM A553 Type I). The maker lists 9 % Ni steel or 304L for LNG; 9 % Ni is the engine's existing choice"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_pressurised" },
+            "value": "S690QL1",
+            "status": "sourced",
+            "source": "Senjanovic et al., Structure design of cargo tanks in river liquefied gas carriers, DESIGN 2006 (Design Society): S690QL1 steel, Re 690 and Rm 770 MPa, allowable stress Rm/2.7 = 285 MPa, design pressure 15.8 bar, cylinder shell 13.1 mm, about 34.4 t of tank steel",
+            "basis": "Quenched and tempered high-strength steel, allowable stress 256.7 MPa (IGC 4.23.3.1: Rm 770 MPa over 3; Re 690 MPa over 1.5 is higher). It is the steel of the one published pressurised LPG tank with a thickness and a weight; that design used Rm/2.7 = 285 MPa, an inland basis above the IGC limit"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "semi_pressurised" },
+            "value": "9Ni",
+            "status": "estimate",
+            "basis": "No source gives the steel of a semi-pressurised LPG Type C tank. 9 % nickel steel is the engine's existing choice and serves at -48 C"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_refrigerated" },
+            "value": "9Ni",
+            "status": "estimate",
+            "basis": "No source gives the steel of a fully refrigerated LPG Type C tank. 9 % nickel steel is the engine's existing choice and serves at -48 C; a low-temperature carbon-manganese steel would be lighter"
+          }
+        ]
+      },
+      "basis": "The tank steel. It gives the density, the least thickness after forming, the corrosion allowance and the allowable stress, unless a stress is typed. Allowable stress, IGC 4.23.3.1: the lesser of Rm/A and Re/B, A and B at least 3 and 1.5 for nickel and carbon-manganese steels, 3.5 and 1.5 for austenitic steels. 304L and 316L: min(485 / 3.5, 170 / 1.5) = 113.3, held as 113 MPa (ASTM minimums, Outokumpu steel grades table). 9Ni: min(690 / 3, 585 / 1.5) = 230 MPa (ASTM A553 Type I, ThyssenKrupp 9 % Ni plates paper). S690QL1: min(770 / 3, 690 / 1.5) = 256.7 MPa (Re 690 and Rm 770 MPa: Senjanovic et al., DESIGN 2006, and an EN 10025-6 S690QL data sheet). The default depends on the Cargo and the carriage condition"
+    },
+    "tank_liquid_pressure": {
+      "default": "static",
+      "basis": "The design liquid pressure added to the design vapour pressure in the wall formula: IGC 4.23.2.2 takes the liquid pressure of 4.13.2 into account, and 4.13.2.4 sets the internal pressure Peq = Po + Pgd. Pgd = a x Z x rho / 1.02e5 MPa (IGC 4.28.1.2), with Z the largest liquid height (the steel outer diameter, the full height of the cylinder) and rho the largest cargo density at the design temperature. static: a = 1, gravity only, an estimate for inland and sheltered service (the maintainer's choice); igc_4_28_2: a = 1 + az, the IGC 4.28.2 guidance vertical acceleration for the North Atlantic, ships over 50 m at their service speed (max_speed_kn), at the tank farthest from amidships, on the centreline; none: the vapour pressure only, what the engine did before. A file saved before the input existed keeps none, so its results do not change"
+    },
+    "tank_allowable_stress_basis": {
+      "default": "igc_4_23_3_1",
+      "basis": "Where the allowable stress of the tank material comes from, when no stress is typed. igc_4_23_3_1: the IGC 4.23.3.1 limit for Type C tanks, the lesser of Rm/A and Re/B (MSC.370(93)). published_design: the stress the engine used before that check; only S690QL1 differs, at 285 MPa (Rm 770 MPa over 2.7, the inland basis of the published river LPG tank, Senjanovic et al., DESIGN 2006), which is above the IGC limit of 256.7 MPa. A file saved before the basis was an input keeps published_design, so its results do not change"
+    },
+    "tank_allowable_stress_mpa": {
+      "default": null,
+      "unit": "MPa",
+      "hard": { "gt": 0, "le": 1000 },
+      "soft": { "min": 100, "max": 400 },
+      "basis": "An allowable stress of your own, in MPa, for the wall thickness formula. none: the stress of the tank material (see Tank material)"
+    },
+    "tank_insulation_type": {
+      "default_by_table": {
+        "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
+        "rows": [
+          {
+            "when": { "cargo": ["LNG", "LNG_ethane"] },
+            "value": "panel",
+            "status": "estimate",
+            "basis": "An insulation panel system on the tank. Only one secondary report names it; no maker data was found"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_pressurised" },
+            "value": "none",
+            "status": "sourced",
+            "source": "Owner's published Form C sheet and general arrangement drawing of a pressurised LPG carrier built 2007: 17.65 barg, 0 to 45 C, tanks not insulated",
+            "basis": "Pressurised LPG tanks carry no insulation"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": ["semi_pressurised", "fully_refrigerated"] },
+            "value": "pu_foam",
+            "status": "estimate",
+            "source": "Seo and Lee, J. Mar. Sci. Eng. 2026, 14, 821: a 5,000 m3 liquid CO2 Type C tank design study with 200 mm PUF insulation at -35 C",
+            "basis": "Polyurethane foam, as on the one published cold Type C tank at -35 C. No source gives the insulation of a semi-pressurised or fully refrigerated LPG tank"
+          }
+        ]
+      },
+      "basis": "The kind of insulation on the tank. The engine uses one density for every kind (60 kg/m3, carried over from the original engine); the type is recorded and shown with the results. The default depends on the Cargo and the carriage condition"
+    },
+    "tank_insulation_thickness_mm": {
+      "default_by_table": {
+        "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
+        "rows": [
+          {
+            "when": { "cargo": ["LNG", "LNG_ethane"] },
+            "value": 330.0,
+            "status": "estimate",
+            "basis": "One secondary report gives 330 mm of panel on a built LNG carrier's Type C tanks; the maker's data was not found. Small LNG fuel tanks use 300 mm of perlite in vacuum, a different build. The engine's old 350 mm is the top of this range"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_pressurised" },
+            "value": 0.0,
+            "status": "sourced",
+            "source": "Owner's published Form C sheet and general arrangement drawing of a pressurised LPG carrier built 2007: 17.65 barg, 0 to 45 C, tanks not insulated",
+            "basis": "None"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": ["semi_pressurised", "fully_refrigerated"] },
+            "value": 200.0,
+            "status": "estimate",
+            "source": "Seo and Lee, J. Mar. Sci. Eng. 2026, 14, 821: a 5,000 m3 liquid CO2 Type C tank design study with 200 mm PUF insulation at -35 C",
+            "basis": "The one published cold Type C tank (-35 C) has 200 mm of foam. Propane at -42 C is colder, so this may be thin. No source gives a thickness for these conditions"
+          }
+        ]
+      },
+      "unit": "mm",
+      "hard": { "ge": 0, "le": 1000 },
+      "soft": { "min": 0, "max": 400 },
+      "basis": "The insulation on the tank, in mm. The tank outer diameter is measured to the outside of this layer: the clearances and the drawing use that face, and the steel diameter is the outer diameter less twice this thickness. The default depends on the Cargo and the carriage condition"
+    },
+    "tank_structure_factor": {
+      "default_by_table": {
+        "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
+        "rows": [
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_pressurised" },
+            "value": 1.12,
+            "status": "estimate",
+            "source": "Senjanovic et al., Structure design of cargo tanks in river liquefied gas carriers, DESIGN 2006 (Design Society): S690QL1 steel, Re 690 and Rm 770 MPa, allowable stress Rm/2.7 = 285 MPa, design pressure 15.8 bar, cylinder shell 13.1 mm, about 34.4 t of tank steel",
+            "basis": "One published tank: about 34.4 t of tank steel against about 30.6 t of shell plates at the published thicknesses (hemispherical heads), a factor of 1.12. One data point, an uninsulated pressurised tank"
+          },
+          {
+            "when": {},
+            "value": 1.3,
+            "status": "estimate",
+            "basis": "Carried over from the original engine. The one published tank weight is for an uninsulated pressurised tank, so no source supports another value for an insulated tank"
+          }
+        ]
+      },
+      "unit": "-",
+      "hard": { "ge": 1, "le": 3 },
+      "soft": { "min": 1.0, "max": 1.6 },
+      "basis": "The weight of the stiffeners, rings and saddles as a multiple of the tank shell weight. The default depends on the Cargo and the carriage condition"
+    },
+    "hold_wing_void_width_m": {
+      "default": 1.0,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 100 },
+      "soft": { "min": 0.5, "max": 2.5 },
+      "basis": "carried over from the original engine: the empty space at each side of the hold. The hold width is the beam less two of these. The hold must keep a width that is not negative (hard)"
+    },
+    "hold_double_bottom_m": {
+      "default": 0.8,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 20 },
+      "soft": { "min": 0.5, "max": 2.0 },
+      "status": "estimate",
+      "basis": "the height of the inner bottom above the keel. The hold height is the depth less this, plus the coaming; it must not be negative (hard). 0.80 m is the value in two published inland dry bulk barge designs (a 42 m dumb barge and a 110 m bulk carrier, main sections). Other built barges: 0.38 m (35 ft US river hopper barge), about 1.0 m (1,400 t Danube barge, scaled from a figure). A file saved before keeps 1.20 m, the value of the original engine"
+    },
+    "double_side_m": {
+      "default": 1.0,
+      "unit": "m",
+      "hard": { "ge": 0 },
+      "soft": { "min": 0.76, "max": 1.5 },
+      "status": "estimate",
+      "basis": "The width of the double side. 1.00 m is the ADN 2025 type C minimum (9.3.2.11.7: not less than 1.00 m between the side of the vessel and the longitudinal bulkhead of the cargo tanks; 0.80 m with reinforcements), kept as an estimate until the Rule Sets for liquid cargo exist and give the governing value. It must be less than half the beam (hard)"
+    },
+    "double_bottom_m": {
+      "default": 0.7,
+      "unit": "m",
+      "hard": { "ge": 0 },
+      "soft": { "min": 0.6, "max": 1.5 },
+      "status": "estimate",
+      "basis": "The height of the double bottom. 0.70 m is the ADN 2025 type C mean depth (9.3.2.11.7: not less than 0.70 m, never less than 0.60 m), kept as an estimate until the Rule Sets for liquid cargo exist and give the governing value. It must be less than the depth (hard)"
+    },
+    "liquid_tanks_in_line": {
+      "default": 4,
+      "unit": "tanks",
+      "hard": { "ge": 1, "le": 50 },
+      "soft": { "min": 1.0, "max": 8.0 },
+      "status": "estimate",
+      "basis": "The number of cargo tank positions along the hull, a whole number. 4 is a working value: the smallest count that meets the tank volume and length limits of the Rule Sets (ADN 9.3.2.11.1: 380 m3 and 0.20 L) comes with `fit`. Fewer tanks are longer; a tank must be at least 1 m long (hard)"
+    },
+    "centreline_bulkhead": {
+      "default": true,
+      "status": "estimate",
+      "basis": "A centreline bulkhead splits each tank into a port and a starboard tank, and cuts the free surface to a quarter. On by default: ADN 2025 9.3.2.14.2 asks for a stability proof when a cargo tank is wider than 0.70 B, and a tank in a hull with a 1.00 m double side is wider than that on every beam above 3.3 m"
+    },
+    "cofferdam_m": {
+      "default": 0.6,
+      "unit": "m",
+      "hard": { "ge": 0 },
+      "soft": { "min": 0.6, "max": 3.0 },
+      "status": "sourced",
+      "source": "ADN 2025 (ECE/TRANS/351), 9.3.2.11.3 (a): the cargo tanks shall be separated by cofferdams of at least 0.60 m in width from the accommodation, engine rooms and service spaces outside the cargo area below deck or, if there are none, from the vessel's ends",
+      "basis": "The length of the cofferdam at each end of the tank block. The default is the ADN minimum"
+    },
+    "pump_arrangement": {
+      "default": "deepwell",
+      "status": "estimate",
+      "basis": "deepwell: one pump per tank, on deck, no pump room (decision D4 of spec 0006; it works for UN 1267 and UN 3494). pump_room: a pump room below deck, at the aft end of the cargo zone; ADN 2025 Table C, column 14, allows it for UN 1267 and not for UN 3494"
+    },
+    "pump_room_length_m": {
+      "default": 4.0,
+      "unit": "m",
+      "hard": { "gt": 0 },
+      "soft": { "min": 3.0, "max": 8.0 },
+      "status": "estimate",
+      "basis": "The length of the pump room, used only with a pump room. A working value for two to four pump sets with their piping; no published length was found"
+    },
+    "slop_share": {
+      "default_by_service_area": { "river-only": 0.0, "coastal-and-river": 0.03 },
+      "status": "estimate",
+      "unit": "-",
+      "hard": { "ge": 0, "lt": 1 },
+      "soft": { "min": 0.0, "max": 0.05 },
+      "basis": "The slop tanks' share of the cargo tank volume. Coastal and river: 0.03, the MARPOL Annex I (MEPC.117(52)) Reg. 29 paragraph 2.3 capacity of not less than 3 per cent of the oil carrying capacity (2 per cent or less is accepted in cases; none is assumed). River only: none; no slop tank requirement was read in ADN, so it is an estimate. The slop tanks take their share of the tank block, at its aft end, and are not cargo"
+    },
+    "heating_kw_per_m3": {
+      "default": 0.0,
+      "unit": "kW/m3",
+      "hard": { "ge": 0 },
+      "soft": { "min": 0.0, "max": 0.7 },
+      "status": "estimate",
+      "basis": "The installed cargo heating per m3 of cargo tank volume. None by default (a crude that needs no heating). Built vessels have 0.15 to 0.65 kW/m3 (docs/research/crude-oil/03-design-practice.md 1.2; installed heat, an upper bound)"
+    },
+    "liquid_fill_ratio": {
+      "default": 0.98,
+      "unit": "-",
+      "hard": { "gt": 0, "le": 1 },
+      "soft": { "min": 0.9, "max": 0.98 },
+      "status": "estimate",
+      "basis": "The fraction of a cargo tank that is filled. 0.98 is a working value; the ADN degree-of-filling text must be read before it is sourced"
+    },
+    "hopper_slope_h_per_v": {
+      "default": 1.0,
+      "unit": "H:V",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.3, "max": 2.0 },
+      "basis": "carried over from the original engine: the slope of the hopper side plates, horizontal over vertical. The hopper bottom is never narrower than 1 m"
+    },
+    "hatch_coaming_height_m": {
+      "default": 1.0,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.3, "max": 2.0 },
+      "basis": "carried over from the original engine: the hatch coaming above the main deck. It adds to the hold height and to the air draft"
+    },
+    "n_holds": {
+      "default": 3,
+      "unit": "holds",
+      "hard": { "ge": 1, "le": 50 },
+      "soft": { "min": 1.0, "max": 8.0 },
+      "basis": "carried over from the original engine: a whole number. It sets the number of transverse bulkheads (holds plus one) in the hopper steel weight"
+    },
+    "bulk_end_bulkhead_m": {
+      "default": 0.5,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 20 },
+      "soft": { "min": 0.2, "max": 2.0 },
+      "basis": "carried over from the original engine: the end bulkhead allowance at each end of a dry-bulk hold. It is taken off the cargo zone at the bow and the stern"
+    },
+    "hold_fill_ratio": {
+      "default": 0.95,
+      "unit": "-",
+      "hard": { "gt": 0, "le": 1 },
+      "soft": { "min": 0.8, "max": 1.0 },
+      "basis": "carried over from the original engine: the part of the hold volume that cargo fills"
+    },
+    "inner_bottom_plate_mm": {
+      "default": 14.0,
+      "unit": "mm",
+      "hard": { "gt": 0, "le": 100 },
+      "soft": { "min": 5.0, "max": 30.0 },
+      "basis": "carried over from the original engine: plate thickness in the hopper steel weight"
+    },
+    "hopper_plate_mm": {
+      "default": 14.0,
+      "unit": "mm",
+      "hard": { "gt": 0, "le": 100 },
+      "soft": { "min": 5.0, "max": 30.0 },
+      "basis": "carried over from the original engine: plate thickness in the hopper steel weight"
+    },
+    "hold_bulkhead_plate_mm": {
+      "default": 11.0,
+      "unit": "mm",
+      "hard": { "gt": 0, "le": 100 },
+      "soft": { "min": 5.0, "max": 30.0 },
+      "basis": "carried over from the original engine: plate thickness of the wing and transverse bulkheads in the hopper steel weight"
+    },
+    "hatch_coaming_plate_mm": {
+      "default": 10.0,
+      "unit": "mm",
+      "hard": { "gt": 0, "le": 100 },
+      "soft": { "min": 5.0, "max": 30.0 },
+      "basis": "carried over from the original engine: plate thickness in the hopper steel weight"
+    },
+    "tanks_across": {
+      "default": null,
+      "unit": "tanks",
+      "hard": { "ge": 1, "le": 10 },
+      "soft": { "min": 1.0, "max": 3.0 },
+      "basis": "A whole number of tanks side by side across the beam, for every arrangement the search tries (issue #675). none: the search tries 1, 2 and 3 across and keeps the one that passes every check with the most cargo. The tank diameter follows from the beam, the side space and the gaps between tanks"
+    },
+    "tanks_in_line": {
+      "default": 2,
+      "unit": "tanks",
+      "hard": { "ge": 1, "le": 50 },
+      "soft": { "min": 1.0, "max": 4.0 },
+      "basis": "carried over from the original engine: a whole number of tanks along the hull. Fewer tanks are longer; a tank longer than 7 outer diameters fails the length over diameter check, and a tank too short for its heads makes the hull infeasible"
+    },
+    "tank_support_height_m": {
+      "default": 0.5,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 5 },
+      "soft": { "min": 0.2, "max": 1.5 },
+      "basis": "carried over from the original engine: the height of the tank saddles above the inner bottom. The double bottom is the bottom clearance less this, and not less than zero"
+    },
+    "tank_dome_height_m": {
+      "default_by_table": {
+        "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
+        "rows": [
+          {
+            "when": {},
+            "value": null,
+            "status": "estimate",
+            "basis": "The dome rule, an estimate on one published point: height above the tank = the dome diameter. A dome 2,500 mm in diameter whose top is 2,500 mm above the inside of the shell (Heo, Kang and Park 2017, Fig. 19)"
+          }
+        ]
+      },
+      "unit": "m",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.5, "max": 3.0 },
+      "basis": "A dome height of your own, in m, above the tank top. none: the dome rule, height = the dome diameter (an estimate on one published point: a dome 2,500 mm in diameter whose top is 2,500 mm above the inside of the shell, Heo, Kang and Park 2017, Fig. 19). The dome raises the tank top and the air draft, and its volume counts in Vc (IGC 2.4.1.1). A saved file that stores a value keeps it (the original engine used 2.0 m)"
+    },
+    "tank_dome_diameter_m": {
+      "default_by_table": {
+        "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
+        "rows": [
+          {
+            "when": {},
+            "value": null,
+            "status": "estimate",
+            "basis": "The dome rule, an estimate on two published points: diameter = the larger of 1.2 m and 0.17 x the steel outer diameter. A 2,500 mm dome on a 14.6 m lobe (R7300; Heo, Kang and Park 2017, Fig. 19; 2.5 / 14.6 = 0.171), and the 1,200 mm valve dome of a 4.73 m river LPG tank (Senjanovic et al., DESIGN 2006)"
+          }
+        ]
+      },
+      "unit": "m",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.5, "max": 3.0 },
+      "basis": "A dome diameter of your own, in m. none: the dome rule, diameter = the larger of 1.2 m and 0.17 x the steel outer diameter of the tank, an estimate on two published points: a 2,500 mm dome on a 14.6 m lobe (R7300; Heo, Kang and Park 2017, Consideration for IMO Type C independent tank rule scantling process, Fig. 19; 2.5 / 14.6 = 0.171) and the 1,200 mm valve dome of a 4.73 m river LPG tank (Senjanovic et al., DESIGN 2006). No dome height of a tank under 1,000 m3 has been found. The dome is a cylinder; its volume counts in Vc only (IGC 2.4.1.1: Vc includes domes and appendages). A saved file that stores a value keeps it (the original engine used 2.0 m)"
+    },
+    "wing_tank_gap_m": {
+      "default": 0.6,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.3, "max": 1.0 },
+      "basis": "carried over from the original engine: the gap between the wing ballast tank and the cargo tank, per side. The wing tank width is the side clearance less this gap, and not less than zero"
+    },
+    "min_side_space_m": {
+      "default": 0.0,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.0, "max": 3.0 },
+      "basis": "The least space from the side shell to the outer face of the tank insulation, per side (issue #675). The search uses the larger of this and the IGC 2.4 minimum d(Vc) less the insulation, then tries up to 2 m more. The wing ballast tank is this space less the wing tank gap, so for a wing tank of width w set at least w plus the gap. 0: the IGC minimum alone"
+    },
+    "wing_tank_height_ratio": {
+      "default": 0.66,
+      "unit": "-",
+      "hard": { "gt": 0, "le": 2 },
+      "soft": { "min": 0.4, "max": 1.0 },
+      "basis": "carried over from the original engine: the wing tank height as a fraction of the cargo tank outer diameter. It sets the wing plate level; the wing plate and the side plating above the moulded depth are lightship items (issue #410)"
+    },
+    "weather_shield_thickness_mm": {
+      "default": 6.0,
+      "unit": "mm",
+      "hard": { "ge": 0, "le": 50 },
+      "soft": { "min": 4.0, "max": 12.0 },
+      "basis": "carried over from the original engine: the plate of the non-structural weather shield over the tanks (top, sides and ends), weighed at the hull steel density. Its part above the moulded depth is a lightship item at its own height (issue #410). 0: no shield"
+    },
+    "weather_shield_clearance_m": {
+      "default": 1.5,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.5, "max": 3.0 },
+      "basis": "carried over from the original engine: the height of the weather shield top above the tank top. It sets the shield's height and so its weight and centre (issue #410)"
+    },
+    "tank_forming_allowance_pct": {
+      "default": 5.0,
+      "unit": "%",
+      "hard": { "ge": 0, "le": 50 },
+      "soft": { "min": 0.0, "max": 15.0 },
+      "status": "estimate",
+      "basis": "an Estimate, not from a source read. IGC 4.23.2.1.1 makes the thickness calculated for a pressure vessel a minimum after forming, without a negative tolerance, so the plate as ordered is thicker by the forming thinning. The tank shell and heads are weighed at the required thickness plus this share of it (issue #412). 0: weighed at the required thickness"
+    },
+    "tank_dome_wall_thickness_mm": {
+      "default": 25.0,
+      "unit": "mm",
+      "hard": { "ge": 0, "le": 100 },
+      "soft": { "min": 0.0, "max": 50.0 },
+      "status": "estimate",
+      "basis": "an Estimate: the thickness of the default tank wall. Each tank's dome (diameter and height from the dome inputs, issue #316) is weighed as a cylinder with a flat top in the tank steel, as a lightship item at its own height (issue #412). 0: the dome has no mass"
+    },
+    "aft_end_space_m": {
+      "default": 0.2,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.2, "max": 1.0 },
+      "basis": "the space between the cargo tanks and the aft end bulkhead of the cargo area: the type G rule for domed tank ends, 0.20 m (0.50 m for plane ends), from Lloyd's Register inland waterways rules Pt 4 Ch 4 3.5.3 and ADN 2025 9.3.1.11.3(a). It replaces the 0.60 m type C cofferdam the engine used before (issue #280); a saved file that stores no value keeps 0.60 m. The aft separation from the cargo area is the greater of this and the 2.00 m opening setback"
+    },
+    "fwd_end_space_m": {
+      "default": 0.2,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.2, "max": 1.0 },
+      "basis": "the space between the cargo tanks and the forward end bulkhead of the cargo area: the type G rule for domed tank ends, 0.20 m (0.50 m for plane ends), from Lloyd's Register inland waterways rules Pt 4 Ch 4 3.5.3 and ADN 2025 9.3.1.11.3(a). The engine used 0.50 m before (issue #280); a saved file that stores no value keeps 0.50 m"
+    },
+    "opening_setback_basis": {
+      "default": "cargo_area",
+      "status": "estimate",
+      "basis": "Where the 2.00 m setback of entrances and openable windows from the cargo area (Lloyd's Register inland waterways rules Pt 4 Ch 4 3.3.7 and 3.3.11) is measured from. cargo_area: from the aft face of the aft end space, the cofferdam standing inside the cargo area (ADN 1.2.1), so the aft separation is the end space plus the setback. tank_end: from the tank end, so the end space counts toward the setback (the earlier reading, issue #381). A saved file that stores no value keeps tank_end"
+    },
+    "tank_wall_thickness_mm": {
+      "default": null,
+      "unit": "mm",
+      "hard": { "gt": 0, "le": 200 },
+      "soft": { "min": 10.0, "max": 50.0 },
+      "basis": "A fixed wall thickness for the shell and the heads, in mm. none: the pressure-vessel formula gives the thickness (the ASME UG-27 shell formula, two passes, the corrosion allowance, rounded up to 0.5 mm, not less than the IGC minimum), from the design pressure, the allowable stress and the steel diameter. A saved file that stores a value keeps it"
+    },
+    "optimise_depth": {
+      "default": false
+    },
+    "propulsive_efficiency": {
+      "default": 0.45,
+      "unit": "-",
+      "hard": { "gt": 0, "lt": 1 },
+      "soft": { "min": 0.2, "max": 0.8 }
+    },
+    "max_speed_kn": {
+      "default": 10.0,
+      "unit": "kn",
+      "hard": { "ge": 1, "le": 100 },
+      "soft": { "min": 2.0, "max": 20.0 },
+      "basis": "the speed-power grid starts at 1 kn"
+    },
+    "air_draft_limit_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 1000 },
+      "soft": { "min": 3.0, "max": 40.0 },
+      "basis": "catalogue air drafts span 3.0 to 35.5 m"
+    },
+    "downflooding_angle_deg": {
+      "default": null,
+      "unit": "deg",
+      "hard": { "gt": 0, "le": 90 },
+      "soft": { "min": 20.0, "max": 60.0 },
+      "basis": "the angle of heel at which an opening through which progressive flooding may take place is immersed (IS Code 2008, MSC.267(85), Part B 2.2.3.5, which says it for pontoons: not an opening closed by a watertight manhole cover or a vent fitted with an automatic closure; Part A 2.2.1 names the angle without a definition). Type it from the general arrangement, or list the deck openings (`downflooding_openings`) and the engine works it out for each loading condition; a typed angle wins. none: no angle typed, so the IS Code areas of Part A 2.2.1 run to 40 degrees; an angle below 40 degrees ends the areas 0-40 and 30-40 there"
+    },
+    "downflooding_openings": {
+      "default": null,
+      "basis": "the deck openings through which progressive flooding may take place: engine room vent inlets and air intakes, entrances, deckhouse openings, hatches not closed weathertight (IS Code 2008, MSC.267(85), Part B 2.2.3.5: not an opening closed by a watertight manhole cover or a vent fitted with an automatic closure). One row each: x_m from the aft end, y_m across from the centre line (either side), height_above_deck_m above the deck at the side. With no angle typed, the engine works the angle of down-flooding for each loading condition from these: the heel, from the hull's sections at the free-trim equilibrium, at which the lowest opening is immersed. A typed angle wins. none: no openings listed, so the angle is the typed one, if any (issue #592)"
+    },
+    "draught_limit_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 100 },
+      "soft": { "min": 0.8, "max": 12.0 },
+      "basis": "catalogue single-hull draughts span 1.0 to 9 m"
+    },
+    "lock_length_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 1000 },
+      "soft": { "min": 20.0, "max": 400.0 },
+      "status": "estimate",
+      "basis": "none: no lock limit is checked. A Waterway Limit: the usable length of the lock chamber. The overall length of the Formation must not exceed it (issue #358): a self-propelled hull, a pushed barge, or a pushed convoy (barges in line x barge length, without its pusher yet). An ATB or a tow is not checked yet. A file saved before keeps none"
+    },
+    "lock_width_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 100 },
+      "soft": { "min": 5.0, "max": 60.0 },
+      "status": "estimate",
+      "basis": "none: no lock limit is checked. A Waterway Limit: the usable width of the lock chamber. The overall beam of the Formation (a pushed convoy: barges abreast x barge beam) must not exceed it (issue #358); an ATB or a tow is not checked yet. A file saved before keeps none"
+    },
+    "channel_depth_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "ge": 0.1, "le": 1000 },
+      "soft": { "min": 1.0, "max": 20.0 },
+      "basis": "must also be at least the under-keel clearance (hard)"
+    },
+    "channel_under_keel_clearance_m": {
+      "default": 0.5,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 100 },
+      "soft": { "min": 0.2, "max": 2.0 }
+    },
+    "channel_bottom_width_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 100000 },
+      "soft": { "min": 10.0, "max": 1000.0 }
+    },
+    "channel_bank_slope": {
+      "default": 3.0,
+      "unit": "H:V",
+      "hard": { "ge": 0, "le": 100 },
+      "soft": { "min": 1.0, "max": 10.0 }
+    },
+    "channel_current_kn": {
+      "default": 0.0,
+      "unit": "kn",
+      "hard": { "ge": 0, "le": 50 },
+      "soft": { "min": 0.0, "max": 5.0 }
+    },
+    "thruster_count": {
+      "default": 3,
+      "unit": "thrusters",
+      "hard": { "ge": 1, "le": 6 },
+      "soft": { "min": 1.0, "max": 4.0 },
+      "basis": "carried over from the original engine: the most thrusters the stern block asks for, a whole number. It is a maximum: the stern block fits as many as the beam takes, and not fewer than one"
+    },
+    "thruster_envelope_m": {
+      "default": 2.6,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 10 },
+      "soft": { "min": 1.5, "max": 4.0 },
+      "basis": "carried over from the original engine: the width one thruster takes across the beam"
+    },
+    "thruster_clearance_m": {
+      "default": 0.6,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 5 },
+      "soft": { "min": 0.3, "max": 1.5 },
+      "basis": "carried over from the original engine: the gap between thrusters and between a thruster and the shell"
+    },
+    "thruster_room_length_m": {
+      "default": 3.5,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 20 },
+      "soft": { "min": 2.0, "max": 6.0 },
+      "basis": "carried over from the original engine: the length of the thruster room at the stern"
+    },
+    "battery_unit_count": {
+      "default_by_cargo_phase": { "dry_bulk": 2, "liquid_gas": 1, "liquid_bulk": 2 },
+      "unit": "units",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.0, "max": 3.0 },
+      "basis": "carried over from the original engine: the number of 40 ft battery units in the stern block, a whole number. The default depends on the Cargo phase: dry bulk carries a second battery, gas carries one"
+    },
+    "accommodation_unit_count": {
+      "default_by_cargo_phase": { "dry_bulk": 1, "liquid_gas": 2, "liquid_bulk": 1 },
+      "unit": "units",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.0, "max": 3.0 },
+      "basis": "carried over from the original engine: the number of 40 ft accommodation units in the stern block, a whole number. The default depends on the Cargo phase: gas carries a second accommodation unit, dry bulk carries one"
+    },
+    "unit_height_m": {
+      "default": 2.896,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 5 },
+      "soft": { "min": 2.5, "max": 3.0 },
+      "basis": "carried over from the original engine: the height of a 40 ft unit, high-cube (ISO 668 1AAA, 2.896 m). A standard-height unit is 2.591 m"
+    },
+    "unit_side_gap_m": {
+      "default": 0.9,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 5 },
+      "soft": { "min": 0.5, "max": 1.5 },
+      "basis": "carried over from the original engine: the walkway beside the units and between units abreast"
+    },
+    "unit_row_gap_m": {
+      "default": 0.8,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 5 },
+      "soft": { "min": 0.5, "max": 1.5 },
+      "basis": "carried over from the original engine: the gap between rows of units along the hull"
+    },
+    "unit_foundation_m": {
+      "default": 0.3,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 3 },
+      "soft": { "min": 0.1, "max": 1.0 },
+      "basis": "carried over from the original engine: the foundation length between the thruster room and the first units"
+    },
+    "wheelhouse_length_m": {
+      "default": 3.6,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 20 },
+      "soft": { "min": 2.0, "max": 8.0 },
+      "basis": "carried over from the original engine: the length of the lifting wheelhouse"
+    },
+    "wheelhouse_width_m": {
+      "default": 6.4,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 20 },
+      "soft": { "min": 3.0, "max": 10.0 },
+      "basis": "carried over from the original engine: the width of the lifting wheelhouse"
+    },
+    "wheelhouse_height_m": {
+      "default": 3.4,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 10 },
+      "soft": { "min": 2.2, "max": 5.0 },
+      "basis": "carried over from the original engine: the height of the lifting wheelhouse"
+    },
+    "wheelhouse_gap_m": {
+      "default": 0.3,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 5 },
+      "soft": { "min": 0.0, "max": 1.5 },
+      "basis": "carried over from the original engine: the gap between the units and the wheelhouse"
+    },
+    "wheelhouse_eye_height_m": {
+      "default": 1.65,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 5 },
+      "soft": { "min": 1.2, "max": 2.0 },
+      "status": "sourced",
+      "source": "ES-TRIN 2025, Article 7.02: the helmsman shall be assumed to have a height of eye of 1,65 m above the wheelhouse floor at the steering position",
+      "basis": "The helmsman's eye height above the wheelhouse floor. A new Option takes the ES-TRIN 1.65 m; a file saved before keeps the 1.5 m of the original engine (issue #347)"
+    },
+    "sightline_margin_m": {
+      "default": 0.5,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 5 },
+      "soft": { "min": 0.2, "max": 1.5 },
+      "basis": "carried over from the original engine: how far the helmsman's eye must clear the cargo top when the wheelhouse is raised. It sets the sightline check, which blocks the arrangement search"
+    },
+    "deckhouse_front_opening": {
+      "default": false,
+      "status": "estimate",
+      "basis": "Whether the deckhouse front, the end facing the cargo area, has an entrance, air inlet or opening (IGC 3.2.4.1; inland class rules 3.3.10). The engine does not place openings: type what the general arrangement shows. false is the aim of both rules. A file saved before reads false"
+    },
+    "deckhouse_side_opening_distance_m": {
+      "default": 5.0,
+      "unit": "m",
+      "hard": {
+        "ge": 0,
+        "le": 100
+      },
+      "soft": {
+        "min": 3.0,
+        "max": 20.0
+      },
+      "status": "estimate",
+      "basis": "The distance of the first entrance, air inlet or opening on the side of the deckhouse from the deckhouse end facing the cargo area. IGC 3.2.4.1 asks for at least 4 % of the ship length L, not less than 3 m, and no more than 5 m. 5 m is the most the rule ever asks, so the default meets it; the engine does not place openings. A file saved before reads 5 m"
+    },
+    "entrance_distance_m": {
+      "default": 2.0,
+      "unit": "m",
+      "hard": {
+        "ge": 0,
+        "le": 100
+      },
+      "soft": {
+        "min": 2.0,
+        "max": 30.0
+      },
+      "status": "estimate",
+      "basis": "The distance from the cargo area of the nearest entrance, or openable window, of the engine room, the accommodation and the wheelhouse (inland class rules 3.3.7 and 3.3.11 ask for at least 2.00 m). 2 m is the least the rule allows; the engine does not place openings. Type the distance the general arrangement shows. A file saved before reads 2 m"
+    },
+    "engine_room_vent_inlet_distance_m": {
+      "default": 2.0,
+      "unit": "m",
+      "hard": {
+        "ge": 0,
+        "le": 100
+      },
+      "soft": {
+        "min": 2.0,
+        "max": 30.0
+      },
+      "status": "estimate",
+      "basis": "The distance from the cargo area of the engine room ventilation inlets, and of the engine air intakes when the engines do not take air from the engine room (inland class rules 3.3.8 ask for at least 2.00 m). 2 m is the least the rule allows; the engine does not place openings. A file saved before reads 2 m"
+    },
+    "funnel_outlet_distance_m": {
+      "default": 2.0,
+      "unit": "m",
+      "hard": {
+        "ge": 0,
+        "le": 100
+      },
+      "soft": {
+        "min": 2.0,
+        "max": 30.0
+      },
+      "status": "estimate",
+      "basis": "The distance from the cargo area of the outlet of the funnels (inland class rules 3.4.1 ask for at least 2.00 m). 2 m is the least the rule allows; the engine does not place openings. A file saved before reads 2 m"
+    },
+    "wheelhouse_max_lift_m": {
+      "default": 6.0,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 30 },
+      "soft": { "min": 2.5, "max": 8.9 },
+      "status": "estimate",
+      "basis": "The most the wheelhouse can rise on its lift: the stroke, measured from the lowered floor on the deck at moulded depth. On a gas Design the lowered wheelhouse top is the highest point, so the lowered position is the light air draft and the lift is measured above it. The blind distance check (ES-TRIN 7.02(2)) gives the lift needed beside this value. 6.0 m is an Estimate carried over from the original engine, inside the published range: the lifting-shaft wheelhouse lifts of BUTER Hebetechnik (bueter-hubtische.de, read 2026-10-29) have strokes of 2.5 m (9 t), 3.0 m (3 t), 4.0 m (8 t), 7.0 m (6 t), 8.8 m and 8.9 m (12 t); the engine weighs an 8 t wheelhouse. The lift shaft goes down into the hull, so the stroke that fits depends on the depth below the deck; the engine does not check this, or the stability with the wheelhouse raised (ES-TRIN 7.12)"
+    },
+    "stern_form": {
+      "default_by_cargo_phase": { "dry_bulk": "tunnel", "liquid_gas": "transom", "liquid_bulk": "tunnel" },
+      "status": "estimate",
+      "basis": "The stern of a self-propelled hull: a transom (square stern above a short run), a pram (a long flat run up to a transom) or a tunnel (a raised tunnel over each propeller, closed by a skirt). Tunnel sterns suit intermediate and very shallow water, pram sterns a high depth over draught (Rotteveel 2019, sec. 2.3.1); azimuth thrusters need no tunnel (MARIN 2020), so gas takes a transom and dry bulk a tunnel (spec 0007 and docs/research/stern-and-tugs.md). Inputs only until the stern geometry ticket (#350): the engine still draws and weighs today's square stern. A file saved before keeps transom"
+    },
+    "stern_run_length_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 100 },
+      "soft": { "min": 0.0, "max": 30.0 },
+      "status": "estimate",
+      "basis": "The length of the stern run, from the transom forward to where the bottom is flat. none: the rule of the Stern Form (transom 1.0 x depth, pram 1.6 x depth, tunnel the Heuser length by shaft arrangement, Rotteveel 2019 sec. 2.3.1; spec 0007 and docs/research/stern-and-tugs.md). The tunnel rule is sourced; the transom and pram rules are estimates. A file saved before keeps 0 m (a square stern)"
+    },
+    "stern_transom_height_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 30 },
+      "soft": { "min": 0.0, "max": 10.0 },
+      "status": "estimate",
+      "basis": "The height of the transom above base. none: 1.0 x the design draught for a transom or pram stern (clear of the design waterline), 0 for a tunnel stern (the run ends at the transom with the skirt); an estimate (spec 0007 and docs/research/stern-and-tugs.md). A file saved before keeps none: with no run, the stern is square"
+    },
+    "tunnel_crown_height_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 30 },
+      "soft": { "min": 0.5, "max": 8.0 },
+      "status": "estimate",
+      "basis": "For a tunnel stern only: the height of the tunnel crown above base. none: the shaft axis + D/2 + 0.10 x D tip clearance, with the tunnel radius = D (the radius after Heuser, Rotteveel 2019 sec. 2.3.1, sourced; the tip clearance an estimate; spec 0007 and docs/research/stern-and-tugs.md)"
+    },
+    "propulsor_type": {
+      "default_by_cargo_phase": { "dry_bulk": "shaft_nozzle", "liquid_bulk": "shaft_nozzle", "liquid_gas": "azimuth_ducted" },
+      "status": "estimate",
+      "basis": "What drives the hull. unspecified: today's fixed propulsive efficiency and thruster layout (the value a file saved before keeps). A new Option: gas takes ducted azimuth thrusters (a Z-drive LNG tanker), dry bulk twin shafts in nozzles (twin ducted Rhine Class Va ships, CDS 110 and 135 tankers) (spec 0007 and docs/research/stern-and-tugs.md). Inputs only until the propulsor model ticket (#351). thruster_count and propulsive_efficiency are used only with unspecified"
+    },
+    "propulsor_count": {
+      "default": 2,
+      "unit": "propulsors",
+      "hard": { "ge": 1, "le": 4 },
+      "soft": { "min": 1.0, "max": 3.0 },
+      "status": "estimate",
+      "basis": "The number of propulsors, a whole number, for a Propulsor type other than unspecified: twin drive on the reference cargo ships and gas tanker (spec 0007 and docs/research/stern-and-tugs.md)"
+    },
+    "propeller_diameter_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 10 },
+      "soft": { "min": 0.8, "max": 3.5 },
+      "status": "estimate",
+      "basis": "For a Propulsor type other than unspecified. none: the largest diameter the stern allows, D_max: 0.80 x the design draught under a tunnel (estimate), capped so the tunnels fit side by side inside the beam, and 0.65 x the design draught at a transom or pram stern (sourced: MAN); an azimuth unit at most 4.2 m, the largest Schottel SRP (SCHOTTEL Product Guide; the maintainer's decision on #352); spec 0007 and docs/research/stern-and-tugs.md. At a transom or pram stern propeller_diameter_basis may make it smaller"
+    },
+    "propeller_diameter_basis": {
+      "default": "light_draught",
+      "status": "estimate",
+      "basis": "What a default propeller diameter (propeller_diameter_m none) is sized to. light_draught: at a transom or pram stern, no larger than keeps the shaft axis under the water by 0.76 D (0.71 D ducted) at the lightest aft draught of the loading conditions, with the axis half a diameter above the base, rounded down to 0.05 m (Beveridge 1971, a guide; the maintainer's decision on #355), so a default hull passes ovd/propulsion/immersion-light. Under a tunnel stern, and with no loading conditions, it is D_max. stern_form: D_max, the largest the stern allows. A file saved before keeps stern_form"
+    },
+    "propulsor_efficiency_factor": {
+      "default_by_propulsor_type": { "azimuth_open": 0.8, "azimuth_ducted": 0.8, "shaft_open": 0.8, "shaft_nozzle": 0.437, "voith_schneider": 0.8, "pump_jet": 0.8 },
+      "unit": "-",
+      "hard": { "gt": 0, "le": 1 },
+      "soft": { "min": 0.3, "max": 1.0 },
+      "status": "estimate",
+      "basis": "kappa, the factor of the Propulsor type on the ideal disc efficiency: eta_D = kappa x eta_i x eta_R x eta_H (spec 0007). Shafts in nozzles: fitted on the installed power of the in-sample inland ship of calibration/propulsion_cases.yaml (calibration/factors.yaml, propulsor_efficiency_factor; issue #353); it also takes in what the resistance method leaves out. Every other type: 0.80, a starting estimate below the ideal disc, which no real propeller reaches (MAN gives open-water efficiencies of 0.35 to 0.75); no inland ship of those types prints both its power and its speed. Unverified for a pump jet"
+    },
+    "bollard_pull_factor": {
+      "default_by_propulsor_type": { "azimuth_open": 0.77, "azimuth_ducted": 0.974, "shaft_open": 0.77, "shaft_nozzle": 0.951, "voith_schneider": 0.77, "pump_jet": 0.77 },
+      "unit": "-",
+      "hard": { "gt": 0, "le": 2 },
+      "soft": { "min": 0.6, "max": 1.2 },
+      "status": "estimate",
+      "basis": "kappa_b, the factor of the Propulsor type on the disc's momentum limit at the bollard, T0 = kappa_b x (2 rho A)^(1/3) x P_D^(2/3) per unit (spec 0007). Ducted azimuth and shafts in nozzles: fitted to the in-sample tugs of calibration/propulsion_cases.yaml (calibration/factors.yaml, bollard_pull_factor). Every other type: 0.77, the open-propeller Wartsila estimate 0.9 x (D P_D)^(2/3) kN (k2 = 1) over the disc limit at 1,025 kg/m3 (derived); no reference vessel of those types prints a diameter. Unverified for a pump jet"
+    },
+    "power_source": {
+      "default_by_cargo_phase": { "dry_bulk": "diesel_mechanical", "liquid_gas": "gas_fuelled", "liquid_bulk": "diesel_mechanical" },
+      "status": "estimate",
+      "basis": "Where the propulsion power comes from: battery-electric and gas-fuelled (today's two), diesel-mechanical, diesel-electric and battery hybrid (maintainer decisions of 2026-10-20, spec 0007 decisions 6 and 7: gas takes gas-fuelled gensets, dry bulk diesel-mechanical). A file saved before keeps battery_electric. Inputs only until the machinery ticket (#352)"
+    },
+    "installed_power_kw": {
+      "default": null,
+      "unit": "kW",
+      "hard": { "gt": 0, "le": 20000 },
+      "soft": { "min": 100.0, "max": 6000.0 },
+      "status": "estimate",
+      "basis": "The installed propulsion power. none: sized for the design speed with the margin below (the powering ticket, #353; spec 0007 and docs/research/stern-and-tugs.md). A file saved before keeps none: no service speed, as today"
+    },
+    "design_speed_kn": {
+      "default": 9.7,
+      "unit": "kn",
+      "hard": { "gt": 0, "le": 30 },
+      "soft": { "min": 4.0, "max": 14.0 },
+      "status": "sourced",
+      "source": "Spec 0007 and the research note: the CDS 110 and 135 tanker design speed of 18 km/h (9.7 kn)",
+      "basis": "The speed the installed power is sized for (#353), in knots. A file saved before keeps none, as today"
+    },
+    "installed_power_margin": {
+      "default": 1.2,
+      "unit": "-",
+      "hard": { "ge": 1, "le": 3 },
+      "soft": { "min": 1.0, "max": 1.5 },
+      "status": "estimate",
+      "basis": "The installed power over the power for the design speed: 1.20, the value electric_energy already uses (an estimate; spec 0007 and docs/research/stern-and-tugs.md). A file saved before keeps none"
+    },
+    "bow_thruster": {
+      "default": "channel_jet",
+      "status": "sourced",
+      "source": "ES-TRIN 2025, Article 31.03(1), Standard S2: a motor cargo vessel or motor tanker operating separately is equipped with a bow thruster which can be operated from the steering position",
+      "basis": "The bow thruster. A channel jet fits a shallow bow (Beveridge 1971; spec 0007 and docs/research/stern-and-tugs.md). A file saved before keeps none. Inputs only until the machinery ticket (#352)"
+    },
+    "bow_thruster_power_kw": {
+      "default": null,
+      "unit": "kW",
+      "hard": { "gt": 0, "le": 5000 },
+      "soft": { "min": 50.0, "max": 1500.0 },
+      "status": "sourced",
+      "source": "Hekkenberg 2013 (PhD thesis, TU Delft), p. 222: 0.11 kW per m3 of L x B x T as a default value, from statistical data of inland vessels",
+      "basis": "For a fitted bow thruster. none: 0.11 kW per m3 of L x B x T"
+    },
+    "battery_energy_kwh": {
+      "default": null,
+      "unit": "kWh",
+      "hard": { "gt": 0, "le": 100000 },
+      "soft": { "min": 200.0, "max": 20000.0 },
+      "status": "estimate",
+      "basis": "For a battery-electric or battery hybrid Power Source. none: the energy per trip x 1.25 reserve, at 80 % usable (the reserve and the usable share are estimates; LTO cells 90 % usable, Echandia; spec 0007 and docs/research/stern-and-tugs.md). A file saved before keeps none: the unit count, as today"
+    },
+    "trip_length_km": {
+      "default": null,
+      "unit": "km",
+      "hard": { "gt": 0, "le": 10000 },
+      "soft": { "min": 5.0, "max": 2000.0 },
+      "status": "estimate",
+      "basis": "For a battery-electric or battery hybrid Power Source: the length of one trip on one charge (issue #353). With a length, the battery energy follows the energy per trip at the service speed of the most demanding environment, and the battery units or room follow the energy. none: no route, so the battery keeps its unit count (no default length: OVD knows no route)"
+    },
+    "battery_unit_energy_kwh": {
+      "default": 5000,
+      "unit": "kWh",
+      "hard": { "gt": 0, "le": 50000 },
+      "soft": { "min": 1000.0, "max": 10000.0 },
+      "status": "estimate",
+      "basis": "The energy of one 40 ft battery unit: 70 kWh per m3 of room (an estimate) x 76 m3 inside a 40 ft high-cube unit (ISO internal size) (spec 0007 and docs/research/stern-and-tugs.md)"
+    },
+    "wheelhouse_type": {
+      "default": "elevating",
+      "status": "estimate",
+      "basis": "An elevating wheelhouse (as today) or a fixed one, which does not lift (issue #354). A file saved before keeps elevating"
+    },
+    "sightline_method": {
+      "default": "blind_distance",
+      "status": "sourced",
+      "source": "ES-TRIN 2025, Article 7.02(2): the blind distance ahead of the bow, a distance rather than a margin",
+      "basis": "How the wheelhouse sightline is checked: margin (today's check: the eye clears the cargo top by a margin) or blind_distance (the distance ahead hidden by the cargo, the deck units and the bow, ES-TRIN 7.02(2): at most 250 m, unladen; the wheelhouse lifts as far as that needs, up to its maximum lift; issue #354). A file saved before keeps margin"
+    },
+    "stern_block_mass_included": {
+      "default": true,
+      "status": "estimate",
+      "basis": "Whether the stern block's mass (thrusters, machinery, units, wheelhouse) counts in the lightship (the WC-A29 finding; spec 0007). Inputs only until the stern block mass ticket (#348). A file saved before keeps false (0 t), as today"
+    },
+    "loading_conditions": {
+      "default": "is_code_2008",
+      "status": "estimate",
+      "basis": "The loading conditions the stability is checked in. is_code_2008: the four standard conditions of a cargo ship in IMO IS Code 2008 (MSC.267(85)) Part B 3.4.1.2 (fully loaded departure and arrival, in ballast departure and arrival), with stores and fuel and water ballast, as Part A 2.1.1 and 2.1.2 ask (issue #426). legacy: laden, half laden and light, with no consumables and no ballast. The gas arrangement search checks its candidates in the conditions it is given, so is_code_2008 is the default (issue #426). A file saved before keeps legacy"
+    },
+    "may_sail_without_ballast": {
+      "default_by_formation": { "self_propelled": false, "pushed_barge": true, "pushed_convoy": true, "atb": true, "towed_barge": true },
+      "status": "estimate",
+      "basis": "Whether the vessel may sail with no cargo, no consumables and no ballast; if so, the condition \"Lightship, no ballast\" is checked too. A barge may sail empty; a self-propelled vessel sails in ballast (maintainer decision on issue #426)"
+    },
+    "endurance_h": {
+      "default": 72.0,
+      "unit": "h",
+      "hard": { "ge": 0, "le": 10000 },
+      "soft": { "min": 12, "max": 720 },
+      "status": "estimate",
+      "basis": "The running hours of fuel carried at departure. The fuel is the fuel use at the service speed (the design speed, or the maximum speed) times these hours. A battery-electric vessel carries no fuel. An Estimate, not from a source: an expert question on issue #426"
+    },
+    "fixed_stores_t": {
+      "default": 10.0,
+      "unit": "t",
+      "hard": { "ge": 0, "le": 1000 },
+      "soft": { "min": 0, "max": 100 },
+      "status": "estimate",
+      "basis": "Fresh water and provisions at departure, carried in the consumables tanks with the fuel. An Estimate for a small inland crew, not from a source: an expert question on issue #426"
+    },
+    "ballast_plan": {
+      "default": "least_ballast",
+      "status": "sourced",
+      "source": "IMO IS Code 2008 (MSC.267(85)) Part B 3.4.2.3",
+      "basis": "How the ballast conditions are filled: the least ballast that meets every criterion (double bottom first, then the peaks, then the wing tanks, both sides alike, in 5 % steps), or fills set by the user. The result states the quantity and the disposition"
+    },
+    "ballast_departure_double_bottom_fill": {
+      "default": 0.0,
+      "unit": "-",
+      "hard": { "ge": 0, "le": 1 },
+      "status": "estimate",
+      "basis": "The fill of the double-bottom tanks in the ballast departure condition, when the ballast plan is set by the user: 0 empty, 1 pressed full. A fill of 0.98 or more is nominally full and has no free surface (IS Code 2008 Part B 3.1.2)"
+    },
+    "ballast_departure_peak_fill": {
+      "default": 0.0,
+      "unit": "-",
+      "hard": { "ge": 0, "le": 1 },
+      "status": "estimate",
+      "basis": "The fill of the peak tanks (fore peak, and aft peak of a pushed barge) in the ballast departure condition, when the ballast plan is set by the user: 0 empty, 1 pressed full. A fill of 0.98 or more is nominally full and has no free surface (IS Code 2008 Part B 3.1.2)"
+    },
+    "ballast_departure_wing_fill": {
+      "default": 0.0,
+      "unit": "-",
+      "hard": { "ge": 0, "le": 1 },
+      "status": "estimate",
+      "basis": "The fill of the wing tanks in the ballast departure condition, when the ballast plan is set by the user: 0 empty, 1 pressed full. A fill of 0.98 or more is nominally full and has no free surface (IS Code 2008 Part B 3.1.2)"
+    },
+    "ballast_arrival_double_bottom_fill": {
+      "default": 0.0,
+      "unit": "-",
+      "hard": { "ge": 0, "le": 1 },
+      "status": "estimate",
+      "basis": "The fill of the double-bottom tanks in the ballast arrival condition, when the ballast plan is set by the user: 0 empty, 1 pressed full. A fill of 0.98 or more is nominally full and has no free surface (IS Code 2008 Part B 3.1.2)"
+    },
+    "ballast_arrival_peak_fill": {
+      "default": 0.0,
+      "unit": "-",
+      "hard": { "ge": 0, "le": 1 },
+      "status": "estimate",
+      "basis": "The fill of the peak tanks (fore peak, and aft peak of a pushed barge) in the ballast arrival condition, when the ballast plan is set by the user: 0 empty, 1 pressed full. A fill of 0.98 or more is nominally full and has no free surface (IS Code 2008 Part B 3.1.2)"
+    },
+    "ballast_arrival_wing_fill": {
+      "default": 0.0,
+      "unit": "-",
+      "hard": { "ge": 0, "le": 1 },
+      "status": "estimate",
+      "basis": "The fill of the wing tanks in the ballast arrival condition, when the ballast plan is set by the user: 0 empty, 1 pressed full. A fill of 0.98 or more is nominally full and has no free surface (IS Code 2008 Part B 3.1.2)"
+    },
+    "tug_included": {
+      "default": true,
+      "status": "estimate",
+      "basis": "Whether the Formation's results include its tug (the maintainer's decision of 2026-10-20 in spec 0007: a new barge Formation includes it). Inputs only until the Formation powering (#359). A file saved before keeps false: the barge alone, as today"
+    },
+    "tug_preset": {
+      "default": "none",
+      "status": "estimate",
+      "basis": "A Reference Vessel tug, pusher or ATB tug of the research note (sec. 10) whose power, size and propulsor fill the tug inputs, marked reference (ovd_core::tug_presets). none: the tug inputs keep their own values"
+    },
+    "tug_length_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 200 },
+      "soft": { "min": 10.0, "max": 60.0 },
+      "status": "estimate",
+      "basis": "none: a pusher 19.5 x (P / 1,400 kW)^0.67, an ATB tug 0.28 x the barge length, a towing tug 23 x (P / 3,000 kW)^0.45, fitted to the reference pushers and tugs (spec 0007, section Formation and Tug; docs/research/stern-and-tugs.md); the sizing comes with #359"
+    },
+    "tug_beam_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 50 },
+      "soft": { "min": 5.0, "max": 20.0 },
+      "status": "estimate",
+      "basis": "none: a pusher 9.5 x (P / 1,400 kW)^0.45, an ATB tug 0.53 x the barge beam, a towing tug L / 2.5 (spec 0007, section Formation and Tug; docs/research/stern-and-tugs.md); the sizing comes with #359"
+    },
+    "tug_draught_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 15 },
+      "soft": { "min": 1.0, "max": 7.0 },
+      "status": "estimate",
+      "basis": "none: a pusher 2.0 m capped by the draught limit (reference pushers 1.4 to 2.65 m), an ATB tug B / 2.33 (the mean tug B/T of Yanakiev 2025 sec. 4.1, sourced), a towing tug 0.42 x B (spec 0007, section Formation and Tug; docs/research/stern-and-tugs.md)"
+    },
+    "tug_stern_form": {
+      "default_by_formation": { "pushed_barge": "tunnel", "pushed_convoy": "tunnel", "atb": "transom", "towed_barge": "transom" },
+      "status": "estimate",
+      "basis": "A pusher has a tunnel stern, an ATB tug and a towing tug a transom stern, as the reference pushers, ATB tugs and ASD tugs (spec 0007, section Formation and Tug; docs/research/stern-and-tugs.md)"
+    },
+    "tug_stern_run_length_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 100 },
+      "soft": { "min": 2.0, "max": 40.0 },
+      "status": "estimate",
+      "basis": "none: the rule of the tug's Stern Form, as stern_run_length_m (spec 0007)"
+    },
+    "tug_stern_transom_height_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 20 },
+      "soft": { "min": 0.0, "max": 8.0 },
+      "status": "estimate",
+      "basis": "none: the rule of the tug's Stern Form, as stern_transom_height_m (spec 0007)"
+    },
+    "tug_tunnel_crown_height_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 10 },
+      "soft": { "min": 0.5, "max": 4.0 },
+      "status": "estimate",
+      "basis": "none: D + 0.10 D, as tunnel_crown_height_m (spec 0007)"
+    },
+    "tug_propulsor_type": {
+      "default_by_formation": { "pushed_barge": "shaft_nozzle", "pushed_convoy": "shaft_nozzle", "atb": "azimuth_ducted", "towed_barge": "azimuth_ducted" },
+      "status": "estimate",
+      "basis": "A pusher has shafts in nozzles (the reference pushers, twin and triple screw), an ATB tug and a towing tug ducted azimuth units (the ATB tugs and ASD tugs) (spec 0007, section Formation and Tug; docs/research/stern-and-tugs.md)"
+    },
+    "tug_propulsor_count": {
+      "default": 2,
+      "unit": "propulsors",
+      "hard": { "ge": 1, "le": 4 },
+      "soft": { "min": 1.0, "max": 3.0 },
+      "status": "estimate",
+      "basis": "Twin drive, as the reference pushers and tugs; spec 0007 gives three above 2,500 kW, which the tug sizing (#359) applies (spec 0007, section Formation and Tug; docs/research/stern-and-tugs.md)"
+    },
+    "tug_propeller_diameter_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 10 },
+      "soft": { "min": 0.8, "max": 4.0 },
+      "status": "estimate",
+      "basis": "none: the largest the tug's stern allows, as propeller_diameter_m (spec 0007)"
+    },
+    "tug_power_source": {
+      "default": "diesel_mechanical",
+      "status": "estimate",
+      "basis": "Diesel-mechanical, as most reference pushers, ATB tugs and towing tugs (spec 0007, section Formation and Tug; docs/research/stern-and-tugs.md)"
+    },
+    "tug_installed_power_kw": {
+      "default": null,
+      "unit": "kW",
+      "hard": { "gt": 0, "le": 30000 },
+      "soft": { "min": 300.0, "max": 10000.0 },
+      "status": "estimate",
+      "basis": "none: the Formation's resistance at its design speed x the margin sets the tug's power (the Formation powering, #359; spec 0007)"
+    },
+    "tug_design_speed_kn": {
+      "default": 9.7,
+      "unit": "kn",
+      "hard": { "gt": 0, "le": 30 },
+      "soft": { "min": 3.0, "max": 15.0 },
+      "status": "estimate",
+      "basis": "The speed the Formation's tug is sized for: the design speed of the self-propelled reference ships, 18 km/h, an estimate for a Formation until the convoy cases (#359) fit one"
+    },
+    "tug_installed_power_margin": {
+      "default": 1.2,
+      "unit": "-",
+      "hard": { "ge": 1, "le": 3 },
+      "soft": { "min": 1.0, "max": 1.5 },
+      "status": "estimate",
+      "basis": "The tug's installed power over the power for the design speed: 1.20, as installed_power_margin (an estimate; spec 0007)"
+    },
+    "tug_bow_thruster": {
+      "default": "none",
+      "status": "estimate",
+      "basis": "A pusher steers with its flanking and steering rudders (research note sec. 5); no bow thruster on the tug"
+    },
+    "tug_bow_thruster_power_kw": {
+      "default": null,
+      "unit": "kW",
+      "hard": { "gt": 0, "le": 5000 },
+      "soft": { "min": 50.0, "max": 1000.0 },
+      "status": "estimate",
+      "basis": "For a fitted bow thruster. none: 0.11 kW per m3 of L x B x T, as bow_thruster_power_kw"
+    },
+    "tug_battery_energy_kwh": {
+      "default": null,
+      "unit": "kWh",
+      "hard": { "gt": 0, "le": 100000 },
+      "soft": { "min": 200.0, "max": 20000.0 },
+      "status": "estimate",
+      "basis": "For a battery Power Source. none: the energy per trip, as battery_energy_kwh"
+    },
+    "tug_battery_unit_energy_kwh": {
+      "default": 5000,
+      "unit": "kWh",
+      "hard": { "gt": 0, "le": 50000 },
+      "soft": { "min": 1000.0, "max": 10000.0 },
+      "status": "estimate",
+      "basis": "The energy of one 40 ft battery unit, as battery_unit_energy_kwh"
+    },
+    "tug_wheelhouse_type": {
+      "default": "elevating",
+      "status": "estimate",
+      "basis": "An elevating wheelhouse, as the reference pushers (an eye of 11 m on 19 m pushers; research note sec. 9.3)"
+    },
+    "tug_sightline_method": {
+      "default": "blind_distance",
+      "status": "estimate",
+      "basis": "The Blind Distance over the convoy (ES-TRIN 7.02(2)), as sightline_method for a new Option"
+    },
+    "formation_resistance_allowance": {
+      "default_by_formation": { "pushed_barge": 1.6, "pushed_convoy": 1.6, "atb": 1.05, "towed_barge": 1.0 },
+      "unit": "-",
+      "hard": { "gt": 0, "le": 3 },
+      "soft": { "min": 0.8, "max": 2.0 },
+      "status": "estimate",
+      "basis": "The Formation's resistance over that of its Equivalent Hull: an ATB 1.05, from \"rigidly linked ... 5 % increase in resistance compared to equivalent ships\" (Yanakiev 2025 Table 3), applied to ATBs as an estimate; pushed 1.6, an estimate: fitted to one vessel, so that the pusher the Formation loop sizes for the SDP 4600 convoy (16 barges) has its published power; the convoy speed is assumed at 7 kn, because the sources print no convoy speed; the held-out CDS 4115 misses by -12.4 % (calibration/formation_cases.yaml, calibration/formation_results.md); towed 1.00, an estimate with no calibration (spec 0007)"
+    },
+    "notch_depth_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 60 },
+      "soft": { "min": 3.0, "max": 30.0 },
+      "status": "estimate",
+      "basis": "The Notch of an ATB barge. none: 0.50 x the tug length (one deep-notch ATB, derived; spec 0007)"
+    },
+    "notch_width_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 40 },
+      "soft": { "min": 3.0, "max": 25.0 },
+      "status": "estimate",
+      "basis": "The Notch of an ATB barge. none: the tug beam + 2 x 0.15 m (coupler clearance, an estimate; spec 0007)"
+    },
+    "water_density_t_per_m3": {
+      "default": 1.0,
+      "unit": "t/m3",
+      "hard": { "ge": 0.9, "le": 1.1 },
+      "soft": { "min": 0.99, "max": 1.03 },
+      "basis": "fresh water, as the original engine; sea water is about 1.025. One value is used for the draught of the hull, the stability and the resistance curves"
+    },
+    "squat_safety_margin_m": {
+      "default": 0.15,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 5 },
+      "soft": { "min": 0.05, "max": 0.5 },
+      "basis": "carried over from the original engine: the under-keel clearance kept below the squatted keel. It limits the speed in a channel; deep water has no squat limit"
+    },
+    "hull_steel_rate": {
+      "default": 2500.0,
+      "unit": "per t",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate for fabricated hull structure; also used for the tug hull. Not a market quote: replace with your own"
+    },
+    "tank_shell_rate": {
+      "default": 10000.0,
+      "unit": "per t",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate for the Type C pressure-vessel shell and heads. Not a market quote: replace with your own"
+    },
+    "tank_supports_rate": {
+      "default": 2000.0,
+      "unit": "per t",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate for saddles, anti-flotation and internals. Not a market quote: replace with your own"
+    },
+    "tank_internals_fraction": {
+      "default": 0.5,
+      "unit": "-",
+      "hard": { "ge": 0, "le": 1 },
+      "status": "estimate",
+      "basis": "The share of the tank structure surplus (tank shells x (structure factor - 1)) that is stiffeners and ring frames in tank steel, priced at the tank shell rate; the rest, the saddles, is priced at the supports rate. An assumption: no source read gives the split (the rule-source library has no component breakdown of a marine Type C tank). A sourced value replaces it when found. 0 prices the whole surplus at the supports rate, as before (issue #402)"
+    },
+    "insulation_rate": {
+      "default": 4000.0,
+      "unit": "per t",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate for the installed insulation system, per tonne equivalent. Not a market quote: replace with your own"
+    },
+    "piping_rate": {
+      "default": 4500.0,
+      "unit": "per t",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate for piping and machinery. Not a market quote: replace with your own"
+    },
+    "outfitting_rate": {
+      "default": 4000.0,
+      "unit": "per t",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate for outfitting. Not a market quote: replace with your own"
+    },
+    "cargo_system_lump": {
+      "default": 500000.0,
+      "unit": "per unit",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate lump sum per unit for pumps, manifold, ESD, relief and gauging. Not a market quote: replace with your own"
+    },
+    "paint_anodes_misc": {
+      "default": 100000.0,
+      "unit": "per unit",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate lump sum per unit. Not a market quote: replace with your own"
+    },
+    "battery_rate_per_kwh": {
+      "default": 250.0,
+      "unit": "per kWh",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate per kWh installed in the tug. Not a market quote: replace with your own"
+    },
+    "propulsion_rate_per_kw": {
+      "default": 1000.0,
+      "unit": "per kW",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate per kW installed in the tug: thrusters, drives, switchboard. Not a market quote: replace with your own"
+    },
+    "wheelhouse_accom_lump": {
+      "default": 450000.0,
+      "unit": "per unit",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate lump sum per unit for wheelhouse, crew spaces, navigation and controls. Not a market quote: replace with your own"
+    },
+    "tug_outfitting_lump": {
+      "default": 200000.0,
+      "unit": "per unit",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate lump sum per unit. Not a market quote: replace with your own"
+    },
+    "yard_margin_fraction": {
+      "default": 0.1,
+      "unit": "-",
+      "hard": { "ge": 0, "le": 1 },
+      "basis": "example rate fraction of the barge and tug subtotal, for engineering, class, trials and margin. Not a market quote: replace with your own"
+    },
+    "currency": {
+      "default": "USD",
+      "basis": "The currency of the rates and of every amount in the capital budget. A three-letter code in capitals. The example rates are in USD: type your own rates when you change it. Nothing converts a currency"
+    },
+    "price_base_date": {
+      "default": null,
+      "basis": "The date the rates are priced at: YYYY, YYYY-MM or YYYY-MM-DD. none: the example rates are current estimates with no set price base date, and the capital budget says so"
+    },
+    "delivery_lump": {
+      "default": 200000.0,
+      "unit": "per unit",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate lump sum per unit for the delivery voyage or heavy lift. Not a market quote: replace with your own"
+    },
+    "tank_coating_rate": {
+      "default": 40.0,
+      "unit": "per m2",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate for the cargo tank coating, per m2 of the inside surface of the cargo and slop tanks (tank barges only). Not a market quote: replace with your own"
+    },
+    "cargo_pump_lump": {
+      "default": 150000.0,
+      "unit": "per pump",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate lump sum for one cargo pump, one for each cargo tank (tank barges only). Not a market quote: replace with your own"
+    },
+    "cargo_piping_lump": {
+      "default": 400000.0,
+      "unit": "per unit",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate lump sum per unit for the cargo piping system (tank barges only). Not a market quote: replace with your own"
+    },
+    "cargo_heating_rate_per_kw": {
+      "default": 500.0,
+      "unit": "per kW",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate per kW of installed cargo heating (tank barges only). Not a market quote: replace with your own"
+    },
+    "vents_gauging_lump": {
+      "default": 25000.0,
+      "unit": "per tank",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate lump sum for the vents and gauging of one cargo tank (tank barges only). Not a market quote: replace with your own"
+    }
+  }
+}

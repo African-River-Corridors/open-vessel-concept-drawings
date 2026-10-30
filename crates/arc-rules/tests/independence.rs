@@ -33,7 +33,7 @@ fn the_kernel_depends_on_no_domain_crate() {
     let deps = dependencies(&manifest);
     assert_eq!(deps, ["serde_json", "sha2"], "{deps:?}");
     assert!(
-        !manifest.contains("ovcd"),
+        !manifest.contains("ovd"),
         "the manifest names a domain crate"
     );
 }
@@ -47,7 +47,7 @@ fn the_kernel_source_names_no_domain_crate() {
                 continue;
             }
             let text = std::fs::read_to_string(&path).unwrap();
-            for word in ["ovcd_core", "ovcd_format", "ovcd-core", "ovcd-format"] {
+            for word in ["ovd_core", "ovd_format", "ovd-core", "ovd-format"] {
                 assert!(!text.contains(word), "{} names `{word}`", path.display());
             }
         }

@@ -1,5 +1,5 @@
-import OvcdRules
-open OvcdRules
+import OvdRules
+open OvdRules
 -- CI fails if any theorem below uses `sorryAx`. Allowed: propext, Classical.choice, Quot.sound.
 #print axioms atLeastAsStrict_total
 #print axioms atLeastAsStrict_trans

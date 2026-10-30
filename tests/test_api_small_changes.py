@@ -6,10 +6,10 @@ import math
 
 import pytest
 
-from vessel_designer.core import barge_capacity as B
-from vessel_designer.core import cargo, gas_arrangement
-from vessel_designer.core import protective_location as PL
-from vessel_designer.simulate import simulate
+from ovd.core import barge_capacity as B
+from ovd.core import cargo, gas_arrangement
+from ovd.core import protective_location as PL
+from ovd.simulate import simulate
 
 # `max_tank_od_m` is the 12 m tank diameter cap of 0.1.0: it is an input, 16 m by default, since
 # issue #175, and the numbers in this file were printed by 0.1.0.
@@ -129,7 +129,7 @@ def test_the_core_modules_no_longer_claim_to_run_in_pyodide():
     # Issue #142: these modules call the Rust core now.
     """Label: property"""
     from pathlib import Path
-    core = Path(__file__).resolve().parents[1] / "src" / "vessel_designer" / "core"
+    core = Path(__file__).resolve().parents[1] / "src" / "ovd" / "core"
     names = ("barge_cost", "design_grid", "electric_energy", "gas_separation", "squat", "waves",
              "aft_arrangement", "vessel_standards")
     assert core.is_dir(), "scanning nothing"

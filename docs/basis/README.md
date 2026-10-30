@@ -4,19 +4,19 @@ Status: draft design. The pages in this folder are first drafts and need expert 
 
 ## Purpose
 
-These pages tell a domain expert what OVCD assumes, which rules it applies, and how it estimates values that no
+These pages tell a domain expert what OVD assumes, which rules it applies, and how it estimates values that no
 rule gives. A naval architect, a gas containment engineer or a cost engineer reads the page for their area and can
 answer three questions:
 
-1. What does OVCD compute here, and by which method?
+1. What does OVD compute here, and by which method?
 2. Which values come from a rule, which come from a published source, and which are estimates?
-3. Where is OVCD wrong, too simple or not yet checked?
+3. Where is OVD wrong, too simple or not yet checked?
 
 The pages describe what the code does **today**, and each statement points to the code or data that does it. The
 pages do not say what the code should do. Proposed changes go in a separate file per area (see "Proposals" below),
 so a reviewer can tell fact from proposal.
 
-OVCD is for concept and preliminary design, never for approval (ADR 0011). Every page says so in its first lines.
+OVD is for concept and preliminary design, never for approval (ADR 0011). Every page says so in its first lines.
 
 ## Labels
 
@@ -62,12 +62,12 @@ Each page follows this structure. Keep the headings, so the pages read the same.
 
 **For:** <discipline>  ·  **Code:** <main modules>  ·  **Rule Sets:** <ids, if any>
 
-## What OVCD computes here
+## What OVD computes here
 <Outputs, in a short list, with the result names a user sees.>
 
 ## How it works today
 <The method, step by step. Formulas in plain notation with units. Each step names its code location
-(`crates/ovcd-core/src/<file>.rs`) and its label.>
+(`crates/ovd-core/src/<file>.rs`) and its label.>
 
 ## Assumptions, rules and estimates
 | Id | Item | Value or method | Label | Source or basis | Where applied | If it is wrong |
@@ -93,7 +93,7 @@ tanks under 500 m³?">
 
 Each area has a companion file `proposals/<nn>-<slug>.md`. It is not published. It lists:
 
-- **Gaps:** what an expert would expect that OVCD does not do.
+- **Gaps:** what an expert would expect that OVD does not do.
 - **Errors:** places where the code and its cited source disagree. Each one needs the code location and the
   source paragraph. These become findings for the register (#121) after maintainer triage.
 - **Changes:** proposed improvements, each with its effect on results (none, small, large) and its order of work.

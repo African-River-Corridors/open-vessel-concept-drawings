@@ -13,14 +13,14 @@ def used(key: str) -> set:
 
 
 def test_every_cargo_in_the_database_is_in_the_case_set():
-    src = (ROOT / "crates/ovcd-core/src/cargo.rs").read_text(encoding="utf-8")
+    src = (ROOT / "crates/ovd-core/src/cargo.rs").read_text(encoding="utf-8")
     keys = set(re.findall(r'^        "([A-Za-z_]+)",$', src, re.M))
     assert {"LNG", "LNG_ethane", "LPG_propane", "LPG_butane", "LPG_mix", "bauxite"} <= keys
     assert keys <= used("cargo"), keys - used("cargo")
 
 
 def test_every_input_of_an_option_is_in_the_case_set():
-    src = (ROOT / "crates/ovcd-format/src/vdesign.rs").read_text(encoding="utf-8")
+    src = (ROOT / "crates/ovd-format/src/vdesign.rs").read_text(encoding="utf-8")
     inputs = set(re.findall(r'(?:spec|only)\(\s*"([a-z0-9_]+)"', src))
     assert len(inputs) >= 20
     in_cases = set().union(*(v.keys() for v in di.cases().values()))
@@ -85,7 +85,7 @@ def test_a_1e_6_move_is_visible_in_the_table():
 def test_a_base_that_refuses_a_new_input_is_run_without_it(tmp_path):
     """The base binary of a design-impact run may predate an input (issue #4). `run_case` leaves out
     an input the binary refuses by name, so the case still runs on it."""
-    fake = tmp_path / "ovcd"
+    fake = tmp_path / "ovd"
     fake.write_text(
         '#!/bin/sh\n'
         'if [ "$1" = fill ]; then\n'
@@ -108,7 +108,7 @@ def test_a_base_from_before_the_as_new_flag_is_filled_without_it(tmp_path):
     Label: property
     """
     log = tmp_path / "calls.txt"
-    fake = tmp_path / "ovcd"
+    fake = tmp_path / "ovd"
     fake.write_text(
         '#!/bin/sh\n'
         f'echo "$@" >> {log}\n'

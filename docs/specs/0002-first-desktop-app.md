@@ -4,7 +4,7 @@ Status: **approved by the maintainer, 2026-10-14.**
 
 ## Problem Statement
 
-The Rust core is complete (spec 0001), but the only way to use it is the `ovcd` command-line tool.
+The Rust core is complete (spec 0001), but the only way to use it is the `ovd` command-line tool.
 To test a design, the maintainer writes JSON by hand in a text editor, runs a command, and reads
 text output. There is no picture of the hull, no chart of speed and power, and no easy way to see
 how a change to one input moves the results. Comparing two Options means reading two blocks of
@@ -34,8 +34,8 @@ A Tauri desktop app (ADR 0006) with three panels:
 Results update live: every change to an input re-evaluates the Design. A run takes milliseconds.
 
 The app holds no calculation and no validation logic. It gets everything, including the list of
-inputs and their ranges, from one Rust interface on top of `ovcd-format`. That interface gives the
-same results as `ovcd run --json` for the same file.
+inputs and their ranges, from one Rust interface on top of `ovd-format`. That interface gives the
+same results as `ovd run --json` for the same file.
 
 **Sequence.** The Drawing Format Standard is written first, as its own spec in the drawing tool's
 repo, and covers a full sheet. This spec is built in parallel with it. The app shell, inputs,
@@ -47,11 +47,11 @@ last ticket of this spec, and the standard blocks it.
 
 ### Files
 1. As the maintainer, I want to start a new Design from the app, so that I can test a design without writing JSON.
-2. As the maintainer, I want the new Design to have one Option with the same starter inputs as `ovcd new`, so that the app and the command-line tool agree.
+2. As the maintainer, I want the new Design to have one Option with the same starter inputs as `ovd new`, so that the app and the command-line tool agree.
 3. As the maintainer, I want to open an existing `.vdesign` file, so that I can test designs I made with the command-line tool.
-4. As the maintainer, I want to open a hand-written file that leaves out inputs, and have them filled in from the Defaults Profile and marked "default", as `ovcd fill` does, so that I can open any valid file.
+4. As the maintainer, I want to open a hand-written file that leaves out inputs, and have them filled in from the Defaults Profile and marked "default", as `ovd fill` does, so that I can open any valid file.
 5. As the maintainer, I want to save the Design to a `.vdesign` file, so that I can keep it and run it with the command-line tool.
-6. As the maintainer, I want a saved file to pass `ovcd validate` and give the same results with `ovcd run`, so that I can trust the file.
+6. As the maintainer, I want a saved file to pass `ovd validate` and give the same results with `ovd run`, so that I can trust the file.
 7. As the maintainer, I want each Option's results hash saved with the file, so that a later engine change shows up when I open it.
 8. As the maintainer, I want a warning when I open a file whose results changed since it was saved, so that I know the engine moved.
 9. As the maintainer, I want a warning before I close or open another file with unsaved changes, so that I don't lose work.
@@ -129,30 +129,30 @@ last ticket of this spec, and the standard blocks it.
 69. As the maintainer, I want numbers shown with sensible rounding and full precision on hover, so that the panel is readable but exact values are there.
 
 ### Agents and the command-line tool
-70. As an agent, I want the same machine-readable input schema the app uses from a command (`ovcd schema`), so that I can build valid Designs without reading Rust.
+70. As an agent, I want the same machine-readable input schema the app uses from a command (`ovd schema`), so that I can build valid Designs without reading Rust.
 71. As a developer, I want all app logic behind one Rust interface that needs no Tauri and no screen, so that it is tested like the command-line tool.
 
 ## Implementation Decisions
 
 ### Modules
-- **Design session (new module in `ovcd-format`).** The one seam between the app and the engine.
+- **Design session (new module in `ovd-format`).** The one seam between the app and the engine.
   It has no Tauri dependency and no file, clock or screen access. It takes and returns strings and
   values; the app shell does all file reading and writing. Its interface:
   - *input schema*: for a Defaults Profile, every input with its kind, unit, valid choices, display
     names, whether it is required, which Cargo Containments it applies to, its group, its default,
     hard and soft ranges, and basis. Built from the existing input table and the profile, so there
     is one source.
-  - *new design*: the same starter Design as `ovcd new`.
-  - *open*: parse a `.vdesign` text, fill left-out inputs as `ovcd fill` does, and report results-hash
+  - *new design*: the same starter Design as `ovd new`.
+  - *open*: parse a `.vdesign` text, fill left-out inputs as `ovd fill` does, and report results-hash
     status per Option.
   - *edit*: set an input (marks it typed), reset an input to its default, set the Formation, and add,
     duplicate, rename and delete Options. Each edit returns the new Design state.
   - *evaluate*: validate and run every Option. Per Option it returns per-input hard errors and soft
-    warnings, cross-check messages, and either the results (the same JSON object `ovcd run --json`
+    warnings, cross-check messages, and either the results (the same JSON object `ovd run --json`
     gives) or the engine's message.
   - *save*: the `.vdesign` text with each computed Option's results hash.
   - *load profile*: parse a Defaults Profile, refusing one that loosens a hard range.
-- **`ovcd schema` command (CLI).** Prints the input schema as JSON. Same function as the app uses.
+- **`ovd schema` command (CLI).** Prints the input schema as JSON. Same function as the app uses.
 - **App shell (new Tauri crate in the workspace).** Thin. Tauri commands that forward to the Design
   session, plus native open and save dialogs, the unsaved-changes guard and the window title. No
   calculation, validation or default logic.
@@ -171,7 +171,7 @@ last ticket of this spec, and the standard blocks it.
 - **Hard error.** The edit is kept in the Design, so the field shows what was typed. The Option's
   results are not recomputed; the last good results stay on screen marked "out of date".
 - **Inputs that do not apply** to the active Cargo Containment are hidden, not deleted. The file
-  keeps them as `ovcd fill` would.
+  keeps them as `ovd fill` would.
 - **Groups.** Required inputs; Hull and containment; Gas tanks (type C tanks only); Waterway Limits
   (channel depth, bottom width, under-keel clearance, bank slope, current, draught limit, air-draft
   limit); Speed and power. The group of each input comes from the input schema, not from the front
@@ -187,20 +187,20 @@ last ticket of this spec, and the standard blocks it.
 - **A good test** checks behaviour a user or an agent can see: a Design in, results and messages
   out. It does not check how the session stores its state.
 - **The Design session** is tested in Rust, like the command-line tool's tests:
-  - For every example Design, *evaluate* gives exactly the results `ovcd run --json` gives.
-  - *new design* equals `ovcd new`; *open* of a hand-written file equals `ovcd fill`.
-  - A saved Design passes `ovcd validate` and round-trips through *open* unchanged.
-  - Hard-range, soft-range and cross-check cases give the same messages as `ovcd validate`.
+  - For every example Design, *evaluate* gives exactly the results `ovd run --json` gives.
+  - *new design* equals `ovd new`; *open* of a hand-written file equals `ovd fill`.
+  - A saved Design passes `ovd validate` and round-trips through *open* unchanged.
+  - Hard-range, soft-range and cross-check cases give the same messages as `ovd validate`.
   - Each edit operation, including deleting the last Option (refused) and loading a profile that
     loosens a hard range (refused).
   - The input schema lists every input in the input table, with ranges equal to the profile's.
-- **`ovcd schema`** has one command test: its output equals the session's input schema.
+- **`ovd schema`** has one command test: its output equals the session's input schema.
 - **The design-impact check** (spec 0001, ticket 28) covers results; this spec changes no results.
 - **The app** gets a few end-to-end smoke tests on the built app, run in CI on Linux through
   Tauri's WebDriver support: open a file, edit an input and see an output change, enter a value
   outside the hard range and see the error, switch Option, save and re-open. No per-component tests.
-- **Prior art:** the `ovcd-cli` tests (`new` output passes `validate`, `fill` refuses a file with a
-  hard error) and the `ovcd-format` validation tests.
+- **Prior art:** the `ovd-cli` tests (`new` output passes `validate`, `fill` refuses a file with a
+  hard error) and the `ovd-format` validation tests.
 
 ## Out of Scope
 
@@ -217,7 +217,7 @@ last ticket of this spec, and the standard blocks it.
 
 ## Further Notes
 
-- **Suggested tickets, in order:** (1) Design session and input schema, with `ovcd schema`;
+- **Suggested tickets, in order:** (1) Design session and input schema, with `ovd schema`;
   (2) app shell with open, save and the unsaved-changes guard; (3) left panel; (4) bottom panel and
   compare table; (5) main panel with the scroll and jump dropdown, empty hull view slots, and
   speed-power curves; (6) stability view; (7) smoke tests in CI; (8) hull views, blocked by the

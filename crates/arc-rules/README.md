@@ -6,14 +6,14 @@ requirement, and the verdict. Of the Rules on one Measure, one object and one di
 strictest governs. No Rule loosens another.
 
 The crate knows no domain. The caller declares its object types, its Measures, the inputs a Rule
-may depend on, and any formula shapes. Open Vessel Concept Drawings (OVCD) is the first user; its
-vessel rules live in OVCD's own crates, not here.
+may depend on, and any formula shapes. Open Vessel Designer (OVD) is the first user; its
+vessel rules live in OVD's own crates, not here.
 
 - `no_std` with `alloc`. No file, clock, environment or randomness access.
 - With no features the crate has no dependency. The `load` feature (on by default) adds the Rule
   Set loader, the content hash and the library, with `serde_json` and `sha2` (both without `std`).
 - Design records: ADR 0013 (rules are versioned Rule Sets), ADR 0014 (the Lean model) and
-  ADR 0019 (this crate). The full model is spec 0004 of the OVCD repository.
+  ADR 0019 (this crate). The full model is spec 0004 of the OVD repository.
 
 ## Schema 1.x is frozen
 

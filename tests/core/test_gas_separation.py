@@ -1,5 +1,5 @@
 """Gas-code longitudinal separation — golden, property and feasibility checks."""
-from vessel_designer.core.gas_separation import (COFFERDAM_MIN_M, OPENING_SETBACK_M,
+from ovd.core.gas_separation import (COFFERDAM_MIN_M, OPENING_SETBACK_M,
                                           GasSeparationInputs, compute)
 
 

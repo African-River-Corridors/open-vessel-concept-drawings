@@ -60,9 +60,9 @@ app-notice-title = Before you start
 app-notice-version = Version
 app-notice-licence = Licence
 app-notice-scope = Concept design. Results are not verified.
-app-notice-tool = OVCD is a concept design tool.
+app-notice-tool = OVD is a concept design tool.
 app-notice-unverified = Its results are not verified. Known engineering findings are under review.
-app-notice-warranty = There is no warranty. OVCD is open source under the Apache License 2.0.
+app-notice-warranty = There is no warranty. OVD is open source under the Apache License 2.0.
 app-notice-accept = I understand
 
 ## Left panel: Options and the Defaults Profile
@@ -257,7 +257,7 @@ app-rules-governing = Governing
 app-rules-governing-hint = The strictest Rule of its requirement: it decides whether the requirement is met.
 app-rules-sizes = Sizes the arrangement
 app-rules-finding = Finding { $finding }
-app-rules-ovcd-check = OVCD Check
+app-rules-ovd-check = OVD Check
 app-rules-verified = Verified
 app-rules-unverified = Unverified
 app-rules-method-unverified = Method unverified
@@ -354,7 +354,7 @@ app-cost-item-wheelhouse-accommodation = Wheelhouse and accommodation
 
 ## The splash screen
 
-app-splash-starting = OVCD is starting
+app-splash-starting = OVD is starting
 app-splash-tagline = An open instrument for the { $design } of inland and coastal vessels.
 app-splash-tagline-design = concept and preliminary design
 app-splash-state = State

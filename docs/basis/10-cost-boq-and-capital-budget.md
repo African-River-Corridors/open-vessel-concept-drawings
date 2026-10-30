@@ -4,13 +4,13 @@
 >
 > Code state: written against `main` at commit `f6d446c` (2026-10-20).
 
-**For:** Cost engineer  ·  **Code:** `crates/ovcd-core/src/barge_cost.rs`, `crates/ovcd-format/src/cost.rs`, `crates/ovcd-core/src/weights.rs`, `app/src/lib/views/CapitalBudget.svelte`  ·  **Rule Sets:** none
+**For:** Cost engineer  ·  **Code:** `crates/ovd-core/src/barge_cost.rs`, `crates/ovd-format/src/cost.rs`, `crates/ovd-core/src/weights.rs`, `app/src/lib/views/CapitalBudget.svelte`  ·  **Rule Sets:** none
 
-OVCD is a concept and preliminary design tool (ADR 0011). The capital budget on this page is a bottom-up
+OVD is a concept and preliminary design tool (ADR 0011). The capital budget on this page is a bottom-up
 order-of-magnitude figure for one unit. Its rates are examples, not market prices. Do not use it for a budget
 approval, a bid or a contract.
 
-## What OVCD computes here
+## What OVD computes here
 
 For a gas Option only (a Hull with Type C tanks), each run gives a `cost` results key. The app shows it in
 **BOQ & Finance → Capital budget**:
@@ -24,30 +24,30 @@ For a gas Option only (a Hull with Type C tanks), each run gives a `cost` result
   this design and which are core defaults.
 - Notes from three checks (see CB-A44 to CB-A46).
 
-What OVCD does **not** compute today:
+What OVD does **not** compute today:
 
 - **No bill of quantities.** The "BOQ" view is a placeholder: "The bill of quantities comes in a later phase"
   (`app/src/lib/MainPanel.svelte`, lines 160-163).
 - **No budget for other Cargos.** For a dry bulk Option, `cost` is null and the app shows "Work in
-  development" (`CapitalBudget.svelte`, lines 58-62; `crates/ovcd-format/src/simulate.rs`, line 809).
+  development" (`CapitalBudget.svelte`, lines 58-62; `crates/ovd-format/src/simulate.rs`, line 809).
 - **No contingency, escalation, owner's costs, financing or running cost.**
 
 ## How it works today
 
 1. **Masses (quantities).** The gas capacity calculation runs `calculate_weights`
-   (`crates/ovcd-core/src/barge_capacity.rs`, line 571) on a plain box hull (no rakes, line 570).
-   `cost::gas_masses` (`crates/ovcd-format/src/cost.rs`, lines 74-99) copies eight masses from the
+   (`crates/ovd-core/src/barge_capacity.rs`, line 571) on a plain box hull (no rakes, line 570).
+   `cost::gas_masses` (`crates/ovd-format/src/cost.rs`, lines 74-99) copies eight masses from the
    `WeightBreakdown` into the cost inputs. The three tug quantities keep the core's defaults, because the
    engine does not size the tug. `simulate` writes the result as `cost_masses`
-   (`crates/ovcd-format/src/simulate.rs`, line 1095). Label: **Method** (masses), **Fixed in code** (tug).
-2. **How each mass is derived** (`crates/ovcd-core/src/weights.rs`, `calculate_weights`). Label: **Method**,
+   (`crates/ovd-format/src/simulate.rs`, line 1095). Label: **Method** (masses), **Fixed in code** (tug).
+2. **How each mass is derived** (`crates/ovd-core/src/weights.rs`, `calculate_weights`). Label: **Method**,
    with the factors below as **Fixed in code** or **Estimate**:
    - Hull steel (bottom-up) = plating × structure factor (2.0 on a gas barge, an Estimate; see page 02). Plating = Σ (area × thickness × 7.85 t/m³) for
      bottom, side, deck and rakes (lines 51-72).
    - Wing plate = deck-thickness plate over the beam less the tank chord cut-outs in the tank zone, full beam
      outside it, plus any side extension (lines 81-122).
    - Weather shield = (top + two sides + two ends) area × 6 mm × 7.85 t/m³ (lines 124-149).
-   - Tank shells = shell volume × tank material density (`crates/ovcd-core/src/tanks.rs`, lines 213-222).
+   - Tank shells = shell volume × tank material density (`crates/ovd-core/src/tanks.rs`, lines 213-222).
    - Tank supports = tank shells × (tank structure factor − 1) (`weights.rs`, line 77). This mass also holds
      the tank stiffeners and ring frames (comment, line 76). The budget prices it in two parts (issue #402):
      the share `tank_internals_fraction` (default 0.5) at the tank shell rate, as stiffeners and ring frames in
@@ -62,7 +62,7 @@ What OVCD does **not** compute today:
 3. **Rates.** `cost::rates_of` (`cost.rs`, lines 37-43) starts from the compiled-in example rates file
    (`examples/barge_cost_rates.example.yaml`) and sets the 14 numeric rates from the Option's "Cost rates"
    inputs. The currency comes from the example file and is not an input. Label: **Estimate** (each rate).
-4. **Line amounts** (`crates/ovcd-core/src/barge_cost.rs`, `compute`, lines 346-365). Each line is
+4. **Line amounts** (`crates/ovd-core/src/barge_cost.rs`, `compute`, lines 346-365). Each line is
    mass × rate, or a lump sum. Label: **Method**.
 5. **Subtotals, margin, total** (`barge_cost.rs`, lines 368-371):
    - Barge subtotal = Σ barge lines; Tug subtotal = Σ tug lines (compensated sum, as Python does).
@@ -73,7 +73,7 @@ What OVCD does **not** compute today:
    (`barge_cost.rs`, lines 401-412). The total is rounded from the unrounded sum, so the shown lines can differ
    from the total by up to one unit per line. Delivery is passed through unrounded. Label: **Method**.
 7. **Output.** `cost::cost_of` (`cost.rs`, lines 151-160) puts the result in `cost`. `cost` and
-   `cost_masses` are out of the results hash (`crates/ovcd-format/src/run.rs`, line 244), and the rates never
+   `cost_masses` are out of the results hash (`crates/ovd-format/src/run.rs`, line 244), and the rates never
    reach `simulate` (lines 269-274). A rate change moves only the budget.
 
 ## Assumptions, rules and estimates
@@ -129,13 +129,13 @@ Id prefix `CB` (cost and budget).
 | CB-A44 | Check `masses_positive` | Error if min(tank shell, hull steel) ≤ 0 | Method | Other masses are not checked | `barge_cost.rs` lines 374-384 | — |
 | CB-A45 | Note `no_reliquefaction_in_scope` | Always passes; says the cargo system has no reliquefaction or nitrogen plant | Fixed in code | Pressure-accumulation operating concept | `barge_cost.rs` lines 385-391 | Non-conservative if the Option needs that plant |
 | CB-A46 | Note `fabrication_rates_are_estimates` | Always fails as a warning, so it always shows | Fixed in code | — | `barge_cost.rs` lines 392-398 | — |
-| CB-A47 | Basis line | "Example rates — replace with yours." shown always, also after the user edits rates | Fixed in code | `COST_RATES_BASIS` | `crates/ovcd-format/src/vdesign.rs` line 241; `CapitalBudget.svelte` line 66 | — |
+| CB-A47 | Basis line | "Example rates — replace with yours." shown always, also after the user edits rates | Fixed in code | `COST_RATES_BASIS` | `crates/ovd-format/src/vdesign.rs` line 241; `CapitalBudget.svelte` line 66 | — |
 | CB-A48 | Scope of the budget | Gas Options only; one barge plus one electric pusher tug as one unit | Fixed in code | Core models a gas ATB unit | `cost.rs` lines 1-6; `simulate.rs` lines 809, 1095 | Unknown for other Formations |
 
 ## Inputs the user can change
 
-All 14 inputs are in the "Cost rates" input group (`crates/ovcd-format/src/vdesign.rs`, lines 1426-1516). Each
-default equals the example rates file (a test keeps them equal: `crates/ovcd-format/tests/cost_rates.rs`).
+All 14 inputs are in the "Cost rates" input group (`crates/ovd-format/src/vdesign.rs`, lines 1426-1516). Each
+default equals the example rates file (a test keeps them equal: `crates/ovd-format/tests/cost_rates.rs`).
 A file saved before these inputs existed opens with the example values, marked `default`, with a warning
 (`CHANGELOG.md`).
 
@@ -175,11 +175,11 @@ mass factors, only the tank structure factor is an input. The currency and the t
 
 ## Evidence
 
-- `crates/ovcd-core/tests/barge_cost.rs`, `the_example_rates_price_the_default_barge`: the core default masses
+- `crates/ovd-core/tests/barge_cost.rs`, `the_example_rates_price_the_default_barge`: the core default masses
   and example rates give a unit total of 6,177,125. A hand check gives the same: barge 4,111,250, tug
   1,322,500, margin 543,375, delivery 200,000. This is an arithmetic check, not a price check.
-- `crates/ovcd-core/tests/barge_cost.rs`: rates-file parsing, bad values, compensated sum, zero-mass check.
-- `crates/ovcd-format/tests/cost_rates.rs`: property tests. Each default equals the example file; a budget is
+- `crates/ovd-core/tests/barge_cost.rs`: rates-file parsing, bad values, compensated sum, zero-mass check.
+- `crates/ovd-format/tests/cost_rates.rs`: property tests. Each default equals the example file; a budget is
   the sum of its parts; a rate edit moves only the budget; the budget is out of the results hash; a dry bulk
   Option has no budget; gas masses come from the design.
 - `app/e2e/smoke.test.mjs`, lines 509-545: the view shows the basis, the three tables, the mass sources, a rate

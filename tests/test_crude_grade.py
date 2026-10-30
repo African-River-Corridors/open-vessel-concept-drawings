@@ -4,8 +4,8 @@ Label: property
 """
 import dataclasses
 
-from vessel_designer import _bridge
-from vessel_designer.core import cargo
+from ovd import _bridge
+from ovd.core import cargo
 
 
 def _rust(fn):

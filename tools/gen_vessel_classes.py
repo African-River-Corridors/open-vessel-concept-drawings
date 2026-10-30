@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Write `crates/ovcd-core/src/vessel_classes_generated.rs`: the Vessel Class list of the core.
+"""Write `crates/ovd-core/src/vessel_classes_generated.rs`: the Vessel Class list of the core.
 
     python3 tools/gen_vessel_classes.py          # rewrite the file
     python3 tools/gen_vessel_classes.py --check  # exit 1 if the file is out of date
@@ -18,7 +18,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "catalogue" / "vessel_classes.yaml"
-OUT = ROOT / "crates" / "ovcd-core" / "src" / "vessel_classes_generated.rs"
+OUT = ROOT / "crates" / "ovd-core" / "src" / "vessel_classes_generated.rs"
 
 # The ids of the 12 classes the core listed by hand before issue #94, and the YAML class each now is.
 # The Dutch 2011 wide motor vessel (`CEMT_VIa_motor_NL2011`) is the 135 m Rhine-max class `RWS-M12`.

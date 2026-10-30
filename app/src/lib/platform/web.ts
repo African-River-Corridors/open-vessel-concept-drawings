@@ -1,13 +1,13 @@
-// The browser implementation: the ovcd-web WebAssembly session, running in this page. No server sees
+// The browser implementation: the ovd-web WebAssembly session, running in this page. No server sees
 // a Design. Errors thrown by the session are strings; they become rejected promises with the same text.
-import init, { Session } from "../../../wasm-pkg/ovcd_web.js";
-import wasmUrl from "../../../wasm-pkg/ovcd_web_bg.wasm?url";
+import init, { Session } from "../../../wasm-pkg/ovd_web.js";
+import wasmUrl from "../../../wasm-pkg/ovd_web_bg.wasm?url";
 import type { Evaluation, Schema, Snapshot } from "../api";
 import type { DeckItems, DrawingFormat, DrawingView, MeshGroup, ModelFormat, Platform, PropulsorPart, SectionOutline, SpaceInfo, Waterline } from "./types";
 import { t } from "../i18n.svelte";
 
-const LAST_DESIGN = "ovcd.lastDesign";
-const NOTICE = "ovcd.noticeSeen";
+const LAST_DESIGN = "ovd.lastDesign";
+const NOTICE = "ovd.noticeSeen";
 const DEFAULT_NAME = "design.vdesign";
 
 /** Storage may be missing or throw (private window, blocked site data): every use is guarded. */
@@ -217,6 +217,6 @@ export async function createWebPlatform(): Promise<Platform> {
     waterlines: (option) => call<Waterline[]>(() => session.waterlines(option)),
   };
   // The smoke test reads results through this; only a build in test mode has it.
-  if (import.meta.env.MODE === "test") (window as unknown as { __ovcdPlatform: Platform }).__ovcdPlatform = platform;
+  if (import.meta.env.MODE === "test") (window as unknown as { __ovdPlatform: Platform }).__ovdPlatform = platform;
   return platform;
 }

@@ -1,6 +1,6 @@
 # Rule trace: Option A basis
 
-Scope: Service Area coastal-and-river; Rule Sets igc-2g@2.0.0, is2008-a@2.0.0, lr-inland-gas@2.0.0, es-trin-2025@1.0.0, icll-freeboard@1.0.0, solas-v22@1.0.0, abs-barges@1.0.0, ovcd@2.1.0; only these Rule Sets were checked, not a statutory technical code. meets every evaluated blocking Rule; 4 blocking Rule(s) not evaluated: Survival after the assumed damage, Severe wind and rolling criterion (weather criterion), Capacity of each cargo tank within Table 4.3.1, Hull in the cargo area: one of the three designs the clause allows (Type G)
+Scope: Service Area coastal-and-river; Rule Sets igc-2g@2.0.0, is2008-a@2.0.0, lr-inland-gas@2.0.0, es-trin-2025@1.0.0, icll-freeboard@1.0.0, solas-v22@1.0.0, abs-barges@1.0.0, ovd@3.0.0; only these Rule Sets were checked, not a statutory technical code. meets every evaluated blocking Rule; 4 blocking Rule(s) not evaluated: Survival after the assumed damage, Severe wind and rolling criterion (weather criterion), Capacity of each cargo tank within Table 4.3.1, Hull in the cargo area: one of the three designs the clause allows (Type G)
 
 One row per Rule and object. Status is the Rule's verification status, then the Measure's method status. "Finding" is the register ticket.
 
@@ -109,57 +109,57 @@ One row per Rule and object. Status is the Rule's verification status, then the 
 | solas/V.22.1.1/blind-zone-laden | A basis | pass | 208.4 | 280 | m | warn | unverified / unverified |  | SOLAS 1974 as amended by resolution MSC.99(73), MSC.99(73), adopted 5 December 2000, V.22.1.1 |
 | abs-barges/5-3-1.1.3/two-vessels |  | not applicable |  |  | - | note | unverified / unverified | #363 | ABS Rules for Building and Classing Steel Barges, January 2024, 5-3-1.1.3 |
 | abs-barges/5-3-1.11.3/notch-wing-walls |  | not applicable |  |  | - | note | unverified / unverified | #363 | ABS Rules for Building and Classing Steel Barges, January 2024, 5-3-1.11.3 |
-| ovcd/capacity/cargo-positive | A basis | pass | True |  |  | block | unverified / verified |  |  |
-| ovcd/capacity/feasible-geometry | A basis | pass | True |  |  | block | unverified / verified |  |  |
-| ovcd/capacity/cargo-zone-positive | A basis | pass | True |  |  | block | unverified / verified |  |  |
-| ovcd/capacity/air-draft-within-limit |  | not applicable |  |  |  | block | unverified / verified |  |  |
-| ovcd/loading/air-draft |  | not applicable |  |  |  | block | unverified / verified |  |  |
-| ovcd/loading/ballast-plan |  | not applicable |  |  |  | block | unverified / verified |  |  |
-| ovcd/capacity/intact-gm |  | not applicable |  |  |  | warn | unverified / verified |  | International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A, MSC.267(85), adopted 4 December 2008 (origin of the value only; OVCD applies it as a tool limit to a first-order estimate), A.2.2.4 |
-| ovcd/gas-arrangement/feasible-arrangement |  | not applicable |  |  |  | block | unverified / verified |  |  |
-| ovcd/gas-arrangement/tank-l-over-d | A basis | pass | True |  |  | block | unverified / verified |  | ADN 2025, ECE/TRANS/351, 2025 (origin of the limit only; OVCD applies it as a tool limit), 9.3.1.11.1(b) |
-| ovcd/aft-block/thrusters-fit-beam | A basis | pass | True |  |  | block | unverified / verified |  |  |
-| ovcd/aft-block/thruster-count | A basis | pass | True |  |  | warn | unverified / verified |  |  |
-| ovcd/aft-block/containers-fit-beam | A basis | pass | True |  |  | block | unverified / verified |  |  |
-| ovcd/aft-block/units-in-one-row | A basis | pass | True |  |  | warn | unverified / verified |  |  |
-| ovcd/aft-block/wheelhouse-fits-beam | A basis | pass | True |  |  | block | unverified / verified |  |  |
-| ovcd/aft-block/accom-beside-wheelhouse | A basis | pass | True |  |  | warn | unverified / verified |  |  |
-| ovcd/aft-block/gensets-fit-beam | A basis | pass | True |  |  | block | unverified / verified |  |  |
-| ovcd/aft-block/gensets-under-deck | A basis | pass | True |  |  | warn | unverified / verified |  |  |
-| ovcd/aft-block/gensets-reserve |  | not applicable |  |  |  | block | unverified / verified |  |  |
-| ovcd/aft-block/wheelhouse-sightline | A basis | pass | True |  |  | block | unverified / verified |  |  |
-| ovcd/squat/froude-depth |  | not applicable |  |  |  | warn | unverified / verified |  |  |
-| ovcd/squat/blockage |  | not applicable |  |  |  | warn | unverified / verified |  |  |
-| ovcd/squat/keel-clears-bed |  | not applicable |  |  |  | block | unverified / verified |  |  |
-| ovcd/squat/keel-margin |  | not applicable |  |  |  | warn | unverified / verified |  |  |
-| ovcd/squat/methods-agree |  | not applicable |  |  |  | warn | unverified / verified |  |  |
-| ovcd/waves/short-wave-validity |  | not applicable |  |  |  | warn | unverified / verified |  |  |
-| ovcd/waves/wave-height |  | not applicable |  |  |  | warn | unverified / verified |  |  |
-| ovcd/energy/service-below-schijf |  | not applicable |  |  |  | block | unverified / verified |  |  |
-| ovcd/capacity/not-overloaded | A basis | pass | True |  |  | warn | unverified / verified |  |  |
-| ovcd/capacity/freeboard | A basis | pass | True |  |  | warn | unverified / verified |  |  |
-| ovcd/journey/volume-bound | A basis | pass | True |  |  | block | unverified / verified |  |  |
-| ovcd/journey/floats | A basis | pass | True |  |  | block | unverified / verified |  |  |
-| ovcd/journey/ukc-consistent | A basis | pass | True |  |  | block | unverified / verified |  |  |
-| ovcd/journey/utilisation | A basis | pass | True |  |  | warn | unverified / verified |  |  |
-| ovcd/gas-arrangement/freeboard-at-payload | A basis | pass | True |  |  | block | unverified / verified |  |  |
-| ovcd/stability/assessed |  | not applicable |  |  |  | block | unverified / verified |  |  |
-| ovcd/waves/bow-length-supplied |  | not applicable |  |  |  | warn | unverified / verified |  |  |
-| ovcd/resistance/service-below-limiting |  | not applicable |  |  |  | block | unverified / verified |  |  |
-| ovcd/resistance/blockage-in-range |  | not applicable |  |  |  | block | unverified / verified |  |  |
-| ovcd/resistance/service-clears-squat |  | not applicable |  |  |  | warn | unverified / verified |  |  |
-| ovcd/resistance/lackenby-fit |  | not applicable |  |  |  | warn | unverified / verified |  |  |
-| ovcd/resistance/first-order-coefficients | A basis | pass | True |  |  | warn | unverified / verified |  |  |
-| ovcd/powering/installed-covers-design-speed | A basis | pass | 1.164 | 1 | - | block | unverified / verified |  |  |
-| ovcd/wheelhouse/lift-enough | A basis | pass | True |  | - | block | unverified / verified |  |  |
-| ovcd/powering/shallow-water-validity |  | not applicable |  |  | - | warn | unverified / verified |  |  |
-| ovcd/propulsion/propeller-fits-stern | A basis | pass | 0.6341 | 1 | - | warn | unverified / verified |  |  |
-| ovcd/propulsion/immersion-light | A basis | warn | 0.02822 | 1 | - | warn | unverified / unverified |  |  |
-| ovcd/propulsion/blade-load | A basis | pass | 0.1023 | 1 | - | warn | unverified / unverified |  |  |
-| ovcd/stability/light-angle-of-max-gz | Full load, departure | not applicable |  |  | deg | warn | unverified / unverified | #498 |  |
-| ovcd/stability/light-angle-of-max-gz | Full load, arrival | not applicable |  |  | deg | warn | unverified / unverified | #498 |  |
-| ovcd/stability/light-angle-of-max-gz | Ballast, departure | not applicable |  |  | deg | warn | unverified / unverified | #498 |  |
-| ovcd/stability/light-angle-of-max-gz | Ballast, arrival | not applicable |  |  | deg | warn | unverified / unverified | #498 |  |
+| ovd/capacity/cargo-positive | A basis | pass | True |  |  | block | unverified / verified |  |  |
+| ovd/capacity/feasible-geometry | A basis | pass | True |  |  | block | unverified / verified |  |  |
+| ovd/capacity/cargo-zone-positive | A basis | pass | True |  |  | block | unverified / verified |  |  |
+| ovd/capacity/air-draft-within-limit |  | not applicable |  |  |  | block | unverified / verified |  |  |
+| ovd/loading/air-draft |  | not applicable |  |  |  | block | unverified / verified |  |  |
+| ovd/loading/ballast-plan |  | not applicable |  |  |  | block | unverified / verified |  |  |
+| ovd/capacity/intact-gm |  | not applicable |  |  |  | warn | unverified / verified |  | International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A, MSC.267(85), adopted 4 December 2008 (origin of the value only; OVD applies it as a tool limit to a first-order estimate), A.2.2.4 |
+| ovd/gas-arrangement/feasible-arrangement |  | not applicable |  |  |  | block | unverified / verified |  |  |
+| ovd/gas-arrangement/tank-l-over-d | A basis | pass | True |  |  | block | unverified / verified |  | ADN 2025, ECE/TRANS/351, 2025 (origin of the limit only; OVD applies it as a tool limit), 9.3.1.11.1(b) |
+| ovd/aft-block/thrusters-fit-beam | A basis | pass | True |  |  | block | unverified / verified |  |  |
+| ovd/aft-block/thruster-count | A basis | pass | True |  |  | warn | unverified / verified |  |  |
+| ovd/aft-block/containers-fit-beam | A basis | pass | True |  |  | block | unverified / verified |  |  |
+| ovd/aft-block/units-in-one-row | A basis | pass | True |  |  | warn | unverified / verified |  |  |
+| ovd/aft-block/wheelhouse-fits-beam | A basis | pass | True |  |  | block | unverified / verified |  |  |
+| ovd/aft-block/accom-beside-wheelhouse | A basis | pass | True |  |  | warn | unverified / verified |  |  |
+| ovd/aft-block/gensets-fit-beam | A basis | pass | True |  |  | block | unverified / verified |  |  |
+| ovd/aft-block/gensets-under-deck | A basis | pass | True |  |  | warn | unverified / verified |  |  |
+| ovd/aft-block/gensets-reserve |  | not applicable |  |  |  | block | unverified / verified |  |  |
+| ovd/aft-block/wheelhouse-sightline | A basis | pass | True |  |  | block | unverified / verified |  |  |
+| ovd/squat/froude-depth |  | not applicable |  |  |  | warn | unverified / verified |  |  |
+| ovd/squat/blockage |  | not applicable |  |  |  | warn | unverified / verified |  |  |
+| ovd/squat/keel-clears-bed |  | not applicable |  |  |  | block | unverified / verified |  |  |
+| ovd/squat/keel-margin |  | not applicable |  |  |  | warn | unverified / verified |  |  |
+| ovd/squat/methods-agree |  | not applicable |  |  |  | warn | unverified / verified |  |  |
+| ovd/waves/short-wave-validity |  | not applicable |  |  |  | warn | unverified / verified |  |  |
+| ovd/waves/wave-height |  | not applicable |  |  |  | warn | unverified / verified |  |  |
+| ovd/energy/service-below-schijf |  | not applicable |  |  |  | block | unverified / verified |  |  |
+| ovd/capacity/not-overloaded | A basis | pass | True |  |  | warn | unverified / verified |  |  |
+| ovd/capacity/freeboard | A basis | pass | True |  |  | warn | unverified / verified |  |  |
+| ovd/journey/volume-bound | A basis | pass | True |  |  | block | unverified / verified |  |  |
+| ovd/journey/floats | A basis | pass | True |  |  | block | unverified / verified |  |  |
+| ovd/journey/ukc-consistent | A basis | pass | True |  |  | block | unverified / verified |  |  |
+| ovd/journey/utilisation | A basis | pass | True |  |  | warn | unverified / verified |  |  |
+| ovd/gas-arrangement/freeboard-at-payload | A basis | pass | True |  |  | block | unverified / verified |  |  |
+| ovd/stability/assessed |  | not applicable |  |  |  | block | unverified / verified |  |  |
+| ovd/waves/bow-length-supplied |  | not applicable |  |  |  | warn | unverified / verified |  |  |
+| ovd/resistance/service-below-limiting |  | not applicable |  |  |  | block | unverified / verified |  |  |
+| ovd/resistance/blockage-in-range |  | not applicable |  |  |  | block | unverified / verified |  |  |
+| ovd/resistance/service-clears-squat |  | not applicable |  |  |  | warn | unverified / verified |  |  |
+| ovd/resistance/lackenby-fit |  | not applicable |  |  |  | warn | unverified / verified |  |  |
+| ovd/resistance/first-order-coefficients | A basis | pass | True |  |  | warn | unverified / verified |  |  |
+| ovd/powering/installed-covers-design-speed | A basis | pass | 1.164 | 1 | - | block | unverified / verified |  |  |
+| ovd/wheelhouse/lift-enough | A basis | pass | True |  | - | block | unverified / verified |  |  |
+| ovd/powering/shallow-water-validity |  | not applicable |  |  | - | warn | unverified / verified |  |  |
+| ovd/propulsion/propeller-fits-stern | A basis | pass | 0.6341 | 1 | - | warn | unverified / verified |  |  |
+| ovd/propulsion/immersion-light | A basis | warn | 0.02822 | 1 | - | warn | unverified / unverified |  |  |
+| ovd/propulsion/blade-load | A basis | pass | 0.1023 | 1 | - | warn | unverified / unverified |  |  |
+| ovd/stability/light-angle-of-max-gz | Full load, departure | not applicable |  |  | deg | warn | unverified / unverified | #498 |  |
+| ovd/stability/light-angle-of-max-gz | Full load, arrival | not applicable |  |  | deg | warn | unverified / unverified | #498 |  |
+| ovd/stability/light-angle-of-max-gz | Ballast, departure | not applicable |  |  | deg | warn | unverified / unverified | #498 |  |
+| ovd/stability/light-angle-of-max-gz | Ballast, arrival | not applicable |  |  | deg | warn | unverified / unverified | #498 |  |
 
 ## Gaps the trace reports
 
@@ -169,11 +169,11 @@ One row per Rule and object. Status is the Rule's verification status, then the 
 - `igc/3.1.2/hold-space-segregation-means`: the model has no division between the hold and the adjoining spaces; the end bulkhead space (lr-inland 3.5.3) is checked, the fire class is not
 - `igc/3.2.1/no-accommodation-in-cargo-area`: the model does not place accommodation, service spaces or control stations; the aft block sits outside the cargo area by construction
 - `is2008/A.2.2.1/downflooding-angle-not-given`: The areas run to 40 degrees because no angle of down-flooding is typed (the input downflooding_angle_deg) and no deck openings are listed (the input downflooding_openings, from which the engine works the angle at which the lowest opening immerses; IS Code Part A 2.2.1, the meaning of the angle in Part B 2.2.3.5). A design may pass 2.2.1 where it fails with the angle
-- `is2008/A.2.2.3/alternative-criteria`: IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVCD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovcd/stability/light-angle-of-max-gz as a warning
+- `is2008/A.2.2.3/alternative-criteria`: IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovd/stability/light-angle-of-max-gz as a warning
 - `is2008/A.2.3/weather`: needs the wind heeling lever, the roll angle, the angle of down-flooding and the deck-edge immersion angle
 - `lr-inland/3.2.1/tank-capacity`: needs the product Loa x Boa x D of the measurement certificate (D with the trunk correction) and the tank capacity in the sense of Table 4.3.1; the engine has neither Measure
 - `lr-inland/3.5.2/hull-design`: the engine models no hull structure: not the double hull and double bottom of (a), not the side stringers and web frames of (b), and not the collision energy of (c)
 - `es-trin/7.02(3)/field-of-view`: the model has no window geometry
 - `es-trin/7.12(2)/elevating-wheelhouse-stability`: the model has no stability case with the wheelhouse raised
-- `abs-barges/5-3-1.1.3/two-vessels`: An approval item, not a calculation: ABS classes the tug and the barge as two separate vessels, so the tug and the barge are each submitted for class. OVCD runs the ATB as one Equivalent Hull for resistance and powering only; it does not assess either vessel against class
-- `abs-barges/5-3-1.11.3/notch-wing-walls`: An approval item, not a calculation: the analysis of the wing walls at the Notch, and of the structure of the tug and the barge in way of the connection, is submitted for review. OVCD has no structure model for it, and the connector loads (5-3-1/11.1) come from model tests or a multi-body analysis it does not do
+- `abs-barges/5-3-1.1.3/two-vessels`: An approval item, not a calculation: ABS classes the tug and the barge as two separate vessels, so the tug and the barge are each submitted for class. OVD runs the ATB as one Equivalent Hull for resistance and powering only; it does not assess either vessel against class
+- `abs-barges/5-3-1.11.3/notch-wing-walls`: An approval item, not a calculation: the analysis of the wing walls at the Notch, and of the structure of the tug and the barge in way of the connection, is submitted for review. OVD has no structure model for it, and the connector loads (5-3-1/11.1) come from model tests or a multi-body analysis it does not do

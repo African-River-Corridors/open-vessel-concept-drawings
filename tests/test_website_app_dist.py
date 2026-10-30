@@ -2,7 +2,7 @@
 
 Label: property
 
-The page goes to app.html (served at /ovcd/app) and its files to app-files/. A folder named app/
+The page goes to app.html (served at /ovd/app) and its files to app-files/. A folder named app/
 would make GitHub Pages redirect /app to /app/ on its own host, which breaks the proxy.
 No mkdocs, Node or Rust: it calls the copy step on a fake dist folder.
 """
@@ -29,7 +29,7 @@ def build(tmp_path, monkeypatch):
 def fake_dist(root: Path) -> Path:
     dist = root / "dist-web"
     (dist / "assets").mkdir(parents=True)
-    (dist / "index.html").write_text('<script src="/ovcd/app-files/assets/x.js"></script>')
+    (dist / "index.html").write_text('<script src="/ovd/app-files/assets/x.js"></script>')
     (dist / "assets" / "x.js").write_text("js")
     (dist / "assets" / "core_bg.wasm").write_bytes(b"\0asm")
     return dist

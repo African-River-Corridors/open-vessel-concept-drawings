@@ -10,13 +10,13 @@ import dataclasses
 
 from pytest import approx
 
-from vessel_designer.core import barge_capacity as B
-from vessel_designer.core import ga_adapter, gas_stability, journey_derating as J
-from vessel_designer.core import hull as H
-from vessel_designer.core import hydrostatics as HY
-from vessel_designer.core import models as M
-from vessel_designer.core import tanks as T
-from vessel_designer.core import weights as W
+from ovd.core import barge_capacity as B
+from ovd.core import ga_adapter, gas_stability, journey_derating as J
+from ovd.core import hull as H
+from ovd.core import hydrostatics as HY
+from ovd.core import models as M
+from ovd.core import tanks as T
+from ovd.core import weights as W
 
 BI = M.BargeInputs(loa=90.0, beam=14.8, depth=6.5, max_draft=4.4, vertical_clearance=10.0)
 HULL = H.HullGeometry(BI.loa, BI.beam, BI.depth, BI.bow_rake_length, BI.bow_rake_rise,

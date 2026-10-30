@@ -5,11 +5,11 @@ use std::path::{Path, PathBuf};
 
 const MARKER: &str = "first-run-notice-accepted.txt";
 
-/// The folder that holds the marker. A debug build reads `OVCD_TEST_CONFIG_DIR` first, so the smoke
+/// The folder that holds the marker. A debug build reads `OVD_TEST_CONFIG_DIR` first, so the smoke
 /// tests never touch the real config folder. Release builds have no such hook.
 #[cfg(debug_assertions)]
 pub fn test_config_dir() -> Option<PathBuf> {
-    std::env::var_os("OVCD_TEST_CONFIG_DIR").map(PathBuf::from)
+    std::env::var_os("OVD_TEST_CONFIG_DIR").map(PathBuf::from)
 }
 
 #[cfg(not(debug_assertions))]
@@ -26,7 +26,7 @@ pub fn seen(dir: &Path) -> bool {
 pub fn accept(dir: &Path, version: &str) -> Result<(), String> {
     std::fs::create_dir_all(dir).map_err(|e| format!("cannot create {}: {e}", dir.display()))?;
     let path = dir.join(MARKER);
-    std::fs::write(&path, format!("accepted in OVCD {version}\n"))
+    std::fs::write(&path, format!("accepted in OVD {version}\n"))
         .map_err(|e| format!("cannot write {}: {e}", path.display()))
 }
 
@@ -36,7 +36,7 @@ mod tests {
 
     #[test]
     fn the_notice_is_shown_until_it_is_accepted_and_then_never_again() {
-        let dir = std::env::temp_dir().join(format!("ovcd-notice-test-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("ovd-notice-test-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         assert!(!seen(&dir));
         accept(&dir, "0.2.1").unwrap();

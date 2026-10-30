@@ -7,10 +7,10 @@ printed by the frozen Python at ce96e66. The comparison is exact (`==`; `90 == 9
 import numpy as np
 import pytest
 
-from vessel_designer.core import barge_capacity as B
-from vessel_designer.core import hull as H
-from vessel_designer.core import hydrostatics as HY
-from vessel_designer.core import journey_derating as J
+from ovd.core import barge_capacity as B
+from ovd.core import hull as H
+from ovd.core import hydrostatics as HY
+from ovd.core import journey_derating as J
 
 # ce96e66: HullGeometry(90, 15, 7, 0, 7, 0, 7), every method at draft 3 (area methods take none)
 HULL_AT_DRAFT_3 = {

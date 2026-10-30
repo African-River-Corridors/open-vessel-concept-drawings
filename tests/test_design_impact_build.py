@@ -16,7 +16,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 import design_impact as di  # noqa: E402
 
 
-def stub_cargo(tmp_path, monkeypatch, *, exe_rel="debug/ovcd", write_exe=True, report=True,
+def stub_cargo(tmp_path, monkeypatch, *, exe_rel="debug/ovd", write_exe=True, report=True,
                old_mtime=False, code=0):
     """Put a `cargo` first on PATH. It writes `exe_rel` under CARGO_TARGET_DIR and reports it."""
     bindir = tmp_path / "bin"
@@ -36,7 +36,7 @@ def stub_cargo(tmp_path, monkeypatch, *, exe_rel="debug/ovcd", write_exe=True, r
         print(json.dumps({{"reason": "compiler-artifact", "executable": None, "target": {{"name": "serde", "kind": ["lib"]}}}}))
         if {report!r}:
             print(json.dumps({{"reason": "compiler-artifact", "executable": exe,
-                              "target": {{"name": "ovcd", "kind": ["bin"]}}}}))
+                              "target": {{"name": "ovd", "kind": ["bin"]}}}}))
         sys.exit({code})
     '''))
     script.chmod(script.stat().st_mode | stat.S_IEXEC)
@@ -44,10 +44,10 @@ def stub_cargo(tmp_path, monkeypatch, *, exe_rel="debug/ovcd", write_exe=True, r
 
 
 def test_build_returns_the_path_cargo_reports(tmp_path, monkeypatch):
-    stub_cargo(tmp_path, monkeypatch, exe_rel="x86_64-unknown/debug/ovcd")
+    stub_cargo(tmp_path, monkeypatch, exe_rel="x86_64-unknown/debug/ovd")
     target = tmp_path / "tgt"
     exe = di.build(tmp_path, target)
-    assert exe == target / "x86_64-unknown" / "debug" / "ovcd"      # not the guessed debug/ovcd
+    assert exe == target / "x86_64-unknown" / "debug" / "ovd"      # not the guessed debug/ovd
 
 
 def test_a_missing_binary_fails_the_gate(tmp_path, monkeypatch):
@@ -58,7 +58,7 @@ def test_a_missing_binary_fails_the_gate(tmp_path, monkeypatch):
 
 def test_a_build_that_reports_no_binary_fails_the_gate(tmp_path, monkeypatch):
     stub_cargo(tmp_path, monkeypatch, report=False)
-    with pytest.raises(SystemExit, match="no `ovcd` binary"):
+    with pytest.raises(SystemExit, match="no `ovd` binary"):
         di.build(tmp_path, tmp_path / "tgt")
 
 
@@ -69,7 +69,7 @@ def test_a_failed_build_fails_the_gate(tmp_path, monkeypatch):
 
 
 def test_a_binary_outside_the_target_directory_fails_the_gate(tmp_path, monkeypatch):
-    stub_cargo(tmp_path, monkeypatch, exe_rel="../elsewhere/ovcd")
+    stub_cargo(tmp_path, monkeypatch, exe_rel="../elsewhere/ovd")
     with pytest.raises(SystemExit, match="not under"):
         di.build(tmp_path, tmp_path / "tgt")
 

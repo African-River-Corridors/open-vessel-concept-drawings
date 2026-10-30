@@ -29,7 +29,7 @@ register (#121).
    per ADR 0001 or amend the ADR for web records.
 2. **Out-of-date statement in `calibration/README.md`.** "Corrections applied" says the barge database is
    unreachable. Sources `K1` to `K39` cite Wayback captures of it, and their notes say so. Update the README.
-3. **Cb default against the fit (to check).** `crates/ovcd-format/src/builtin_profile.json` gives
+3. **Cb default against the fit (to check).** `crates/ovd-format/src/builtin_profile.json` gives
    `block_coefficient` default 0.85, with a basis that quotes the calibrated range 0.883 to 0.995. The fit is 0.928.
    Pass 1 finding 2 says 0.85 gives box-barge DWT 19 to 33 % low. Check which Cb a box-barge Design gets when
    the user leaves the input out. If it is 0.85, a default sits below every calibrated value.

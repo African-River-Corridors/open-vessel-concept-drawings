@@ -1,6 +1,6 @@
 """The design-impact check (ticket 28): what the tool reports, and that it can fail.
 
-The tool builds `ovcd` twice and runs a fixed set of Designs. These tests use a stand-in `ovcd`
+The tool builds `ovd` twice and runs a fixed set of Designs. These tests use a stand-in `ovd`
 (a small script) so they need no compiler: they prove the report, the table, the changelog entry
 and the fail-closed checks. The real binaries run in the gate and in the pull-request workflow.
 """
@@ -17,8 +17,8 @@ sys.path.insert(0, str(ROOT / "tools"))
 import design_impact as di  # noqa: E402
 
 
-def fake_ovcd(tmp_path: Path, name: str, factor: float = 1.0, fail_on: str = "") -> Path:
-    """A stand-in `ovcd`: `fill` copies the file, `run --json` answers from the inputs."""
+def fake_ovd(tmp_path: Path, name: str, factor: float = 1.0, fail_on: str = "") -> Path:
+    """A stand-in `ovd`: `fill` copies the file, `run --json` answers from the inputs."""
     script = tmp_path / name
     script.write_text(textwrap.dedent(f'''\
         #!{sys.executable}
@@ -49,7 +49,7 @@ def test_the_case_set_covers_the_calibration_vessels_and_a_sweep():
     assert any(k.startswith("sweep CN-derived liquid") for k in cs)
     assert any(k.startswith("sweep gas IGC_2G_EXACT") for k in cs)
     assert not any("ADN_G" in k for k in cs)
-    for typed in cs.values():           # the five required inputs, so `ovcd fill` can complete the rest
+    for typed in cs.values():           # the five required inputs, so `ovd fill` can complete the rest
         for key in ("cargo", "hull_form", "formation", "length_overall_m", "beam_m"):
             assert key in typed
     # Most cases type their depth, so a design that types it is compared as before; the cases that
@@ -61,8 +61,8 @@ def test_the_case_set_covers_the_calibration_vessels_and_a_sweep():
 
 def test_identical_results_say_no_design_change(tmp_path):
     cs = {"a": di._inputs("bauxite", "box_hold", "pushed_barge", 60.0, 10.0, 4.0)}
-    base = di.run_all(fake_ovcd(tmp_path, "base"), cs)
-    head = di.run_all(fake_ovcd(tmp_path, "head"), cs)
+    base = di.run_all(fake_ovd(tmp_path, "base"), cs)
+    head = di.run_all(fake_ovd(tmp_path, "head"), cs)
     rows = di.compare(base, head)
     assert rows == []
     text, tbl = di.report_text(len(cs), rows, "main abc", "this branch def")
@@ -72,8 +72,8 @@ def test_identical_results_say_no_design_change(tmp_path):
 def test_a_moved_coefficient_gives_a_before_after_table(tmp_path):
     cs = {"a": di._inputs("bauxite", "box_hold", "pushed_barge", 60.0, 10.0, 4.0),
           "b": di._inputs("bauxite", "box_hold", "pushed_barge", 70.0, 10.0, 4.0)}
-    base = di.run_all(fake_ovcd(tmp_path, "base"), cs)
-    head = di.run_all(fake_ovcd(tmp_path, "head", factor=1.1), cs)
+    base = di.run_all(fake_ovd(tmp_path, "base"), cs)
+    head = di.run_all(fake_ovd(tmp_path, "head", factor=1.1), cs)
     rows = di.compare(base, head)
     assert {r["case"] for r in rows} == {"a", "b"}
     row = next(r for r in rows if r["case"] == "a")
@@ -103,8 +103,8 @@ def test_the_biggest_moves_come_first():
 
 def test_a_case_that_stops_computing_is_a_change(tmp_path):
     cs = {"a": di._inputs("bauxite", "box_hold", "pushed_barge", 60.0, 10.0, 4.0)}
-    base = di.run_all(fake_ovcd(tmp_path, "base"), cs)
-    head = di.run_all(fake_ovcd(tmp_path, "head", fail_on='"length_overall_m": 60.0'), cs)
+    base = di.run_all(fake_ovd(tmp_path, "base"), cs)
+    head = di.run_all(fake_ovd(tmp_path, "head", fail_on='"length_overall_m": 60.0'), cs)
     rows = di.compare(base, head)
     assert len(rows) == 1 and rows[0]["quantity"] == "result"
     assert rows[0]["before"] == "computed" and "refused" in rows[0]["after"]
@@ -137,7 +137,7 @@ def test_the_changelog_entry_is_written_once_per_key_and_newest_first(tmp_path, 
 
 def test_the_gate_fails_closed_when_nothing_computed(tmp_path):
     cs = {"a": di._inputs("bauxite", "box_hold", "pushed_barge", 60.0, 10.0, 4.0)}
-    out = di.run_all(fake_ovcd(tmp_path, "dead", fail_on="bauxite"), cs)
+    out = di.run_all(fake_ovd(tmp_path, "dead", fail_on="bauxite"), cs)
     assert not any("results" in v for v in out.values())
 
 
@@ -181,8 +181,8 @@ def test_the_pull_request_workflow_only_measures_and_keeps_an_artifact():
     assert not (ROOT / ".github" / "workflows" / "design-impact.yml").exists()
 
 
-def versioned_ovcd(tmp_path: Path, name: str, reads: tuple) -> Path:
-    """A stand-in `ovcd` that reads only the format versions in `reads`, as the real one says."""
+def versioned_ovd(tmp_path: Path, name: str, reads: tuple) -> Path:
+    """A stand-in `ovd` that reads only the format versions in `reads`, as the real one says."""
     script = tmp_path / name
     script.write_text(textwrap.dedent(f'''\
         #!{sys.executable}
@@ -212,9 +212,9 @@ def test_a_case_is_given_to_each_binary_in_the_newest_format_it_reads(tmp_path):
     Label: property
     """
     cs = {"a": di._inputs("bauxite", "box_hold", "pushed_barge", 60.0, 10.0, 4.0)}
-    new = di.run_all(versioned_ovcd(tmp_path, "new", (1, 2)), cs)
-    old = di.run_all(versioned_ovcd(tmp_path, "old", (1,)), cs)
+    new = di.run_all(versioned_ovd(tmp_path, "new", (1, 2)), cs)
+    old = di.run_all(versioned_ovd(tmp_path, "old", (1,)), cs)
     assert new["a"]["results"]["results"]["format_version_read"] == 2
     assert old["a"]["results"]["results"]["format_version_read"] == 1
-    none = di.run_all(versioned_ovcd(tmp_path, "none", ()), cs)
+    none = di.run_all(versioned_ovd(tmp_path, "none", ()), cs)
     assert "format_version" in none["a"]["error"]

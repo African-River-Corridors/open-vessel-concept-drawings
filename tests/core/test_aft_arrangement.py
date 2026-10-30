@@ -3,7 +3,7 @@
 The stern block is what replaced `stern_void_fraction = 0.15`. These tests exist so the
 replacement stays a DERIVATION: if someone puts a number back, one of them fails.
 """
-from vessel_designer.core.aft_arrangement import (AftArrangementInputs, ISO40_LENGTH_M,
+from ovd.core.aft_arrangement import (AftArrangementInputs, ISO40_LENGTH_M,
                                            compute)
 
 

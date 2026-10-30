@@ -4,8 +4,8 @@ A capacity result must not change when the caller edits the inputs object afterw
 values are printed by the original Python at commit ce96e66 (the frozen package under
 `parity/frozen_python` in that commit).
 """
-from vessel_designer.core import barge_capacity as B
-from vessel_designer.core import ga_adapter, gas_stability, journey_derating as J
+from ovd.core import barge_capacity as B
+from ovd.core import ga_adapter, gas_stability, journey_derating as J
 
 
 def test_journey_derating_after_the_inputs_object_was_reused():

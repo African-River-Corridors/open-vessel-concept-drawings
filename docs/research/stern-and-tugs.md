@@ -7,12 +7,12 @@ Retrieved 2026-10-20. For spec 0007 and ADR 0017. Concept and preliminary design
 - **sourced**: the value is in the cited text, which we read.
 - **derived**: plain arithmetic on sourced values.
 - **estimate**: our own judgement; the basis is given.
-- File paths are in the rule-source library (`~/Dev/ovcd-rule-sources/`, outside the repo, ADR 0001).
+- File paths are in the rule-source library (`~/Dev/ovd-rule-sources/`, outside the repo, ADR 0001).
   The stern-and-tug files sit in `stern-tug/<area>/<folder>/`, one download per folder. The index
   `stern-tug/SOURCES.md` gives the URL, the retrieval date and the SHA-256 of each of the 172 files.
 - A figure with no stated basis was left out. A source we could not read is named in "Gaps", never cited.
 
-## 1. What OVCD does today
+## 1. What OVD does today
 
 - **Stern block** (`aft_arrangement.rs`): a thruster room (up to three azimuth thrusters, 2.60 m
   envelope), 40 ft battery and accommodation units on deck, and a lifting wheelhouse. A gas-fuelled

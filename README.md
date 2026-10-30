@@ -1,11 +1,11 @@
-# Open Vessel Concept Design (OVCD)
+# Open Vessel Designer (OVD)
 
 An open instrument for the concept and preliminary design of inland and coastal vessels and
 tug-barge systems. Give it a hull and a cargo; it gives you capacity, draught, weights, tank
 arrangement, stability, resistance and power, and general-arrangement drawings — each result with
 its checks, checked against real vessels.
 
-**Website and docs:** [africanrivercorridors.com/ovcd](https://www.africanrivercorridors.com/ovcd) ·
+**Website and docs:** [africanrivercorridors.com/ovd](https://www.africanrivercorridors.com/ovd) ·
 **Roadmap:** [ROADMAP.md](ROADMAP.md) · **Decisions:** [architecture decision records](docs/adr/0011-scope-concept-and-preliminary-design-never-approval.md)
 
 ## Ways to use it
@@ -15,10 +15,10 @@ its checks, checked against real vessels.
   [Run the desktop app](#run-the-desktop-app).
 - **Web version — coming.** The same Rust core compiled to WebAssembly, running in your browser
   with nothing to install; your designs stay on your computer. Planned on the [roadmap](ROADMAP.md).
-- **Command line** (`ovcd`): create, check, run and draw `.vdesign` files.
-- **Python library** (`vessel_designer`): the calculation core from Python.
+- **Command line** (`ovd`): create, check, run and draw `.vdesign` files.
+- **Python library** (`ovd`): the calculation core from Python.
 
-All of them use one compiled Rust calculation core (`ovcd-core`: pure calculation, no I/O), so they
+All of them use one compiled Rust calculation core (`ovd-core`: pure calculation, no I/O), so they
 give the same numbers.
 
 ## What it is, and what it is not
@@ -32,13 +32,13 @@ formats and documented methods.
 ([ADR 0011](docs/adr/0011-scope-concept-and-preliminary-design-never-approval.md)). It is not a
 substitute for a naval architect, a yard design office or a class surveyor. It is not yet verified:
 known engineering findings are under review in the open
-([#121](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/121)).
+([#121](https://github.com/African-River-Corridors/open-vessel-designer/issues/121)).
 
 ## What it does
 
 - **Standard vessel classes.** A catalogue of standard inland classes (CEMT, the Dutch 2011 update,
   Chinese GB 38030, US and Paraná sizes) in `catalogue/`, and a typed lookup of the common ones in
-  `vessel_designer.core.vessel_standards`.
+  `ovd.core.vessel_standards`.
 - **Capacity.** Volume-bound cargo for dry-bulk holds (sloped hopper, box, container) and for
   liquefied-gas barges with IMO Type C tanks (`core.barge_capacity`).
 - **Gas tank arrangement.** Protective-location clearances under IGC type 2G (the distance d(Vc) of
@@ -56,8 +56,8 @@ known engineering findings are under review in the open
   model works the angle out for each loading condition, from the hull's sections at the free-trim
   equilibrium; a typed angle wins. With neither typed nor listed, a hull whose openings immerse before
   40 degrees can pass when it should fail
-  ([#282](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/282),
-  [#592](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/592)).
+  ([#282](https://github.com/African-River-Corridors/open-vessel-designer/issues/282),
+  [#592](https://github.com/African-River-Corridors/open-vessel-designer/issues/592)).
 - **Journey de-rating.** Cargo per trip when the channel, not the hull, limits the draught
   (`core.journey_derating`).
 - **Resistance, squat, waves and power** in deep and confined shallow water (`core.resistance`,
@@ -69,7 +69,7 @@ known engineering findings are under review in the open
 Python 3.12 or later.
 
 ```
-pip install git+https://github.com/African-River-Corridors/open-vessel-concept-drawings
+pip install git+https://github.com/African-River-Corridors/open-vessel-designer
 ```
 
 ## Run the desktop app
@@ -78,29 +78,29 @@ The desktop app is a concept design tool with live results and drawings. It need
 The first start shows a short notice: results are not verified and there is no warranty.
 
 **Download an installer.** Open the newest release on the
-[releases page](https://github.com/African-River-Corridors/open-vessel-concept-drawings/releases)
+[releases page](https://github.com/African-River-Corridors/open-vessel-designer/releases)
 and take the file for your computer. A release named `v<version>` is a numbered release; one named
 `test-...` is a test build of work in progress.
 
-- Windows: `OVCD_<version>_x64-setup.exe`
-- macOS, Apple silicon: `OVCD_<version>_aarch64.dmg`
-- macOS, Intel: `OVCD_<version>_x64.dmg`
+- Windows: `OVD_<version>_x64-setup.exe`
+- macOS, Apple silicon: `OVD_<version>_aarch64.dmg`
+- macOS, Intel: `OVD_<version>_x64.dmg`
 
 `SHA256SUMS.txt` on the same page lets you check the download. The installers are not signed, so
 your system warns you once:
 
 - Windows SmartScreen says "Windows protected your PC". Click **More info**, then **Run anyway**.
-- macOS says the app "can't be verified" (the download is not signed). Open the `.dmg`, drag OVCD to
+- macOS says the app "can't be verified" (the download is not signed). Open the `.dmg`, drag OVD to
   Applications, then open it once from **System Settings → Privacy & Security → Open Anyway**. If
-  that does not work, run `xattr -dr com.apple.quarantine /Applications/OVCD.app` in Terminal and
-  open OVCD again.
+  that does not work, run `xattr -dr com.apple.quarantine /Applications/OVD.app` in Terminal and
+  open OVD again.
 
 **Build from source.** You need Git, Node 24 and Rust (install with [rustup](https://rustup.rs)).
 On Windows, rustup also asks for the Microsoft C++ build tools (MSVC); accept that. Then:
 
 ```
-git clone https://github.com/African-River-Corridors/open-vessel-concept-drawings
-cd open-vessel-concept-drawings/app
+git clone https://github.com/African-River-Corridors/open-vessel-designer
+cd open-vessel-designer/app
 npm ci
 npx tauri dev       # run the app
 npx tauri build     # make the installer (target/release/bundle)
@@ -111,9 +111,9 @@ npx tauri build     # make the installer (target/release/bundle)
 Size a liquefied-propane barge on a standard Chinese Class II hull (`examples/quickstart.py`):
 
 ```python
-from vessel_designer.core.barge_capacity import BargeCapacityInputs, compute
-from vessel_designer.core.gas_arrangement import fit
-from vessel_designer.core.vessel_standards import get_standard
+from ovd.core.barge_capacity import BargeCapacityInputs, compute
+from ovd.core.gas_arrangement import fit
+from ovd.core.vessel_standards import get_standard
 
 cls = get_standard("CN_II_motor")
 loa, beam = cls.loa_m[1], cls.beam_m
@@ -147,13 +147,13 @@ passing; it stays in the results as a failed check.
 
 | Path | Holds |
 |---|---|
-| `src/vessel_designer/core/` | the calculation core |
-| `src/vessel_designer/simulate.py` | one-call JSON-in, JSON-out simulation |
+| `src/ovd/core/` | the calculation core |
+| `src/ovd/simulate.py` | one-call JSON-in, JSON-out simulation |
 | `catalogue/` | standard vessel classes and reference vessels, with sources |
 | `calibration/` | calibration cases, fitted factors and results |
-| `crates/` | the Rust core (`ovcd-core`), file format and Design session (`ovcd-format`), and CLI. Drawings go through [`otd`](https://github.com/African-River-Corridors/open-technical-drawer), pinned by tag |
+| `crates/` | the Rust core (`ovd-core`), file format and Design session (`ovd-format`), and CLI. Drawings go through [`otd`](https://github.com/African-River-Corridors/open-technical-drawer), pinned by tag |
 | `app/` | the desktop app (Tauri) |
-| `website/` | the website and docs ([africanrivercorridors.com/ovcd](https://www.africanrivercorridors.com/ovcd)) |
+| `website/` | the website and docs ([africanrivercorridors.com/ovd](https://www.africanrivercorridors.com/ovd)) |
 | `docs/adr/` | architecture decisions |
 | `GLOSSARY.md` | the domain language |
 

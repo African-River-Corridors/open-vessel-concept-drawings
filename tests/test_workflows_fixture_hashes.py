@@ -1,6 +1,6 @@
 """The release gate checks the fixture results hashes on every system (ticket 144).
 
-The script runs against a stand-in `ovcd`, so these tests need no compiler. They show that a hash
+The script runs against a stand-in `ovd`, so these tests need no compiler. They show that a hash
 mismatch, a missing result, a failing binary or an empty fixture folder fails it, and that only the
 release gate (not the pull request gate) runs it.
 """
@@ -20,11 +20,11 @@ sys.path.insert(0, str(ROOT / "tools"))
 import check_fixture_hashes as chk  # noqa: E402
 
 
-def fake_ovcd(tmp_path: Path, status="matches", results=True, code=0, text=None) -> Path:
+def fake_ovd(tmp_path: Path, status="matches", results=True, code=0, text=None) -> Path:
     out = text if text is not None else json.dumps({"options": [
         {"name": "Option 1", "hash_status": status, "results_hash": "ab" * 32,
          "results": {"x": 1} if results else None}]})
-    script = tmp_path / "ovcd"
+    script = tmp_path / "ovd"
     script.write_text(textwrap.dedent(f'''\
         #!{sys.executable}
         import sys
@@ -45,49 +45,49 @@ def fixtures(tmp_path: Path, names) -> Path:
 SIX = [f"f{i}.vdesign" for i in range(6)]
 
 
-def run(tmp_path, ovcd, names=SIX):
-    return subprocess.run([sys.executable, str(SCRIPT), str(ovcd), str(fixtures(tmp_path, names))],
+def run(tmp_path, ovd, names=SIX):
+    return subprocess.run([sys.executable, str(SCRIPT), str(ovd), str(fixtures(tmp_path, names))],
                           capture_output=True, text=True)
 
 
 def test_matching_hashes_pass(tmp_path):
-    r = run(tmp_path, fake_ovcd(tmp_path))
+    r = run(tmp_path, fake_ovd(tmp_path))
     assert r.returncode == 0, r.stderr
     assert "every fixture hash matches" in r.stdout
 
 
 def test_a_hash_mismatch_fails(tmp_path):
-    r = run(tmp_path, fake_ovcd(tmp_path, status="differs"))
+    r = run(tmp_path, fake_ovd(tmp_path, status="differs"))
     assert r.returncode == 1 and "'differs'" in r.stderr
 
 
 def test_a_missing_stored_hash_fails(tmp_path):
-    assert run(tmp_path, fake_ovcd(tmp_path, status="not_stored")).returncode == 1
+    assert run(tmp_path, fake_ovd(tmp_path, status="not_stored")).returncode == 1
 
 
 def test_an_option_without_results_fails_unless_it_is_the_convoy(tmp_path):
-    r = run(tmp_path, fake_ovcd(tmp_path, results=False))
+    r = run(tmp_path, fake_ovd(tmp_path, results=False))
     assert r.returncode == 1 and "no results" in r.stderr
-    r = run(tmp_path, fake_ovcd(tmp_path, results=False, code=1), names=["pushed_convoy.vdesign"])
+    r = run(tmp_path, fake_ovd(tmp_path, results=False, code=1), names=["pushed_convoy.vdesign"])
     assert r.returncode == 1 and "only 0 Options matched" in r.stderr     # allowed, but nothing matched
     assert "no results yet (allowed)" in r.stdout and "no results\n" not in r.stderr
 
 
 def test_a_failing_or_silent_binary_fails(tmp_path):
-    assert run(tmp_path, fake_ovcd(tmp_path, code=1)).returncode == 1
-    assert run(tmp_path, fake_ovcd(tmp_path, text="not json")).returncode == 1
+    assert run(tmp_path, fake_ovd(tmp_path, code=1)).returncode == 1
+    assert run(tmp_path, fake_ovd(tmp_path, text="not json")).returncode == 1
 
 
 def test_too_few_matches_or_no_fixtures_fail(tmp_path):
-    r = run(tmp_path, fake_ovcd(tmp_path), names=SIX[:3])
+    r = run(tmp_path, fake_ovd(tmp_path), names=SIX[:3])
     assert r.returncode == 1 and "only 3 Options matched" in r.stderr
-    assert run(tmp_path, fake_ovcd(tmp_path), names=[]).returncode == 1
+    assert run(tmp_path, fake_ovd(tmp_path), names=[]).returncode == 1
 
 
 def test_a_missing_binary_fails(tmp_path):
-    r = subprocess.run([sys.executable, str(SCRIPT), str(tmp_path / "no-such-ovcd")],
+    r = subprocess.run([sys.executable, str(SCRIPT), str(tmp_path / "no-such-ovd")],
                        capture_output=True, text=True)
-    assert r.returncode == 1 and "no ovcd binary" in r.stderr
+    assert r.returncode == 1 and "no ovd binary" in r.stderr
 
 
 def test_the_real_fixtures_are_what_the_script_expects():
@@ -119,21 +119,21 @@ def run_wasm(tmp_path, module, names=SIX, wasmtime=None):
 
 
 def test_the_wasm_module_is_run_under_wasmtime_and_matching_hashes_pass(tmp_path):
-    r = run_wasm(tmp_path, fake_ovcd(tmp_path))
+    r = run_wasm(tmp_path, fake_ovd(tmp_path))
     assert r.returncode == 0, r.stderr
     assert "under" in r.stdout and "every fixture hash matches" in r.stdout
 
 
 def test_a_wasm_hash_mismatch_fails(tmp_path):
-    r = run_wasm(tmp_path, fake_ovcd(tmp_path, status="differs"))
+    r = run_wasm(tmp_path, fake_ovd(tmp_path, status="differs"))
     assert r.returncode == 1 and "'differs'" in r.stderr
 
 
 def test_a_missing_wasmtime_or_module_fails(tmp_path):
-    r = run_wasm(tmp_path, fake_ovcd(tmp_path), wasmtime=tmp_path / "no-such-wasmtime")
+    r = run_wasm(tmp_path, fake_ovd(tmp_path), wasmtime=tmp_path / "no-such-wasmtime")
     assert r.returncode == 1 and "no wasmtime" in r.stderr
     r = run_wasm(tmp_path, tmp_path / "no-such.wasm")
-    assert r.returncode == 1 and "no ovcd binary" in r.stderr
+    assert r.returncode == 1 and "no ovd binary" in r.stderr
 
 
 # ---------- where it runs ----------
@@ -147,7 +147,7 @@ def test_the_release_gate_runs_it_on_windows_and_both_macs():
     assert set(job["strategy"]["matrix"]["os"]) == {"macos-15-intel", "macos-latest", "windows-latest"}
     runs = [s.get("run", "") for s in job["steps"]]
     build = next(i for i, r in enumerate(runs) if "cargo build --release" in r)
-    check = next(i for i, r in enumerate(runs) if "tools/check_fixture_hashes.py target/release/ovcd" in r)
+    check = next(i for i, r in enumerate(runs) if "tools/check_fixture_hashes.py target/release/ovd" in r)
     assert check > build
     assert not any("--no-fail" in r or "|| true" in r for r in runs)
 
@@ -174,7 +174,7 @@ def test_the_release_gate_runs_it_on_webassembly_with_a_pinned_wasmtime():
     assert "cargo install wasmtime-cli --version 49.0.3 --locked" in text
     build = next(i for i, r in enumerate(runs) if "cargo build --release" in r and "wasm32-wasip1" in r)
     check = next(i for i, r in enumerate(runs) if "check_fixture_hashes.py --wasmtime" in r
-                 and "ovcd.wasm" in r)
+                 and "ovd.wasm" in r)
     assert check > build
     assert not any("--no-fail" in r or "|| true" in r for r in runs)
     assert "continue-on-error" not in str(job)
@@ -182,7 +182,7 @@ def test_the_release_gate_runs_it_on_webassembly_with_a_pinned_wasmtime():
 
 def test_the_default_run_checks_the_website_examples_too(tmp_path):
     # A stand-in that gives a stale hash only for a website example: the default run must fail on it.
-    script = tmp_path / "ovcd"
+    script = tmp_path / "ovd"
     script.write_text(textwrap.dedent(f'''\
         #!{sys.executable}
         import json, sys
@@ -199,7 +199,7 @@ def test_the_default_run_checks_the_website_examples_too(tmp_path):
 
 def test_the_default_run_checks_the_worked_examples_too(tmp_path):
     # A stand-in that gives a stale hash only for a design under examples/: the default run must fail.
-    script = tmp_path / "ovcd"
+    script = tmp_path / "ovd"
     script.write_text(textwrap.dedent(f'''\
         #!{sys.executable}
         import json, sys
@@ -217,5 +217,5 @@ def test_the_default_run_checks_the_worked_examples_too(tmp_path):
 
 def test_an_empty_examples_folder_fails(tmp_path):
     empty = Path(tempfile.mkdtemp(dir=tmp_path))
-    problems = chk.check(fake_ovcd(tmp_path), fixtures(tmp_path, SIX), also=(empty,))
+    problems = chk.check(fake_ovd(tmp_path), fixtures(tmp_path, SIX), also=(empty,))
     assert problems == [f"no .vdesign designs in {empty}"]

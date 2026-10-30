@@ -1,6 +1,6 @@
 """Check the built site (website/_site/) for broken internal links.
 
-Every internal URL must be an absolute /ovcd/... path (a relative URL breaks at /ovcd with no
+Every internal URL must be an absolute /ovd/... path (a relative URL breaks at /ovd with no
 trailing slash) and must resolve to a built file the way GitHub Pages resolves it: the file
 itself, or the file plus ".html". A link with a #fragment must land on an id in the target page.
 External links are not fetched.
@@ -15,10 +15,10 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 SITE = Path(__file__).resolve().parent / "_site"
-PREFIX = "/ovcd"
+PREFIX = "/ovd"
 EXTERNAL = re.compile(r"^([a-z][a-z0-9+.-]*:|//)", re.I)
 # The two folder URLs the ARC proxy maps to an index page (see website/README.md).
-INDEXES = {"/ovcd": "index.html", "/ovcd/docs": "docs/index.html"}
+INDEXES = {"/ovd": "index.html", "/ovd/docs": "docs/index.html"}
 
 
 class Page(HTMLParser):

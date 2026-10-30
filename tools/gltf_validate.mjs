@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // The Khronos glTF validator on the `.glb` of every fixture (issue #460).
 //
-//   node tools/gltf_validate.mjs <path to ovcd>
+//   node tools/gltf_validate.mjs <path to ovd>
 //
-// Each fixture Option is written with `ovcd export --format gltf` and checked with the `gltf-validator`
+// Each fixture Option is written with `ovd export --format gltf` and checked with the `gltf-validator`
 // package (pinned in the CI job). Any error fails; so does a fixture that writes nothing (a pushed
 // convoy has no model: it is the one allowed exception). Warnings and infos are printed.
 import { spawnSync } from "node:child_process";
@@ -16,11 +16,11 @@ import validator from "gltf-validator";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const bin = process.argv[2];
 if (!bin) {
-  console.error("usage: node tools/gltf_validate.mjs <path to ovcd>");
+  console.error("usage: node tools/gltf_validate.mjs <path to ovd>");
   process.exit(2);
 }
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "ovcd-gltf-"));
-const dirs = ["crates/ovcd-format/tests/fixtures", "crates/ovcd-format/tests/legacy"];
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "ovd-gltf-"));
+const dirs = ["crates/ovd-format/tests/fixtures", "crates/ovd-format/tests/legacy"];
 const allowed = new Set(["pushed_convoy.vdesign"]);
 let checked = 0;
 let bad = 0;
@@ -41,7 +41,7 @@ for (const dir of dirs) {
       const out = path.join(tmp, `${f}-${name}.glb`.replace(/[^A-Za-z0-9_.-]/g, "_"));
       const r = spawnSync(bin, ["export", "--format", "gltf", "--option", name, "-o", out, file], { encoding: "utf8" });
       if (r.status !== 0) {
-        console.log(`${f} / ${name}: ovcd exited ${r.status}: ${r.stderr.trim()}`);
+        console.log(`${f} / ${name}: ovd exited ${r.status}: ${r.stderr.trim()}`);
         bad++;
         continue;
       }

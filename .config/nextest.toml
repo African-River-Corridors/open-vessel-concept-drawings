@@ -10,11 +10,11 @@
 [profile.pr]
 default-filter = """
 not (
-    (binary_id(ovcd-core::gas_arrangement_feasible) & test(=no_arrangement_labelled_feasible_has_a_failing_check))
-  | (binary_id(ovcd-format::ga) & test(=a_sweep_of_hull_sizes_always_draws_a_valid_sheet))
-  | (binary_id(ovcd-core::gas_arrangement) & test(=property_the_smallest_viable_length_is_a_length_that_passes))
-  | (binary_id(ovcd-format::aft_block_inputs) & test(=each_input_moves_the_aft_block_in_the_drawing_object))
-  | (binary_id(ovcd-format::light_angle_of_max_gz) & test(=a_light_failure_with_another_criterion_failing_stays_an_error))
+    (binary_id(ovd-core::gas_arrangement_feasible) & test(=no_arrangement_labelled_feasible_has_a_failing_check))
+  | (binary_id(ovd-format::ga) & test(=a_sweep_of_hull_sizes_always_draws_a_valid_sheet))
+  | (binary_id(ovd-core::gas_arrangement) & test(=property_the_smallest_viable_length_is_a_length_that_passes))
+  | (binary_id(ovd-format::aft_block_inputs) & test(=each_input_moves_the_aft_block_in_the_drawing_object))
+  | (binary_id(ovd-format::light_angle_of_max_gz) & test(=a_light_failure_with_another_criterion_failing_stays_an_error))
 )
 """
 

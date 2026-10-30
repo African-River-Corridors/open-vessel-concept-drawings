@@ -1,4 +1,4 @@
-# OVCD app text, Spanish (Latin America). Draft: machine-translated, for native review (locales/REVIEWING.md).
+# OVD app text, Spanish (Latin America). Draft: machine-translated, for native review (locales/REVIEWING.md).
 
 ## Header
 
@@ -103,11 +103,11 @@ app-notice-licence = Licencia
 # status: draft
 app-notice-scope = Diseño conceptual. Los resultados no están verificados.
 # status: draft
-app-notice-tool = OVCD es una herramienta de diseño conceptual.
+app-notice-tool = OVD es una herramienta de diseño conceptual.
 # status: draft
 app-notice-unverified = Sus resultados no están verificados. Hay hallazgos de ingeniería conocidos en revisión.
 # status: draft
-app-notice-warranty = No hay garantía. OVCD es de código abierto bajo la licencia Apache 2.0.
+app-notice-warranty = No hay garantía. OVD es de código abierto bajo la licencia Apache 2.0.
 # status: draft
 app-notice-accept = Entiendo
 
@@ -504,7 +504,7 @@ app-cost-item-wheelhouse-accommodation = Puente de gobierno y alojamiento
 ## Pantalla de inicio
 
 # status: draft
-app-splash-starting = OVCD se está iniciando
+app-splash-starting = OVD se está iniciando
 # status: draft
 app-splash-tagline = Un instrumento abierto para el { $design } de embarcaciones fluviales y costeras.
 # status: draft

@@ -8,8 +8,8 @@ Errors go to the findings register (#121) only after maintainer triage.
 
 ### E1. The wheelhouse sightline does not block `fit`
 
-- **Code:** `crates/ovcd-core/src/aft_arrangement.rs`, `compute`, lines 949 to 965: `wheelhouse_sees_over_cargo`
-  has severity `"warning"`. `crates/ovcd-core/src/checks.rs`, `all_ok`, lines 47 to 49, ignores warnings.
+- **Code:** `crates/ovd-core/src/aft_arrangement.rs`, `compute`, lines 949 to 965: `wheelhouse_sees_over_cargo`
+  has severity `"warning"`. `crates/ovd-core/src/checks.rs`, `all_ok`, lines 47 to 49, ignores warnings.
   `gas_arrangement.rs`, `search`, line 588 and line 611, gate on `all_ok`.
 - **Source:** maintainer decision on #264 (comment, 2026-10-20): the sightline blocks `fit`; a candidate that
   fails it is not feasible. Spec 0004 still lists it as an open question ("How `fit` uses it").
@@ -18,7 +18,7 @@ Errors go to the findings register (#121) only after maintainer triage.
 
 ### E2. The wing tank width ignores the side clearance
 
-- **Code:** `crates/ovcd-core/src/models.rs`, `post_init`, lines 245 to 254 set `side_clearance = 1.0` and
+- **Code:** `crates/ovd-core/src/models.rs`, `post_init`, lines 245 to 254 set `side_clearance = 1.0` and
   `wing_tank_width = 1.0 − wing_tank_gap` when both are empty. `barge_capacity.rs`, `gas_volumetric`, line 507 runs
   `post_init` on the base inputs first, so each round (lines 553 to 557) copies the 0.4 m width and only changes
   the clearance.
@@ -62,11 +62,11 @@ Errors go to the findings register (#121) only after maintainer triage.
 ### E6. Provenance of the length-over-diameter limit
 
 - **Code:** `gas_arrangement.rs`, lines 43 to 47, says the 7.0 comes from the removed `ADN_G` ruleset and that no
-  IGC paragraph is cited. Spec 0004 files it in `ovcd` as a tool limit.
+  IGC paragraph is cited. Spec 0004 files it in `ovd` as a tool limit.
 - **Source:** the inland rule book that `lr-inland-gas` already cites gives the same limit for type G: 3.5.1,
   ratio of cargo tank length over diameter not to exceed seven. ADN 2025 9.3.1.11.1(b) applies it to pressure tanks.
 - **Effect:** none on numbers. It changes the label: the limit can be a cited Rule in `lr-inland-gas` (unverified
-  until a second reader checks it), not an OVCD tool limit.
+  until a second reader checks it), not an OVD tool limit.
 
 ### E7. The check list comment claims a protective location check that does not exist
 
@@ -115,7 +115,7 @@ Errors go to the findings register (#121) only after maintainer triage.
 
 - **G1. IGC 3.2.4.1, entrances and openings.** Entrances, air inlets and openings to accommodation, service and
   machinery spaces must not face the cargo area. On the side of the deckhouse they must be at least 4 % of L, not
-  less than 3 m (and need not exceed 5 m), from the end facing the cargo area. OVCD models only the 2.00 m inland
+  less than 3 m (and need not exceed 5 m), from the end facing the cargo area. OVD models only the 2.00 m inland
   setback, measured from the cargo area. The stern block layout (`aft_arrangement.rs`) has no openings.
 - **G2. IGC 2.4.4, collision bulkhead.** Cargo tanks shall not be forward of the collision bulkhead. The hull
   has no collision bulkhead; the bow void is the rake plus 0.50 m.
@@ -161,7 +161,7 @@ Errors go to the findings register (#121) only after maintainer triage.
 | C6 | Replace `lr-inland-gas` separation clauses with IGC chapter 3 Rules: 3.1.1, 3.1.2, 3.2.1, 3.2.4.1 (with a deckhouse opening Measure), and remove the 0.60 m cofferdam Rule | E3, G1 | Large, unknown until codified | With #280 (decided) |
 | C7 | Add a `sizes` Rule `igc/2.4.1.2/side-clearance` and a bottom Rule, checked on the result; drive the design grid from them | E5, E7, G11 | Medium on the design grid; none on `fit` | #271 (wording), #277 (values) |
 | C8 | Add IGC 3.5.3.5 inspection clearances as Rules, `warn` first | G3 | None at `warn`; medium if `block` | After C7 |
-| C9 | Move the L/D 7 limit into `lr-inland-gas` as a cited Rule (3.5.1), keep the `ovcd` tool limit if wanted | E6 | None | With #272 |
+| C9 | Move the L/D 7 limit into `lr-inland-gas` as a cited Rule (3.5.1), keep the `ovd` tool limit if wanted | E6 | None | With #272 |
 | C10 | Add the inland 380 m³ capacity limit and the 3.5.2 hull clauses as `not evaluated` rows now, and as Rules in an optional ADN set later | G4, G5 | None now; large when ADN is selected | With #272 (rows), ADN set later |
 | C11 | Round `smallest_viable_loa` up, or test the rounded value; put the cap tank on the cap with the gaps counted | E9, E10 | Small | Any time, with a design-impact table |
 | C12 | Harness cases: d(Vc) at 1,000, 5,000, 30,000 m³ on each side; clear gap with and without insulation; each separation check at its limit; one `fit` case with a known answer | G12 | None (tests) | With #278 |

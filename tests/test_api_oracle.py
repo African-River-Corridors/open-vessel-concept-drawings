@@ -197,7 +197,7 @@ CASES = [(name, mode) for name in S.SCENARIOS for mode in S.MODES]
 def test_the_api_gives_the_answers_of_0_1_0(name, mode):
     """Label: snapshot"""
     expected = EXPECTED[name].get(mode, EXPECTED[name]["float"])
-    actual = S.run("vessel_designer", mode, name)
+    actual = S.run("ovd", mode, name)
     if name in KNOWN_DIFFERENCES:
         pytest.skip(KNOWN_DIFFERENCES[name])
     actual = without_added(actual, expected)
@@ -225,11 +225,11 @@ def test_no_scenario_is_vacuous():
 
 def test_every_public_function_is_called_by_a_scenario():
     """Label: property"""
-    needed = {"simulate." + n for n, v in API["vessel_designer.simulate"].items() if v["kind"] == "function"}
+    needed = {"simulate." + n for n, v in API["ovd.simulate"].items() if v["kind"] == "function"}
     for module, names in API.items():
-        if not module.startswith("vessel_designer.core."):
+        if not module.startswith("ovd.core."):
             continue
-        short = module.removeprefix("vessel_designer.")
+        short = module.removeprefix("ovd.")
         needed |= {f"{short}.{n}" for n, v in names.items() if v["kind"] == "function"}
         # classes with callable methods of their own (not just an `ok` property)
         needed |= {f"{short}.{n}" for n, v in names.items()
@@ -242,12 +242,12 @@ def test_every_public_function_is_called_by_a_scenario():
 
 def test_the_modes_really_hand_over_the_numbers_they_name():
     """Label: property"""
-    ints = S.Ctx("vessel_designer", "int")
+    ints = S.Ctx("ovd", "int")
     assert type(ints.n(90.0)) is int and type(ints.n(0.5)) is float and type(ints.k(2)) is int
-    np_ints = S.Ctx("vessel_designer", "np.int64")
+    np_ints = S.Ctx("ovd", "np.int64")
     assert type(np_ints.n(90.0)) is np.int64 and type(np_ints.n(0.5)) is np.float64
     assert type(np_ints.k(2)) is np.int64
-    np_floats = S.Ctx("vessel_designer", "np.float64")
+    np_floats = S.Ctx("ovd", "np.float64")
     assert type(np_floats.n(90.0)) is np.float64 and type(np_floats.n(0.5)) is np.float64
-    plain = S.Ctx("vessel_designer", "float")
+    plain = S.Ctx("ovd", "float")
     assert type(plain.n(90.0)) is float

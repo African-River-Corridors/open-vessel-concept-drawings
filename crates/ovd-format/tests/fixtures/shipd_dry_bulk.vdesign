@@ -1,0 +1,371 @@
+{
+  "format": "vdesign",
+  "format_version": 3,
+  "engine_version": "0.2.4",
+  "units": "SI",
+  "options": [
+    {
+      "name": "Option 1",
+      "inputs": {
+        "cargo": {
+          "value": "bauxite",
+          "source": "typed"
+        },
+        "hull_form": {
+          "value": "shipd",
+          "source": "typed"
+        },
+        "formation": {
+          "value": {
+            "kind": "pushed_barge"
+          },
+          "source": "typed"
+        },
+        "length_overall_m": {
+          "value": 80.0,
+          "source": "typed"
+        },
+        "beam_m": {
+          "value": 14.0,
+          "source": "typed"
+        },
+        "moulded_depth_m": {
+          "value": 4.5,
+          "source": "typed"
+        },
+        "cargo_containment": {
+          "value": "box_hold",
+          "source": "default"
+        },
+        "midship_coefficient": {
+          "value": 1.0,
+          "source": "default"
+        },
+        "sheer_aft_m": {
+          "value": 0.0,
+          "source": "default"
+        },
+        "sheer_fwd_m": {
+          "value": 0.0,
+          "source": "default"
+        },
+        "camber_m": {
+          "value": 0.0,
+          "source": "default"
+        },
+        "shipd_parameters": {
+          "value": {
+            "Lb": 0.448934650755608,
+            "Ls": 0.543911040631986,
+            "Bs": 0.116329176691602,
+            "WL": 0.622675917926474,
+            "Bc": 0.154697683655,
+            "Beta": 0.822625038981057,
+            "Rc": 0.289999712200032,
+            "Rk": 0.475932129102236,
+            "Abow": 3.44128392444005,
+            "Bbow": -3.4132193144145,
+            "BK_z": 0.95316528882128,
+            "Kappa_bow": 0.779019547064257,
+            "Adel bow": -1.95048354846558,
+            "Bdel bow": 1.34902994866912,
+            "Adrft": -1.48552318102814,
+            "Bdrft": 1.7436127628757,
+            "Cdrft": 0.655521667492138,
+            "bit_EP_S": 0.0,
+            "bit_EP_T": 0.0,
+            "Atrans": -2.85874134834807,
+            "SK_z": 0.729495778733818,
+            "Kappa_stern": 0.176802265929974,
+            "Adel stern": -0.5144029271561,
+            "Bdel stern": 0.833853540537704,
+            "Beta trans": 32.6659685663813,
+            "Bc trans": 0.0230787270058602,
+            "Rc Trans": 0.148893077704097,
+            "Rk trans": -0.0130611765932769,
+            "bit_BB": 0.0,
+            "bit_SB": 0.0,
+            "Lbb": 0.110930750129359,
+            "Hbb": 0.403854019894644,
+            "Bbb": 0.404560539715575,
+            "Lbbm": -0.000408053177279877,
+            "Rbb": 0.0557179202422023,
+            "Kappa_SB": 0.107664983215122,
+            "Lsb": 0.19964943665274,
+            "HSBOA": 0.383693585212329,
+            "Hsb": 0.445040554814405,
+            "Bsb": 0.610800513753723,
+            "Lsbm": 0.332766795996687,
+            "Rsb": 0.268086740934822
+          },
+          "source": "default"
+        },
+        "min_freeboard_m": {
+          "value": 0.3,
+          "source": "default"
+        },
+        "bow_rake_length_to_depth_ratio": {
+          "value": 1.6,
+          "source": "default"
+        },
+        "bow_rake_max_length_m": {
+          "value": null,
+          "source": "default"
+        },
+        "pushed_stern_void_m": {
+          "value": 3.0,
+          "source": "default"
+        },
+        "lightship_factor_t_per_m3": {
+          "value": 0.1093,
+          "source": "default"
+        },
+        "hold_wing_void_width_m": {
+          "value": 1.0,
+          "source": "default"
+        },
+        "hold_double_bottom_m": {
+          "value": 1.2,
+          "source": "default"
+        },
+        "hatch_coaming_height_m": {
+          "value": 1.0,
+          "source": "default"
+        },
+        "hold_covering": {
+          "value": "covered",
+          "source": "default"
+        },
+        "bulk_end_bulkhead_m": {
+          "value": 0.5,
+          "source": "default"
+        },
+        "hold_fill_ratio": {
+          "value": 0.95,
+          "source": "default"
+        },
+        "tug_included": {
+          "value": true,
+          "source": "default"
+        },
+        "tug_preset": {
+          "value": "none",
+          "source": "default"
+        },
+        "tug_length_m": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_beam_m": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_draught_m": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_stern_form": {
+          "value": "tunnel",
+          "source": "default"
+        },
+        "tug_stern_run_length_m": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_stern_transom_height_m": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_tunnel_crown_height_m": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_propulsor_type": {
+          "value": "shaft_nozzle",
+          "source": "default"
+        },
+        "tug_propulsor_count": {
+          "value": 2.0,
+          "source": "default"
+        },
+        "tug_propeller_diameter_m": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_power_source": {
+          "value": "diesel_mechanical",
+          "source": "default"
+        },
+        "tug_installed_power_kw": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_design_speed_kn": {
+          "value": 9.7,
+          "source": "default"
+        },
+        "tug_installed_power_margin": {
+          "value": 1.2,
+          "source": "default"
+        },
+        "tug_bow_thruster": {
+          "value": "none",
+          "source": "default"
+        },
+        "tug_wheelhouse_type": {
+          "value": "elevating",
+          "source": "default"
+        },
+        "tug_sightline_method": {
+          "value": "blind_distance",
+          "source": "default"
+        },
+        "formation_resistance_allowance": {
+          "value": 1.0,
+          "source": "default"
+        },
+        "propulsive_efficiency": {
+          "value": 0.45,
+          "source": "default"
+        },
+        "max_speed_kn": {
+          "value": 10.0,
+          "source": "default"
+        },
+        "air_draft_limit_m": {
+          "value": null,
+          "source": "default"
+        },
+        "draught_limit_m": {
+          "value": null,
+          "source": "default"
+        },
+        "channel_depth_m": {
+          "value": null,
+          "source": "default"
+        },
+        "channel_under_keel_clearance_m": {
+          "value": 0.5,
+          "source": "default"
+        },
+        "channel_bottom_width_m": {
+          "value": null,
+          "source": "default"
+        },
+        "channel_bank_slope": {
+          "value": 3.0,
+          "source": "default"
+        },
+        "channel_current_kn": {
+          "value": 0.0,
+          "source": "default"
+        },
+        "water_density_t_per_m3": {
+          "value": 1.0,
+          "source": "default"
+        },
+        "squat_safety_margin_m": {
+          "value": 0.15,
+          "source": "default"
+        },
+        "loading_conditions": {
+          "value": "legacy",
+          "source": "typed"
+        },
+        "hull_steel_rate": {
+          "value": 2500.0,
+          "source": "default"
+        },
+        "tank_shell_rate": {
+          "value": 10000.0,
+          "source": "default"
+        },
+        "tank_supports_rate": {
+          "value": 2000.0,
+          "source": "default"
+        },
+        "insulation_rate": {
+          "value": 4000.0,
+          "source": "default"
+        },
+        "piping_rate": {
+          "value": 4500.0,
+          "source": "default"
+        },
+        "outfitting_rate": {
+          "value": 4000.0,
+          "source": "default"
+        },
+        "cargo_system_lump": {
+          "value": 500000.0,
+          "source": "default"
+        },
+        "paint_anodes_misc": {
+          "value": 100000.0,
+          "source": "default"
+        },
+        "battery_rate_per_kwh": {
+          "value": 250.0,
+          "source": "default"
+        },
+        "propulsion_rate_per_kw": {
+          "value": 1000.0,
+          "source": "default"
+        },
+        "wheelhouse_accom_lump": {
+          "value": 450000.0,
+          "source": "default"
+        },
+        "tug_outfitting_lump": {
+          "value": 200000.0,
+          "source": "default"
+        },
+        "yard_margin_fraction": {
+          "value": 0.1,
+          "source": "default"
+        },
+        "delivery_lump": {
+          "value": 200000.0,
+          "source": "default"
+        },
+        "currency": {
+          "value": "USD",
+          "source": "default"
+        },
+        "price_base_date": {
+          "value": null,
+          "source": "default"
+        },
+        "service_area": {
+          "value": "river-only",
+          "source": "default"
+        },
+        "rule_sets": {
+          "value": [
+            {
+              "id": "is2008-a",
+              "version": "2.0.0",
+              "hash": "7dfa155b0d58383f73d35b9b0c037c89dbd928ad4bf22fe93a0a32b1eaee744f",
+              "source": "default"
+            },
+            {
+              "id": "es-trin-2025",
+              "version": "1.0.0",
+              "hash": "a37a0c98b24d77e205b4cc04d4803b2de27912ba81232cc695a1984ef8e58d6a",
+              "source": "default"
+            },
+            {
+              "id": "ovd",
+              "version": "3.0.0",
+              "hash": "88869f85bacb1baab3ecd5336a60642423a5e82cac6960c9d8e329cdceb63333",
+              "source": "default"
+            }
+          ],
+          "source": "default"
+        }
+      },
+      "results_hash": "a577fed3f33e50379819d722cea3990e329c64e831c593849570917ea5725541"
+    }
+  ],
+  "defaults_profile": "built-in"
+}

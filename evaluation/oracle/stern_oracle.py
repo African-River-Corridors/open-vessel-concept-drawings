@@ -58,19 +58,19 @@ def verdicts(i: dict) -> dict:
                 "SOLAS V/22.1.1", f"blind zone ahead, {cond}", "m", "le", i[key], limit, TOL)
     out["rheinschpv/1.07(2)/blind-zone-laden"] = _entry(
         "Rhine Police Regulations 1.07(2)", "blind zone ahead, laden", "m", "le", i["blind_distance_laden_m"], 350.0)
-    out["ovcd/powering/installed-covers-design-speed"] = _entry(
+    out["ovd/powering/installed-covers-design-speed"] = _entry(
         "spec 0007", "service speed over the Design Speed", "-", "ge",
         i["speed_deep_water_kmh"] / KN_TO_KMH / i["design_speed_kn"], 1.0, TOL)
     d = i["propeller_diameter_m"]
-    out["ovcd/propulsion/propeller-fits-stern"] = _entry(
+    out["ovd/propulsion/propeller-fits-stern"] = _entry(
         "spec 0007", "propeller diameter over the largest the stern allows", "-", "le",
         d / i["propeller_d_max_m"], 1.0, TOL)
     k = 1 if i["propeller_ducted"] else 0
     submergence = i["aft_draught_light_m"] - d / 2.0
-    out["ovcd/propulsion/immersion-light"] = _entry(
+    out["ovd/propulsion/immersion-light"] = _entry(
         "spec 0007", "shaft submergence over the diameter, over its limit", "-", "ge",
         submergence / d / IMMERSION[k], 1.0, TOL)
-    out["ovcd/propulsion/blade-load"] = _entry(
+    out["ovd/propulsion/blade-load"] = _entry(
         "spec 0007", "blade load over its limit", "-", "le", i["blade_load_kw_m2"] / BLADE_LOAD[k], 1.0, TOL)
     return out
 
@@ -96,13 +96,13 @@ def move(i: dict, rule_id: str, target: float) -> tuple[str, float]:
         return "blind_distance_laden_m", target
     if rule_id == "es-trin/5.06(1)/speed-13kmh":
         return "speed_deep_water_kmh", target
-    if rule_id == "ovcd/powering/installed-covers-design-speed":
+    if rule_id == "ovd/powering/installed-covers-design-speed":
         return "speed_deep_water_kmh", target * i["design_speed_kn"] * KN_TO_KMH
-    if rule_id == "ovcd/propulsion/propeller-fits-stern":
+    if rule_id == "ovd/propulsion/propeller-fits-stern":
         return "propeller_diameter_m", target * i["propeller_d_max_m"]
-    if rule_id == "ovcd/propulsion/immersion-light":
+    if rule_id == "ovd/propulsion/immersion-light":
         return "aft_draught_light_m", target * IMMERSION[k] * d + d / 2.0
-    if rule_id == "ovcd/propulsion/blade-load":
+    if rule_id == "ovd/propulsion/blade-load":
         return "blade_load_kw_m2", target * BLADE_LOAD[k]
     raise KeyError(rule_id)
 

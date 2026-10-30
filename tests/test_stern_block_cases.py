@@ -1,6 +1,6 @@
 """The stern-block cases (issue #365): built ships whose stern block and aft peak are measured from the
 maker's general arrangement. The list is well formed, and each figure says how it was read. The run
-itself needs the `ovcd` binary: `python3 tools/stern_block_calibration.py <ovcd> --check`."""
+itself needs the `ovd` binary: `python3 tools/stern_block_calibration.py <ovd> --check`."""
 
 from pathlib import Path
 

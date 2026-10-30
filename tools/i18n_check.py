@@ -176,16 +176,16 @@ INPUT_SPEC = re.compile(r'\b(?:spec|only|only_in|pushed|self_propelled|lpg|tug|a
 
 def check_input_labels(root: Path, english: dict[str, "Message"]) -> list[str]:
     """`inputs.ftl` holds each input of the input table with its label: a stale file fails here, fast.
-    The Rust test `crates/ovcd-format/tests/i18n_inputs.rs` checks the rest (choices, groups, notes)."""
-    path = root / "crates/ovcd-format/src/vdesign.rs"
+    The Rust test `crates/ovd-format/tests/i18n_inputs.rs` checks the rest (choices, groups, notes)."""
+    path = root / "crates/ovd-format/src/vdesign.rs"
     if not path.exists():
         return []
     src = path.read_text(encoding="utf-8")
     start = src.find("pub const INPUTS")
     if start < 0:
-        return ["crates/ovcd-format/src/vdesign.rs: no input table (`pub const INPUTS`) found"]
+        return ["crates/ovd-format/src/vdesign.rs: no input table (`pub const INPUTS`) found"]
     table = {f"input-{k.replace('_', '-')}": label for k, label in INPUT_SPEC.findall(src[start:src.index("];", start)])}
-    rerun = "run OVCD_WRITE_TEXT=1 cargo test -p ovcd-format --test i18n_inputs"
+    rerun = "run OVD_WRITE_TEXT=1 cargo test -p ovd-format --test i18n_inputs"
     out = []
     for k, label in table.items():
         value = english[k].source.split("=", 1)[1].strip() if k in english else None

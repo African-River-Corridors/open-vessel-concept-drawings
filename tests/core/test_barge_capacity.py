@@ -3,7 +3,7 @@
 Capacity is VOLUME-BOUND (no weight/draft cap; that is applied downstream). The worked
 examples use LOA 100, beam 16, moulded depth 6.
 """
-from vessel_designer.core.barge_capacity import BargeCapacityInputs, compute
+from ovd.core.barge_capacity import BargeCapacityInputs, compute
 
 
 def _gas(beam=16.0, depth=6.0, **kw):
@@ -141,7 +141,7 @@ def test_wider_cofferdam_costs_cargo():
 
     Label: property
     """
-    from vessel_designer.core.gas_separation import GasSeparationInputs
+    from ovd.core.gas_separation import GasSeparationInputs
     base = _gas()
     wide = _gas(separation=GasSeparationInputs(opening_setback_m=4.0))
     assert abs((base.cargo_zone_length_m - wide.cargo_zone_length_m) - 2.0) < 1e-9

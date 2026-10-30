@@ -1,6 +1,6 @@
 """The tank-barge lightship fit (issue #330): the generated file is current and holds the declared
 subset. The Rust constants equal the file: `the_lightship_constants_equal_the_generated_fit` in
-`crates/ovcd-core/tests/liquid_bulk.rs` (this file may not read `crates/`: the wheel check does not
+`crates/ovd-core/tests/liquid_bulk.rs` (this file may not read `crates/`: the wheel check does not
 copy it).
 
 Label: property

@@ -1,6 +1,6 @@
-# OVCD engine messages, Simplified Chinese. Draft: machine-translated, for native review (locales/REVIEWING.md).
+# OVD engine messages, Simplified Chinese. Draft: machine-translated, for native review (locales/REVIEWING.md).
 
-## crates/ovcd-core/src/aft_arrangement.rs
+## crates/ovd-core/src/aft_arrangement.rs
 
 # status: draft
 check-thrusters-fit-beam = { $count } x { $envelope } m 推进器横向需要{ $needed } m，型宽为{ $beam } m
@@ -29,7 +29,7 @@ check-wheelhouse-sees-over-cargo = 升高后眼高{ $eye } m >= 障碍物{ $obst
 # status: draft
 warn-aft-sightline-lift = 视线需要升高{ $lift } m；升降柱可提供{ $max_lift } m。请升高升降柱或降低货物顶面。
 
-## crates/ovcd-core/src/barge_capacity.rs
+## crates/ovd-core/src/barge_capacity.rs
 
 # status: draft
 check-feasible-geometry = 货物容积必须为正（液货舱/货舱可布置）
@@ -56,7 +56,7 @@ check-intact-gm-reported-cargo = 报告货量 { $cargo } t、吃水 { $draught }
 # status: draft
 warn-barge-bulk-gm = 散货 GM 为一阶估算（假定空船 KG）；未模拟货物移动/休止角——请用完整的完整稳性计算书确认。
 
-## crates/ovcd-core/src/barge_cost.rs
+## crates/ovd-core/src/barge_cost.rs
 
 # status: draft
 check-masses-positive = 质量模型输入齐全
@@ -65,7 +65,7 @@ check-no-reliquefaction-in-scope = 按压力累积运行方案，货物系统不
 # status: draft
 check-fabrication-rates-are-estimates = 制造/供货单价为用户提供的估算值；在依赖总价之前，请用船厂报价替换
 
-## crates/ovcd-core/src/electric_energy.rs
+## crates/ovd-core/src/electric_energy.rs
 
 # status: draft
 check-service-below-schijf = 营运航速{ $service } kn 低于 Schijf 限速{ $limit } kn
@@ -76,7 +76,7 @@ check-energy-positive = 营运航速下能耗{ $energy } kWh/km
 # status: draft
 check-resistance-coeffs-first-order = 受限水域阻力（剩余阻力/Lackenby/阻塞比）为一阶估算（RS1）——ITTC-1957 摩擦阻力为标准方法；用于船级之前，请用模型试验/CFD 校准。
 
-## crates/ovcd-core/src/gas_arrangement.rs
+## crates/ovd-core/src/gas_arrangement.rs
 
 # status: draft
 check-tank-length-over-inner-diameter = 液货舱长度{ $length } m / 内径{ $diameter } m = { $ratio } <= { $max }
@@ -89,7 +89,7 @@ check-stability-fails = GM { $gm } m（液体），最大 GZ { $max_gz } m，位
 # status: draft
 check-stability-not-assessed = 无法评估稳性：{ $reason }
 
-## crates/ovcd-core/src/gas_separation.rs
+## crates/ovd-core/src/gas_separation.rs
 
 # status: draft
 check-opening-setback = 尾部间隔{ $aft } m >= { $min } m，自货物区量至任何入口或可开启窗（cl. 3.3.7 / 3.3.11）
@@ -102,7 +102,7 @@ check-fwd-end-bulkhead-space-plane-ends = 液货舱端部为平面
 # status: draft
 warn-separation-clauses = 间隔条款引自内河船舶入级规范（Pt 4 Ch 4 Sec 3，Jul 2022）。发布前请对照 ADN 文本确认。
 
-## crates/ovcd-core/src/gas_stability.rs
+## crates/ovd-core/src/gas_stability.rs
 
 # status: draft
 stab-limit-concept-stage = 概念阶段：棱柱形箱形剖面，一阶重心高度估算，未计进水开口。
@@ -113,7 +113,7 @@ stab-limit-stern-block-mass = 自航尾部区块的质量不在气体空船重�
 # status: draft
 stab-limit-weight-split = 重量分项合计为{ $split } t，而空船重量为{ $lightship } t。
 
-## crates/ovcd-core/src/journey_derating.rs
+## crates/ovd-core/src/journey_derating.rs
 
 # status: draft
 check-capacity-is-volume-bound = 输入的载货能力必须是可行的、受容积限制的设计（未超载）
@@ -126,7 +126,7 @@ check-utilisation-reasonable = 容积利用率{ $utilisation } >= 下限{ $floor
 # status: draft
 warn-journey-draft-bound = 受吃水限制：为在 T_max = { $t_max } m 时浮起，从{ $capacity } t 容积载货能力中减去{ $shed } t（满载吃水{ $full_load_draft } m）。
 
-## crates/ovcd-core/src/resistance.rs
+## crates/ovd-core/src/resistance.rs
 
 # status: draft
 check-service-speed-below-limiting = { $environment }：营运航速{ $service } kn <= 0.95 x Schijf 限速{ $limit } kn
@@ -137,7 +137,7 @@ check-blockage-in-range = { $environment }：阻塞比 n = { $blockage } 必须�
 # status: draft
 check-coefficients-are-first-order = 剩余阻力 Cr/Cf 拟合、Lackenby 浅水修正、阻塞比和 1.02 形状因子均为未经校准的一阶估算（RS1）——ITTC-1957 摩擦阻力为标准方法。
 
-## crates/ovcd-core/src/squat.rs
+## crates/ovd-core/src/squat.rs
 
 # status: draft
 check-keel-clears-bed = 动态 UKC { $ukc } m = 静态{ $static_ukc } m - 航行下沉量{ $squat } m（{ $method }），航速{ $speed } kn
@@ -154,7 +154,7 @@ warn-squat-icorels-not-evaluated = 未计算 ICORELS：水深弗劳德数{ $frou
 # status: draft
 warn-squat-open-water = 未给出航道断面积，因此阻塞比为 0，Barrass 结果为 0——这是开阔水域工况，此时航行下沉量仅按 ICORELS 计算
 
-## crates/ovcd-core/src/vessel_standards.rs
+## crates/ovd-core/src/vessel_standards.rs
 
 # status: draft
 check-unique-ids = 每个键都与其 standard_id 一致
@@ -177,7 +177,7 @@ check-source-cited = 每个等级都引用其来源表
 # status: draft
 check-source-cited-missing = 无来源：{ $keys }
 
-## crates/ovcd-core/src/waves.rs
+## crates/ovd-core/src/waves.rs
 
 # status: draft
 check-stawave1-short-wave-validity = lambda/Lpp = { $ratio }（波长 lambda { $wavelength } m，Lpp { $lpp } m）。STAwave-1 假定为短波，lambda/Lpp < 0.5；超出此范围会低估，在 lambda/Lpp = 1 附近可能低估 2 倍以上
@@ -190,7 +190,7 @@ warn-waves-period-estimated = 未给出波浪周期；由 H_s 估算 T_p 为{ $t
 # status: draft
 warn-waves-beam-seas-floor = 近横浪：本模块给出的是下限，因为未模拟漂移、舵和航向保持损失，而偏离船首方向时它们起主导作用
 
-## crates/ovcd-format/src/class_input.rs
+## crates/ovd-format/src/class_input.rs
 
 # status: draft
 msg-class-scheme = “{ $input }”{ $class }属于等级方案{ $family }，而不是{ $scheme }
@@ -205,12 +205,12 @@ msg-class-draught-above = “{ $input }” = { $value }高于等级{ $class }的
 # status: draft
 msg-class-clearance-above = “{ $input }” = { $value }高于等级{ $class }的最低桥梁净空（{ $limit } m）
 
-## crates/ovcd-format/src/run.rs
+## crates/ovd-format/src/run.rs
 
 # status: draft
 msg-convoy-not-available = 船队结果尚不可用
 
-## crates/ovcd-format/src/simulate.rs
+## crates/ovd-format/src/simulate.rs
 
 # status: draft
 warn-channel-no-bottom-width = 航道有水深但没有底宽，因此不校核航行下沉量、Schijf 限速和阻塞比，航速曲线只适用于深水。吃水限制仍使用水深。请输入航道底宽以进行这些校核。
@@ -219,7 +219,7 @@ name-governs-draught = 吃水——{ $limit }
 # status: draft
 check-feasible-arrangement = 此船体上没有通过全部校核的布置。显示的是最接近的布置。它不通过：{ $fails }。
 
-## crates/ovcd-format/src/text_ids.rs
+## crates/ovd-format/src/text_ids.rs
 
 # status: draft
 name-condition-laden = 满载
@@ -276,7 +276,7 @@ name-cargo-lightship-alone = 仅空船重量就超过允许吃水。
 # status: draft
 name-cargo-nothing-fits = 无法布置：请加长或加宽船体。
 
-## crates/ovcd-format/src/vdesign.rs
+## crates/ovd-format/src/vdesign.rs
 
 # status: draft
 msg-file-not-json = 该文件不是 JSON：{ $error }
@@ -353,7 +353,7 @@ msg-legacy-fixed-one = 此文件没有“{ $input }”；现取引擎在其成�
 # status: draft
 msg-legacy-fixed-many = 此文件没有{ $inputs }；每项现取引擎在其成为输入项之前使用的固定值（标记为默认），因此结果不变
 # status: draft
-msg-inputs-not-stored = 文件中未存储的输入：{ $inputs }。已保存的设计按实际使用值保存每个输入，因此修改默认值配置不会改变它；运行 `ovcd fill` 可从默认值配置写入这些输入，标记为默认
+msg-inputs-not-stored = 文件中未存储的输入：{ $inputs }。已保存的设计按实际使用值保存每个输入，因此修改默认值配置不会改变它；运行 `ovd fill` 可从默认值配置写入这些输入，标记为默认
 # status: draft
 msg-profile-case-keyed = { $key }的 `default_by_{ $by }`
 # status: draft
@@ -379,11 +379,11 @@ msg-currency = “{ $input }”必须为三个大写字母的货币代码，例�
 # status: draft
 msg-price-base-date = “{ $input }”必须为 YYYY、YYYY-MM 或 YYYY-MM-DD 格式的日期，或 null（无）
 # status: draft
-msg-scheme = “{ $input }” = { $value }不是含有可定义船舶的船型等级的等级方案（见 `ovcd schema`）
+msg-scheme = “{ $input }” = { $value }不是含有可定义船舶的船型等级的等级方案（见 `ovd schema`）
 # status: draft
 msg-class-cannot-define = “{ $input }” = { $value }无法定义船舶：等级{ $class }未给出船长或型宽，或其船队编组（{ $formation }）不是设计所具有的船队编组
 # status: draft
-msg-class-unknown = “{ $input }” = { $value }不是船型等级（见 `ovcd schema`）
+msg-class-unknown = “{ $input }” = { $value }不是船型等级（见 `ovd schema`）
 # status: draft
 msg-class-id = “{ $input }”必须为等级 id 或 null
 # status: draft

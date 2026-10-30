@@ -1,26 +1,26 @@
 # Website and docs
 
-The OVCD website and docs. Live at **https://www.africanrivercorridors.com/ovcd** (docs at
-`/ovcd/docs`).
+The OVD website and docs. Live at **https://www.africanrivercorridors.com/ovd** (docs at
+`/ovd/docs`).
 
 ## How it is served
 
 - `.github/workflows/website.yml` builds this folder and deploys it to GitHub Pages on each push to
   `main` that touches `website/`, `docs/` or a root `.md` file. Pull requests build and check the
   links but do not deploy.
-- The ARC website (Vercel) proxies `/ovcd` and `/ovcd/*` to the Pages site with rewrites. There is
+- The ARC website (Vercel) proxies `/ovd` and `/ovd/*` to the Pages site with rewrites. There is
   one source, this folder, and no copy on the ARC side.
 - The ARC site redirects `/path/` to `/path` and `/page.html` to `/page`. So every URL here is an
-  absolute `/ovcd/...` path with no trailing slash and no `.html`. A relative URL would resolve
-  against the wrong folder at `/ovcd`. GitHub Pages serves `page.html` for `/page`.
-- The ARC rewrites map two folder URLs to their index page: `/ovcd` and `/ovcd/docs`. Do not add
-  other folder index pages; name the page instead (`app.html`, served as `/ovcd/app`).
-- The web app page is `app.html`, served at `/ovcd/app`. Its files (JS, CSS, font, `.wasm`) are
-  under `/ovcd/app-files/`, never `app/`: a folder named `app/` next to `app.html` makes GitHub
+  absolute `/ovd/...` path with no trailing slash and no `.html`. A relative URL would resolve
+  against the wrong folder at `/ovd`. GitHub Pages serves `page.html` for `/page`.
+- The ARC rewrites map two folder URLs to their index page: `/ovd` and `/ovd/docs`. Do not add
+  other folder index pages; name the page instead (`app.html`, served as `/ovd/app`).
+- The web app page is `app.html`, served at `/ovd/app`. Its files (JS, CSS, font, `.wasm`) are
+  under `/ovd/app-files/`, never `app/`: a folder named `app/` next to `app.html` makes GitHub
   Pages redirect `/app` to `/app/` on its own host, which breaks the proxy.
 - `build.py --app-dist app/dist-web` copies the web build in. Without the flag the "coming soon"
   `app.html` stays, so the docs build with no Rust or Node.
-- The `github.io` address serves the same files, but its links point to `/ovcd/...`, so browse the
+- The `github.io` address serves the same files, but its links point to `/ovd/...`, so browse the
   ARC address.
 
 ## Layout
@@ -30,8 +30,8 @@ The OVCD website and docs. Live at **https://www.africanrivercorridors.com/ovcd*
 | `index.html`, `site.css`, `tokens.css` | The home page. Plain HTML and CSS, no build step. |
 | `app.html` | The "web app, coming soon" page. With `--app-dist`, the web app itself (files in `app-files/`). |
 | `assets/` | Logo, illustrations. `favicon.svg` is at the root. |
-| `mkdocs.yml`, `hooks.py`, `overrides/` | The docs: mkdocs-material with the OVCD theme. |
-| `docs-theme/ovcd.css` | The docs theme over `tokens.css`. |
+| `mkdocs.yml`, `hooks.py`, `overrides/` | The docs: mkdocs-material with the OVD theme. |
+| `docs-theme/ovd.css` | The docs theme over `tokens.css`. |
 | `build.py` | Builds everything into `_site/`. |
 | `check_links.py` | Fails on any broken internal link in `_site/`. |
 

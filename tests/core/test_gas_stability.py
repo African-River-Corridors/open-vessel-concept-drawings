@@ -3,9 +3,9 @@ import math
 
 import pytest
 
-from vessel_designer.core.barge_capacity import BargeCapacityInputs, compute as capacity
-from vessel_designer.core.gas_arrangement import fit
-from vessel_designer.core.gas_stability import assess, box_gz, criteria_set_for, segment_fill
+from ovd.core.barge_capacity import BargeCapacityInputs, compute as capacity
+from ovd.core.gas_arrangement import fit
+from ovd.core.gas_stability import assess, box_gz, criteria_set_for, segment_fill
 
 
 @pytest.mark.parametrize("deg", [2, 5, 10, 15, 20])

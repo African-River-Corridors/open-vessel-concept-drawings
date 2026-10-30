@@ -28,7 +28,7 @@
       "name": "a not evaluated blocking rule does not fail the Option",
       "rules": [
         {"id": "is2008/A.2.3/weather", "key": "weather.ratio@laden", "dir": "lower", "limit": 1.0, "strict": false, "blocking": true},
-        {"id": "ovcd/gas-arrangement/tank-l-over-d", "key": "tank.l_over_d@tank1", "dir": "upper", "limit": 7.0, "strict": false, "blocking": true}
+        {"id": "ovd/gas-arrangement/tank-l-over-d", "key": "tank.l_over_d@tank1", "dir": "upper", "limit": 7.0, "strict": false, "blocking": true}
       ],
       "values": {"weather.ratio@laden": null, "tank.l_over_d@tank1": 6.2}
     },

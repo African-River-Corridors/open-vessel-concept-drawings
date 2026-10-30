@@ -1,4 +1,4 @@
-/* OVCD website. Plain CSS over tokens.css. No build step. */
+/* OVD website. Plain CSS over tokens.css. No build step. */
 
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }

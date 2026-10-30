@@ -8,7 +8,7 @@ Concept and preliminary design only, never approval (ADR 0011).
 ## 1. Goal
 
 A user can design a **crude oil tank barge** (pushed, towed or self-propelled, inland or coastal) or a **small
-coastal tanker**. OVCD sizes the cargo tanks inside a double hull, computes capacity, lightship, deadweight and
+coastal tanker**. OVD sizes the cargo tanks inside a double hull, computes capacity, lightship, deadweight and
 stability for the standard loading conditions, draws the tank arrangement, prices it, and checks it against the rules
 that apply to its Service Area. Other oils (products, vegetable oil, chemicals) come later **as data rows**, not as new
 code paths.
@@ -107,7 +107,7 @@ phase 2 compartment model** (ADR 0016), not a one-off.
 | `marpol-i` | Service Area includes coastal; Cargo class oil | Reg. 19.6 small-tanker double bottom and side or 700 m³ cap; Reg. 19.7 nothing forward of the collision bulkhead; Reg. 29 slop tanks; Reg. 28 evaluated for every size and Reg. 23 evaluated (issue #341; see the Accidental oil outflow row of section 5); Reg. 19.3 and 27 as `not evaluated` above 5,000 dwt |
 | `icll-freeboard` | Service Area includes coastal | Type A freeboard, table 28.1, and the barge reduction (27.14), in the set `icll-freeboard` 1.0.0 (issue #428); the minimum bow height (39) is not codified: the model has no bow height Measure. A separate `icll-type-a` set is not made |
 | `normam-202` | optional, chosen by the user | Brazilian inland tank barge widths and setbacks; an example of a national Rule Set |
-| `ovcd` (existing) | always | Physical checks: tank breadth > 0, double side < B/2, cargo zone length > 0 |
+| `ovd` (existing) | always | Physical checks: tank breadth > 0, double side < B/2, cargo zone length > 0 |
 
 "The strictest rule governs" applies Measure by Measure. On coastal-and-river service, below 5,000 dwt:
 double side = max(ADN type, MARPOL 0.76 m), double bottom = max(ADN type, B/15, 0.76 m). For damage stability no rule
@@ -145,7 +145,7 @@ From the codebase review (04 §5). Summary:
 - **Refactor first, with no result change.** The cargo phase becomes a Rust enum (`CargoClass`), so the compiler finds
   every branch. Today an unknown phase goes down the gas path in `barge_capacity.rs` and is drawn as a dry hold in
   `ga.rs`, with no error. The box stability code moves to `box_stability.rs`. Hull plating moves out of `weights.rs`.
-- **New deep module `ovcd-core/src/liquid_bulk/`.** One interface: `compute(&LiquidBulkInputs) -> LiquidBulkResult`
+- **New deep module `ovd-core/src/liquid_bulk/`.** One interface: `compute(&LiquidBulkInputs) -> LiquidBulkResult`
   and `conditions(...)`. Layout, spaces, inner-hull clipping and free surface stay inside. The `TankContainment` seam
   has two adapters (integral, independent). The `InnerHull` seam stays private until the sections table (ADR 0012)
   gives it a second adapter.
@@ -182,7 +182,7 @@ Filed as #328 to #342, in the order of this table (ticket n = #327 + n). "None" 
 | 10 | Measures of §5.3 | none | #269, 3 |
 | 11 | Rule Sets `adn-tank`, `marpol-i`, `icll-type-a` 1.0.0, `unverified`, as `warn`; harness boundary cases | warnings only | 10; #273, #278 |
 | 12 | Default Rule Set stacks for liquid bulk by Service Area | default stack | #274, #275 |
-| 13 | `fit` for liquid bulk (tanks in line, double hull from the governing Rule): `liquid_fit` in `ovcd-format`, and the `liquid_fit` entry of the evaluation API | `fit` results only; no `run` calls it | #276, #277 |
+| 13 | `fit` for liquid bulk (tanks in line, double hull from the governing Rule): `liquid_fit` in `ovd-format`, and the `liquid_fit` entry of the evaluation API | `fit` results only; no `run` calls it | #276, #277 |
 | 14 | Damage stability Measure (ADN extents first), then oil outflow | new checks | 5, 11 |
 | 15 | Second oil (product, vegetable oil): data rows only. Done for diesel fuel to EN 590 (`diesel_en590`, issue #342): a Cargo row, a grade row, a fixture; no new branch on Cargo in Rust code (a test keeps it so) | new Cargo only | 2–11 |
 

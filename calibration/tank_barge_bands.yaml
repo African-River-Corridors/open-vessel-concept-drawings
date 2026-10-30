@@ -7,7 +7,7 @@
 #
 # The error of a case in the declared k-fit subset (`tank_lightship_inputs.yaml`, `fit_subset`) is
 # IN-SAMPLE: k was fitted on it. The error of every other case is out of sample. A case outside its band
-# is a WARNING only: the report marks it and `python -m vessel_designer.calibration --check` prints an
+# is a WARNING only: the report marks it and `python -m ovd.calibration --check` prints an
 # annotation. It never fails the build. A self-propelled vessel, and a figure that is a cargo capacity
 # and not a deadweight, have no band (the case says why: `not_banded`).
 #

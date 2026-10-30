@@ -16,6 +16,6 @@ labels: bug
 
 ## Versions
 
-- vessel_designer version or commit:
+- ovd version or commit:
 - Python version:
 - OS:

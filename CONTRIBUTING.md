@@ -1,4 +1,4 @@
-# Contributing to open-vessel-concept-drawings
+# Contributing to open-vessel-designer
 
 Thank you for helping. Bug reports, fixes, calibration data and new features are all welcome.
 
@@ -7,8 +7,8 @@ Thank you for helping. Bug reports, fixes, calibration data and new features are
 Python 3.12 or later. With [uv](https://docs.astral.sh/uv/):
 
 ```
-git clone https://github.com/African-River-Corridors/open-vessel-concept-drawings
-cd open-vessel-concept-drawings
+git clone https://github.com/African-River-Corridors/open-vessel-designer
+cd open-vessel-designer
 uv venv
 uv pip install -e '.[dev]'
 ```
@@ -17,12 +17,12 @@ Or with plain pip: `python -m venv .venv && .venv/bin/pip install -e '.[dev]'`.
 
 The install builds a small Rust extension with maturin, so you need the Rust toolchain (`rustup` reads
 `rust-toolchain.toml`). A user who installs a built wheel needs no compiler. The release workflow
-(`.github/workflows/release.yml`) builds and tests wheels and `ovcd` binaries; it publishes nothing.
+(`.github/workflows/release.yml`) builds and tests wheels and `ovd` binaries; it publishes nothing.
 
 ## Run the tests
 
 ```
-OVCD_PYTHON=.venv/bin/python bash tools/gates.sh   # the fast gate: Rust and Python
+OVD_PYTHON=.venv/bin/python bash tools/gates.sh   # the fast gate: Rust and Python
 python tools/release_guard.py
 ```
 
@@ -36,9 +36,9 @@ reports whether designs moved (`tools/design_impact.py`, see `CHANGELOG.md`).
 
 ## Rules for the core
 
-- The calculation core is Rust (`crates/ovcd-core`). `src/vessel_designer/` is a thin layer: it keeps
+- The calculation core is Rust (`crates/ovd-core`). `src/ovd/` is a thin layer: it keeps
   the public imports, names and result types, and calls the compiled core through
-  `vessel_designer/_bridge.py`. `tests/test_public_api.py` enforces the public API. The core
+  `ovd/_bridge.py`. `tests/test_public_api.py` enforces the public API. The core
   stays pure calculation, no I/O; `no_std` and the WebAssembly build check that.
 - Every new calculation comes with tests: a golden case (a worked number with its source), a property
   (an invariant), and a feasibility check (the checks fire when they should).
@@ -47,7 +47,7 @@ reports whether designs moved (`tools/design_impact.py`, see `CHANGELOG.md`).
 
 ## Translations
 
-OVCD's text is in Fluent files under `locales/`, one folder per language (spec 0005). English is
+OVD's text is in Fluent files under `locales/`, one folder per language (spec 0005). English is
 the source. The other languages are drafts until a native speaker reviews them. To review or
 improve a translation, follow [`locales/REVIEWING.md`](locales/REVIEWING.md). It needs no code
 knowledge. Label the pull request `translation`.

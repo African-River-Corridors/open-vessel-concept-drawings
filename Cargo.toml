@@ -1,31 +1,31 @@
 [workspace]
 resolver = "3"
-members = ["crates/arc-rules", "crates/ovcd-core", "crates/ovcd-format", "crates/ovcd-cli", "crates/ovcd-py", "crates/ovcd-shell", "crates/ovcd-web", "app/src-tauri", "xtask"]
-# ovcd-py (PyO3 bindings) and the app (Tauri, needs Node for the front end) are left out so `cargo build` and `cargo test` need no Python.
-default-members = ["crates/arc-rules", "crates/ovcd-core", "crates/ovcd-format", "crates/ovcd-cli", "crates/ovcd-shell", "crates/ovcd-web", "xtask"]
+members = ["crates/arc-rules", "crates/ovd-core", "crates/ovd-format", "crates/ovd-cli", "crates/ovd-py", "crates/ovd-shell", "crates/ovd-web", "app/src-tauri", "xtask"]
+# ovd-py (PyO3 bindings) and the app (Tauri, needs Node for the front end) are left out so `cargo build` and `cargo test` need no Python.
+default-members = ["crates/arc-rules", "crates/ovd-core", "crates/ovd-format", "crates/ovd-cli", "crates/ovd-shell", "crates/ovd-web", "xtask"]
 
 [workspace.package]
 version = "0.2.4"
 edition = "2024"
 rust-version = "1.99"
 license = "Apache-2.0"
-repository = "https://github.com/African-River-Corridors/open-vessel-concept-drawings"
+repository = "https://github.com/African-River-Corridors/open-vessel-designer"
 
 [workspace.dependencies]
 arc-rules = { path = "crates/arc-rules", default-features = false }
-ovcd-core = { path = "crates/ovcd-core" }
-ovcd-format = { path = "crates/ovcd-format" }
-# The Drawing Format Standard in Rust lives in its own repository (open-technical-drawer). OVCD code
-# keeps the name `ovcd_draw` for it.
-ovcd-draw = { package = "otd", git = "https://github.com/African-River-Corridors/open-technical-drawer", tag = "v0.1.0" }
-ovcd-shell = { path = "crates/ovcd-shell" }
+ovd-core = { path = "crates/ovd-core" }
+ovd-format = { path = "crates/ovd-format" }
+# The Drawing Format Standard in Rust lives in its own repository (open-technical-drawer). OVD code
+# keeps the name `ovd_draw` for it.
+ovd-draw = { package = "otd", git = "https://github.com/African-River-Corridors/open-technical-drawer", tag = "v0.1.0" }
+ovd-shell = { path = "crates/ovd-shell" }
 # float_roundtrip, arbitrary_precision: read every number exactly as written, big ints too.
 # preserve_order: a JSON object keeps its key order, as a Python dict does.
 serde_json = { version = "1", features = ["float_roundtrip", "arbitrary_precision", "preserve_order"] }
 
 # Issue #448: the hydrostatics and GZ curves come from the Sections Table, about 25 times slower
 # unoptimised. Dev and test builds optimise the core, so `cargo test` and the design-impact check
-# (which builds `ovcd` in dev) stay fast. Rust does not reorder or fuse floating-point operations
+# (which builds `ovd` in dev) stay fast. Rust does not reorder or fuse floating-point operations
 # at any opt level, so the results are the same bits.
-[profile.dev.package.ovcd-core]
+[profile.dev.package.ovd-core]
 opt-level = 3

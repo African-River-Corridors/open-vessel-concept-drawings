@@ -4,8 +4,8 @@ The river-side code depends on these numbers, so they are pinned here.
 """
 import pytest
 
-from vessel_designer.core.barge_capacity import BargeCapacityInputs, compute as capacity
-from vessel_designer.core.gas_arrangement import fit, required_side_clearance, smallest_viable_loa
+from ovd.core.barge_capacity import BargeCapacityInputs, compute as capacity
+from ovd.core.gas_arrangement import fit, required_side_clearance, smallest_viable_loa
 
 
 def test_cn_ii_benchmark_is_reproduced():
@@ -187,7 +187,7 @@ def test_adn_g_is_gone_and_only_igc_2g_is_left():
 
     Label: property
     """
-    from vessel_designer.core import gas_arrangement
+    from ovd.core import gas_arrangement
     assert gas_arrangement.RULESETS == ("IGC_2G",)
     with pytest.raises(ValueError, match=r"ruleset must be one of \('IGC_2G',\)"):
         fit(110.0, 11.4, "LNG", 3.0, ruleset="ADN_G")

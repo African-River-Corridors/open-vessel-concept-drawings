@@ -55,7 +55,7 @@ type_c_tank:
   - id: seo-2026-lco2-5000
     what: "5,000 m3 liquid CO2 Type C cargo tank, design study (not built)"
     built: design_study
-    cargo: "liquid CO2 (not an OVCD cargo; the tank maths does not use the cargo)"
+    cargo: "liquid CO2 (not an OVD cargo; the tank maths does not use the cargo)"
     diameter_m: 13.400
     diameter_basis: steel_inner
     length_m: 40.000

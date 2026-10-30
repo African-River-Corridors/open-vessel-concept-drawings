@@ -1,4 +1,4 @@
-"""Packaging contract (ticket 26): maturin build, ovcd-py skeleton, release gate, no publish."""
+"""Packaging contract (ticket 26): maturin build, ovd-py skeleton, release gate, no publish."""
 import re
 import json
 import tomllib
@@ -30,14 +30,14 @@ def test_maturin_is_the_build_backend():
     assert not any("hatch" in r for r in build["requires"])
 
 
-def test_distribution_name_is_vessel_designer():
-    assert pyproject()["project"]["name"] == "vessel-designer"
+def test_distribution_name_is_ovd():
+    assert pyproject()["project"]["name"] == "open-vessel-designer"
 
 
-def test_maturin_builds_ovcd_py_as_a_submodule_of_the_package():
+def test_maturin_builds_ovd_py_as_a_submodule_of_the_package():
     m = pyproject()["tool"]["maturin"]
-    assert m["manifest-path"] == "crates/ovcd-py/Cargo.toml"
-    assert m["module-name"] == "vessel_designer._native"
+    assert m["manifest-path"] == "crates/ovd-py/Cargo.toml"
+    assert m["module-name"] == "ovd._native"
     assert m["python-source"] == "src"
     assert "pyo3/extension-module" in m["features"]
 
@@ -60,7 +60,7 @@ def test_no_package_module_imports_numpy():
 
 
 def test_calculator_is_gone_from_the_package():
-    assert not (ROOT / "src/vessel_designer/core/calculator.py").exists()
+    assert not (ROOT / "src/ovd/core/calculator.py").exists()
     files = list((ROOT / "src").rglob("*.py"))
     assert files, "no package modules found: scanning nothing"
     for p in files:
@@ -68,14 +68,14 @@ def test_calculator_is_gone_from_the_package():
 
 
 def test_example_rates_ship_in_the_package_and_match_the_reader_copy():
-    shipped = ROOT / "src/vessel_designer/data/barge_cost_rates.example.yaml"
+    shipped = ROOT / "src/ovd/data/barge_cost_rates.example.yaml"
     assert shipped.read_bytes() == (ROOT / "examples/barge_cost_rates.example.yaml").read_bytes()
 
 
-# ---------- ovcd-py skeleton ----------
+# ---------- ovd-py skeleton ----------
 
 def test_core_crates_never_depend_on_pyo3():
-    for crate in ("ovcd-core", "ovcd-format", "ovcd-cli"):
+    for crate in ("ovd-core", "ovd-format", "ovd-cli"):
         assert "pyo3" not in (ROOT / "crates" / crate / "Cargo.toml").read_text(encoding="utf-8"), crate
 
 
@@ -83,16 +83,16 @@ def test_core_crates_never_depend_on_pyo3():
 def test_the_drawing_crate_is_otd_pinned_by_tag():
     """Issue #499: drawings go through `otd` (open-technical-drawer), pinned by a release tag, never a branch or a commit."""
     cargo = tomllib.loads((ROOT / "Cargo.toml").read_text(encoding="utf-8"))
-    dep = cargo["workspace"]["dependencies"]["ovcd-draw"]
+    dep = cargo["workspace"]["dependencies"]["ovd-draw"]
     assert dep["package"] == "otd"
     assert dep["git"] == "https://github.com/African-River-Corridors/open-technical-drawer"
     assert set(dep) == {"package", "git", "tag"}
     assert dep["tag"].startswith("v")
-    assert not (ROOT / "crates" / "ovcd-draw").exists()
+    assert not (ROOT / "crates" / "ovd-draw").exists()
 
 
-def test_ovcd_py_is_abi3_for_python_312():
-    text = (ROOT / "crates/ovcd-py/Cargo.toml").read_text(encoding="utf-8")
+def test_ovd_py_is_abi3_for_python_312():
+    text = (ROOT / "crates/ovd-py/Cargo.toml").read_text(encoding="utf-8")
     assert "abi3-py312" in text
     assert 'crate-type = ["cdylib"]' in text
 
@@ -138,7 +138,7 @@ def test_binaries_build_for_windows_and_macos():
     jobs = workflow(RELEASE)["jobs"]
     bins = next(j for n, j in jobs.items() if "binar" in n)
     assert set(bins["strategy"]["matrix"]["os"]) >= {"macos-15-intel", "macos-latest", "windows-latest"}
-    assert "ovcd-cli" in RELEASE.read_text(encoding="utf-8")
+    assert "ovd-cli" in RELEASE.read_text(encoding="utf-8")
 
 
 def test_nothing_publishes_to_pypi():
@@ -166,15 +166,15 @@ def test_wheel_job_skips_the_tests_that_scan_files_it_does_not_copy():
 
 
 def test_version_is_0_2_3_everywhere():
-    """Ticket 27, and 111: one version for the package, every `ovcd-*` crate and the app."""
+    """Ticket 27, and 111: one version for the package, every `ovd-*` crate and the app."""
     assert pyproject()["project"]["version"] == "0.2.4"
     cargo = tomllib.loads((ROOT / "Cargo.toml").read_text(encoding="utf-8"))
     assert cargo["workspace"]["package"]["version"] == "0.2.4"
     lock = tomllib.loads((ROOT / "Cargo.lock").read_text(encoding="utf-8"))
     ours = {p["name"]: p["version"] for p in lock["package"]
-            if p["name"] in ("ovcd-core", "ovcd-format", "ovcd-cli", "ovcd-py", "ovcd-shell", "ovcd-web", "xtask")}
-    assert ours == dict.fromkeys(("ovcd-core", "ovcd-format", "ovcd-cli", "ovcd-py", "ovcd-shell", "ovcd-web", "xtask"), "0.2.4")
-    for crate in ("ovcd-core", "ovcd-format", "ovcd-cli", "ovcd-py", "ovcd-shell", "ovcd-web"):
+            if p["name"] in ("ovd-core", "ovd-format", "ovd-cli", "ovd-py", "ovd-shell", "ovd-web", "xtask")}
+    assert ours == dict.fromkeys(("ovd-core", "ovd-format", "ovd-cli", "ovd-py", "ovd-shell", "ovd-web", "xtask"), "0.2.4")
+    for crate in ("ovd-core", "ovd-format", "ovd-cli", "ovd-py", "ovd-shell", "ovd-web"):
         manifest = tomllib.loads((ROOT / "crates" / crate / "Cargo.toml").read_text(encoding="utf-8"))
         assert manifest["package"]["version"] == {"workspace": True}, crate
     # the app: its front end, its Tauri config (the installer name) and its crate
@@ -182,4 +182,4 @@ def test_version_is_0_2_3_everywhere():
     assert json.loads((app / "package.json").read_text(encoding="utf-8"))["version"] == "0.2.4"
     assert json.loads((app / "package-lock.json").read_text(encoding="utf-8"))["version"] == "0.2.4"
     assert json.loads((app / "src-tauri" / "tauri.conf.json").read_text(encoding="utf-8"))["version"] == "0.2.4"
-    assert {p["name"]: p["version"] for p in lock["package"]}["ovcd-app"] == "0.2.4"
+    assert {p["name"]: p["version"] for p in lock["package"]}["ovd-app"] == "0.2.4"

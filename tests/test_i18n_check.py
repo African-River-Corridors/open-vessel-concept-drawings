@@ -98,7 +98,7 @@ def test_a_stale_engine_file_is_caught(tmp_path):
 def test_a_stale_input_label_is_caught(tmp_path):
     """Label: property"""
     root = tree(tmp_path, EN, CODE)
-    src = root / "crates" / "ovcd-format" / "src"
+    src = root / "crates" / "ovd-format" / "src"
     src.mkdir(parents=True)
     (src / "vdesign.rs").write_text('pub const INPUTS: &[InputSpec] = &[\n    spec("beam_m", "Beam", InputKind::Number, true, Group::Required),\n];\n', encoding="utf-8")
     (root / "locales" / "en" / "inputs.ftl").write_text("input-beam-m = Breadth\ninput-old = Old\n", encoding="utf-8")

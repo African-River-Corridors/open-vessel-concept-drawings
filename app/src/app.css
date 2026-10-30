@@ -40,7 +40,7 @@
   src: url("./fonts/ArchitectsDaughter-Regular.woff2") format("woff2");
 }
 
-/* OVCD design tokens (docs/design/style-guide.md, sections 2 to 5 and 9). The light theme is the cream
+/* OVD design tokens (docs/design/style-guide.md, sections 2 to 5 and 9). The light theme is the cream
    mat with Prussian-blue ink; the dark theme is the blueprint field. The drawing sheet stays white in
    both. scripts/contrast.mjs reads this file: keep one token per line pair as written. */
 :root {

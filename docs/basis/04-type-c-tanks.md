@@ -4,10 +4,10 @@
 >
 > Code state: written against `main` at commit `f6d446c` (2026-10-20). The Type C values are updated for #313 to #317.
 
-**For:** gas containment engineer  ·  **Code:** `crates/ovcd-core/src/tanks.rs`, `pressure_vessel.rs`,
+**For:** gas containment engineer  ·  **Code:** `crates/ovd-core/src/tanks.rs`, `pressure_vessel.rs`,
 `barge_capacity.rs` (`TankDesign`, `gas_volumetric`, `dome_volume_m3`), `weights.rs` (tank lines),
 `gas_arrangement.rs` (L/D check, OD cap), `cargo.rs` (cargo density); defaults in
-`crates/ovcd-format/src/builtin_profile.json`; parameter mapping in `crates/ovcd-format/src/simulate.rs`
+`crates/ovd-format/src/builtin_profile.json`; parameter mapping in `crates/ovd-format/src/simulate.rs`
 ·  **Rule Sets:** none loaded yet. The IGC values in this area are constants in code with citations. Spec 0004 plans
 them as Rules of the set `igc-2g` (4.23.2.1.2 minimum thickness, 4.23.2.1.3 weld factor, 4.23.3.1 allowable stress).
 
@@ -25,10 +25,10 @@ them as Rules of the set `igc-2g` (4.23.2.1.2 minimum thickness, 4.23.2.1.3 weld
 > ±15 % band). This is an accepted miss: the paper uses the inland basis Rm/2.7. Its steel at the published thickness
 > is 37.4 t against 34.4 t published.
 
-OVCD is a concept tool (ADR 0011). This page says how OVCD sizes and weighs a Type C tank today. It is not a tank
+OVD is a concept tool (ADR 0011). This page says how OVD sizes and weighs a Type C tank today. It is not a tank
 design and it gives no verdict that an Administration or class can use.
 
-## What OVCD computes here
+## What OVD computes here
 
 For an Option with Cargo Containment `type_c_tanks` (a gas Cargo), each `simulate` result gives:
 
@@ -65,7 +65,7 @@ depends on the tank volume through d(Vc) (IGC 2.4.1.1; see page 05).
    (`wall_formula_on_steel_diameter` false).
 
 4. **Wall thickness** (`pressure_vessel.rs::calculate_wall_thicknesses_with`, lines 244–286). Method, from the ASME
-   VIII-1 shell formula form. OVCD does not hold ASME VIII-1, so the formulas are unverified (spec 0004, Appendix A).
+   VIII-1 shell formula form. OVD does not hold ASME VIII-1, so the formulas are unverified (spec 0004, Appendix A).
    With P the design pressure (MPa), f the allowable stress (MPa), E the weld efficiency and R_o = D_s/2 (mm):
    - first pass: t₁ = P·R_o / (f·E − 0.6·P);
    - second pass: R_i = R_o − t₁, t_cyl = P·R_i / (f·E − 0.6·P);
@@ -100,7 +100,7 @@ depends on the tank volume through d(Vc) (IGC 2.4.1.1; see page 05).
 
 11. **Tank total** (`weights.rs` lines 74–79). Method. W_tank = W_shell × structure factor. The part above the shell,
     W_shell × (factor − 1), is "tank internals and supports" and becomes the cost line `tank_supports`
-    (`crates/ovcd-format/src/cost.rs` lines 79–81). Piping and outfitting are fractions of (hull steel + W_tank)
+    (`crates/ovd-format/src/cost.rs` lines 79–81). Piping and outfitting are fractions of (hull steel + W_tank)
     (`weights.rs` lines 170–173; see page 02). In the stability KG, W_tank + W_ins sits at the tank centre
     (`gas_stability.rs` lines 709–716).
 
@@ -112,7 +112,7 @@ depends on the tank volume through d(Vc) (IGC 2.4.1.1; see page 05).
 
 ## Assumptions, rules and estimates
 
-Profile line numbers are in `crates/ovcd-format/src/builtin_profile.json`. "API only" means the Python and `eval`
+Profile line numbers are in `crates/ovd-format/src/builtin_profile.json`. "API only" means the Python and `eval`
 API, not a Design.
 
 | Id | Item | Value or method | Label | Source or basis | Where applied | If it is wrong |
@@ -175,7 +175,7 @@ API, not a Design.
 | TC-A56 | Dome diameter | max(1.2 m, 0.17 × steel OD) | Estimate | Dome rule (#316), same two points. Both drawing views now draw the dome at this diameter | Profile; `barge_capacity.rs`; `ga.rs` | Small effect, through Vc |
 | TC-A57 | Dome volume | (π/4)·d_d²·h_d, in Vc only; not in cargo, fill or weight | Method | IGC 2.4.1.1 (Vc includes domes) | `barge_capacity.rs` 467–469, 561 | Dome steel and fittings missing from weight: non-conservative (small) |
 | TC-A58 | Tank top | db + support height + OD + dome height | Method | Geometry | `barge_capacity.rs` 573; `tanks.rs` 237 | None known |
-| TC-A59 | Length over diameter | ≤ 7, insulated length over insulated OD | Fixed in code | OVCD Check. Origin ADN 2025 9.3.1.11.1(b), which states no datum; no IGC paragraph | `gas_arrangement.rs` 47, 257–274 | Unknown |
+| TC-A59 | Length over diameter | ≤ 7, insulated length over insulated OD | Fixed in code | OVD Check. Origin ADN 2025 9.3.1.11.1(b), which states no datum; no IGC paragraph | `gas_arrangement.rs` 47, 257–274 | Unknown |
 | TC-A60 | Outer diameter cap | 16 m | Estimate | Tool limit, not an IGC rule (profile 113–118) | `barge_capacity.rs` 46; `gas_arrangement.rs` 459–462 | Unknown |
 | TC-A61 | Shell steel volume | Cylinder at mean surface × t; heads at outer steel surface × t | Method | Thin-shell approximation | `tanks.rs` 213–222 | Heads slightly conservative |
 | TC-A62 | Structure factor, LPG fully pressurised | 1.12 | Estimate | One published uninsulated tank: 34.4 t steel over 30.6 t shell plate. Two tank weight records added, held out and not yet runnable: 0.115 t/m³ (155 t, 1,350 m³) and 0.096 t/m³ (240 t, 2,500 m³ bilobe) (#317 part 1) | Profile; `calibration/` | Unknown; one tank, in-sample |
@@ -218,7 +218,7 @@ cargo density.
 
 ## Limits and known findings
 
-- **No liquid head in the wall.** IGC 4.23.2.2 and 4.13.2.4 ask for Peq = P0 + (Pgd)max. OVCD uses P0 only (TC-A14).
+- **No liquid head in the wall.** IGC 4.23.2.2 and 4.13.2.4 ask for Peq = P0 + (Pgd)max. OVD uses P0 only (TC-A14).
   IGC 4.28.1.2 gives the guidance for Pgd (full tank, maximum cargo density at the design temperature). For an LNG
   tank of about 8 m diameter the static head alone (a = 1 g, Z = 8 m, ρ = 450 kg/m³) is about 0.035 MPa, about 9 %
   of 0.4 MPa (derived).
@@ -242,14 +242,14 @@ cargo density.
 
 ## Evidence
 
-- **Tests** (`crates/ovcd-core/tests/`):
+- **Tests** (`crates/ovd-core/tests/`):
   - `tank_wall_formula.rs`: the two-pass shell formula gives 13.08 mm for the published river LPG tank
     (4,730 mm, 1.58 MPa, 285 MPa, E = 1.0); the paper prints 13.1 mm. The full chain gives 14.0 mm.
   - `tank_datum.rs`: the wall formula takes the steel diameter in a Design and the insulated diameter in the API;
     clearances measure to the steel; the steel mass follows the material.
   - `dome_in_vc.rs`: the default dome holds 2π m³, counts in Vc and not in the cargo or inner volume.
   - `pressure_vessel.rs`, `tanks.rs`: formula values, rounding, minimums, error paths, Python parity.
-  - `crates/ovcd-format/tests/type_c_defaults.rs`: every profile row has a status and a basis; a sourced row has a
+  - `crates/ovd-format/tests/type_c_defaults.rs`: every profile row has a status and a basis; a sourced row has a
     source; defaults follow Cargo and carriage condition; old files keep their results; the Design fill is 0.98.
 - **Calibration** (`calibration/results.md` section 5, bands in `calibration/tank_bands.yaml`). Two held-out cases:
 
@@ -263,16 +263,16 @@ cargo density.
 
   The steel case uses the 2:1 head with the low area (#314) and the 285 MPa stress (#313). Both fixes will move it.
 - **Tank weight per m³ (derived, not a test).** Published empty weights of two marine LNG Type C tanks give 0.115
-  t/m³ (1,350 m³, 155 t) and 0.096 t/m³ (2,500 m³ bilobe, 240 t) (`ovcd-rule-sources/type-c/NOTES-weight.md`). The
+  t/m³ (1,350 m³, 155 t) and 0.096 t/m³ (2,500 m³ bilobe, 240 t) (`ovd-rule-sources/type-c/NOTES-weight.md`). The
   engine's formulas for a 9.0 m × 25.2 m LNG tank (330 mm insulation, 0.4 MPa, 9Ni, factor 1.30) give 1,184 m³, 48 t
   of steel and 14 t of insulation: 0.052 t/m³.
 - No evaluation harness case covers tank values (`evaluation/`).
 
 ## Questions for reviewers
 
-1. OVCD sizes the wall on P0 only. Is Peq = P0 + (Pgd)max (IGC 4.23.2.2, 4.28.1) needed at concept stage, or is a
+1. OVD sizes the wall on P0 only. Is Peq = P0 + (Pgd)max (IGC 4.23.2.2, 4.28.1) needed at concept stage, or is a
    fixed margin on P0 enough? Which accelerations suit an inland or coastal barge under 50 m?
-2. IGC 4.23.1.2 with OVCD's inputs gives a minimum P0 of about 0.46 MPa for a 0.4 MPa fully refrigerated LPG tank in
+2. IGC 4.23.1.2 with OVD's inputs gives a minimum P0 of about 0.46 MPa for a 0.4 MPa fully refrigerated LPG tank in
    9Ni (8 m × 40 m, ρr 0.58, σm = 230 MPa; derived). Is 0.4 MPa a fair default for that row, or should it rise?
 3. Is a single hemispherical head a fair default for small Type C cargo tanks, or should the default be
    torispherical or 2:1?

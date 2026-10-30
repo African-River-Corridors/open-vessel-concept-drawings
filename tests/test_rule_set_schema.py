@@ -13,7 +13,7 @@ import pytest
 jsonschema = pytest.importorskip("jsonschema")
 
 ROOT = Path(__file__).resolve().parents[1]
-RULES = ROOT / "crates" / "ovcd-format" / "rules"
+RULES = ROOT / "crates" / "ovd-format" / "rules"
 SCHEMA = json.loads((RULES / "rule-set.schema.json").read_text())
 
 
@@ -69,5 +69,5 @@ def _bad(change) -> dict:
 )
 def test_the_schema_refuses_what_the_loader_refuses(name, change):
     """Label: property"""
-    # The Rust test crates/ovcd-format/tests/rule_set.rs refuses each of these in the loader.
+    # The Rust test crates/ovd-format/tests/rule_set.rs refuses each of these in the loader.
     assert errors(_bad(change)), name

@@ -50,17 +50,17 @@ def test_the_propeller_ratios_by_hand():
     """Label: sourced - 100 m craft: D 3.0 m of 3.7 m allowed; the aft draught 3.9 m less the axis at 1.5 m is 2.4 m,
     0.8 diameters, over 0.76 (0.71 ducted); the blade load 300 over 400 (500 ducted)."""
     v = oracle.verdicts(case())
-    assert v["ovcd/propulsion/propeller-fits-stern"]["value"] == pytest.approx(3.0 / 3.7)
-    assert v["ovcd/propulsion/immersion-light"]["value"] == pytest.approx(0.8 / 0.76)
-    assert v["ovcd/propulsion/blade-load"]["value"] == pytest.approx(0.75)
+    assert v["ovd/propulsion/propeller-fits-stern"]["value"] == pytest.approx(3.0 / 3.7)
+    assert v["ovd/propulsion/immersion-light"]["value"] == pytest.approx(0.8 / 0.76)
+    assert v["ovd/propulsion/blade-load"]["value"] == pytest.approx(0.75)
     d = oracle.verdicts(case(propeller_ducted=True))
-    assert d["ovcd/propulsion/immersion-light"]["value"] == pytest.approx(0.8 / 0.71)
-    assert d["ovcd/propulsion/blade-load"]["value"] == pytest.approx(0.6)
+    assert d["ovd/propulsion/immersion-light"]["value"] == pytest.approx(0.8 / 0.71)
+    assert d["ovd/propulsion/blade-load"]["value"] == pytest.approx(0.6)
 
 
 def test_the_speed_check_by_hand():
     """Label: sourced - 18 km/h is 9.72 kn, over the Design Speed of 9.7 kn; 17.9 km/h is under it."""
-    key = "ovcd/powering/installed-covers-design-speed"
+    key = "ovd/powering/installed-covers-design-speed"
     assert oracle.verdicts(case(speed_deep_water_kmh=18.0))[key]["verdict"] == "pass"
     assert oracle.verdicts(case(speed_deep_water_kmh=17.9))[key]["verdict"] == "fail"
 

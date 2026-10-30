@@ -1,17 +1,17 @@
 # Spec 0001: Parity harness and Rust core port
 
-Status: **approved by the maintainer, 2026-10-13. Complete.** Removed in ticket 29: the parity harness, the Reference Results, the parity case inputs, the frozen Python copy, the hidden `ovcd eval` command and the `xtask` regenerate task were deleted. The last commit that still has them is `ce96e66cf0016df3bb36bed1cdc0ae998372564e` (`git show ce96e66cf0016df3bb36bed1cdc0ae998372564e:parity/README.md`; the frozen Python runs from a checkout of that commit with Python 3.12 and numpy).
+Status: **approved by the maintainer, 2026-10-13. Complete.** Removed in ticket 29: the parity harness, the Reference Results, the parity case inputs, the frozen Python copy, the hidden `ovd eval` command and the `xtask` regenerate task were deleted. The last commit that still has them is `ce96e66cf0016df3bb36bed1cdc0ae998372564e` (`git show ce96e66cf0016df3bb36bed1cdc0ae998372564e:parity/README.md`; the frozen Python runs from a checkout of that commit with Python 3.12 and numpy).
 
 ## Problem Statement
 
-Open Vessel Concept Drawings (the Python package `vessel-designer`) is a Python library. People who
+Open Vessel Designer (the Python package `open-vessel-designer`) is a Python library. People who
 design inland barges, but who do not write code, cannot use it. The plan is a free, offline,
 installable desktop app with a compiled Rust core. Later, the same core runs in a web page.
 
 Rewriting the calculation core in another language is risky. A naval architect cannot easily see a
 port error in tonnage, draught or stability. If we also fix known engineering errors during the port,
 we cannot tell a port error from a deliberate change. Python users must also keep a working
-`pip install vessel-designer` with the same public API.
+`pip install open-vessel-designer` with the same public API.
 
 The project also needs a file that holds a design, a command-line tool, and a test and CI setup. That
 setup must catch real mistakes without slowing work down. In the past, CI has slowed and blocked work
@@ -25,7 +25,7 @@ Port the calculation core to Rust **with identical results first**. Fix nothing 
    Reference Results. The Rust code must match them. Every later ticket is done only when its part
    of the harness is green.
 2. Port the core module by module, in dependency order, each module against its Reference Results.
-3. Add a `.vdesign` file format, a defaults and validation layer, and a command-line tool `ovcd`.
+3. Add a `.vdesign` file format, a defaults and validation layer, and a command-line tool `ovd`.
 4. Switch the Python package to call the Rust core. The public Python API stays the same.
 5. When the port is complete, delete the Reference Results and the frozen Python copy. From then
    on, a design-impact check on every pull request shows whether vessel designs moved.
@@ -60,20 +60,20 @@ review, and nobody has agreed yet that they need fixing. General improvements co
     default rule is coming but is not there yet.
 
 ### Engineer using the command line
-12. As an engineer, I want `ovcd new` to write a starter Design, so that I do not have to write the
+12. As an engineer, I want `ovd new` to write a starter Design, so that I do not have to write the
     file by hand.
-13. As an engineer, I want `ovcd validate` to check a Design file without running it, so that I can
+13. As an engineer, I want `ovd validate` to check a Design file without running it, so that I can
     find input errors fast.
-14. As an engineer, I want `ovcd run` to print a short summary, so that I can read the main results at
+14. As an engineer, I want `ovd run` to print a short summary, so that I can read the main results at
     a glance.
-15. As an engineer, I want `ovcd run --json` to print the full results, so that I can feed them into my
+15. As an engineer, I want `ovd run --json` to print the full results, so that I can feed them into my
     own tools.
 16. As an engineer, I want all files and output in SI units, so that there is no unit confusion. (US
     units arrive later with the app's unit setting.) Note: speeds are the one exception. They are in
     knots, the inland-waterway convention (ADR 0007, issue #134).
 
 ### Python library user
-17. As a Python user, I want `pip install vessel-designer` to keep working, so that my scripts do not
+17. As a Python user, I want `pip install open-vessel-designer` to keep working, so that my scripts do not
     break.
 18. As a Python user, I want the same import paths, function names and result fields as today, so that
     I do not have to change my code.
@@ -135,17 +135,17 @@ review, and nobody has agreed yet that they need fixing. General improvements co
 
 ### Workspace and crates
 - One Cargo workspace at the repo root, edition 2024, with a pinned toolchain. Workspace crates:
-  - **`ovcd-core`**: pure calculation. `no_std` plus `alloc`. Its only dependencies are `libm` and an
+  - **`ovd-core`**: pure calculation. `no_std` plus `alloc`. Its only dependencies are `libm` and an
     optional `serde`. No file, clock, environment or randomness access. It must build for
     `wasm32-unknown-unknown`, and CI checks this. Its modules mirror the Python core files one to
     one. Restructuring waits until after the port. A `hull_form` module holds the one Hull Form that
     exists today, the raked box. V-bottom and others come later.
-  - **`ovcd-format`**: the `.vdesign` format (read, write, schema, versions, migration), the
+  - **`ovd-format`**: the `.vdesign` format (read, write, schema, versions, migration), the
     Defaults Profile, validation, the results hash, the port of the one-call `simulate`
     orchestration, and an `eval(entry_point, json) -> json` dispatch over every parity entry point.
-  - **`ovcd-cli`**: the `ovcd` binary. A thin layer over `ovcd-format`.
-  - **`ovcd-py`**: PyO3 bindings, abi3 for Python 3.12 and later, built by maturin into the
-    `vessel-designer` wheel. It is not in the workspace's default members, so `cargo build` and
+  - **`ovd-cli`**: the `ovd` binary. A thin layer over `ovd-format`.
+  - **`ovd-py`**: PyO3 bindings, abi3 for Python 3.12 and later, built by maturin into the
+    `open-vessel-designer` wheel. It is not in the workspace's default members, so `cargo build` and
     `cargo test` need no Python. The core never depends on PyO3.
   - **`xtask`**: developer tasks. It regenerates the Reference Results from the frozen Python and
     runs the gates script.
@@ -155,7 +155,7 @@ review, and nobody has agreed yet that they need fixing. General improvements co
 
 ### Python package
 - The project file at the repo root switches to the maturin build backend. The distribution name is
-  written `vessel-designer`.
+  written `open-vessel-designer`.
 - The shipped Python package is a thin layer. It keeps today's public import paths, names and
   dataclass-style result types, and it calls the Rust core.
 - During the port, the current pure-Python code is moved (keeping its git history) to a frozen,
@@ -217,7 +217,7 @@ review, and nobody has agreed yet that they need fixing. General improvements co
     formats numbers the way Python does, with its own tests.
 
 ### Platform-identical maths
-- Every transcendental function in `ovcd-core` (`sin`, `cos`, `atan`, `exp`, `log10`, `pow`, and so
+- Every transcendental function in `ovd-core` (`sin`, `cos`, `atan`, `exp`, `log10`, `pow`, and so
   on) uses the pure-Rust `libm` crate. Python's `**` maps to `libm::pow`.
 - A clippy `disallowed-methods` rule bans the standard-library versions, plus `powi` and `mul_add`,
   in the core.
@@ -236,7 +236,7 @@ review, and nobody has agreed yet that they need fixing. General improvements co
 - Floats are stored as shortest round-trip text. NaN and infinity are stored as tagged strings.
 - `xtask` regenerates the Reference Results by running the frozen Python. It needs no maturin build.
   The frozen Python cannot change during the port, so CI does not re-run it.
-- The main parity test calls `eval` in-process for every case. A second, small test runs the `ovcd`
+- The main parity test calls `eval` in-process for every case. A second, small test runs the `ovd`
   binary's hidden `eval` command on a few cases, so the binary is proven too.
 - Ticket 1 delivers the harness, the case set, the Reference Results for **every** entry point, and
   an empty Rust dispatch. All cases fail at first. Each later port ticket turns its own entry points
@@ -254,7 +254,7 @@ review, and nobody has agreed yet that they need fixing. General improvements co
     error message says a default rule is planned.
   - Formation can be one self-propelled Hull, one pushed barge, or a pushed convoy of barges abreast
     and in line. This spec computes only the first two. A pushed barge is computed without its pusher,
-    as today. A convoy is valid in the file, but `ovcd run` reports "convoy results not yet
+    as today. A convoy is valid in the file, but `ovd run` reports "convoy results not yet
     available".
 - Every other input comes from the **Defaults Profile**. A built-in profile ships with the tool, and a
   user may copy and edit it. It holds the defaults (Cb 0.85, minimum freeboard 0.3 m, ruleset
@@ -266,17 +266,17 @@ review, and nobody has agreed yet that they need fixing. General improvements co
   maintainer approves the proposed table in the ticket's pull request.
 - The file stores every input **as used** and marks which ones came from a default. A later change to
   the Defaults Profile never changes the results of a saved file.
-- Validation lives only in `ovcd-format`. The core copies Python exactly and adds no checks.
+- Validation lives only in `ovd-format`. The core copies Python exactly and adds no checks.
 - **Results hash:** SHA-256 of the canonical JSON of each Option's results. If a file opens on an
   engine version that gives a different hash, the tool warns that results have changed since the
   file was saved with engine version X.
-- One version number covers every `ovcd-*` crate and the Python package.
+- One version number covers every `ovd-*` crate and the Python package.
 
-### CLI (`ovcd`)
-- `ovcd new`: writes a starter Design with one Option and the defaults filled in and marked.
-- `ovcd validate <file>`: checks the file and lists hard errors and soft warnings.
-- `ovcd run <file>`: a short summary by default. `--json` gives the full results.
-- `ovcd eval <entry-point>`: hidden. JSON on stdin, JSON on stdout. For parity only. It is removed
+### CLI (`ovd`)
+- `ovd new`: writes a starter Design with one Option and the defaults filled in and marked.
+- `ovd validate <file>`: checks the file and lists hard errors and soft warnings.
+- `ovd run <file>`: a short summary by default. `--json` gives the full results.
+- `ovd eval <entry-point>`: hidden. JSON on stdin, JSON on stdout. For parity only. It is removed
   with the Reference Results.
 - Output is SI only in this spec, except speeds, which are in knots (as the original Python gives them).
 
@@ -284,7 +284,7 @@ review, and nobody has agreed yet that they need fixing. General improvements co
 - "Port complete" means every entry point is at parity **and** the switch pull request has merged.
 - The last tickets then, in order:
   1. **Design-impact check.** On every pull request, CI runs a fixed set of case inputs (the
-     calibration vessels plus a small sweep) through `ovcd` twice: once on `main` and once on the
+     calibration vessels plus a small sweep) through `ovd` twice: once on `main` and once on the
      branch. If nothing moved, the PR body says "no design change". If anything moved, the PR gets the
      `design-change` label and a before/after table, and the same table goes into a "Design changes"
      section of the changelog. There are no stored answers, so nothing goes stale. A design change
@@ -315,7 +315,7 @@ review, and nobody has agreed yet that they need fixing. General improvements co
   - after the port, the design-impact check
 - The required check names stay `test` and `release-guard`, so branch protection does not change.
 - **Release gate, per release only, plus a manual trigger.** No nightly runs. It builds wheels for
-  Linux, macOS (Intel and Apple chip) and Windows, runs pytest on each, and builds the `ovcd` binary
+  Linux, macOS (Intel and Apple chip) and Windows, runs pytest on each, and builds the `ovd` binary
   for Windows and macOS.
 - The release workflow cannot build or publish unless `test` and `release-guard` pass. Nothing is
   published to PyPI in this spec.
@@ -330,7 +330,7 @@ review, and nobody has agreed yet that they need fixing. General improvements co
 - Change the copyright holder in the licence notice, the README and the project file to "Mobile
   Clipboard Limited (trading as African River Corridors)" until the company's rename is registered.
 - Update the repo URLs in the README, CONTRIBUTING, ROADMAP and the project file to the new name
-  `open-vessel-concept-drawings`. The old URL redirects, but the docs should be right.
+  `open-vessel-designer`. The old URL redirects, but the docs should be right.
 - Add architecture decision records 0005–0010 in `docs/adr/`:
   - 0005 Rust core with PyO3 bindings and a Rust CLI; port with identical results before fixing
   - 0006 Tauri desktop app with an HTML/TypeScript UI; the same core in WebAssembly for the web later
@@ -359,12 +359,12 @@ review, and nobody has agreed yet that they need fixing. General improvements co
   5. install or build fails on one system;
   6. confidential data leaks.
 - **Seams** (in order of importance):
-  1. `eval(entry_point, json)` in `ovcd-format`: the parity contract for every entry point.
-  2. The `ovcd` binary: a few end-to-end cases for `eval`, `run`, `validate` and `new`.
+  1. `eval(entry_point, json)` in `ovd-format`: the parity contract for every entry point.
+  2. The `ovd` binary: a few end-to-end cases for `eval`, `run`, `validate` and `new`.
   3. The Python public API: the audited pytest suite, run against the Rust-backed package.
   4. A `.vdesign` file in, results out: defaults, hard and soft ranges, the convoy and depth
      messages, the results hash, and stability across file versions.
-  5. The design-impact check: the same inputs through `ovcd` on `main` and on the branch.
+  5. The design-impact check: the same inputs through `ovd` on `main` and on the branch.
 - Private Rust helpers get only the tests their implementer finds useful. Seam 1 is the contract.
 - **Prior art in the repo:** the current pytest suite (fixed-number cases such as the quickstart
   tonnage, regression snapshots for `gas_arrangement`, worked figures for `aft_arrangement` and

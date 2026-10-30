@@ -6,7 +6,7 @@
 #   status "reviewed"      checked by a native speaker with marine knowledge (add "@handle" to the note);
 #   status "needs-native"  no established term is known: the English term is kept, and a native
 #                          speaker with marine knowledge should decide. Never invent a word.
-# `glossary` names the GLOSSARY.md term where OVCD defines the word, if it does.
+# `glossary` names the GLOSSARY.md term where OVD defines the word, if it does.
 # Twi (ak) keeps English for nearly every technical term: few established Twi terms exist for them.
 
 [draught]
@@ -124,7 +124,7 @@ ak = ["pusher", "needs-native", "No established Twi term known; English kept."]
 [formation]
 en = "Formation (convoy, tow)"
 glossary = "Formation"
-es = ["formación", "draft", "Spanish users may know \"convoy\"; keep \"formación\" for the OVCD term."]
+es = ["formación", "draft", "Spanish users may know \"convoy\"; keep \"formación\" for the OVD term."]
 pt = ["formação", "draft", ""]
 zh-Hans = ["船队编组", "draft", ""]
 ak = ["Formation", "needs-native", "No established Twi term known; English kept."]

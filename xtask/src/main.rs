@@ -1,11 +1,11 @@
 //! Developer tasks. Run with `cargo xtask <task>`.
 //!
-//! - `mutants [--base <ref>] [--out <file>]`: run cargo-mutants on the `ovcd-core` code this branch
+//! - `mutants [--base <ref>] [--out <file>]`: run cargo-mutants on the `ovd-core` code this branch
 //!   changed and write a short killed / survived / timeout report.
 //! - `gates`: run the fail-closed fast gate, `tools/gates.sh`.
 //! - `shipd-sample <dataset folder>`: draw the fixed-seed ShipD benchmark sample from a local copy
 //!   of the Ship-D dataset into `calibration/shipd/` (issue #452).
-//! - `shipd-benchmark`: compare OVCD's ShipD-style hulls with the sample and write
+//! - `shipd-benchmark`: compare OVD's ShipD-style hulls with the sample and write
 //!   `calibration/shipd/report.md`.
 
 mod shipd;
@@ -68,11 +68,11 @@ fn git(args: &[&str]) -> Result<String> {
     run(Command::new("git").current_dir(root()).args(args))
 }
 
-/// The commit this branch forked from. `--base`, else `OVCD_BASE`, else the PR base on GitHub
+/// The commit this branch forked from. `--base`, else `OVD_BASE`, else the PR base on GitHub
 /// Actions, else `origin/main`.
 fn merge_base(args: &[String]) -> Result<(String, String)> {
     let base = flag(args, "--base")
-        .or_else(|| std::env::var("OVCD_BASE").ok())
+        .or_else(|| std::env::var("OVD_BASE").ok())
         .or_else(|| {
             std::env::var("GITHUB_BASE_REF")
                 .ok()
@@ -96,11 +96,11 @@ fn mutants(args: &[String]) -> Result {
         .unwrap_or_else(|| root.join("target/mutants-report.md"));
     let work = root.join("target/mutants");
     std::fs::create_dir_all(&work).map_err(|e| e.to_string())?;
-    let diff = git(&["diff", &sha, "--", "crates/ovcd-core/src"])?;
+    let diff = git(&["diff", &sha, "--", "crates/ovd-core/src"])?;
     let mut report =
-        format!("# Mutation test: `ovcd-core` changes against `{base}` ({sha:.12})\n\n");
+        format!("# Mutation test: `ovd-core` changes against `{base}` ({sha:.12})\n\n");
     if diff.trim().is_empty() {
-        report.push_str("No `ovcd-core` source changed, so there is nothing to mutate.\n");
+        report.push_str("No `ovd-core` source changed, so there is nothing to mutate.\n");
     } else {
         let diff_file = work.join("core.diff");
         std::fs::write(&diff_file, &diff).map_err(|e| e.to_string())?;
@@ -109,7 +109,7 @@ fn mutants(args: &[String]) -> Result {
             .args([
                 "mutants",
                 "--package",
-                "ovcd-core",
+                "ovd-core",
                 "--test-workspace=true",
                 "--no-shuffle",
             ])

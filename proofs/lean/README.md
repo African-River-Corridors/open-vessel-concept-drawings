@@ -87,7 +87,7 @@ Install elan (the Lean version manager). The file `lean-toolchain` pins Lean 4.2
 cd proofs/lean
 lake build
 lake env lean AxiomCheck.lean
-./.lake/build/bin/ovcd-rules-oracle examples/cases.json
+./.lake/build/bin/ovd-rules-oracle examples/cases.json
 ```
 
 A cold build takes about 2 s on an Apple silicon laptop once the toolchain is installed. The
@@ -124,7 +124,7 @@ gate:
 
 ```bash
 cd proofs/lean && lake build && cd ../..
-ARC_RULES_LEAN_ORACLE=$PWD/proofs/lean/.lake/build/bin/ovcd-rules-oracle \
+ARC_RULES_LEAN_ORACLE=$PWD/proofs/lean/.lake/build/bin/ovd-rules-oracle \
   cargo test -p arc-rules --test lean_oracle -- --nocapture
 ```
 

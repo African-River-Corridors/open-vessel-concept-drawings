@@ -1,7 +1,7 @@
 """Where the calibration pass finds its files (issue #217).
 
 From an installed wheel the module's own path is under site-packages, which has no `calibration/`
-folder. So importing the module reads no file, `OVCD_CALIBRATION_DIR` names the folder, and the bands
+folder. So importing the module reads no file, `OVD_CALIBRATION_DIR` names the folder, and the bands
 are read from the folder `CAL` names when they are first used. `tests/conftest.py` points the variable
 at the `calibration/` next to `tests/`, so these tests run the same from a checkout and from the wheel
 check's scratch copy.
@@ -11,15 +11,15 @@ import subprocess
 import sys
 from pathlib import Path
 
-from vessel_designer import calibration
+from ovd import calibration
 
 
 def test_importing_the_module_reads_no_file_and_takes_the_folder_from_the_environment(tmp_path):
     """Label: property
     """
     folder = tmp_path / "no-such-folder"
-    env = {**os.environ, "OVCD_CALIBRATION_DIR": str(folder)}
-    out = subprocess.run([sys.executable, "-c", "import vessel_designer.calibration as c; print(c.CAL)"],
+    env = {**os.environ, "OVD_CALIBRATION_DIR": str(folder)}
+    out = subprocess.run([sys.executable, "-c", "import ovd.calibration as c; print(c.CAL)"],
                          capture_output=True, text=True, env=env, cwd=tmp_path)
     assert out.returncode == 0, out.stderr
     assert out.stdout.strip() == str(folder)

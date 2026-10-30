@@ -3,7 +3,7 @@
 # the case. These are STARTING values proposed with the first tank cases, in the shape of the barge
 # bands; the maintainer sets them. Every tank case is held out, so every error is out of sample (but see
 # `steel_in_sample` in tank_cases.yaml). A case outside its band is a WARNING only: the report marks
-# it and `python -m vessel_designer.calibration --check` prints an annotation. It never fails the build.
+# it and `python -m ovd.calibration --check` prints an annotation. It never fails the build.
 bands:
   tank_volume_m3:
     label: Gross tank volume

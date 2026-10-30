@@ -4,7 +4,7 @@ Status: **agreed with the maintainer, 2026-10-20.** Decision record: ADR 0015 (a
 
 ## Problem Statement
 
-OVCD is English only. Its users include engineers in Ghana, Latin America and China. They read
+OVD is English only. Its users include engineers in Ghana, Latin America and China. They read
 Spanish, Portuguese, Simplified Chinese and Twi, and many read English as a second language.
 
 The English is spread through the code. The app holds about 300 strings in its Svelte files. The
@@ -41,16 +41,16 @@ Portuguese (`pt`), Simplified Chinese (`zh-Hans`) and Twi (`ak`).
 | Source | Where | Size | Phase |
 |---|---|---|---|
 | App chrome: buttons, tabs, headings, notes, table heads, chart axes | `app/src/**/*.svelte`, `metrics.ts` | about 300 strings | 1 |
-| Input labels, choices, groups, group notes | `ovcd-format` `vdesign.rs` (`spec(...)`, `CHOICE_LABELS`), sent in the input schema | about 115 inputs, 60 choices | 1 |
-| Check names and messages | `ovcd-core` (`Check`, about 50 sites), `ovcd-format` `simulate.rs` | about 70 | 1 |
-| Warnings | `ovcd-core` result structs, about 12 constants and 8 inline | about 20 | 1 |
+| Input labels, choices, groups, group notes | `ovd-format` `vdesign.rs` (`spec(...)`, `CHOICE_LABELS`), sent in the input schema | about 115 inputs, 60 choices | 1 |
+| Check names and messages | `ovd-core` (`Check`, about 50 sites), `ovd-format` `simulate.rs` | about 70 | 1 |
+| Warnings | `ovd-core` result structs, about 12 constants and 8 inline | about 20 | 1 |
 | Stability: condition and criterion names, limitations | `gas_stability.rs` | about 15 | 1 |
 | Names in results: `governs`, vessel, cargo, curve names | `simulate.rs`, `cargo.rs` | about 25 | 1 |
 | Session messages: range errors, cross-checks, migration notes | `vdesign.rs` `Report`, `session.rs` | about 70 | 1 |
 | Capital budget: item names, basis, cost checks | app `CapitalBudget.svelte`, `barge_cost.rs` | about 20 | 1 |
-| Drawing labels, notes, view names, status line | `ovcd-format` `ga.rs`, `ovcd-draw` `furniture.rs` | about 45 | 1 (English only) |
-| Desktop dialogs, window title | `app/src-tauri`, `ovcd-shell` `state.rs` | about 10 | 1 |
-| `ovcd run` summary lines, CLI help | `ovcd-format` `run.rs`, `ovcd-cli` `main.rs` | about 30 | 2 |
+| Drawing labels, notes, view names, status line | `ovd-format` `ga.rs`, `ovd-draw` `furniture.rs` | about 45 | 1 (English only) |
+| Desktop dialogs, window title | `app/src-tauri`, `ovd-shell` `state.rs` | about 10 | 1 |
+| `ovd run` summary lines, CLI help | `ovd-format` `run.rs`, `ovd-cli` `main.rs` | about 30 | 2 |
 | Errors: engine `PyException`, `Result<_, String>`, Python exceptions | core, format, shell, py | about 150 | not translated |
 | Website and docs | `website/` | | 3 |
 
@@ -80,7 +80,7 @@ locales/
 
 ### The engine (Rust)
 
-- `ovcd-core` gets a `text` module: `Msg { id: &'static str, args: Vec<(&'static str, Arg)> }`
+- `ovd-core` gets a `text` module: `Msg { id: &'static str, args: Vec<(&'static str, Arg)> }`
   and `Arg = Num { value: f64, text: String } | Count(i64) | Text(String) | Cite(String)`.
   `Num.text` is the number as the engine prints it today (`pyfmt`), so a translation shows the same
   digits with the language's decimal sign.
@@ -174,7 +174,7 @@ It reads only text files and finishes in well under a second.
 ## Out of Scope
 
 - Translated drawings (they wait for the Standard).
-- CLI and Python output in other languages (phase 2: a `--lang` flag and `OVCD_LANG`).
+- CLI and Python output in other languages (phase 2: a `--lang` flag and `OVD_LANG`).
 - The website and docs (phase 3: mkdocs-material language support, one folder per language).
 - Right-to-left languages.
 - A translation platform (Weblate and similar). The files are plain text in the repo; a platform can

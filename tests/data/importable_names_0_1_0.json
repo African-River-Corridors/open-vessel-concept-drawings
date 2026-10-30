@@ -1260,8 +1260,8 @@
     "required_freeboard": "<class 'float'>",
     "air_draft_limit_m": "typing.Optional[float]",
     "ballast_capacity_t": "<class 'float'>",
-    "aft": "typing.Optional[vessel_designer.core.aft_arrangement.AftArrangementInputs]",
-    "separation": "typing.Optional[vessel_designer.core.gas_separation.GasSeparationInputs]",
+    "aft": "typing.Optional[ovd.core.aft_arrangement.AftArrangementInputs]",
+    "separation": "typing.Optional[ovd.core.gas_separation.GasSeparationInputs]",
     "self_propelled": "<class 'bool'>",
     "pushed_stern_void_m": "<class 'float'>",
     "bow_rake_length_m": "typing.Optional[float]",
@@ -1323,8 +1323,8 @@
     "stern_void_length_m": "typing.Optional[float]",
     "cargo_zone_length_m": "typing.Optional[float]",
     "bow_rake_length_m": "typing.Optional[float]",
-    "aft_arrangement": "typing.Optional[vessel_designer.core.aft_arrangement.AftArrangementResult]",
-    "separation": "typing.Optional[vessel_designer.core.gas_separation.GasSeparationResult]",
+    "aft_arrangement": "typing.Optional[ovd.core.aft_arrangement.AftArrangementResult]",
+    "separation": "typing.Optional[ovd.core.gas_separation.GasSeparationResult]",
     "containment_inner_volume_m3": "typing.Optional[float]",
     "fill_ratio_applied": "typing.Optional[float]",
     "insulation_thickness_mm": "typing.Optional[float]",
@@ -1380,8 +1380,8 @@
     "yard_margin": "<class 'float'>",
     "delivery": "<class 'float'>",
     "unit_total": "<class 'float'>",
-    "checks": "typing.List[vessel_designer.core.checks.Check]",
-    "rates": "typing.Optional[vessel_designer.core.barge_cost.BargeCostRates]"
+    "checks": "typing.List[ovd.core.checks.Check]",
+    "rates": "typing.Optional[ovd.core.barge_cost.BargeCostRates]"
    }
   },
   "core.cargo": {
@@ -1410,7 +1410,7 @@
     "cargo_type": "<class 'str'>",
     "clearance_basis": "<class 'str'>",
     "max_tank_length_m": "<class 'float'>",
-    "cells": "typing.List[vessel_designer.core.design_grid.GridCell]"
+    "cells": "typing.List[ovd.core.design_grid.GridCell]"
    },
    "GridCell": {
     "barge_length_m": "<class 'float'>",
@@ -1432,7 +1432,7 @@
     "limiting_speed_knots": "typing.Optional[float]",
     "service_speed_knots": "<class 'float'>",
     "blockage_ratio": "<class 'float'>",
-    "curve": "typing.List[vessel_designer.core.electric_energy.EnergyPoint]",
+    "curve": "typing.List[ovd.core.electric_energy.EnergyPoint]",
     "resistance_kn": "<class 'float'>",
     "shaft_power_kw": "<class 'float'>",
     "battery_power_kw": "<class 'float'>",
@@ -1473,9 +1473,9 @@
     "energy_kwh_per_km": "<class 'float'>"
    },
    "EnergyResult": {
-    "inputs": "<class 'vessel_designer.core.electric_energy.EnergyInputs'>",
+    "inputs": "<class 'ovd.core.electric_energy.EnergyInputs'>",
     "installed_power_kw": "<class 'float'>",
-    "environments": "typing.List[vessel_designer.core.electric_energy.EnergyEnvironment]",
+    "environments": "typing.List[ovd.core.electric_energy.EnergyEnvironment]",
     "checks": "<class 'list'>"
    }
   },
@@ -1581,7 +1581,7 @@
   },
   "core.journey_derating": {
    "JourneyDeratingInputs": {
-    "capacity": "<class 'vessel_designer.core.barge_capacity.BargeCapacityResult'>",
+    "capacity": "<class 'ovd.core.barge_capacity.BargeCapacityResult'>",
     "loa": "<class 'float'>",
     "beam": "<class 'float'>",
     "depth": "<class 'float'>",
@@ -1657,19 +1657,19 @@
     "stores_weight": "<class 'float'>",
     "tank_support_height": "<class 'float'>",
     "double_bottom_height": "typing.Optional[float]",
-    "aft_arrangement": "typing.Optional[vessel_designer.core.aft_arrangement.AftArrangementResult]",
-    "separation": "typing.Optional[vessel_designer.core.gas_separation.GasSeparationResult]",
+    "aft_arrangement": "typing.Optional[ovd.core.aft_arrangement.AftArrangementResult]",
+    "separation": "typing.Optional[ovd.core.gas_separation.GasSeparationResult]",
     "tug_length": "<class 'float'>",
     "tug_beam": "<class 'float'>",
     "notch_depth": "<class 'float'>"
    },
    "BargeResults": {
-    "inputs": "<class 'vessel_designer.core.models.BargeInputs'>",
-    "tanks": "<class 'vessel_designer.core.models.TankResult'>",
+    "inputs": "<class 'ovd.core.models.BargeInputs'>",
+    "tanks": "<class 'ovd.core.models.TankResult'>",
     "cargo_type": "<class 'str'>",
     "cargo_density": "<class 'float'>",
     "cargo_mass": "<class 'float'>",
-    "weights": "<class 'vessel_designer.core.models.WeightBreakdown'>",
+    "weights": "<class 'ovd.core.models.WeightBreakdown'>",
     "displacement": "<class 'float'>",
     "deadweight": "<class 'float'>",
     "draft": "<class 'float'>",
@@ -1677,14 +1677,14 @@
     "min_freeboard_ok": "<class 'bool'>",
     "air_draft": "<class 'float'>",
     "air_draft_ok": "<class 'bool'>",
-    "stability": "<class 'vessel_designer.core.models.StabilityResult'>",
+    "stability": "<class 'ovd.core.models.StabilityResult'>",
     "stability_ok": "<class 'bool'>",
-    "trim": "<class 'vessel_designer.core.models.TrimResult'>",
+    "trim": "<class 'ovd.core.models.TrimResult'>",
     "total_depth_required": "<class 'float'>",
     "air_draft_unladen": "<class 'float'>",
     "light_draft": "<class 'float'>",
     "air_draft_navigating_unladen": "<class 'float'>",
-    "protective_location": "typing.Optional[vessel_designer.core.protective_location.ProtectiveLocationResult]",
+    "protective_location": "typing.Optional[ovd.core.protective_location.ProtectiveLocationResult]",
     "binding_constraints": "<class 'list'>",
     "warnings": "<class 'list'>"
    },
@@ -1799,7 +1799,7 @@
     "limiting_speed_knots": "typing.Optional[float]",
     "service_speed_knots": "<class 'float'>",
     "blockage_ratio": "<class 'float'>",
-    "speed_curve": "typing.List[vessel_designer.core.resistance.SpeedPoint]",
+    "speed_curve": "typing.List[ovd.core.resistance.SpeedPoint]",
     "resistance_at_service_kn": "<class 'float'>",
     "power_at_service_kw": "<class 'float'>",
     "fuel_at_service_lph": "<class 'float'>",
@@ -1815,16 +1815,16 @@
     "block_coefficient": "<class 'float'>",
     "wetted_surface_area": "<class 'float'>",
     "displacement_tonnes": "<class 'float'>",
-    "tug": "<class 'vessel_designer.core.resistance.TugInputs'>",
-    "environments": "typing.List[vessel_designer.core.resistance.EnvironmentInputs]",
+    "tug": "<class 'ovd.core.resistance.TugInputs'>",
+    "environments": "typing.List[ovd.core.resistance.EnvironmentInputs]",
     "speed_min_knots": "<class 'float'>",
     "speed_max_knots": "<class 'float'>",
     "speed_step_knots": "<class 'float'>"
    },
    "ResistanceResults": {
-    "inputs": "<class 'vessel_designer.core.resistance.ResistanceInputs'>",
+    "inputs": "<class 'ovd.core.resistance.ResistanceInputs'>",
     "wetted_surface_area": "<class 'float'>",
-    "environments": "typing.List[vessel_designer.core.resistance.EnvironmentResult]",
+    "environments": "typing.List[ovd.core.resistance.EnvironmentResult]",
     "checks": "<class 'list'>",
     "warnings": "<class 'list'>"
    },
@@ -1876,7 +1876,7 @@
     "static_ukc_m": "<class 'float'>",
     "dynamic_ukc_m": "<class 'float'>",
     "grounds": "<class 'bool'>",
-    "checks": "typing.List[vessel_designer.core.checks.Check]",
+    "checks": "typing.List[ovd.core.checks.Check]",
     "warnings": "typing.List[str]"
    }
   },
@@ -1919,7 +1919,7 @@
     "wavelength_m": "<class 'float'>",
     "lambda_over_lpp": "<class 'float'>",
     "added_power_kw": "<class 'float'>",
-    "checks": "typing.List[vessel_designer.core.checks.Check]",
+    "checks": "typing.List[ovd.core.checks.Check]",
     "warnings": "typing.List[str]"
    }
   }
