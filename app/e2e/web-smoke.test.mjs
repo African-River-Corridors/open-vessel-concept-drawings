@@ -125,7 +125,7 @@ describe("OVD web smoke tests", () => {
     assert.equal(await b.execute((el) => el.selectedOptions[0].disabled, await (await field()).$("select")), true);
     if (SHOTS) {
       for (const theme of ["Light", "Dark"]) {
-        await (await b.$(`button=${theme}`)).click();
+        await inSettings(b, async () => (await b.$(`button=${theme}`)).click());
         await (await field()).scrollIntoView();
         await new Promise((r) => setTimeout(r, 300));
         await b.saveScreenshot(path.join(SHOTS, `web-pick-default-${theme.toLowerCase()}.png`));
@@ -162,12 +162,12 @@ describe("OVD web smoke tests", () => {
     if (SHOTS) {
       fs.mkdirSync(SHOTS, { recursive: true });
       for (const theme of ["Light", "Dark"]) {
-        await (await b.$(`button=${theme}`)).click();
+        await inSettings(b, async () => (await b.$(`button=${theme}`)).click());
         await (await b.$("[data-testid=compare-hash]")).scrollIntoView();
         await new Promise((r) => setTimeout(r, 400));
         await b.saveScreenshot(path.join(SHOTS, `web-results-hash-${theme.toLowerCase()}.png`));
       }
-      await (await b.$("button=Light")).click();
+      await inSettings(b, async () => (await b.$("button=Light")).click());
     }
     // Issue #457: the meshes reach the front end typed, with the mesh hash of `ovd mesh --hash`.
     const meshes = await b.execute(async () => {
@@ -384,7 +384,7 @@ describe("OVD web smoke tests", () => {
     if (SHOTS) {
       fs.mkdirSync(SHOTS, { recursive: true });
       for (const theme of ["Light", "Dark"]) {
-        await (await b.$(`button=${theme}`)).click();
+        await inSettings(b, async () => (await b.$(`button=${theme}`)).click());
         await new Promise((r) => setTimeout(r, 800));
         await b.saveScreenshot(path.join(SHOTS, `web-3d-tanks-${theme.toLowerCase()}.png`));
       }
@@ -472,7 +472,7 @@ describe("OVD web smoke tests", () => {
           for (const p of ["exterior", "cargo", "arrangement"]) {
             await (await b.$(`[data-testid=preset-${p}]`)).click();
             for (const theme of ["Light", "Dark"]) {
-              await (await b.$(`button=${theme}`)).click();
+              await inSettings(b, async () => (await b.$(`button=${theme}`)).click());
               await new Promise((r) => setTimeout(r, 600));
               await b.saveScreenshot(path.join(SHOTS, `web-3d-preset-${p}-${theme.toLowerCase()}.png`));
             }
@@ -481,11 +481,11 @@ describe("OVD web smoke tests", () => {
           await (await b.$("[data-testid=preset-arrangement]")).click();
           await (await b.$('[data-testid="propulsor-propulsor_1"]')).click();
           for (const theme of ["Light", "Dark"]) {
-            await (await b.$(`button=${theme}`)).click();
+            await inSettings(b, async () => (await b.$(`button=${theme}`)).click());
             await new Promise((r) => setTimeout(r, 600));
             await b.saveScreenshot(path.join(SHOTS, `web-3d-propulsors-${theme.toLowerCase()}.png`));
           }
-          await (await b.$("button=Light")).click();
+          await inSettings(b, async () => (await b.$("button=Light")).click());
         }
       }
     }
@@ -543,7 +543,7 @@ describe("OVD web smoke tests", () => {
       fs.mkdirSync(SHOTS, { recursive: true });
       await (await b.$("[data-testid=section-on]")).click();
       for (const theme of ["Light", "Dark"]) {
-        await (await b.$(`button=${theme}`)).click();
+        await inSettings(b, async () => (await b.$(`button=${theme}`)).click());
         await (await b.$("[data-testid=model3d-reset]")).click();
         await new Promise((r) => setTimeout(r, 500));
         await b.saveScreenshot(path.join(SHOTS, `web-3d-shading-spaces-${theme.toLowerCase()}.png`));
@@ -611,7 +611,7 @@ describe("OVD web smoke tests", () => {
       });
     const painted = {};
     for (const theme of ["Light", "Dark"]) {
-      await (await b.$(`button=${theme}`)).click();
+      await inSettings(b, async () => (await b.$(`button=${theme}`)).click());
       const want = await tokens();
       const same = (a, c) => Object.keys(c).every((k) => a?.[k] === c[k]);
       await until(b, `the ${theme} colours`, async () => same(await data("colours"), want)).catch(async (e) => {
@@ -667,7 +667,7 @@ describe("OVD web smoke tests", () => {
     if (SHOTS) {
       fs.mkdirSync(SHOTS, { recursive: true });
       for (const theme of ["Light", "Dark"]) {
-        await (await b.$(`button=${theme}`)).click();
+        await inSettings(b, async () => (await b.$(`button=${theme}`)).click());
         for (const view of ["reset", "view-profile", "view-plan"]) {
           await (await b.$(`[data-testid=model3d-${view}]`)).click();
           await new Promise((r) => setTimeout(r, 500));
