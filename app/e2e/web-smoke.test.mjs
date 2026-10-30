@@ -405,6 +405,13 @@ describe("OVCD web smoke tests", () => {
         assert.equal(Number(await (await b.$("[data-testid=deck-item-info-top]")).getAttribute("data-value")), a.wheelhouse_top_raised_m);
         const lift = await b.$("[data-testid=wheelhouse-lift]");
         assert.equal(Number(await lift.getAttribute("data-air")), results.results.air_draft_light_m);
+        // Pick a propulsor (issue #692): its diameter and axis height are the results' Propulsor Layout.
+        const layout = results.drawing.propulsors;
+        await (await b.$('[data-testid="propulsor-propulsor_1"]')).click();
+        await until(b, "the propulsor info", async () => (await b.$("[data-testid=propulsor-info]")).isExisting());
+        assert.equal(Number(await (await b.$("[data-testid=propulsor-info-diameter]")).getAttribute("data-value")), layout.diameter_m);
+        assert.equal(Number(await (await b.$("[data-testid=propulsor-info-axis]")).getAttribute("data-value")), layout.axis_z_m);
+        assert.ok((await data("shown")).some((g) => g.startsWith("propulsor:")), "the propulsors on Exterior");
         if (SHOTS) {
           fs.mkdirSync(SHOTS, { recursive: true });
           for (const p of ["exterior", "cargo", "arrangement"]) {
@@ -414,6 +421,14 @@ describe("OVCD web smoke tests", () => {
               await new Promise((r) => setTimeout(r, 600));
               await b.saveScreenshot(path.join(SHOTS, `web-3d-preset-${p}-${theme.toLowerCase()}.png`));
             }
+          }
+          // The propulsors through the translucent hull, one picked (issue #692).
+          await (await b.$("[data-testid=preset-arrangement]")).click();
+          await (await b.$('[data-testid="propulsor-propulsor_1"]')).click();
+          for (const theme of ["Light", "Dark"]) {
+            await (await b.$(`button=${theme}`)).click();
+            await new Promise((r) => setTimeout(r, 600));
+            await b.saveScreenshot(path.join(SHOTS, `web-3d-propulsors-${theme.toLowerCase()}.png`));
           }
           await (await b.$("button=Light")).click();
         }

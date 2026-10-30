@@ -208,6 +208,11 @@ impl Session {
         ok(self.state.deck_items(option)).map(|v| v.to_string())
     }
 
+    /// The propulsor parts and their values, as JSON (spec 0009).
+    pub fn propulsors(&mut self, option: &str) -> Js<String> {
+        ok(self.state.propulsors(option)).map(|v| v.to_string())
+    }
+
     /// The waterline of each floating position, as JSON.
     pub fn waterlines(&mut self, option: &str) -> Js<String> {
         ok(self.state.waterlines(option)).map(|v| v.to_string())

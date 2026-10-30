@@ -2314,38 +2314,13 @@ fn stern_drawing(g: &ovcd_core::stern_form::SternGeometry) -> Value {
 }
 
 /// Issue #691 (spec 0009): the Propulsor Layout of a self-propelled hull, for `drawing.propulsors`
-/// (outside the results hash). A specified Propulsor takes its machinery; the default stern block
-/// its thrusters. `None` with no stern block.
+/// (outside the results hash); `None` with no stern block. The core works it out
+/// ([`ovcd_core::machinery::layout_of`]), as the Vessel Model does.
 pub(crate) fn propulsor_layout_of(
     inp: &BargeCapacityInputs,
     r: &BargeCapacityResult,
 ) -> Option<ovcd_core::machinery::PropulsorLayout> {
-    use ovcd_core::machinery::{default_thruster_layout, propulsor_layout};
-    let aft = r.aft_arrangement.as_ref()?;
-    let (envelope, clear) = match &inp.aft {
-        Some(a) => (a.thruster_envelope_m, a.thruster_clear_m),
-        None => (
-            inp.aft_design.thruster_envelope_m,
-            inp.aft_design.thruster_clear_m,
-        ),
-    };
-    match (&inp.machinery, &aft.machinery) {
-        (Some(mi), Some(m)) => {
-            // Under a tunnel stern every type sits on its tunnel's axis (spec 0009).
-            let offsets = match &inp.stern_geometry {
-                Some(g) if g.form == ovcd_core::stern_form::SternForm::Tunnel => {
-                    g.tunnel_offsets_m.as_slice()
-                }
-                _ => aft.thruster_offsets_m.as_slice(),
-            };
-            Some(propulsor_layout(mi, m, offsets, envelope + clear, inp.beam))
-        }
-        _ => default_thruster_layout(
-            aft.thruster_room_length_m,
-            envelope,
-            &aft.thruster_offsets_m,
-        ),
-    }
+    ovcd_core::machinery::layout_of(inp, r)
 }
 
 /// `drawing.propulsors` (issue #691): the Propulsor Layout as JSON.
@@ -2356,6 +2331,7 @@ fn propulsors_drawing(l: &ovcd_core::machinery::PropulsorLayout) -> Value {
         "diameter_m": num(l.diameter_m),
         "axis_z_m": num(l.axis_z_m),
         "ducted": l.ducted,
+        "unit_power_kw": l.unit_power_kw.map_or(Value::Null, num),
         "propulsors": l.propulsors.iter().map(|u| json!({
             "x_m": num(u.x_m),
             "y_m": num(u.y_m),

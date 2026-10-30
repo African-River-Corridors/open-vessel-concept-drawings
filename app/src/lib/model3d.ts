@@ -269,5 +269,5 @@ export function wheelhouseDraw(id: string, shown: WheelhouseShown): { on: boolea
 
 /** The layers whose meshes are closed solids: a cut through one shows its inside in `--model-cut`. */
 export function closedSolid(layer: string): boolean {
-  return ["hull", "space", "dome", "deck_item", "weather_shield"].includes(layer);
+  return ["hull", "space", "dome", "deck_item", "weather_shield", "propulsor"].includes(layer);
 }

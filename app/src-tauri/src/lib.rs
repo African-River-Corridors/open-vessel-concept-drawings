@@ -178,6 +178,11 @@ fn deck_items(option: String, state: State<Shared>) -> Reply {
 }
 
 #[tauri::command]
+fn propulsors(option: String, state: State<Shared>) -> Reply {
+    lock(&state)?.propulsors(&option)
+}
+
+#[tauri::command]
 fn waterlines(option: String, state: State<Shared>) -> Reply {
     lock(&state)?.waterlines(&option)
 }
@@ -441,6 +446,7 @@ pub fn run() {
             section_at,
             space_info,
             deck_items,
+            propulsors,
             waterlines,
         ])
         .on_window_event(|window, event| {

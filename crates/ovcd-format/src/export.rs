@@ -18,7 +18,7 @@ use ovcd_core::mesh::{Mesh, MeshGroup, PartSource};
 use serde_json::{Value, json};
 
 /// The layers of a mesh in the order they appear in a scene, with the name of the layer's node.
-const LAYERS: [(&str, &str); 8] = [
+const LAYERS: [(&str, &str); 9] = [
     ("hull", "hull"),
     ("deck", "decks"),
     ("bulkhead", "bulkheads"),
@@ -26,6 +26,7 @@ const LAYERS: [(&str, &str); 8] = [
     ("dome", "domes"),
     ("weather_shield", "weather_shields"),
     ("deck_item", "deck_items"),
+    ("propulsor", "propulsors"),
     ("waterline", "waterlines"),
 ];
 
@@ -42,11 +43,12 @@ const MODEL_TO_GLTF: [f64; 16] = [
 
 /// The Light theme colours of the parts of spec 0009 (`app/src/app.css`, `:root`), as the 3D view
 /// draws them: `(token, sRGB hex)`. A test keeps them equal to the stylesheet.
-pub const LIGHT_PART_COLOURS: [(&str, &str); 4] = [
+pub const LIGHT_PART_COLOURS: [(&str, &str); 5] = [
     ("--space-cargo", "#9a4a1c"),
     ("--model-deck", "#8c7b56"),
     ("--model-deck-item", "#7a5a2c"),
     ("--model-wheelhouse", "#4f585d"),
+    ("--model-propulsor", "#5a4a7a"),
 ];
 
 /// The linear base colour factor (RGBA, opaque) of a Light theme token (glTF 2.0, 3.9.2: the base
@@ -79,6 +81,11 @@ fn material(g: &MeshGroup) -> (&'static str, [f64; 4], bool) {
         PartSource::Wheelhouse(_) | PartSource::LiftColumn => {
             ("wheelhouse", light("--model-wheelhouse"), false)
         }
+        PartSource::Propulsor(_)
+        | PartSource::Nozzle(_)
+        | PartSource::Leg(_)
+        | PartSource::Rudder(_)
+        | PartSource::BowThruster => ("propulsor", light("--model-propulsor"), false),
         _ => match g.layer.as_str() {
             "hull" => ("hull", [0.55, 0.60, 0.66, 1.0], false),
             "deck" => ("deck", [0.78, 0.70, 0.50, 1.0], false),
@@ -90,9 +97,9 @@ fn material(g: &MeshGroup) -> (&'static str, [f64; 4], bool) {
 }
 
 /// The `.glb` of `mesh`: one node for each layer, named for it (`hull`, `decks`, `bulkheads`,
-/// `spaces`, `domes`, `weather_shields`, `deck_items`, `waterlines`), holding one child node for each
-/// part, named for the part (a deck or bulkhead key, a Space or tank name, a dome, the shield, a Deck
-/// Item id, a loading condition). The hull is the
+/// `spaces`, `domes`, `weather_shields`, `deck_items`, `propulsors`, `waterlines`), holding one child
+/// node for each part, named for the part (a deck or bulkhead key, a Space or tank name, a dome, the
+/// shield, a Deck Item id, a propulsor part id, a loading condition). The hull is the
 /// layer's own node, with its mesh. One material for each layer. All of them sit under one root
 /// node, `vessel`, which maps the model axes to glTF's. An empty mesh gives a scene with no nodes.
 pub fn gltf_glb(mesh: &Mesh) -> Vec<u8> {

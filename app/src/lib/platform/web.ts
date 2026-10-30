@@ -3,7 +3,7 @@
 import init, { Session } from "../../../wasm-pkg/ovcd_web.js";
 import wasmUrl from "../../../wasm-pkg/ovcd_web_bg.wasm?url";
 import type { Evaluation, Schema, Snapshot } from "../api";
-import type { DeckItems, DrawingFormat, DrawingView, MeshGroup, ModelFormat, Platform, SectionOutline, SpaceInfo, Waterline } from "./types";
+import type { DeckItems, DrawingFormat, DrawingView, MeshGroup, ModelFormat, Platform, PropulsorPart, SectionOutline, SpaceInfo, Waterline } from "./types";
 import { t } from "../i18n.svelte";
 
 const LAST_DESIGN = "ovcd.lastDesign";
@@ -213,6 +213,7 @@ export async function createWebPlatform(): Promise<Platform> {
     sectionAt: (option, x) => call<SectionOutline>(() => session.section_at(option, x)),
     spaceInfo: (option, name) => call<SpaceInfo>(() => session.space_info(option, name)),
     deckItems: (option) => call<DeckItems>(() => session.deck_items(option)),
+    propulsors: (option) => call<PropulsorPart[]>(() => session.propulsors(option)),
     waterlines: (option) => call<Waterline[]>(() => session.waterlines(option)),
   };
   // The smoke test reads results through this; only a build in test mode has it.

@@ -180,13 +180,20 @@ fn every_space_mesh_of_every_fixture_is_closed_and_holds_the_space_volume() {
 }
 
 /// The triangles of each layer of each fixture and example Option when the triangle budget landed
-/// (issue #690, spec 0009 "Performance budget"). Label: snapshot - what `option_meshes` printed.
+/// (issue #690, spec 0009 "Performance budget"); the `propulsor` layer since issue #692. Label:
+/// snapshot - what `option_meshes` printed.
 const TRIANGLES: &[(&str, &str, &str, u32)] = &[
     ("gas-140x29-coastal-lng.vdesign", "A basis", "bulkhead", 36),
     ("gas-140x29-coastal-lng.vdesign", "A basis", "deck", 2),
     ("gas-140x29-coastal-lng.vdesign", "A basis", "deck_item", 60),
     ("gas-140x29-coastal-lng.vdesign", "A basis", "dome", 384),
     ("gas-140x29-coastal-lng.vdesign", "A basis", "hull", 38),
+    (
+        "gas-140x29-coastal-lng.vdesign",
+        "A basis",
+        "propulsor",
+        1752,
+    ),
     ("gas-140x29-coastal-lng.vdesign", "A basis", "space", 9410),
     ("gas-140x29-coastal-lng.vdesign", "A basis", "waterline", 16),
     (
@@ -210,6 +217,12 @@ const TRIANGLES: &[(&str, &str, &str, u32)] = &[
     ),
     ("gas-140x29-coastal-lng.vdesign", "B profile", "dome", 384),
     ("gas-140x29-coastal-lng.vdesign", "B profile", "hull", 38),
+    (
+        "gas-140x29-coastal-lng.vdesign",
+        "B profile",
+        "propulsor",
+        1752,
+    ),
     ("gas-140x29-coastal-lng.vdesign", "B profile", "space", 9410),
     (
         "gas-140x29-coastal-lng.vdesign",
@@ -228,6 +241,12 @@ const TRIANGLES: &[(&str, &str, &str, u32)] = &[
     ("gas-140x29-coastal-lng.vdesign", "C deep", "deck_item", 60),
     ("gas-140x29-coastal-lng.vdesign", "C deep", "dome", 384),
     ("gas-140x29-coastal-lng.vdesign", "C deep", "hull", 38),
+    (
+        "gas-140x29-coastal-lng.vdesign",
+        "C deep",
+        "propulsor",
+        1752,
+    ),
     ("gas-140x29-coastal-lng.vdesign", "C deep", "space", 9418),
     ("gas-140x29-coastal-lng.vdesign", "C deep", "waterline", 16),
     ("lrg-gas-89.vdesign", "LRG Gas 89", "bulkhead", 28),
@@ -235,6 +254,7 @@ const TRIANGLES: &[(&str, &str, &str, u32)] = &[
     ("lrg-gas-89.vdesign", "LRG Gas 89", "deck_item", 72),
     ("lrg-gas-89.vdesign", "LRG Gas 89", "dome", 768),
     ("lrg-gas-89.vdesign", "LRG Gas 89", "hull", 26),
+    ("lrg-gas-89.vdesign", "LRG Gas 89", "propulsor", 2340),
     ("lrg-gas-89.vdesign", "LRG Gas 89", "space", 18506),
     ("lrg-gas-89.vdesign", "LRG Gas 89", "waterline", 9),
     (
@@ -319,6 +339,12 @@ const TRIANGLES: &[(&str, &str, &str, u32)] = &[
     (
         "crude_integral_tanks_self_propelled.vdesign",
         "Option 1",
+        "propulsor",
+        1392,
+    ),
+    (
+        "crude_integral_tanks_self_propelled.vdesign",
+        "Option 1",
         "space",
         1508,
     ),
@@ -393,6 +419,12 @@ const TRIANGLES: &[(&str, &str, &str, u32)] = &[
     (
         "gas_igc_2g_self_propelled.vdesign",
         "Option 1",
+        "propulsor",
+        2340,
+    ),
+    (
+        "gas_igc_2g_self_propelled.vdesign",
+        "Option 1",
         "space",
         4730,
     ),
@@ -456,7 +488,7 @@ fn budget_designs() -> Vec<std::path::PathBuf> {
 
 /// Label: property (the 1.5 x bound and the 200,000 cap of spec 0009) over the snapshot above. Each
 /// layer of each Option stays within 1.5 x its pinned count, so doubling a tessellation constant
-/// (`TANK_SEGMENTS`, `HEAD_RINGS`, `DOME_SEGMENTS`) fails it; and no Option passes 200,000.
+/// (`TANK_SEGMENTS`, `HEAD_RINGS`, `DOME_SEGMENTS`, `PROPULSOR_SEGMENTS`) fails it; and no Option passes 200,000.
 #[test]
 fn every_fixture_layer_stays_within_its_triangle_budget() {
     let mut seen = 0;

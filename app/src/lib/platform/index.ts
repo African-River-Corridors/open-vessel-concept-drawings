@@ -15,6 +15,7 @@ export type {
   SpaceInfo,
   DeckItem,
   DeckItems,
+  PropulsorPart,
   Waterline,
 } from "./types";
 
