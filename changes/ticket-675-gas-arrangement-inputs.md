@@ -6,7 +6,7 @@
 <!-- design-impact -->
 ### ticket/675-gas-arrangement-inputs (2026-10-30)
 
-Between `main a8d61b7` and `this branch c80cb59b`.
+Between `main c0446ef` and `this branch 317df747`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
