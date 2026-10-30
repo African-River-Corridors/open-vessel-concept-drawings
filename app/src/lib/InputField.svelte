@@ -87,6 +87,17 @@
   let label = $derived(schemaText.input(spec.name, spec.label));
 
   let value = $derived(stored.value);
+
+  /** The text of a list entry. */
+  function choiceText(v: string): string {
+    const c = (spec.choices ?? []).find((x) => x.value === v);
+    if (!c) return v;
+    const name = schemaText.choice(spec.name, c.value, c.label);
+    return spec.kind === "cargo" && c.status === "development" ? t("app-cargo-development", { name }) : name;
+  }
+  /** The value of the entry that shows a value not typed; no choice has it. */
+  const HELD = "__not-typed__";
+  let notTyped = $derived(stored.source !== "typed" && (spec.choices ?? []).some((c) => c.value === String(value)));
   // Local display state, taken once: the field is drawn afresh (new key) when Rust changes a value.
   /* svelte-ignore state_referenced_locally */
   let showNumber = $state(stored.value !== null);
@@ -142,9 +153,15 @@
       {t(value === true ? "app-yes" : "app-no")}
     </label>
   {:else if spec.kind === "choice" || spec.kind === "cargo"}
-    <select aria-label={label} class:invalid={hasError} value={String(value)} onchange={(e) => onEdit(e.currentTarget.value)}>
+    <!-- Issue #670: a list fires no change when the user picks the entry already shown, so a value that
+         is not typed is shown in an entry of its own, "Type C tanks (default)", that cannot be picked.
+         Picking the real entry is then a change, and marks the field typed. -->
+    <select aria-label={label} class:invalid={hasError} value={notTyped ? HELD : String(value)} onchange={(e) => onEdit(e.currentTarget.value)}>
+      {#if notTyped}
+        <option value={HELD} disabled>{t("app-choice-not-typed", { value: choiceText(String(value)), source: SOURCE_IDS[stored.source] ? t(SOURCE_IDS[stored.source]) : stored.source })}</option>
+      {/if}
       {#each spec.choices ?? [] as c (c.value)}
-        <option value={c.value}>{spec.kind === "cargo" && c.status === "development" ? t("app-cargo-development", { name: schemaText.choice(spec.name, c.value, c.label) }) : schemaText.choice(spec.name, c.value, c.label)}</option>
+        <option value={c.value}>{choiceText(c.value)}</option>
       {/each}
     </select>
   {:else if spec.kind === "formation"}

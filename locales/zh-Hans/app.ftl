@@ -147,6 +147,8 @@ app-reset = 重置
 # status: draft
 app-reset-title = 恢复为默认值
 # status: draft
+app-choice-not-typed = { $value }（{ $source }）
+# status: draft
 app-range-and = { $first } 和 { $second }
 # status: draft
 app-help-default = 默认值：{ $value }

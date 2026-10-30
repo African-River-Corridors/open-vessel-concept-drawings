@@ -147,6 +147,8 @@ app-reset = redefinir
 # status: draft
 app-reset-title = Voltar ao padrão
 # status: draft
+app-choice-not-typed = { $value } ({ $source })
+# status: draft
 app-range-and = { $first } e { $second }
 # status: draft
 app-help-default = Padrão: { $value }

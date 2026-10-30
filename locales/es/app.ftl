@@ -147,6 +147,8 @@ app-reset = restablecer
 # status: draft
 app-reset-title = Volver al valor por defecto
 # status: draft
+app-choice-not-typed = { $value } ({ $source })
+# status: draft
 app-range-and = { $first } y { $second }
 # status: draft
 app-help-default = Por defecto: { $value }
