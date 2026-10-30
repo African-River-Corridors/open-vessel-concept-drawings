@@ -4,9 +4,9 @@
 - Evaluation harness (issue #355): `kind: stern` cases keyed by rule id for the Blind Distance, speed, redundancy and propeller Rules of `es-trin-2025`, `solas-v22`, `rheinschpv` and `ovcd`, with an independent oracle (`evaluation/oracle/stern_oracle.py`) and generated boundary cases (the Blind Distance 249 and 251 m, the speed 12.9 and 13.1 km/h, a 110.1 m craft with and without a bow thruster). The engine has a new evaluation entry point, `gas_stability.stern_trace`. 0 false passes and 0 false fails.
 
 <!-- design-impact -->
-### ticket/355-propulsor-checks (2026-10-23)
+### ticket/355-propulsor-checks (2026-10-30)
 
-Between `main 71c00cd` and `this branch 6b0a6c93`.
+Between `main c0446ef` and `this branch 9b8c3e9c`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
