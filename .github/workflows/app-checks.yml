@@ -1,94 +1,34 @@
 name: App and web checks
 
-# Checks that no pull request has to wait for (issue #565). None of them is a required check; `test`,
-# `release-guard`, `drawing-crosscheck` and `app-e2e` stay in ci.yml and run on every pull request.
+# Checks that no pull request has to wait for (issues #565, #716). None of them is a required check; `test`,
+# `release-guard` and `drawing-crosscheck` stay in ci.yml. app-e2e and web-app run on release and weekly,
+# not on every PR: they are in app-gate.yml, which release.yml calls and which this workflow calls every
+# Monday (07:47 UTC) and on request. `web-parity` is in web-parity.yml, a release gate as well.
 #
-#   web-app               On a pull request only when the web front end or the web build changes; on every
-#                         push to main that changes them; and every day (07:17 UTC). `web-parity` is in
-#                         web-parity.yml: a release gate that release.yml calls.
 #   app-linux, app-windows  Every day (07:17 UTC) and on request (workflow_dispatch). Never on a pull
 #                         request or a push to main.
 #
-# A failed daily run opens an issue (the last job), so a regression found the next day is not lost.
+# A failed scheduled run opens an issue (the last job), so a regression found later is not lost.
 
 on:
-  pull_request:
-    paths:
-      - "app/**"
-      - "crates/ovd-web/**"
-      - "tools/build_web.sh"
-      - "tools/web_parity.mjs"
-  push:
-    branches: ["main"]
-    paths:
-      - "app/**"
-      - "crates/ovd-web/**"
-      - "tools/build_web.sh"
-      - "tools/web_parity.mjs"
-      - ".github/workflows/app-checks.yml"
   schedule:
-    - cron: "17 7 * * *" # every day, 07:17 UTC
+    - cron: "17 7 * * *" # every day, 07:17 UTC: app-linux and app-windows
+    - cron: "47 7 * * 1" # every Monday, 07:47 UTC: web-app and app-e2e
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: app-checks-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.run_id }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: app-checks-${{ github.run_id }}
+  cancel-in-progress: false
 
 jobs:
 
-  # The web app (issue #246): the web build of the front end over the wasm Design session, in
-  # headless Chrome. The wasm-bindgen CLI is the version the ovd-web crate pins.
-  web-app:
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: npm
-          cache-dependency-path: app/package-lock.json
-      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
-        run: rustup toolchain install
-      - uses: Swatinem/rust-cache@v2
-      - name: The pinned wasm-bindgen version
-        id: wb
-        run: echo "version=$(sed -n 's/^wasm-bindgen = "=\([0-9.]*\)".*/\1/p' crates/ovd-web/Cargo.toml)" >> "$GITHUB_OUTPUT"
-      - name: wasm-bindgen CLI (cached)
-        id: cli
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/bin/wasm-bindgen
-          key: wasm-bindgen-cli-${{ steps.wb.outputs.version }}-${{ runner.os }}
-      - name: Install wasm-bindgen CLI
-        if: steps.cli.outputs.cache-hit != 'true'
-        run: cargo install wasm-bindgen-cli --version "${{ steps.wb.outputs.version }}" --locked
-      - name: Build the web package
-        run: bash tools/build_web.sh
-      - name: Build ovd
-        run: cargo build -p ovd-cli
-      - name: Front end (type check, desktop build, web build)
-        working-directory: app
-        run: |
-          npm ci
-          npm run build
-          npm run build:web
-      - name: Web smoke test (headless Chrome)
-        working-directory: app
-        env:
-          # The smoke test saves each view in each language, light and dark, here (spec 0005).
-          OVD_WEB_SHOTS: ${{ runner.temp }}/web-screenshots
-        run: bash e2e/run-web.sh
-      - name: Upload the screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-screenshots
-          path: ${{ runner.temp }}/web-screenshots
-          if-no-files-found: warn
+  # web-app and app-e2e (app-gate.yml): every Monday and on request, not on the daily run.
+  app-gate:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '47 7 * * 1' }}
+    uses: ./.github/workflows/app-gate.yml
 
   # The desktop app (spec 0002). Kept out of the fast gate: it needs Node and the Tauri system
   # libraries, and the workspace's default members must build without them.
@@ -144,10 +84,10 @@ jobs:
       - name: Compile the app crate
         run: cargo build -p ovd-app
 
-  # A failed daily run opens one issue, or adds a comment to the one that is open.
+  # A failed scheduled run opens one issue, or adds a comment to the one that is open.
   daily-failure:
     if: failure() && github.event_name == 'schedule'
-    needs: [web-app, app-linux, app-windows]
+    needs: [app-gate, app-linux, app-windows]
     runs-on: ubuntu-latest
     permissions:
       issues: write

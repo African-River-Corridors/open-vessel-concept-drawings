@@ -121,9 +121,19 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+  # pytest runs in four shards (issue #716). tools/pytest_shard.py gives each test to one shard by its
+  # node id, so each collected test is in exactly one shard, and `test` below needs all four to pass.
+  # tools/check_pytest_shards.py proves the split on a machine; it is not a CI step, so the gate does
+  # not depend on artifact storage. The checks that run once (Calibration Bands, evaluation harness,
+  # mutants) run in shard 1.
   gate-python:
+    name: gate-python (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -131,25 +141,31 @@ jobs:
       - uses: ./.github/actions/gate-env
         with:
           cache-key: gate-python
-      - name: pytest
+      - name: pytest, shard ${{ matrix.shard }} of 4
         env:
           GATES_STEPS: pytest
+          PYTHONPATH: tools
+          PYTEST_ADDOPTS: -p pytest_shard
+          PYTEST_SHARD: ${{ matrix.shard }}/4
         run: bash tools/gates.sh
       # Calibration Bands (issue #119): one warning annotation per case outside its band. A band miss
       # never fails the build; a crash does. It takes about a second.
       - name: Calibration against the Calibration Bands (warning only)
+        if: matrix.shard == 1
         run: python -m ovd.calibration --check
       # Evaluation harness (issue #184): known designs with known verdicts per rule, run against the
       # engine. A FALSE PASS (the engine passes a criterion a case expects to fail) fails the build; a
       # false fail and a coverage gap are warning annotations, as the Calibration Bands are. A stale
       # evaluation/results.md also fails. It takes a few seconds.
       - name: Evaluation harness (a false pass fails the build)
+        if: matrix.shard == 1
         run: python evaluation/run.py --check
       # The boundary mutants are generated (issue #184) and take about 3 minutes to generate again.
       # They change only with evaluation/, so a run that changes nothing there skips the check: a PR
       # is compared with its base branch, a push to main with the commit before it. A tag, a manual
       # run and the nightly run do it every time (issue #481, docs/agents/slow-tests.md).
       - name: The mutants file is what the generator writes (when evaluation/ changes)
+        if: matrix.shard == 1
         env:
           EVENT: ${{ github.event_name }}
           BASE: ${{ github.base_ref }}
@@ -263,53 +279,3 @@ jobs:
           curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz \
             | tar -xz gitleaks
           ./gitleaks detect --source . --redact --verbose
-
-  # End-to-end smoke tests (spec 0002): the built debug app, driven by Tauri's WebDriver on Linux.
-  # Its own job, so the fast gate keeps its time budget.
-  app-e2e:
-    runs-on: ubuntu-latest
-    timeout-minutes: 40
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: npm
-          cache-dependency-path: app/package-lock.json
-      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
-        run: rustup toolchain install
-      - uses: Swatinem/rust-cache@v2
-      - name: Tauri system libraries, WebDriver and a virtual display
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential libxdo-dev libssl-dev \
-            libayatana-appindicator3-dev librsvg2-dev webkit2gtk-driver xvfb
-      - name: tauri-driver (cached)
-        id: driver
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/bin/tauri-driver
-          key: tauri-driver-2.1.0-${{ runner.os }}
-      - name: Install tauri-driver
-        if: steps.driver.outputs.cache-hit != 'true'
-        run: cargo install tauri-driver --version 2.1.0 --locked
-      - name: Build the debug app
-        working-directory: app
-        run: |
-          npm ci
-          npx tauri build --debug --no-bundle
-      - name: Build the CLI (the smoke tests compare its mesh hash, issue #457)
-        run: cargo build -p ovd-cli
-      - name: Smoke tests
-        working-directory: app
-        env:
-          # The smoke tests save a screenshot of each view here, for review.
-          OVD_E2E_SHOTS: ${{ runner.temp }}/app-screenshots
-        run: xvfb-run -a bash e2e/run.sh
-      - name: Upload the screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-screenshots
-          path: ${{ runner.temp }}/app-screenshots
-          if-no-files-found: warn

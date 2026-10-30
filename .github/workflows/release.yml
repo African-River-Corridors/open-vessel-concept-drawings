@@ -6,7 +6,7 @@ name: Release
 # There is no nightly run. It builds and tests; it publishes NOTHING (no PyPI, no upload to a release).
 # Wheels and binaries are kept as workflow artifacts for the maintainer to inspect.
 #
-# Order: `gate` (the CI jobs `test` and `release-guard`) -> `web-parity`, `wasm-hashes`, `wheels` and `binaries`. Both build jobs
+# Order: `gate` (the CI jobs `test` and `release-guard`) -> `app-gate` (web-app, app-e2e), `web-parity`, `wasm-hashes`, `wheels` and `binaries`. Both build jobs
 # list `gate` in `needs`, so a failing `test` or `release-guard` stops the run before any build step.
 
 on:
@@ -27,6 +27,12 @@ jobs:
   web-parity:
     needs: gate
     uses: ./.github/workflows/web-parity.yml
+
+  # The web app and the desktop app smoke tests (issue #716). They left the pull request path: a release
+  # waits on them here. app-gate.yml holds them.
+  app-gate:
+    needs: gate
+    uses: ./.github/workflows/app-gate.yml
 
   # A calibration case outside its band blocks a release unless the CHANGELOG entry of that release explains
   # it (issue #431, docs/agents/build-process.md). A failure here fails `gate` of app-build.yml.
