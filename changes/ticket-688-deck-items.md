@@ -1,2 +1,0 @@
-<!-- unreleased -->
-- Deck Items (issue #688, spec 0009, ADR 0021): the Vessel Model's Outfit holds the stern block's accommodation and battery units, the wheelhouse lowered and raised, and its lift column. Each is a box mesh with a typed source (`PartSource`) in the new `deck_item` layer. A unit stands on the highest deck point under it, so camber and sheer are kept. The lift column's plan size is an estimate (basis DR-A45). No result value changes.

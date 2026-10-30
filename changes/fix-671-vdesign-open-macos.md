@@ -1,2 +1,0 @@
-<!-- unreleased -->
-- Desktop app (issue #671): the app now declares the `.vdesign` file type (exported type `org.africanrivercorridors.ovcd.vdesign`, conforming to `public.json`) and registers as its editor. A Design handed to the app from outside now opens: on macOS from Finder, "Open With" or `open -a` (the opened-file event); on Windows and Linux as a path on the command line. If the open Design has unsaved changes, the app asks first, as **Open** does.

@@ -1,2 +1,0 @@
-<!-- unreleased -->
-- Picking a value from a list marks the field typed, even when it is the default (issue #670). A list fires no change when the user picks the entry it already shows, so the app sent no edit and the field kept its "default" marker. While a list field is not typed it now shows its value in an entry of its own, for example "Type C tanks (default)", greyed and not pickable; picking "Type C tanks" is then a change, and the field is saved as typed. "reset" brings the default entry back. No result moves.

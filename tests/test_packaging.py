@@ -165,21 +165,21 @@ def test_wheel_job_skips_the_tests_that_scan_files_it_does_not_copy():
         assert f"--deselect={node}" in text, node
 
 
-def test_version_is_0_2_3_everywhere():
+def test_version_is_0_3_0_everywhere():
     """Ticket 27, and 111: one version for the package, every `ovd-*` crate and the app."""
-    assert pyproject()["project"]["version"] == "0.2.4"
+    assert pyproject()["project"]["version"] == "0.3.0"
     cargo = tomllib.loads((ROOT / "Cargo.toml").read_text(encoding="utf-8"))
-    assert cargo["workspace"]["package"]["version"] == "0.2.4"
+    assert cargo["workspace"]["package"]["version"] == "0.3.0"
     lock = tomllib.loads((ROOT / "Cargo.lock").read_text(encoding="utf-8"))
     ours = {p["name"]: p["version"] for p in lock["package"]
             if p["name"] in ("ovd-core", "ovd-format", "ovd-cli", "ovd-py", "ovd-shell", "ovd-web", "xtask")}
-    assert ours == dict.fromkeys(("ovd-core", "ovd-format", "ovd-cli", "ovd-py", "ovd-shell", "ovd-web", "xtask"), "0.2.4")
+    assert ours == dict.fromkeys(("ovd-core", "ovd-format", "ovd-cli", "ovd-py", "ovd-shell", "ovd-web", "xtask"), "0.3.0")
     for crate in ("ovd-core", "ovd-format", "ovd-cli", "ovd-py", "ovd-shell", "ovd-web"):
         manifest = tomllib.loads((ROOT / "crates" / crate / "Cargo.toml").read_text(encoding="utf-8"))
         assert manifest["package"]["version"] == {"workspace": True}, crate
     # the app: its front end, its Tauri config (the installer name) and its crate
     app = ROOT / "app"
-    assert json.loads((app / "package.json").read_text(encoding="utf-8"))["version"] == "0.2.4"
-    assert json.loads((app / "package-lock.json").read_text(encoding="utf-8"))["version"] == "0.2.4"
-    assert json.loads((app / "src-tauri" / "tauri.conf.json").read_text(encoding="utf-8"))["version"] == "0.2.4"
-    assert {p["name"]: p["version"] for p in lock["package"]}["ovd-app"] == "0.2.4"
+    assert json.loads((app / "package.json").read_text(encoding="utf-8"))["version"] == "0.3.0"
+    assert json.loads((app / "package-lock.json").read_text(encoding="utf-8"))["version"] == "0.3.0"
+    assert json.loads((app / "src-tauri" / "tauri.conf.json").read_text(encoding="utf-8"))["version"] == "0.3.0"
+    assert {p["name"]: p["version"] for p in lock["package"]}["ovd-app"] == "0.3.0"

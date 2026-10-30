@@ -2,6 +2,181 @@
 
 ## Unreleased
 
+## 0.3.0 (2026-10-30)
+
+OVCD is now Open Vessel Designer (OVD). The repository, crates, the `ovd` command, the Python package (`open-vessel-designer`, `import ovd`) and the app use the new name. The old names no longer work. Design files keep the `.vdesign` extension, but files saved by 0.2.x do not open in 0.3.0.
+
+0.3.0 is the first release shared with expert reviewers.
+
+Highlights, since 0.2.4:
+
+- 3D model (spec 0009). A 3D view of each Option that reads as a vessel: the hull, the Type C tanks with their heads and domes, the weather shield, the Deck Items, the wheelhouse lowered and raised, and the propulsors. Three View Presets, a half-model cut, a deck cut, a section plane and the sea at the shown waterline. The model exports as glTF, STL, OBJ and an offsets table.
+- Tank Spaces in the results. A gas Design's results list each Type C tank as a Space, from one Tank Layout that the drawings, the 3D view and the checks share.
+- Propulsors. One Propulsor Layout places the drive units, shafts, rudders and bow thrusters for the drawings and the 3D view. The stern block of a specified Propulsor lays out one unit per propulsor. New propeller checks, and a default propeller at a transom or pram stern sized to the light draught.
+- Bow rake cap. A new input, `bow_rake_max_length_m` (default 10 m, an estimate), caps the bow rake of deep hulls. A file saved before keeps no cap and its results.
+- Draught cap. The draught a dry bulk hull reports now sits on its cap, so its freeboard meets `min_freeboard_m`.
+- Settings dialog. The Display Language, the theme and the Defaults Profile move to a Settings dialog in the app bar. The theme is Dark by default.
+- Liquid bulk. Crude oil and diesel are Cargoes, with integral tank hulls, a capital budget, loading conditions with cargo tanks, damage stability (ADN 9.3.2.15, MARPOL Annex I Reg. 28), oil outflow and a tank-barge calibration.
+- Hull Forms. The hull gives its own Sections Table, and hydrostatics and stability read it. New Hull Forms: V-bottom, chine, offsets and `shipd` with bulbs. Bilge radius, sheer and camber shape the hull.
+- Formations. Pushed, towed and ATB Formations that include their tug get a `formation` block: powering, the coupling force, the pusher's sightline over its convoy, an arrangement plan and a tug GA.
+- Rules. New Rule Sets for liquid bulk, freeboard, stern, wheelhouse and ATB notes, and a default Rule Set stack by Service Area. The Rule Sets this release freezes are listed below.
+- Gas barges. Tank arrangement inputs (`tanks_across` and more), the IGC minimum design pressure of each tank for refrigerated LPG, the tank plate as ordered and its dome, gas fuel and boil-off.
+- App. The results hash of each Option in the Compare table, a Ballast tanks view, a Convoy totals view, and a bottom panel that follows its width.
+- Release. The package can be published to PyPI from a `v*` tag with trusted publishing.
+
+Read this before you use this build:
+
+- Files saved by 0.2.x do not open (see above). The examples and fixtures in the repository are re-saved.
+- Results move for many designs. See the design-impact entries in `## Design changes`.
+- Concept and preliminary design only. Results are not verified.
+
+Calibration cases outside their band (issue #431). These 15 cases (20 results) are known for this release. Each is a held-out case, never used in a fit, that runs as a box barge because the core has no deck or pontoon model (`calibration/README.md`). No case has been investigated one by one, so each cause below is a likely cause, not confirmed.
+
+- `cbc-1951-deck-195x35` (lightship -26.8 % against ±20 %): likely cause, not confirmed: a deck barge runs as a box hull, and the box k and box Cb may not carry over.
+- `cbc-2762-deck-276x55` (lightship -20.4 % against ±20 %, deadweight +10.6 % against ±10 %): likely cause, not confirmed: a deck barge runs as a box hull, and the box k and box Cb may not carry over.
+- `cbc-julius-deck-300x100` (deadweight +10.1 % against ±10 %): likely cause, not confirmed: a deck barge runs as a box hull, and the box k and box Cb may not carry over.
+- `vl-deck-345ft` (deadweight +15.6 % against ±15 %): likely cause, not confirmed: a deck barge runs as a box hull, and the box k and box Cb may not carry over.
+- `meb-dcb26-78x16.5` (deadweight +16.8 % against ±10 %): likely cause, not confirmed: a deck barge runs as a box hull, and the box k and box Cb may not carry over.
+- `vl-pontoon-33.7x7.8x2.0` (lightship -45.6 % against ±30 %): likely cause, not confirmed: a flat-top pontoon runs as a box hold.
+- `vl-pontoon-30.0x11.2x2.5` (lightship -43.7 % against ±30 %): likely cause, not confirmed: a flat-top pontoon runs as a box hold.
+- `vl-pontoon-50.0x12.0x2.8` (lightship -44.4 % against ±30 %): likely cause, not confirmed: a flat-top pontoon runs as a box hold.
+- `vl-pontoon-80.0x24.0x5.0` (lightship -32.7 % against ±30 %): likely cause, not confirmed: a flat-top pontoon runs as a box hold.
+- `wilcarry-250-45x8` (lightship -39.7 % against ±20 %, deadweight +48.1 % against ±10 %): likely cause, not confirmed: a flat-top pontoon runs as a box hold.
+- `wilcarry-300-36x8` (lightship -45.3 % against ±20 %, deadweight +16.4 % against ±10 %): likely cause, not confirmed: a flat-top pontoon runs as a box hold.
+- `wilcarry-350-33x9.5` (lightship -61.8 % against ±30 %, deadweight +76.1 % against ±15 %): likely cause, not confirmed: a flat-top pontoon runs as a box hold.
+- `wilcarry-501-30x11.2` (lightship -33.9 % against ±20 %): likely cause, not confirmed: a flat-top pontoon runs as a box hold.
+- `wilcarry-1711-50x18.8` (lightship -28.9 % against ±20 %): likely cause, not confirmed: a flat-top pontoon runs as a box hold.
+- `wilcarry-1750-45x20` (lightship -47.1 % against ±20 %, deadweight +23.6 % against ±10 %): likely cause, not confirmed: a flat-top pontoon runs as a box hold.
+
+The bow rake cap (issue #661) moved one held-out case inside its band: `meb-dcb23-ptich` (D = 8.0 m) now gives 6,327 t deadweight, not 6,167 t, against 6,222 t published (+1.7 %, was -0.9 %).
+
+Rule Sets released with 0.3.0 (14). From this release each listed file never changes; a fix is a new version. Every one is `draft`. A Rule marked unverified has not been checked against the text of its source; the last column says who checked the others (an AI agent checks against the edition held; it is not a review by a person).
+
+| Rule Set | Version | Status | Rules | Unverified | Checked, by |
+|---|---|---|---|---|---|
+| `is2008-a` | 2.0.0 | draft | 10 | 3 | 7 (agent) |
+| `adn-tank` | 1.0.0 | draft | 18 | 18 | 0 |
+| `marpol-i` | 1.0.0 | draft | 11 | 11 | 0 |
+| `normam-202` | 1.0.0 | draft | 5 | 5 | 0 |
+| `es-trin-2025` | 1.0.0 | draft | 12 | 11 | 1 (agent) |
+| `icll-freeboard` | 1.0.0 | draft | 2 | 2 | 0 |
+| `icll-freeboard` | 2.0.0 | draft | 2 | 2 | 0 |
+| `rheinschpv` | 1.0.0 | draft | 1 | 1 | 0 |
+| `solas-v22` | 1.0.0 | draft | 2 | 2 | 0 |
+| `abs-barges` | 1.0.0 | draft | 2 | 2 | 0 |
+| `igc-2g` | 1.1.0 | draft | 15 | 8 | 7 (agent) |
+| `igc-2g` | 2.0.0 | draft | 15 | 8 | 7 (agent) |
+| `lr-inland-gas` | 2.0.0 | draft | 9 | 8 | 1 (agent) |
+| `ovd` | 3.0.0 | draft | 48 | 48 | 0 |
+
+- ICLL freeboard Rules read the real freeboard (issue #659): `icll-freeboard` 2.0.0 compares the freeboard at the laden draught (new Measure `freeboard.laden`, moulded depth less the laden draught, ICLL regulation 3(8)) with the type A table 28.1. Version 1.0.0 compared `min_freeboard_m`, which is the ES-TRIN safety clearance (default 0.3 m), so every coastal Option at the default failed the Rule and `fit` found no feasible arrangement, whatever the real freeboard. The Measure changed, so the two Rules have new ids: `icll/28(1)/type-a-tabular-freeboard-laden` (block, self-propelled) and `icll/28(1)/type-a-tabular-freeboard-laden-barge` (warn, barges). A new coastal Option takes 2.0.0. A file that stores 1.0.0 keeps it and its verdicts, with the usual "newer version built in" warning; re-select the default stack to take 2.0.0. A hull that loads down to the safety clearance still fails (a 76.5 m dry-bulk hull at 0.3 m against 0.793 m); a volume-bound hull, such as a 140 m LNG barge with about 8 m of freeboard, now passes. The gas arrangement search reads the same Measure for each candidate (depth less the carried draught, as `freeboard_at_payload` does). Results hashes do not move: the Rule Trace is outside the hash.
+- Desktop app (issue #671): the app now declares the `.vdesign` file type (exported type `org.africanrivercorridors.ovcd.vdesign`, conforming to `public.json`) and registers as its editor. A Design handed to the app from outside now opens: on macOS from Finder, "Open With" or `open -a` (the opened-file event); on Windows and Linux as a path on the command line. If the open Design has unsaved changes, the app asks first, as **Open** does.
+- Rename (spec 0010, ADR 0022): the crates are `ovd-core`, `ovd-format`, `ovd-cli`, `ovd-py`, `ovd-shell`, `ovd-web` and `ovd-app`; the command is `ovd` (`ovd.exe`, `ovd.wasm`); the app is OVD, with the identifier `org.africanrivercorridors.ovd` and the file type "OVD Design"; environment variables start `OVD_` and browser storage keys `ovd.`, and the old ones are not read, so the app shows the first-run notice again and starts with no stored Design or settings. The project Rule Set is `ovd` 3.0.0, with the Rules of the old 2.1.0 and ids that start `ovd/`; its earlier versions are gone, and `RELEASED.json` no longer lists the old id. A file that stores the old Rule Set id fails with one error that names the rename. Every `.vdesign` in the repository stores `ovd` 3.0.0 with its hash. No result and no results hash moves: every fixture and example gives the same results before and after, apart from the Rule Set id, version and hash. The website moves from `/ovcd` to `/ovd`, with no redirect. `tools/old_name_gate.py` (in the fast gate) fails on the old name outside the history. The design-impact table has one row, the case that types the Rule Set id: the engine before the rename cannot read `ovd`, so that case failed there and computes here; the other 252 cases do not move. The worked example `examples/gas-140x29-coastal-lng/` is re-run with `ovd`: `results.json`, the GA views and the README results hashes now match `main` (they predated #694, #702 and #708, which moved only the thruster and propulsor positions; no figure in its tables moves). `tools/design_impact.py` reads the CLI package and binary names from the tree it builds, so it can build the base of this change.
+- Docs (issue #681): spec 0009, a 3D vessel you can read (Type C tanks, deck units, wheelhouse lowered and raised, propulsors, view presets and cuts), and ADR 0021 (tank-shaped Spaces and an Outfit layer). No code change.
+- Release (issue #1): a new workflow, `publish-pypi.yml`, publishes the package to PyPI when a `v*` tag is pushed. It uses trusted publishing (no token), runs the release gate first, and waits for the maintainer to approve the `pypi` environment.
+- Design change (issue #280, maintainer decision of 2026-10-22): the end-bulkhead space aft and forward of the gas tanks follows the type G rule, 0.20 m for domed tank ends (0.50 m for plane ends; Lloyd's Register inland waterways rules Pt 4 Ch 4 3.5.3, ADN 2025 9.3.1.11.3(a)), in place of 0.60 m aft (the type C cofferdam) and 0.50 m forward. They are now two stored inputs, `aft_end_space_m` and `fwd_end_space_m` (Gas tanks group). A new Option takes 0.20 m from the Defaults Profile; a file that lacks them keeps 0.60 m and 0.50 m with one note, so no existing file moves. The aft separation stays 2.00 m (the opening setback governs), so the cargo gain comes from the forward end: 0.30 m more cargo zone (issue #381 later measures the setback from the cargo area). User-visible change in the Python API: the defaults of `GasSeparationInputs` (cofferdam and forward end space) move from 0.60 m and 0.50 m to 0.20 m, and the cargo of `fit`, `compute` and `simulate` for a gas Design rises accordingly. Examples of new Options: the CN II motor gas barge 2,021.2 t to 2,033.4 t (+0.6 %), a 60 x 11 m hull 714.4 t to 726.2 t.
+- Design change (issue #282, maintainer decision of 2026-10-22): the IS Code areas end at the angle of down-flooding where it is below 40 degrees (IS Code 2008, MSC.267(85), Part A 2.2.1). The angle is a new optional Option input, `downflooding_angle_deg` (Loading conditions group; none by default and for a file saved before). With an angle below 40 degrees typed, the 0-40 and 30-40 areas run to it (GZ interpolated between whole degrees) and the criteria are named for it; an angle not above 30 degrees leaves no area between 30 degrees and the angle, so that criterion fails. `is2008-a` 2.0.0 (unreleased, edited in place) replaces `is2008/A.2.2.1/area-0-40` and `area-30-40` with `area-to-40-or-downflooding` and `area-30-to-40-or-downflooding` (new Measure `gz.area_to_downflooding`; the gate needs new ids when a Measure changes), and adds the note Rule `is2008/A.2.2.1/downflooding-angle-not-given`, not evaluated, shown when no angle is typed: the areas then run to 40 degrees and a design may pass what 2.2.1 would fail with the angle. The engine has no openings with heights, so it does not compute the angle (issue #592). No result moves for a design that types none.
+- Calibration (issue #335, spec 0006 section 7): the calibration runs tank barges. Every `hold_type: tank` record of `cases.yaml` (41) and 12 new reference vessels (`tank_barge_cases.yaml`: ROB21, RT63, 005ROB04, RST27, RST12, RST25, 005RST01, RST05, RST11, ST19, RST43C and the CDS Tanker 110) run through the tank-barge model of `tank_lightship.yaml` (lightship = k x L x B x D + outfit; deadweight from the box-barge Cb). Each new vessel was read on its source page, and the page checksums are in `sources.yaml` (M15 to M25, R1; no figure without its basis). `calibration/results.md` has a new section 5a. The 15 cases of the k-fit subset are labelled in-sample (mean absolute deadweight error 2.6 %); the 21 banded held-out cases are out of sample (mean absolute error 21.9 %, 8 inside the band). A self-propelled vessel and a cargo capacity have no band, and the report says why. New bands (`tank_barge_bands.yaml`) are starting values for the maintainer, equal to the dry-barge bands. A band miss is a warning only. No engine result moves.
+- Damage stability (issue #341, spec 0006): a liquid bulk Option has the ADN 2025 9.3.2.15 and 9.3.3.15 damages, and the two `damage-stability` Rules of `adn-tank` are evaluated. The damages are a side damage 0.79 m (type C) or 0.59 m (type N) inboard of the side and a bottom damage 3.00 m wide and 0.59 m or 0.49 m high, each 0.10 L but not under 5.00 m long, at every position along the hull that floods a different set of compartments (a ballast space is cut at the cargo tank bulkheads beside it; cargo and slop tanks are full, ballast spaces, cofferdams and the pump room are empty at 95 % permeability). A new module, `damage_stability`, works out the floating position of the damaged hull by the lost buoyancy method on the Sections Table (waterplane height, trim and heel, damped Newton solves), and the righting lever beyond the equilibrium. The Measure `stability.damage` (object type `damage-case`) is true for a damage when the heel at equilibrium is at most 12 degrees and the righting lever beyond it reaches 0.05 m with an area of 0.0065 m.rad up to 27 degrees. Each damage is a row of the Rule Trace, and the results have a `damage` block (kept out of the results hash, like the Rule Trace, so no results hash moves). Not modelled, and said so in the Measure: the intermediate stages of flooding, the non-watertight openings (27 degrees stands in for the first), the flooding of undamaged compartments, and the end spaces beyond the cargo zone. MARPOL Regulation 28 and NORMAM-202 5.23.8 and 5.23.9 stay `not evaluated` (their extents reach the cargo tanks), with their gaps rewritten. The unreleased `adn-tank` 1.0.0 is changed in place: two Rules are evaluated and the gap text of two sets is new. The solver is checked against closed forms for a wall-sided box barge (the righting lever to 1e-6) and against an independent grid integral of the equilibrium conditions. No published damage case with righting lever figures was found, so that acceptance line is open.
+- Damage stability (issue #341, spec 0006): the `damage-stability` Rule of `marpol-i` (Reg. 28) is evaluated for a liquid bulk Option under that Rule Set, for every size. The new Measure `stability.damage_marpol` (object `marpol-damage-case`) has the extents of Reg. 28.2, which reach the cargo tanks: a side damage `(1/3) L^(2/3)` long (at most 14.5 m) and `B/5` deep (at most 11.5 m); a bottom damage `(1/3) L^(2/3)` long (at most 14.5 m in the forward 0.3 L, at most 5 m elsewhere), `B/6` wide (at most 10 m forward, 5 m elsewhere) and `B/15` high (at most 6 m), placed along and across the hull at every position that floods a different set of compartments. A hull of more than 150 m has the damage anywhere in its length (28.1.1); at 150 m or less it lies between adjacent transverse bulkheads (28.1.3), and a bulkhead is damaged only beside a bay shorter than the damage (28.2.5.1). The criteria are 28.3.2 (heel at equilibrium at most 25 degrees) and 28.3.3 (a range of 20 degrees beyond equilibrium with a righting lever of 0.1 m and an area of 0.0175 m.rad within it); `DamageCriteria` has the new `range_beyond_deg` for it. A damaged cargo or slop tank floods at 95 % and the oil keeps its mass. The results have a `marpol_damage` block (outside the results hash, like `damage`). No result hash moves. Still missing for #341: a published damage case with righting lever figures to check the whole method against; and in the MARPOL step the openings (28.3.1), the intermediate stages (28.3.4), the 30 degree allowance of 28.3.2 (needs deck edge immersion), the machinery space of 28.1.2, steps and recesses (28.2.5.2), the bottom raking damage of 28.6 (20,000 t and above) and the oil kept in a damaged tank. Reg. 23 (oil outflow) is the next step; NORMAM-202 5.23.8 and 5.23.9 stay not evaluated.
+- Oil outflow (issue #341, spec 0006): the `accidental-oil-outflow` Rule of `marpol-i` (Reg. 23) is evaluated, and the Rule Set has a Rule for the cargo tank length of 23.3.2. From 5,000 t deadweight, the new Measure `oil_outflow.ratio` (object `oil-outflow`) is the mean oil outflow parameter OM over the largest OM that 23.3.1 allows for the cargo volume (0.015 up to 200,000 m3). OM is worked out by the damaged tank method of 23.4 to 23.9: cargo at 98 % filling and permeability 0.99, the probabilities of breaching each cargo and slop tank by a side or a bottom damage, the side outflow as the whole tank, the bottom outflow by pressure balance at tides of 0 and -2.5 m, and `OM = (0.4 OMS + 0.6 OMB) / C`. Under 5,000 t the new Measure `cargo-tank.marpol_length_ratio` is the length of each cargo tank over the longest tank of 23.3.2.1 to 23.3.2.3 (10 m or the formula by the bulkheads abreast and bi/B). The method reproduces the tank barge worked in the explanatory notes (Res. MEPC.122(52), part C 1): C, the nominal density, the probabilities, the outflows of each tank, OMS, OMB and OM agree to the rounding of the notes (0.5 %). The results have an `oil_outflow` block (outside the results hash). No result hash moves. Model choices, written in `oil_outflow.rs`: the hull is a prism with a flat bottom shell, L is the overall length, the load line draught is the draught of the full load, the inert gas overpressure is 5 kPa, C3 is 1.0, fuel tanks in the cargo block are not modelled. Still missing for #341: a published damage case with righting lever figures to check the damage stability method against (the oil outflow now has its published case). Reg. 19.3 and 27 stay not evaluated above 5,000 t; NORMAM-202 5.23.8 and 5.23.9 stay not evaluated.
+- Cargo (issue #342, spec 0006 section 8 row 15): a second oil, diesel fuel to EN 590 (`diesel_en590`, UN 1202), as data rows only: a Cargo row, a grade row (`DIESEL_GRADE`, in Python `CRUDE_GRADES` too), a fixture (`diesel_integral_tanks_pushed.vdesign`) and three design-impact cases. Its values come from the ADN 2025 Table C row for UN 1202, EN 590 (read in full: hazard labels 3+N2+F, type N, open cargo tank, tank walls distinct from the hull, relative density 0.82 to 0.85 at 20 deg C): the flowchart gives type N open with walls distinct from the hull, as that row does, and the `adn-tank` type N Rules apply by their existing applicability. What the table does not state (the flash point, the vapour pressure, the density inside the range) is an estimate with the basis written. It is `development` like crude oil. No Rust code branches on the Cargo: a test finds the new key in `cargo.rs` and `crude_grade.rs` only. Design gap, recorded as the ticket asks: the Table C maximum degree of filling for this cargo is 97 %, and the liquid fill ratio default is 0.98 for every liquid bulk Cargo (the Defaults Profile has no value keyed by Cargo); type 0.97 for diesel until the profile has one. No existing result moves.
+- Rule (issue #355, after the Formation powering of #359): `es-trin/ESI-III-6.2.1/coupling-force` in the unreleased `es-trin-2025` 1.0.0 is now evaluated. It is a note whose value is `formation.coupling_force_kn`, the ES-TRIN ESI-III-6 2.1 force 270 x P_B x L_S / B_S x 10^-3 kN, with the pusher's installed power, length and beam. It applies to a pushed barge or convoy that includes its pusher; without the pusher it does not apply. An ATB no longer lists it (its linkage is rigid, and the Formation block has no coupling force). The Rule Trace is not hashed, so no results hash moves.
+- Test (issue #359): `es-trin/5.06(1)/speed-13kmh` on a pushed barge or convoy reads the deep water service speed of the Formation powering (since #615), and does not apply without the pusher. A new test checks both sides of 13 km/h (a pusher sized to 7.1 kn passes, 6.9 kn fails). No result moves.
+- Propeller Checks (issue #355): three new Rules in the unreleased `ovcd` 2.1.0, each a warning. `ovcd/propulsion/propeller-fits-stern`: the propeller diameter is at most the largest the Stern Form allows. `ovcd/propulsion/immersion-light`: the shaft axis is under the water by at least 0.76 diameters (0.71 ducted) at the lightest aft draught of the loading conditions; not for a tunnel stern; the axis is taken at half a diameter above the base. `ovcd/propulsion/blade-load`: the delivered power of one unit at the Installed Power is at most 400 kW per m2 of disc (500 ducted). The `powering` block of a self-propelled result gets five new keys that these read: `propeller_diameter_m`, `shaft_axis_height_m`, `blade_load_kw_m2`, `blade_load_limit_kw_m2`, `propeller_ducted`. Every self-propelled Option with a specified Propulsor gets a new results hash.
+- Design change (issue #355, the maintainer's decision): a default propeller at a transom or pram stern is sized to the light draught, so a new self-propelled hull passes `ovcd/propulsion/immersion-light`. The diameter is the Stern Form's D_max, but no larger than keeps the shaft axis 0.76 D (0.71 D ducted) under the lightest aft draught of the loading conditions, rounded down to 0.05 m. The run is done again with that diameter until it fits (at most four runs), because a smaller propeller makes the stern block lighter and the light draught smaller. A new stored input, `propeller_diameter_basis` (`light_draught`, the default, an estimate; `stern_form`, D_max), keeps D_max for a file saved before. A typed diameter, a tunnel stern and an unspecified Propulsor do not change. A Design that a user changes can still warn. Every new gas Option moves (a transom stern is the gas default; dry and liquid bulk take a tunnel stern and do not move). On a 110 x 11.4 x 6.0 m propane hull: D 3.71 m to 1.05 m, stern block 251 t to 107 t, lightship 1,653 t to 1,508 t, installed power 621 kW to 941 kW (a smaller disc is less efficient), immersion ratio 0.01 (warn) to 1.07 (pass), blade load 0.88 of the limit (pass). A few gas cases still warn, where the light draught falls as fast as the diameter (an LNG hull, the tank head and tank liquid pressure sweep cases, and the gas down-flooding opening case). The Python API reads a left-out key as `light_draught`.
+- Evaluation harness (issue #355): `kind: stern` cases keyed by rule id for the Blind Distance, speed, redundancy and propeller Rules of `es-trin-2025`, `solas-v22`, `rheinschpv` and `ovcd`, with an independent oracle (`evaluation/oracle/stern_oracle.py`) and generated boundary cases (the Blind Distance 249 and 251 m, the speed 12.9 and 13.1 km/h, a 110.1 m craft with and without a bow thruster). The engine has a new evaluation entry point, `gas_stability.stern_trace`. 0 false passes and 0 false fails.
+- Calibration (issue #359, part 2): the pushed Formation allowance is fitted. `calibration/formation_cases.yaml` holds two pushers with a published installed power and a published convoy: the SDP 4600 (16 barges of 61 m x 15 m, 3,000 t each; in-sample) and the CDS 4115 (12 barges; held out). `python3 tools/formation_calibration.py <ovcd> --write` runs each as a pushed convoy, fits `formation_resistance_allowance` and writes `calibration/formation_results.md` and `calibration/formation_factors.yaml`. The fitted value is 1.6, with status `estimate`. Its basis says so: one vessel fitted, the convoy speed assumed at 7 kn, and a held-out miss of -12.4 %. The modelled pusher power is 5,368 kW for the published 5,369 kW (in-sample), and 3,494 kW for the published 3,990 kW of the held-out case (-12.4 %, inside its 30 % band). #647 fits it again when a second sourced convoy exists. The sources print no convoy speed for most pushers, so both cases run at 7 knots (the CDS 4115 design speed, published; assumed for the SDP 4600), and the barge sizes of the CDS 4115 are derived from its convoy size. Three more records (RApide 4600-Z3 and two others) cannot run yet and are listed with the reason. The Defaults Profile `formation_resistance_allowance` is 1.6 for a pushed barge and a pushed convoy (was 1.00) with the soft limit raised from 1.5 to 2.0; an ATB stays 1.05 and a towed barge 1.00. A new pushed Design that includes its pusher gets a larger pusher; a file that stores the input keeps its value.
+- Feature (issue #359, part 1): a pushed Design that includes its pusher (`tug_included`, true for a new Design) gains a `formation` block in its results. The pusher is sized for the Formation in a loop of at most 5 passes (tolerance 1 %): its dimensions, machinery and steel come from the power it needs, and the power comes from the Equivalent Hull, which is the barges and the pusher taken as one hull. The block gives the power and the service speed in each environment, the bollard pull and the coupling force (ES-TRIN 2025/1 ESI-III-6 2.1, with the pusher length as L_S and the pusher beam as B_S). All of it is uncalibrated: the label is in the unhashed key `calibration.formation`, and the pusher depth (draught + 1.0 m) and the 0.5 m double bottom of its machinery items are Estimates. The fixture hashes of the pushed Designs moved because they gain the block. The calibration against built pushers is part 2.
+- The pusher sees over its convoy (issue #360, part 1): with the tug's sightline method `blind_distance`, the result of a pushed barge, a pushed convoy or an ATB with its tug has `formation.sightline`. It gives the Blind Distance light and laden over every barge ahead (each barge's highest point at its forward end), the wheelhouse lift the ES-TRIN 7.02(2) limit of 250 m needs, and whether the lift is enough. The eye is at the forward face of the wheelhouse, at mid-length of the tug, with the floor on its deck (estimates). A tug that cannot see far enough gets the warning `warn-formation-blind-distance-lift`. A file with `margin` (the stored default) is as it was.
+- New drawing `arrangement-plan` (issue #360, part 1): one sheet for a pushed convoy, or a pushed barge or an ATB with its tug. The plan shows the barges and the tug, the overall length and beam, the barge length and the coupling points. The profile below shows the light condition and the tug's sightline over the convoy, with the wheelhouse raised. `ovcd draw` writes it beside the GA views; a pushed convoy gets only this sheet in place of the message "no drawings of a pushed convoy yet". The pusher's own GA is not drawn yet.
+- The tug gets its own GA (issue #360, part 2). `ovcd draw` writes `tug-ga` for a Formation that includes its tug: one sheet with the side elevation and the plan. It shows the push knees, the machinery spaces of the tug's sizing, the engines (hidden), the propellers with their shafts, nozzles, rudders and flanking rudders (an azimuth unit as leg and pod), and the wheelhouse, lowered and raised. Its data is the new `drawing.tug` block, which is not in the results hash. The positions of the propellers, rudders and push knees are drawing proportions, not results, and a note on the sheet says so.
+- Feature (issue #361): a towed barge that includes its tug (`tug_included`) gains a `formation` block in its results. The barge and the tug are separate hulls: the resistance is the resistance of the barge plus that of the tug at each speed, times the Formation resistance allowance (1.00, an Estimate). The tug is sized by the sizing loop of #359 with the towing ratios: length 23 m x (P / 3,000 kW)^0.45, beam one 2.5th of its length, draught 0.42 of its beam (Estimates). The block holds the power and service speed in each environment and the bollard pull; it has no Equivalent Hull and no coupling force (a hawser is not a rigid link). One barge is towed until a Formation holds a count of barges. New Rule `es-trin/21.05(2)/no-downstream-towing-over-86m` in the unreleased `es-trin-2025` 1.0.0: a craft longer than 86 m is not authorised for towing downstream (a warning on a towed Option). New fixture `towed_barge`. The design-impact check shows no change: no existing Design is a towed barge with a tug.
+- Formations (issue #362, spec 0007, part 1 of the ATB: the Notch and the tug sizing; the Equivalent Hull and the ATB powering come with #359): the barge of an `atb` Formation has a Notch. `ovcd-core::atb` sizes the ATB tug from the barge unless typed (length 0.28 of the barge length, beam 0.53 of its beam, draught beam over 2.33) and the Notch from the tug unless typed (0.50 of the tug length deep, the tug's beam and 0.30 m wide), and `Hull::build` cuts it into the Sections Table after the Stern Form (`HullShape.notch`; `apply_notch`, #465). The Notch takes its volume, LCB and waterplane from the sections, so the capacity, the draught and the stability of an ATB barge see it. A Notch of zero depth or width gives the plain barge bit for bit, and every other Formation is unchanged. Only `atb` Options move; the tug and Notch inputs were already in the file.
+- Formations (issue #362, spec 0007, part 2 of the ATB: the powering): an `atb` Formation that includes its tug (`tug_included`) gets the `formation` block of a pushed one, with the tug sized from the barge (0.28 of its length, 0.53 of its beam, draught beam over 2.33; typed values kept) and the Equivalent Hull of the barge and the tug less the Notch the tug sits in (length barge + tug - notch depth, the barge's beam and draught, the block coefficient of the displaced volumes over L x B x T). The Formation's resistance is that hull's by the single-hull method times the Formation resistance allowance (1.05 for an ATB); the power and the service speed come in each environment from the tug's propulsor, with the tug's own lightship in the displacement. The block holds the Notch depth and has no coupling force (a pusher's formula; the ATB's linkage loads are approval items). The method is `unverified`. A pushed Formation's block is unchanged. Calibration: `calibration/atb.yaml` and `atb_powering.rs` compare the model with the Aveogan, the 550 Class and the Kim M. Bouchard: the still-water deep-water power the model needs at the service speed is 0.29 to 0.43 of the published installed power (which also covers shallow water, seaway and bollard pull; the barge depths are estimates).
+- Rules (issue #363, spec 0007 "Rules"): the new Rule Set `abs-barges` 1.0.0 (draft) holds two notes for an ATB, from ABS Rules for Building and Classing Steel Barges, January 2024, Part 5 Chapter 3 Section 1: `abs-barges/5-3-1.1.3/two-vessels` (paragraph 1.3: the tug and the barge are classed as two separate vessels, so the approval of each is its own) and `abs-barges/5-3-1.11.3/notch-wing-walls` (paragraph 11.3: the barge's wing walls at a notch need an analysis that takes torsional shear as well as primary and secondary shear and bending, by finite element analysis). Both are approval items: `not evaluated` note rows with their gaps, `applies_when` the Formation kind is `atb`, so they appear in the Rule Trace of an ATB Option and not for any other Formation. The set is in each default stack of `coastal-and-river` (a file keeps the stack it stored; a new Option takes the new one); two new Measures, `formation.separate_vessels` and `formation.notch_wing_walls`, name what the notes are about. No result moves.
+- Drawings (issue #363, spec 0007 "Drawings"): the GA plan and side elevation of an `atb` barge draw its Notch and the tug in it. In plan the outline has the Notch cut at the transom (full depth, the tug's beam and 0.3 m wide, half the tug's length deep, or as typed); the tug, when the Option includes it, is an outline with a pointed bow inside the Notch, its bow 0.3 m short of the Notch's end wall, and the coupler is two short bars across that gap (plain lines: the standard's symbol library has no coupler yet). In profile the Notch's end wall is a hidden line and the tug a side outline at its own draught. The results carry the dimensions in `drawing.atb` (not in the results hash). Another Formation draws what it drew. The new `arrangement-plan` view (spec 0007, #360) is not part of this.
+- Calibration (issue #365): the stern block of a self-propelled Design with a specified Propulsor is calibrated against built ships. `calibration/propulsion_cases.yaml` gains `stern_block_case`: 28 ships and published standard designs (tugs, pushers, tankers, bulk carriers, gas tankers) whose aft peak and stern block are measured from the general arrangement on the maker's or designer's sheet (derived lengths with the source, its SHA-256, the scale and the reading tolerance; 23 are fitted, 5 are kept out with the reason). `python3 tools/stern_block_calibration.py <ovcd> --write` runs the layout against them and writes `calibration/stern_block_results.md`. The layout was 4.7 m (28 %) too short on average (RMS 5.8 m). Two fitted Estimates fix it: the aft peak is 2.5 m (was 1.5 m) and the drive room or shaft run plus the engine room are drawn 1.4 times as long, for the switchboard room, workshop, stores, auxiliaries and access. The mean error is now -0.3 m (RMS 3.3 m; inland ships only -0.7 m, RMS 2.8 m); 9 of the 28 ships are outside the new band (`stern_block_m` in `bands.yaml`, +-25/30/35 %, an estimate). The shaft mass, the gas rooms and the battery room do not take the factor. A Design with an unspecified Propulsor keeps its stern block, so no old file moves; the stern block of a Design with a specified Propulsor is longer, and the cargo zone shorter by as much.
+- Gas opening setback (issue #381): the 2.00 m setback of an entrance or openable window is now measured from the end of the cargo area, so the aft end space counts as part of the aft separation, not toward the setback. New stored choice input `opening_setback_basis` (`tank_end` for a file saved before, `cargo_area` for a new Option). The aft separation grows by 0.20 m, which takes back about two thirds of the cargo gain of the end space change (CN II cargo 2,033.4 t to 2,025.3 t). `lr-inland-gas` 2.0.0 (unreleased) drops its setback Rule (`lr-inland/3.3.7/opening-setback`). The Python API default of the gas separation inputs changes with it.
+- Cost (issue #401, step 2): the bottom-up hull steel of a gas barge, which the capital budget prices, is higher. Its structure factor is 2.0 times the plating, not 1.4 (an Estimate, `GAS_HULL_STRUCTURE_FACTOR`). The bottom-up steel is now about 0.10 t/m3 of L x B x D (median 0.102), where it was 0.077, so it agrees with the top-down steel of the lightship (median gap -2 %, was +30 %); the hull steel line of the budget is 43 % higher, the unit total 3 to 12 % higher (median 5.7 %). The reference vessel library (designer estimates, not weighed ships) gives 0.145 t/m3 for 92 to 110 m cargo vessels. The lightship, the stability and the results hash do not change: `cost`, `cost_masses` and `steel_delta` move, and none of them is in the hash. The legacy API keeps 1.4.
+- Cost (issue #402, basis item 13): a new Cost rates input, `tank_internals_fraction` (default 0.5, an Estimate), splits the tank structure surplus (tank shells x (structure factor - 1)). That share is priced at the tank shell rate, as stiffeners and ring frames in tank steel; the rest, the saddles, stays at the supports rate. The share is an assumption: no source read gives the split. The maintainer decided to state the assumption (profile, basis page 10, the `cost.tank_internals` result and the app line) in place of waiting for a source. The capital budget of a new gas Option rises by the share of the surplus times (shell rate less supports rate); with the example rates and 0.5, about 0.5 x the supports mass x 8,000 per t. The lightship does not move, and the budget is outside the results hash, so no results hash moves (the design-impact check gives no design change). A file saved before takes 0 and keeps its budget; a share of 0 gives the earlier pricing.
+- Cost (issue #404): a gas barge result now warns when the top-down hull steel of the lightship and the bottom-up hull steel that the cost prices differ by more than 20 % of the bottom-up steel. The limit is an Estimate, to calibrate against the reference vessel library. The message gives both masses and the delta. The cost keeps pricing the bottom-up steel. Only the `warnings` list changes.
+- Hold section drawing (issue #408): the midship section of a dry bulk hold now draws the hold side from the inner bottom to the top of the hatch coaming, where the volume model takes the top width. Before, the drawing put the top width at the deck and drew a separate vertical coaming. For the sloped hopper fixture the drawn hold area was 16 % more than the model area; now they are equal. A box hold looks the same. No result changes.
+- App (issue #426, part 4): a new "Ballast tanks" view in the Stability and Propulsion group. It lists the ballast tanks (name, kind, side, capacity, centre of gravity) and, for each condition that carries ballast, the plan: fill, mass, centre and free surface moment of each tank, with the ballast mass in the heading. A condition with no workable plan says so. A Design saved before the IS Code conditions shows a note instead. The drawings already show the ballast tanks of gas and liquid bulk hulls.
+- Drawings (issue #426, part 4): the plan, side elevation and typical section of a dry bulk hull in the IS Code loading conditions show the ballast tanks: the wing tanks hatched in plan and section, the double bottom hatched in section, and both named. The tanks come from the compartment model through a new `drawing.ballast_spaces` block, which is outside the results hash. A Design saved with the legacy conditions draws none. No result moves.
+- Freeboard Rules, second reading (issue #428): the ES-TRIN Rules now cite page 17. For a dry-bulk vessel with open holds, the safety clearance (Article 4.01(1) and (2)) is measured to the top of the hatch coaming, so the freeboard must be the clearance less the coaming height, not below 0. A hold that cannot be closed spray-proof and weathertight is typed as open. A covered hold, a tank vessel and a gas vessel keep the 300 mm check to the deck edge. The load line check (table 28.1, read at the length overall, which is the stricter reading) blocks only a self-propelled vessel. A barge with no propulsion of its own gets a warning, because an unmanned barge with small gasketed openings may take 25 % less (Reg. 27(14)(c)). The 150 mm Rule is now marked verified. No case design changes. The two Rule Sets are still unreleased, so they change in place.
+- Design change (issue #431, the maintainer decision): the forum-sourced box-barge point `us-hopper-195x35-generic` (practitioner statements, not a primary source) is dropped from every fit: its case stays in `calibration/cases.yaml` with the new field `exclude_from_fit` (reason: forum source, not used in the fit), so it is still run and banded. The fitted box lightship factor k goes from 0.1093 t/m3 (n = 3) to 0.1086 (n = 2); the fitted box-barge Cb on LOA from 0.928 to 0.927; the tank lightship factor fitted from it from 0.1141 to 0.1134. The Defaults Profile follows: `lightship_factor_t_per_m3` is 0.1086 for a box hold and 0.1134 for integral tanks, and the engine constant for integral tanks is 0.1134. A new dry bulk or liquid Option without a typed factor has a hull lightship term 0.6 % lower (0.1086 against 0.1093). 93 of 230 case designs move (table below). A file that stores its own factor keeps its results hash.
+- Calibration (issue #431): a calibration case outside its band blocks a release unless the CHANGELOG entry of that release names it and says why, or its case file already records why (`accepted_miss`, `exclude_from_fit_cb`). `python -m vessel_designer.calibration --release-check <version>` checks it, and the `calibration-bands` job of `release.yml` runs it. At this commit 20 cases outside their band have no recorded reason: the next release entry must name them.
+- Hull Forms (issue #452, spec 0008): the `shipd` Hull Form is built, without bulbs. `ovcd-core::shipd` is a Sections Table generator written for OVCD from the Ship-D parameter and constraint definitions (Bagazinski and Ahmed; the dataset doi:10.7910/DVN/MMGAUS, CC0 1.0); each definition settled from the dataset's documents is recorded in the module header, and no code is copied. `shipd_parameters` (the dataset's header names; LOA, Bd and Dd come from the Option's length, beam and depth) reaches the hull; a Design's checks name each failed constraint by index and name, and refuse a bulb (#453). The Defaults Profile's parameters are a shallow, nearly flat-bottomed hull of the benchmark sample. A ShipD Design is cut at 41 stations and 20 height levels, so it stays fast; in the IS Code loading conditions a run still takes about 21 s (#567). The benchmark (`cargo run -p xtask -- shipd-benchmark`, `calibration/shipd/`): 100 hulls each of the dataset's Constrained Randomized Sets 2 and 3, at a finer cut; 95 % of Set 2 and 98 % of Set 3 pass, Set 2 exactly on the spec's 95 % line. New fixture `shipd_dry_bulk.vdesign`. Old files keep their hash; the design-impact table shows the new case.
+- Hull Forms (issue #453, spec 0008): the `shipd` Hull Form has its bulbs. `bit_BB` and `bit_SB` now build a bow bulb and a stern bulb: ellipsoids with the 14 bulb terms, joined to the hull at each height below the design draught by a quartic fillet that matches value and slope at both ends. The fillet's curvature row is written from the definition (the dataset's code has `6 x^2` where the second derivative has `6 x`); the benchmark report lists the hulls where the two rows differ. The stern bulb starts a share `Kappa_SB` of `Ls` along the stern taper (the code and its comment say `Ls`, the overview PDF says `Lb`; the reading is `Ls`). The constraints 36 to 48 are built from the constraints PDF (the dataset's code has the sign of row 40 the other way round); a bulb needs a zero deadrise or a positive keel radius. A Design no longer refuses a bulb. The section check no longer reports two straight edges on one line as a crossing (a rounding difference of 1e-12 or less). Benchmark: 100 hulls of Constrained Randomized Set 1 with a bulb, at the finer cut: 82 pass the pass rule of #452 and each of the 18 outside is listed with the draughts where it is out: 12 only at the two lowest draughts (small immersed volume), 3 only at the deck-level waterplane, 3 between. Old files keep their hash; the design-impact table shows the new case.
+- Vessel Model (issue #454): `vessel_model::assemble` builds the Vessel Model of an Option from what the engine already placed: the hull's Sections Table, the main deck and the inner bottom, the bulkheads the general arrangement draws, and the Spaces (holds or cargo tanks, ballast tanks, the gas separation, the machinery spaces of the aft block), each with a kind and a name. New Space kinds `cargo_hold`, `void`, `machinery` and `peak_void`. `ovcd_format::option_vessel_model` gives the model of a design Option. No new inputs; no result reads the model, so no results hash moves.
+- Design change (issue #455): Spaces are clipped by the hull (`compartments::clip`, spec 0008 "One compartment model"). Each hull section is clipped by the Space's convex section and the result is integrated along x by Simpson's rule, split where the shape changes. A Space wholly inside the hull keeps its prism values bit for bit. The fore peak tank is now the whole bow void, clipped by the bow rake: with a rake that rises the full depth its volume is the same as before, but its centroid and its fills follow the rake (water in the rake sits higher and further aft). Bilge radii and rakes that cut the double-bottom, wing and aft peak tanks give their true volumes. The ballast capacities and centroids in `loading_conditions` move, and so do the ballast conditions that use them. The Vessel Model's Spaces are clipped too; a dry bulk hold loses its coaming part, which lies above the deck. No check changes its verdict on the design-impact cases.
+- Vessel Model (issue #456): meshes from the core (`ovcd_core::mesh`). The hull is a closed mesh of the ruled quads, slot walls, step faces and end caps; there are deck and waterline strips, bulkheads, and each Space as its prism. Each part is one group. `ovcd mesh --hash <file>` prints the SHA-256 mesh hash of each Option (`ovcd_format::mesh_hash`), and the web parity check compares it with the WebAssembly session (`Session.mesh_hash`). The mesh is not in the results hash (ADR 0018), so no results hash moves.
+- Vessel Model (issue #457): the front end reaches the Vessel Model through the platform layer, on both platforms. The calls are `meshes(option)` (typed arrays: f32 positions and u32 indices, with the group table and the mesh hash), `sectionAt(option, x)`, `spaceInfo(option, name)` and `waterlines(option)`. The web build uses `Session` methods; the desktop app uses Tauri commands, and its vertex data arrives as raw bytes, not JSON. `AppState` keeps the run of the Option the 3D view last asked about until that Option changes, so a moving section plane does not run the Option again. No result changes.
+- App (issue #458): a new "3D" view in the Drawings group shows the Vessel Model of an Option in three.js (pinned to 0.186.1): orbit, zoom, pan, reset, the profile, plan and body plan views, and the arrow keys. Layers: the hull (translucent while an inner layer is on), decks, bulkheads and one per kind of Space, coloured by family from theme tokens. The structure layer is shown disabled ("from phase 3"). Click a Space, or pick it in the list, to read its volume and centroid from the core. Without WebGL the view says so and lists the Spaces. No result moves.
+- App (issue #459): the 3D view has a section plane and a waterline. A switch and a slider move a clipping plane along the hull and draw the core's section outline at that position. A drop-down shows the waterline of each loading condition, with its draughts and trim as the results give them. No result moves.
+- Exports (issue #460, spec 0008 "Phase 2: exports"): `ovcd export --format gltf -o <file.glb> [--option <name>] <file.vdesign>` writes the Vessel Model of an Option as a glTF 2.0 binary: one node for each layer (`hull`, `decks`, `bulkheads`, `spaces`, `waterlines`) with one child node for each part, named for it (a deck or bulkhead key, a Space name, a loading condition), one material for each layer, the meshes of #456 as the geometry. `--hash` prints the SHA-256 of the bytes instead, for the parity check. The writer is `ovcd_format::export::gltf_glb`; the web crate has `export_gltf` and the web app `exportModel` (the desktop shell has none yet). The `.glb` of every fixture passes the Khronos glTF validator with no error and no warning (CI job `gltf-validate`, `tools/gltf_validate.mjs`), and the WebAssembly parity check compares the bytes of the web build with the native ones. No result moves.
+- Exports (issue #461, spec 0008 "Phase 2: exports"): `ovcd export --format stl|obj|offsets-csv` writes the closed hull to the deck as a binary STL or an OBJ (outward normals, watertight, in hull axes, metres), or the Sections Table as an offsets CSV in the import format of #451. With `--below <condition>` an STL or OBJ is the part of the hull under that loading condition's waterline, closed by a lid. The writers are in `ovcd_format::export` and the web crate has `export_model(option, format, below)` (the web app `exportModel`), so every surface writes the same bytes; the WebAssembly parity check compares them. The exported meshes are closed (every edge in two triangles, found from the file's own coordinates) with the sections' volume within the ruled-quad error, a clipped one holds the immersed volume of the sections within 1 %, and the offsets CSV of an offsets Option read back gives the same results hash. A Python test (skipped without Capytaine, meshio and trimesh) loads the clipped STL of gas and crude fixtures in Capytaine, which finds it closed with the displaced volume within 1 % of the condition's. No result moves.
+- Feature (issue #464): a gas-fuelled Option (power source `gas_fuelled`) gets the gas its gensets burn and a boil-off check. Each environment of `powering` gains `fuel_gas_kg_per_h` and `fuel_gas_kj_per_kwh`: the shaft output (the electric need over an alternator efficiency of 0.955) at the load of the sets that run, at the fuel-gas consumption of the Wartsila 20DF Product Guide 1/2018 (p. 3-1, 6L20DF, gas mode: 8048, 8219, 8326 and 8862 kJ/kWh at 100, 85, 75 and 50 % load; gas lower calorific value 49,620 kJ/kg, Note 4 p. 3-3). **This is a stand-in Estimate:** the Weichai source of the genset table gives no gas consumption, and no maker's sheet for those sets was found. A new `boil_off` block holds the heat leak into the LNG tanks (conduction through the insulation at 45 C air, IGC Code 7.2; the conductivity is an Estimate from a polyurethane foam table) over the latent heat of methane (NIST saturation table, 511.77 kJ/kg at -162 C). Two warning checks join the result: "cargo as fuel" (IGC 16.1: methane only; 16.9.1: another cargo gas needs the Administration's acceptance) and "boil-off within gas use" (IGC 7.1.1 and 7.1.3: venting is not acceptable, so boil-off above the gas used needs reliquefaction, pressure accumulation or thermal oxidation). The boil-off is worked out for LNG only. The Weichai genset claim "dual-fuel" is corrected in the code and in the entry of the genset catalogue. A file that does not use a gas-fuelled power source does not move.
+- Vessel Model (issue #465): the Notch of an ATB barge is a stern parameter of the Sections Table. `stern_form::apply_notch` cuts a full-depth slot of the Notch width on the centre line, from the aft end to the Notch depth; the forward end is a step. A slotted section is two polygons, port and starboard, and the integrator sums over both. A Notch of zero leaves the table unchanged; a Notch as wide as the beam or as long as the hull is a typed error. Not wired into any result yet: the ATB results come with #362.
+- Design change (issue #522, maintainer decision of 2026-10-22): the default design pressure of fully refrigerated LPG (propane, butane and the mix) is 0.55 MPa, not 0.4 MPa. IGC Code, MSC.370(93), 4.23.1.2 asks for Po = 0.2 + A C (rho_r)^1.5 MPa; the minimum depends on the tank length (0.33 MPa for a 60 m hull, 0.44 to 0.48 MPa for 110 m, 0.54 MPa for butane on 120 m), so one constant cannot be the minimum, and 0.55 MPa covers tanks up to about 45 m (conservative for shorter tanks; the profile basis says so). A saved file that stores a design pressure keeps it. A per-design default is issue #577. New fully refrigerated LPG Options get a slightly thicker wall; the three fully refrigerated sweep cases move.
+- Design change (issue #526): resistance, squat, waves and the bollard pull take one value of g (9.80665 m/s^2) and one knot (1852/3600 m/s) from one definition (`constants.rs`). Before, the resistance used 9.81 and 0.5144, and squat and waves used 9.80665 and 0.514444, so one speed point mixed both pairs. The speed to metres per second factor moves by 0.01 % and g by 0.03 %: small shifts in resistance, power, squat, wave resistance and bollard pull on every Design with a speed curve. The Python API (`squat`, `waves.compute`) differs from 0.1.0 in the same way and is listed in `KNOWN_DIFFERENCES`.
+- Examples (issue #409): the dry bulk box hold and the two gas example files are saved in the IS Code loading conditions, so their drawings show the ballast waterline and the ballast tanks. The dry bulk example now has a stability result. The fitted bollard pull factor of an azimuth ducted propulsor is 0.974, not 0.975, because the calibration cases now use the shared g (the profile follows the fit). All stored results hashes are re-stamped.
+- Design change (issue #534): the result key `stability.governing` is now `stability.lowest_gm_condition`; it names the Loading Condition with the lowest fluid GM. The app reads the new key. The other name the ticket listed, the check "Air draft (empty, governing)", no longer exists: #421 removed it, and the light air draft is checked by `air draft within limit`. The Python class `StabilityAssessment` keeps its `governing` method, because it is public API of 0.1.0. Every result that carries a stability block gets a new results hash; stored fixture hashes are re-stamped. No value or verdict changes.
+- Design change (issue #549): when `trim_in_range` fails, its message says "no trim balances the load", names the condition, and gives its LCG and the furthest LCB the hull reaches (for example "Laden: LCG 53.78 m is forward of the furthest LCB the hull reaches (50.24 m)"), not the 10 degree limit, because the cause is that the deck goes under before any trim balances the load. The verdict does not change. Seven dry bulk sweep Options (self-propelled, 80 to 90 m long) show the new text; the message when the check passes is the same.
+- App (issue #551): a pushed convoy has a "Convoy totals" view in the Drawings group. It shows the convoy (barges abreast and in line), the figures of one barge and the totals of the convoy (cargo, lightship, deadweight, displacement, cargo volume, overall length and beam), as the core gives them, and says that the pusher is not in the totals yet. No other Formation has the view. No result moves.
+- Design change (issue #552): the `cost` block of a pushed convoy is the budget of every barge, not of one. The barge items and their subtotal are multiplied by the number of barges; the tug stays as one tug for the convoy; the yard margin is the same fraction of the new subtotals; the delivery stays one lump. `cost.barges` is the count and `cost.one_barge` keeps the budget of one barge, so the basis can be read. A convoy of one barge, and every other Formation, are unchanged. `cost` is outside the results hash, so no hash moves and no design-impact table is written.
+- CI: the Linux and Windows app builds run in the daily 07:17 UTC run, as well as on request. They stay off pull requests and pushes to main. A failure in either opens the daily-failure issue.
+- Speed (issue #567, spec 0008): the free-trim equilibrium solves stop at a tolerance. The inner solve (the height for the volume) stops when the volume is within 1e-13 of the target; the outer solve (the trim) stops when B - G is within 1e-11 m; the step caps stay at 16 and 12. The stop compares numbers the solve computes, so native and WebAssembly stop at the same step and give the same bits. A condition's GZ curve starts from the heel 0 equilibrium that the float already solved. The solve count falls by about 2.0 times on a ShipD Design (47,000 to 23,000 volume cuts) and by 2.2 times on a gas Design (179,000 to 81,000), and a ShipD barge in the IS Code conditions takes about half the time. Results change in the last bits only (the largest change in any number is about 1e-12 relative, on values near zero about 1e-16 absolute), but every results hash changes, so every fixture hash is stamped again. The design-impact tool finds no design change: every case agrees at its comparison precision.
+- Speed (issue #567, spec 0008): a trial of the automatic ballast plan stops as soon as its heels decide an IS Code 2008 criterion. The GZ curve of a trial is worked in blocks: heels 30 to 40 (the area 30 to 40 degrees), then 41 to 60 (the greatest GZ at 30 degrees or more), then 25 to 29 and 24 down to 0 (the angle of maximum GZ is under 25 degrees as soon as a heel under 25 has a GZ at least the greatest at 25 or more). It stops only when a criterion is decided by the heels worked, so no reported number changes; a trial that is not decided gives the whole curve, bit for bit. Designs with failing trials do 20 to 25 % fewer heel solves (a gas Design 5,307 to 4,059; a crude Design 3,660 to 2,796); Designs whose first trial passes are unchanged. With an angle of down-flooding below 40 degrees (#282) the first block checks the area 30 to that angle, as the criterion does, so the screen never rejects a trial the criteria accept.
+- Design change (issue #577): the default design pressure of fully refrigerated LPG is the IGC 4.23.1.2 minimum of each design's own tank (Po = 0.2 + A C (rho_r)^1.5 MPa), not the single 0.55 MPa of #522. The Defaults Profile row holds `none`, as the dome rules do, and the core works the value out from the tank's outer diameter and length. It needs no iteration, because neither depends on the wall. A 60 m hull takes about 0.35 MPa, an 85 m hull 0.47 MPa and a 110 m hull 0.54 MPa (9 % nickel steel), so short tanks get a thinner wall and more cargo. The input `tank_design_pressure_mpa` now accepts `none`. A file that stores a pressure keeps it; a file saved before keeps its own.
+- Build: `tools/build_web.sh` finds the wasm file in `CARGO_TARGET_DIR` when it is set (issue #586).
+- Stability (issue #592, spec 0004, IS Code 2008 Part A 2.2.1): the angle of down-flooding can be worked out from the Design's deck openings. The new optional Option input `downflooding_openings` (Loading conditions group) lists them, one row each: `x_m` from the aft end, `y_m` across from the centre line (either side), `height_above_deck_m` above the deck at the side; a row may carry a `name`. With no angle typed, the angle of each loading condition is the heel, from the hull's sections at that condition's free-trim equilibrium, at which the lowest opening is immersed (linear between whole degrees); the areas 0-40 and 30-40 then end there where it is below 40 degrees, as with a typed angle (#282), which still wins. The worked angle shows in each condition's results as `downflooding_deg` where there is one (a typed angle is the Option's input and is not repeated). The derived input `downflooding_angle` has a third value, `computed`, and the note Rule `is2008/A.2.2.1/downflooding-angle-not-given` shows only where nothing is typed or listed. The default is none listed, so no existing file moves and no hash changes; a Design that lists openings gets shorter areas and may fail. Openings outside the hull (x, y) or below the deck are named. The app shows the count; the openings are typed in the file. `is2008-a` 2.0.0 (unreleased) gets the new gap text in place.
+- Hold inner bottom default (issue #597): a new dry bulk Option takes an inner bottom 0.80 m above the keel, not 1.20 m. Built barges and published designs show 0.38 to 1.0 m (0.80 m in two published inland designs). The hold is 0.40 m taller, so a 14 m beam, 4.5 m depth box hold gains 9 % cargo volume. A file saved before keeps 1.20 m. A new dry bulk Option already defaulted to the box hold (vertical inner sides); the 1.0 H:V slope applies only to a hold typed as sloped hopper, and it is unchanged.
+- Docs (#602): ADR 0020 records the solver tolerance stop. Each equilibrium solve stops at the first step whose residual is within a tolerance (1e-13 of the target volume, 1e-11 m of B - G). This replaces the "no early stop" rule of spec 0008, which gets an amendment note. No result moves.
+- Tooling (issue #625): the design-impact gate passes a changelog fragment whose table names the same (case, quantity) rows that the branch moves. The numbers may come from an earlier base, so a merge on main no longer forces every open pull request to regenerate its table. The gate still fails when a moved row is missing, when the table names a row that does not move, or when there is no table. The merge-group check is unchanged.
+- Rules (issue #628): the per-condition checks "Air draft" and "Ballast plan" of the IS Code loading conditions now report a Rule. Two new Rules in the unreleased `ovcd` 2.1.0, each a block: `ovcd/loading/air-draft` (the air draft of each condition within the typed limit) and `ovcd/loading/ballast-plan` (a ballast plan meets every stability criterion in each ballast condition). A check is in the results only when a condition fails it, so the Rule is not applicable when every condition passes. The `ovcd_rules` test no longer skips the two checks. The Rule Trace is not hashed, so no results hash moves.
+- Consumables tanks inside the hull (issue #631): under a raked stern bottom the consumables pair lay partly outside the hull. The pair is now clipped by the hull and made long enough that its volume inside the hull holds the stores, so the stores mass is kept. GM and GZ move a little in the self-propelled cases (148 of 250 design-impact cases); no check changes its result.
+- Meshes (issue #633, spec 0008): a Space the hull cuts is meshed as the Space inside the hull, not as its uncut prism, so the 3D view and the exports do not show it sticking out of the hull (the fore peak in the bow rake, a tank under the rising keel). `ovcd_core::mesh::space_mesh` takes the clipped Space and the hull: a Space the hull does not cut keeps its prism mesh exactly; a cut one is the hull's own solid over its length, clipped by each side of its section (`mesh::clip_by`, which closes each cut with a lid). Every Space mesh is closed, lies inside the hull and holds the Space's clipped volume within the ruled-quad error. The mesh hash changes for a Design with a cut Space (the hash is not in the results hash). `clip_by` also gives the waterline clip of the STL and OBJ exports.
+- ShipD benchmark (issue #648): the gate now compares the shape. `shipd::dataset_measures` measures OVCD's ShipD hull the way the dataset measured its own (101 waterlines, 1000 points each, the trapezoid rule, interpolation between waterlines). Measured this way, Sets 2 and 3 pass 100 of 100 (before: 95 and 98), and Set 1 (bulbs) passes 94 of 100 (before: 82). The other 6 Set 1 hulls are listed in `calibration/shipd/artefacts.csv`, each with its cause: two places where the dataset's code departs from the definitions (a mirrored stern ellipse where the transom is wider than the midbody; the bow bulb's crossing taken from a complex root or a root aft of `delta_bow`). For each, a test shows that the hull misses by the definitions and that reading that one place as the code does brings it within the limits (`Reading::DatasetCode`, benchmark only). Any other hull outside fails the gate, now for Set 1 too. OVCD's own integration stays in the report for information. Spec 0008 has an amendment note. No result moves: every Design takes the definitions.
+- Formations (issue #649): the `formation` block of a Formation with its tug has a new `service_margins` object and a note. It shows the still-water power in deep water at the design speed, the sea margin 1.15 ("traditionally about 15 % of the propeller design PD power") and the engine margin 1/0.90 (the service point at 90 % of the specified MCR), both sourced from MAN B&W, Basic Principles of Ship Propulsion, p. 27 and Fig. 17, and the power with both margins. The margins are shown, not used: the tug is still sized with `tug_installed_power_margin` (1.20), so no power, size or speed moves and the pushed allowance fitted in #359 stands. No shallow-water margin: the shallow-water environments already carry that resistance. For the three reference ATBs the model gives 0.29 to 0.43 of the published installed power, and 0.31 to 0.46 with the margins; the rest is bollard pull and the owner's choice. Results hashes move (new keys only).
+- Drawings of an Option with a wide name (issue #660): an Option named, for example, `140 x 29 x 9m LNG` gets its three hull views again in the app, in `ovcd draw` and in the web export. When `<OPTION>-GA-<n>` is too wide for the document number cell, the number uses a short id of the name, `OPTION-<6 hex digits>-GA-<n>`, which is the same on every run. The full name stays in the supplementary title. Names that fit keep their document numbers. The tug GA puts the tug after the name only when both fit.
+- A name too wide even for the supplementary title (about 40 capitals) is refused when the user gives it (new, rename, duplicate), with a message that says how many of its characters fit. A file that already holds such a name gets the same message in place of its drawings, not a clause 14.6 fault.
+- One hull view that the Drawing Format Standard refuses no longer hides the other views in the app or in `ovcd draw --out`. The message names the view and its clauses.
+- Design change (issue #661, the maintainer's choice of 2026-10-30): a new input, `bow_rake_max_length_m` (Hull and containment, default 10 m, an estimate), caps the bow rake that `bow_rake_length_to_depth_ratio` x moulded depth gives. The rake is now `min(1.6 x D, 10 m)`, so it changes only hulls deeper than 6.25 m. A typed `bow_rake_length_m` is not capped. The rake rise is unchanged (the moulded depth), so a capped rake is steeper. A file saved before keeps no cap and its results. On the worked 140 x 29 m gas example (D = 12 m) a 10 m cap gives a 10 m rake instead of 19.2 m, 9.2 m more cargo zone and 15,862 m3 of cargo instead of 14,355 m3.
+- Defaults Profile (issue #661): `bow_rake_length_to_depth_ratio` (1.6) is now marked `estimate`, and its basis says that no published source was found for any Service Area and that, on a deep hull, the rake it gives sets the cargo zone. The value is unchanged, so no Design moves. The coastal default waits on the maintainer's decision on #661.
+- The app shows each Option's results hash (issue #666): a "Results hash" row at the foot of the Compare table, the first 12 characters with the full value on hover. A Design entered by hand can now be checked against `ovcd run --json` of a published example without saving the file. Out-of-date results show their last hash, marked like the other values.
+- App, bottom panel (issue #669): the Outputs, Checks and Compare columns follow the panel's width. Below the width the three need, Compare goes under the other two; narrower still, one column. A table wider than its column scrolls inside it, so no text runs over the next column.
+- App, bottom panel (issue #668): with the IS Code loading conditions, the Outputs draught and freeboard are for the full load, the cargo and the consumables (stores and fuel), and the two freeboard checks take the cargo alone. The panel now says so: Draught and Freeboard carry a † and a note under the Outputs table, and the two checks say "cargo alone, no stores or fuel". No number changes.
+- App, intact stability (issue #667): the names at the ends of the GZ curves no longer overlap. They move up or down to stay one line apart inside the plot; a plot too short for all of them writes the first ones only, and the legend above the chart names every curve.
+- Picking a value from a list marks the field typed, even when it is the default (issue #670). A list fires no change when the user picks the entry it already shows, so the app sent no edit and the field kept its "default" marker. While a list field is not typed it now shows its value in an entry of its own, for example "Type C tanks (default)", greyed and not pickable; picking "Type C tanks" is then a change, and the field is saved as typed. "reset" brings the default entry back. No result moves.
+- Design change (issue #675, part 1): two new Gas tanks inputs. `tanks_across` (none: the search tries 1, 2 and 3 across, as before) fixes the number of tanks side by side for every arrangement the search tries; when that number cannot pass, the answer is infeasible and says which checks fail. `min_side_space_m` (0: the IGC 2.4 minimum alone, as before) is the least space from the side shell to the tank insulation: the search uses the larger of it and the IGC minimum, then tries up to 2 m more, as before. The wing ballast tank is the side space less `wing_tank_gap_m`. A file saved before reads none and 0, so its results do not move.
+- Design change (issue #675, part 2): the result lists the gas tank arrangements the search tried (`fit_tried`, one row per depth and number of tanks across, outside the results hash), each with its tank diameter, side space, wing tank width, cargo volume and outcome: chosen, less cargo, fails (with the failing checks) or not built (with the reason). The app shows the list under Checks as "Arrangements tried". A failing `wheelhouse sees over cargo` check now says the lift needed beside the lift allowed ("blind distance ahead of the bow over 250 m, light (ES-TRIN 7.02(2)): lift needed 9.30 m of 6.00 m"); a passing one keeps its message. A gas arrangement with no wing ballast tank (side space not more than the wing tank gap) gets the warning `warn-fit-no-wing-tank`, which names `min_side_space_m`. These two texts are in the results, so a Design whose answer has no wing tank, or fails the blind distance, gets a new results hash. Design impact: 5 of 252 cases move, text only: four get the warning and one has the new failing blind distance message. The website example `lrg-gas-89` gets the warning too, so its stored hash is re-stamped (nothing else in it moves). No cargo, arrangement or feasibility moves.
+- Issue #675, part 3: the Defaults Profile entry of `wheelhouse_max_lift_m` keeps its 6.0 m default and now cites the published range it sits in: the lifting-shaft wheelhouse lifts of BÜTER Hebetechnik have strokes of 2.5 m (9 t), 3.0 m (3 t), 4.0 m (8 t), 7.0 m (6 t), 8.8 m and 8.9 m (12 t). The soft range is that range, 2.5 to 8.9 m. The help text names the datum: the lift is measured from the lowered floor on the deck at moulded depth, which is the light air draft of a gas Design. No source gives one value, and the stroke that fits depends on the hull depth below the deck (the shaft goes into the hull), so the default stays an Estimate and the choice is a question for the maintainer (basis page 05, GA-A39a and question 11). Tried and not adopted: with 8.8 m, 95 of the 252 cases of the design-impact set carry 3 to 58 % more cargo (most of them 27 % or more), on hulls mostly 5.5 to 6 m deep; no case changes feasibility.
+- The draught cap binds the draught a dry bulk hull reports (issue #680). With its stern block mass a dry bulk hull floats trimmed, and at the displacement of the level cap its mid-length draught could be a few centimetres deeper than the cap, so its freeboard was less than `min_freeboard_m` (76.5 m bauxite hull at 0.8 m: draught 2.737 m against a 2.70 m cap, freeboard 0.763 m). The cargo is now the most whose reported draught is at the cap, whichever cap governs (hull, draught limit or channel). Five sweep cases move: cargo 0.16 % to 0.81 % less, draught 5 mm to 14 mm less, and each draught now sits on its cap.
+- The 3D view and the glTF export draw the vessel, not its mirror image (issue #682, spec 0009). The model axes (x forward, y to starboard, z up) are left-handed; three.js and glTF are right-handed, and both drew the raw positions, so the profile "from the starboard side" showed the bow on the left, and a part to port would have shown to starboard (a symmetric hull hid it). The view now holds every mesh under one root mirrored in y; the glTF has one root node, `vessel`, that maps model (x, y, z) to glTF (x, z, y), right-handed with y up. The STL and OBJ panel mesh stays in hull axes, for solvers. No result, mesh hash or drawing moves; the `.glb` bytes change (one more node).
+- The 3D view reads as a vessel (issue #683, spec 0009). It opens on the outside: the hull opaque, the Spaces off (put a kind on, or pick a Space in the list, to see them; the hull and the decks then turn translucent). The hull, decks, bulkheads and Spaces are flat shaded, so the knuckles show, and the hull's edges are drawn (faces meeting at 30 degrees or more), clipped by the section plane like the faces. Lights: sky and ground from the theme, a key light from the aft-starboard quarter and a weaker fill from port, with no ambient flood. The default camera, and Reset view, stand at the aft-starboard quarter 25 degrees above the horizon, framed to the model with a 10 % margin. Each part is its own geometry, so transparent parts sort and frustum culling works. No result or mesh hash moves.
+- The 3D view shows the sea (issue #684, spec 0009). A translucent sea plane lies at the shown loading condition's waterplane, through its aft and forward draughts as the waterline is drawn, and moves when the loading condition changes; with no waterline chosen there is no sea. The hull below that plane takes a wet colour and the hull above it the topside colour: the same hull geometry drawn twice, each copy clipped to its side of the plane. Nine colour tokens for the 3D view, light and dark, each at least 3:1 on the paper (WCAG 2.2, 1.4.11) and checked by `scripts/contrast.mjs`: `--model-hull`, `--model-hull-wet`, `--model-deck`, `--model-sea`, `--model-deck-item`, `--model-wheelhouse`, `--model-propulsor`, `--model-edge`, `--model-cut` (the last four for parts that later tickets add). No result or mesh hash moves.
+- Tank Layout (issue #685, spec 0009, ADR 0021): one core function places the Type C cargo tanks and their domes. The IGC accelerations, the loading conditions, the stability, the weights and the GA drawer read it. A Space now has a shape, a prism or a tank, and the Vessel Model holds the tank Spaces and an empty Outfit layer. No result value and no drawing changes.
+- Tank meshes (issue #686, spec 0009, ADR 0021): the 3D view and the meshes draw each Type C tank at its Tank Outer Diameter with its Tank Heads, each dome, and the weather shield when its inputs are set. Every mesh group carries a typed source (`PartSource::Tank`, `Dome`, `WeatherShield`). The tanks are drawn smooth in the cargo colour. A gas Design's `H1C` is named "Hold space (around tanks)". Picking a tank shows its outer diameter, length and head from the core. No result value changes.
+- Results Spaces table (issue #687, spec 0009 D1 b, ADR 0021): a gas Design's results gain `spaces`, one row per Type C tank (name, kind, side, volume = the capacity's `volume_per_tank`, centroid = the middle of its axis). Added rows only: no existing value moves. The results hash of every gas Option changes, and the gas fixtures and examples are re-stamped.
+- Deck Items (issue #688, spec 0009, ADR 0021): the Vessel Model's Outfit holds the stern block's accommodation and battery units, the wheelhouse lowered and raised, and its lift column. Each is a box mesh with a typed source (`PartSource`) in the new `deck_item` layer. A unit stands on the highest deck point under it, so camber and sheer are kept. The lift column's plan size is an estimate (basis DR-A45). No result value changes.
+- 3D view (issue #689, spec 0009):
+  - Three View Presets: Exterior (on open), Cargo and Arrangement. A moved toggle shows "Custom".
+  - A half-model cut and a deck cut; the faces a cut opens are drawn in `--model-cut`.
+  - The wheelhouse can be shown lowered, raised or both (the raised one as a ghost), with its lift and the light air draft.
+  - A pick panel for the Deck Items, with values from the core; the side table lists the Deck Items.
+  - No result value changes.
+- glTF and triangle budget (issue #690, spec 0009): each tank, dome, weather shield and Deck Item is a named glTF node (the raised and lowered wheelhouse are two), with the Light theme colour of its kind as its material. A test pins each fixture layer's triangle count and fails above 1.5 times it, or above 200,000 for any Design. No result value changes.
+- Propulsor Layout (issue #691, spec 0009): one set of named position functions in `machinery.rs` (`drive_unit_positions`, `shaft_positions`, `rudder_positions`, `bow_thruster_position`) places every propulsor, shaft line, rudder and the bow thruster. The mass items, and the default stern block's thrusters, take their centres from them, so no mass, centre or result moves. A self-propelled result gets `drawing.propulsors` (outside the results hash): each unit's disc centre (x from the aft end, y, the axis at D / 2, as `powering.shaft_axis_height_m`), its mass item and centre, and its nozzle, azimuth leg and pod or shaft line; two rudders per shaft; the bow thruster tunnel. Under a tunnel stern every type sits on its tunnel's axis; otherwise on the stern block's thruster offsets, and where those hold a different number of places than `propulsor_count`, the layout spreads the units at the thruster pitch and says so in `drawing.propulsors.warnings`. Nozzle length, the azimuth leg and pod, the rudder blade and the bow thruster tunnel are sized from D or the bow thruster power as estimates (`docs/basis/11-drawings.md` DR-A46 to DR-A50). Glossary: Propulsor Layout.
+- Propulsors in the 3D view (issue #692, spec 0009): the Vessel Model's Outfit carries the Propulsor Layout of #691 (`machinery::layout_of`, the same function `drawing.propulsors` uses), and the meshes draw it: each propeller as a disc 0.05 D thick in 48 segments round (with an azimuth unit's pod on the same centre), its nozzle as a ring, an azimuth unit's leg and each rudder blade as a box, and the bow thruster tunnel as a cylinder across the beam. Typed sources `PartSource::Propulsor(i)`, `Nozzle(i)`, `Leg(i)`, `Rudder(i)` and `BowThruster`, all on the `propulsor` layer. The view draws them in `--model-propulsor` with their own layer toggle (the View Presets already name it); a click on one shows its type, propeller diameter, axis height above the keel, Installed Power per unit (a bow thruster: its power) and its mass item's centre, from the core (new call `propulsors`). The glTF export has a `propulsors` node with one named node per part, in the Light theme colour. `drawing.propulsors` gains `unit_power_kw` (outside the results hash). No result moves.
+- Stern block (issue #702, option 1): with a specified Propulsor at a transom or pram stern, the stern block lays out `propulsor_count` units at a pitch of the Propulsor's own envelope (1.35 D) plus the thruster clearance. Before, it laid out the default block's three 2.60 m thrusters, so `thruster_offsets_m` and the Propulsor Layout disagreed, and the layout warned. Now they agree, and the layout warns only when the beam takes fewer units. Under a tunnel stern nothing changes. Moved: the text of the two thruster beam checks on 104 cases, and the requested-count check now passes on the two 60 x 10 gas hulls (two units fit where three did not). No cargo, mass, draught or stability value moves. The eight Options of `examples/gas-140x29-coastal-lng/` are re-stamped.
+- Dependency: the website build pins `certifi` 2026.10.19, which fixes a critical advisory. The pin is younger than the usual two weeks; the file says so.
+- Dependency: the Python bindings use `pyo3` 0.29, which fixes two high and two moderate advisories. The bindings build and pass clippy with no code change.
+- Tests: `tools/check_fixture_hashes.py` also checks the website examples (`website/assets/examples/*.vdesign`) when it runs with no fixtures folder, so the pull request gate fails when a results change leaves an example with a stale hash. `lrg-gas-89.vdesign` is re-stamped: its stored hash was stale on main. No result moves.
+- Examples (after #643): the eight Options of `examples/gas-140x29-coastal-lng/` (both files) are re-stamped. Their stored results hashes were stale because #643 added five `powering` keys to the results (`propeller_diameter_m`, `shaft_axis_height_m`, `blade_load_kw_m2`, `blade_load_limit_kw_m2`, `propeller_ducted`); no existing value changed. Their stored `ovcd` 2.1.0 Rule Set hash is re-stamped too: #643 added three warning Rules to that unreleased version, so each run warned that the rules differ from the file. `results.json` and `trace.md` are run again (the trace gains the three propeller Rules; `ovcd/propulsion/immersion-light` warns on these files, which keep the Stern Form diameter). `tools/check_fixture_hashes.py` now checks `examples/*/*.vdesign` too, so a results change that leaves a worked example stale fails the gate, as the website examples already do.
+- CI: WebAssembly parity (`web-parity.yml`) is now a release gate only. `release.yml` calls it; it no longer runs on pull requests, on push or every day. It never failed on a parity mismatch, and it cost a web build on most pull requests. Start it by hand for a change to the web crate.
+- App: a Settings dialog in the app bar holds the Display Language, the theme and the Defaults Profile. They leave the app bar and the input panel. The theme is now Dark by default; Auto still follows the operating system.
 - Rule trace (issue #663): for a gas Cargo, the gap of `igc/2.7/damage-survival` now gives the real reason: the assumed damage of IGC 2.3 is not modelled yet, so survival to IGC 2.7 is not checked. It said the laden departure condition has no floating position, which was false: that condition floats. The outcome stays `not evaluated`; no result and no results hash moves (the Rule trace is not hashed).
 - Examples: `examples/gas-140x29-coastal-lng/`, a worked review run of a 140 x 29 m self-propelled LNG Type C gas barge on the coastal-and-river stack (three Options, a sensitivities file, the results JSON, the Rule trace as a table and the three GA views of each Option as PDF and SVG). An example only: no code, no Defaults Profile value and no result of any other file changes. The run filed three findings on the register (#121): the ICLL freeboard Measure (#659), `ovcd draw` and Option names over 15 characters (#660), and the bow rake default with the river sightline Rule (#661).
 - Fit (issue #340, spec 0006 section 5): `fit` for liquid bulk, `ovcd_format::trace::liquid_fit` and the `liquid_fit` entry of the evaluation API (`gas_stability`). For a hull and the selected Rule Sets it gives the double side, the double bottom and the cofferdam from the governing lower limit of the `sizes` Rules on `hull.double_side_width`, `hull.double_bottom_height` and `input.cofferdam_m` (the greatest, rounded up to the centimetre), a centreline bulkhead when the inner breadth is over 0.70 B, and the smallest count of tanks in line that meets the tank volume and length limits. It tries every count from 1 to 30, keeps only layouts that no Rule fails, prefers layouts that meet every `sizes` Rule, then the most cargo, then the fewest tanks. A layout that no Rule fails is `feasible`; if none is, the answer carries the failing rows of the closest one. An input the designer typed (`typed`) is kept, and the `sizes` Rule it breaks is named. `fit` never returns a feasible layout that a Rule fails, and a Rule added never raises the cargo (tested over a grid with blocking sets). No `run` calls `fit`, so no design moves and every results hash is unchanged: the design-impact table has no rows.
@@ -252,6 +427,1234 @@ Notes:
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
+
+### rename/open-vessel-designer (2026-10-30)
+
+Between `main 26d5710` and `this branch 124893fb`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep optional rule_sets | `result` | fill: warning: Option 'sweep optional rule_sets': `price_base_date` was not stored in the file; wrote in the Defaults Profile value none, marked default \| warning: Option 'sweep optional rule_sets': `service_area` was not stored in the file; wrote in the Defaults Profile value river-only, marked default \| ovcd fill: 1 error(s); nothing written | computed | changed |
+
+### ticket/280-type-g-default (2026-10-22)
+
+Between `main fc7e931` and `this branch dc51879`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived liquid 1 (88x16.3) | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 3.59 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 3.60 m of 6.00 m | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[14].message` | aft end-bulkhead space 0.60 m >= 0.20 m (domed tank ends, cl. 3.5.3) | aft end-bulkhead space 0.20 m >= 0.20 m (domed tank ends, cl. 3.5.3) | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[16].message` | forward end-bulkhead space 0.50 m >= 0.20 m (domed tank ends, cl. 3.5.3) | forward end-bulkhead space 0.20 m >= 0.20 m (domed tank ends, cl. 3.5.3) | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[21].message` | tank length 28.44 m / inner diameter 6.80 m = 4.18 <= 7.0 | tank length 28.59 m / inner diameter 6.80 m = 4.21 <= 7.0 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[22].message` | freeboard 2.93 m at the carried draught 2.77 m >= required 0.3 m | freeboard 2.92 m at the carried draught 2.78 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[23].message` | GM 5.90 m (fluid), max GZ 2.52 m at 29° | GM 5.87 m (fluid), max GZ 2.51 m at 29° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[24].message` | GM 5.91 m (fluid), max GZ 2.52 m at 29° | GM 5.89 m (fluid), max GZ 2.51 m at 29° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[25].message` | GM 12.49 m (fluid), max GZ 3.47 m at 28° | GM 12.46 m (fluid), max GZ 3.46 m at 28° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[26].message` | GM 12.58 m (fluid), max GZ 3.46 m at 28° | GM 12.54 m (fluid), max GZ 3.46 m at 28° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[3].message` | freeboard 2.93 m >= required 0.3 m | freeboard 2.92 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[4].message` | cargo zone 58.89 m = LOA 88.0 - bow void 9.62 m - stern void 19.49 m | cargo zone 59.19 m = LOA 88.0 - bow void 9.32 m - stern void 19.49 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[14].message` | blind distance ahead of the bow 2747.3 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 6.00 m of 6.00 m | blind distance ahead of the bow 2741.8 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 6.00 m of 6.00 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[15].message` | aft end-bulkhead space 0.60 m >= 0.20 m (domed tank ends, cl. 3.5.3) | aft end-bulkhead space 0.20 m >= 0.20 m (domed tank ends, cl. 3.5.3) | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[17].message` | forward end-bulkhead space 0.50 m >= 0.20 m (domed tank ends, cl. 3.5.3) | forward end-bulkhead space 0.20 m >= 0.20 m (domed tank ends, cl. 3.5.3) | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[22].message` | tank length 49.44 m / inner diameter 10.04 m = 4.92 <= 7.0 | tank length 49.59 m / inner diameter 10.04 m = 4.94 <= 7.0 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[23].message` | freeboard 2.51 m at the carried draught 3.19 m >= required 0.3 m | freeboard 2.50 m at the carried draught 3.20 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[24].message` | GM 3.74 m (fluid), max GZ 1.52 m at 25° | GM 3.73 m (fluid), max GZ 1.51 m at 25° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[25].message` | GM 3.74 m (fluid), max GZ 1.52 m at 25° | GM 3.73 m (fluid), max GZ 1.51 m at 25° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[26].message` | GM 10.32 m (fluid), max GZ 2.90 m at 25° | GM 10.30 m (fluid), max GZ 2.90 m at 25° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[27].message` | GM 10.37 m (fluid), max GZ 2.90 m at 25° | GM 10.35 m (fluid), max GZ 2.90 m at 25° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[4].message` | freeboard 2.51 m >= required 0.3 m | freeboard 2.50 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[5].message` | cargo zone 100.89 m = LOA 130.0 - bow void 9.62 m - stern void 19.49 m | cargo zone 101.19 m = LOA 130.0 - bow void 9.32 m - stern void 19.49 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `warnings[1]` | The blind distance needs 10.08 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | The blind distance needs 10.10 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 5.51 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 5.52 m of 6.00 m | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[14].message` | aft end-bulkhead space 0.60 m >= 0.20 m (domed tank ends, cl. 3.5.3) | aft end-bulkhead space 0.20 m >= 0.20 m (domed tank ends, cl. 3.5.3) | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[16].message` | forward end-bulkhead space 0.50 m >= 0.20 m (domed tank ends, cl. 3.5.3) | forward end-bulkhead space 0.20 m >= 0.20 m (domed tank ends, cl. 3.5.3) | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[21].message` | tank length 49.44 m / inner diameter 7.20 m = 6.87 <= 7.0 | tank length 49.59 m / inner diameter 7.20 m = 6.89 <= 7.0 | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[22].message` | freeboard 2.60 m at the carried draught 3.10 m >= required 0.3 m | freeboard 2.59 m at the carried draught 3.11 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[23].message` | GM 5.67 m (fluid), max GZ 2.26 m at 27° | GM 5.66 m (fluid), max GZ 2.25 m at 27° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[24].message` | GM 5.68 m (fluid), max GZ 2.27 m at 27° | GM 5.67 m (fluid), max GZ 2.26 m at 27° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[25].message` | GM 13.44 m (fluid), max GZ 3.64 m at 27° | GM 13.42 m (fluid), max GZ 3.64 m at 27° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[26].message` | GM 13.51 m (fluid), max GZ 3.64 m at 27° | GM 13.49 m (fluid), max GZ 3.64 m at 27° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[3].message` | freeboard 2.60 m >= required 0.3 m | freeboard 2.59 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[4].message` | cargo zone 100.89 m = LOA 130.0 - bow void 9.62 m - stern void 19.49 m | cargo zone 101.19 m = LOA 130.0 - bow void 9.32 m - stern void 19.49 m | changed |
+| sweep default depth gas 90x14 | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.96 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.98 m of 6.00 m | changed |
+| sweep default depth gas 90x14 | `checks[14].message` | aft end-bulkhead space 0.60 m >= 0.20 m (domed tank ends, cl. 3.5.3) | aft end-bulkhead space 0.20 m >= 0.20 m (domed tank ends, cl. 3.5.3) | changed |
+| sweep default depth gas 90x14 | `checks[16].message` | forward end-bulkhead space 0.50 m >= 0.20 m (domed tank ends, cl. 3.5.3) | forward end-bulkhead space 0.20 m >= 0.20 m (domed tank ends, cl. 3.5.3) | changed |
+| sweep default depth gas 90x14 | `checks[21].message` | tank length 25.89 m / inner diameter 9.23 m = 2.81 <= 7.0 | tank length 26.04 m / inner diameter 9.23 m = 2.82 <= 7.0 | changed |
+| sweep default depth gas 90x14 | `checks[22].message` | freeboard 4.88 m at the carried draught 2.82 m >= required 0.3 m | freeboard 4.87 m at the carried draught 2.83 m >= required 0.3 m | changed |
+| sweep default depth gas 90x14 | `checks[23].message` | GM 3.02 m (fluid), max GZ 1.89 m at 40° | GM 3.00 m (fluid), max GZ 1.89 m at 40° | changed |
+| ... | 78661 more changed quantities | | | |
+
+### ticket/342-second-oil (2026-10-22)
+
+Between `main 5d5ec18` and `this branch d6efec6`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep diesel carries nothing (draught limit) | `result` | fill: warning: Option 'sweep diesel carries nothing (draught limit)': `slop_share` was not stored in the file; wrote in the Defaults Profile value 0, marked default \| warning: Option 'sweep diesel carries nothing (draught limit)': `rule_sets` was not stored in the file; wrote in the Defaults Profile value [{"id":"is2008-a","version":"2.0.0","hash":"7dfa155b0d58383f73d35b9b0c037c89dbd928ad4bf22fe93a0a32b1eaee744f","source":"default"},{"id":"es-trin-2025","version":"1.0.0","hash":"a37a0c98b24d77e205b4cc04d4803b2de27912ba81232cc695a1984ef8e58d6a","source":"default"},{"id":"adn-tank","version":"1.0.0","hash":"3c73961fe949a0a2088322a68fa66cb20115870967db94d4593d5a532c73e783","source":"default"},{"id":"ovcd","version":"2.1.0","hash":"7daa76a269bcad107d2e87ca16df70669aa985aab05473296555b853124cce96","source":"default"}], marked default \| ovcd fill: 1 error(s); nothing written | computed | changed |
+| sweep diesel coastal service 90x14 | `result` | fill: warning: Option 'sweep diesel coastal service 90x14': `slop_share` was not stored in the file; wrote in the Defaults Profile value 0.03, marked default \| warning: Option 'sweep diesel coastal service 90x14': `rule_sets` was not stored in the file; wrote in the Defaults Profile value [{"id":"is2008-a","version":"2.0.0","hash":"7dfa155b0d58383f73d35b9b0c037c89dbd928ad4bf22fe93a0a32b1eaee744f","source":"default"},{"id":"es-trin-2025","version":"1.0.0","hash":"a37a0c98b24d77e205b4cc04d4803b2de27912ba81232cc695a1984ef8e58d6a","source":"default"},{"id":"icll-freeboard","version":"1.0.0","hash":"0c28cbf1fd6be1a40e4c6520735c1df432902f234692a375602115feaca2eb7d","source":"default"},{"id":"solas-v22","version":"1.0.0","hash":"75030377beb5e74d6641cd536669159dea2dccf2e884f2372786d0b880f1b0fc","source":"default"},{"id":"adn-tank","version":"1.0.0","hash":"3c73961fe949a0a2088322a68fa66cb20115870967db94d4593d5a532c73e783","source":"default"},{"id":"marpol-i","version":"1.0.0","hash":"884e740d0f325c3367c3309e69a801b4e89991ddfb4f0d4fbcece4cd45b2d410","source":"default"},{"id":"ovcd","version":"2.1.0","hash":"7daa76a269bcad107d2e87ca16df70669aa985aab05473296555b853124cce96","source":"default"}], marked default \| ovcd fill: 1 error(s); nothing written | computed | changed |
+| sweep diesel pushed 90x14 | `result` | fill: warning: Option 'sweep diesel pushed 90x14': `slop_share` was not stored in the file; wrote in the Defaults Profile value 0, marked default \| warning: Option 'sweep diesel pushed 90x14': `rule_sets` was not stored in the file; wrote in the Defaults Profile value [{"id":"is2008-a","version":"2.0.0","hash":"7dfa155b0d58383f73d35b9b0c037c89dbd928ad4bf22fe93a0a32b1eaee744f","source":"default"},{"id":"es-trin-2025","version":"1.0.0","hash":"a37a0c98b24d77e205b4cc04d4803b2de27912ba81232cc695a1984ef8e58d6a","source":"default"},{"id":"adn-tank","version":"1.0.0","hash":"3c73961fe949a0a2088322a68fa66cb20115870967db94d4593d5a532c73e783","source":"default"},{"id":"ovcd","version":"2.1.0","hash":"7daa76a269bcad107d2e87ca16df70669aa985aab05473296555b853124cce96","source":"default"}], marked default \| ovcd fill: 1 error(s); nothing written | computed | changed |
+
+### ticket/355-propulsor-checks (2026-10-30)
+
+Between `main c0446ef` and `this branch 9b8c3e9c`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived bulk 1 (88x16.3) | `powering.blade_load_kw_m2` | absent | 45.9347097366 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `powering.blade_load_limit_kw_m2` | absent | 500 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `powering.propeller_diameter_m` | absent | 3.44 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `powering.propeller_ducted` | absent | True | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `powering.shaft_axis_height_m` | absent | 1.72 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `powering.blade_load_kw_m2` | absent | 64.1288506566 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `powering.blade_load_limit_kw_m2` | absent | 500 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `powering.propeller_diameter_m` | absent | 3.44 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `powering.propeller_ducted` | absent | True | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `powering.shaft_axis_height_m` | absent | 1.72 | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `powering.blade_load_kw_m2` | absent | 66.7412389576 | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `powering.blade_load_limit_kw_m2` | absent | 500 | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `powering.propeller_diameter_m` | absent | 3.44 | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `powering.propeller_ducted` | absent | True | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `powering.shaft_axis_height_m` | absent | 1.72 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 3.54 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 3.55 m of 6.00 m | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[22].message` | freeboard 3.01 m at the carried draught 2.69 m >= required 0.3 m | freeboard 3.05 m at the carried draught 2.65 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[23].message` | GM 6.08 m (fluid), max GZ 2.56 m at 29° | GM 6.17 m (fluid), max GZ 2.57 m at 29° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[24].message` | GM 6.09 m (fluid), max GZ 2.56 m at 29° | GM 6.18 m (fluid), max GZ 2.56 m at 29° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[25].message` | GM 12.69 m (fluid), max GZ 3.48 m at 28° | GM 13.07 m (fluid), max GZ 3.50 m at 27° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[26].message` | GM 12.78 m (fluid), max GZ 3.48 m at 27° | GM 13.16 m (fluid), max GZ 3.49 m at 27° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[3].message` | freeboard 3.01 m >= required 0.3 m | freeboard 3.05 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `powering.blade_load_kw_m2` | absent | 427.881368069 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `powering.blade_load_limit_kw_m2` | absent | 500 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `powering.propeller_diameter_m` | absent | 1 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `powering.propeller_ducted` | absent | True | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `powering.shaft_axis_height_m` | absent | 0.5 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[14].message` | blind distance ahead of the bow 2800.2 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 6.00 m of 6.00 m | blind distance ahead of the bow 2806.8 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 6.00 m of 6.00 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[23].message` | freeboard 2.56 m at the carried draught 3.14 m >= required 0.3 m | freeboard 2.58 m at the carried draught 3.12 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[24].message` | GM 3.82 m (fluid), max GZ 1.55 m at 26° | GM 3.85 m (fluid), max GZ 1.56 m at 26° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[25].message` | GM 3.82 m (fluid), max GZ 1.55 m at 26° | GM 3.85 m (fluid), max GZ 1.56 m at 26° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[26].message` | GM 10.43 m (fluid), max GZ 2.92 m at 25° | GM 10.62 m (fluid), max GZ 2.92 m at 25° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[27].message` | GM 10.48 m (fluid), max GZ 2.91 m at 25° | GM 10.67 m (fluid), max GZ 2.92 m at 25° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[4].message` | freeboard 2.56 m >= required 0.3 m | freeboard 2.58 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `powering.blade_load_kw_m2` | absent | 452.868361704 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `powering.blade_load_limit_kw_m2` | absent | 500 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `powering.propeller_diameter_m` | absent | 1.15 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `powering.propeller_ducted` | absent | True | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `powering.shaft_axis_height_m` | absent | 0.575 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `warnings[1]` | The blind distance needs 10.02 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | The blind distance needs 10.03 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| ... | 73601 more changed quantities | | | |
+
+### ticket/358-convoy-totals-fix (2026-10-22)
+
+Between `main 54e0b1f` and `this branch 1efe004`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep box convoy 2x3 | `result` | convoy results not yet available | computed | changed |
+| sweep box convoy 2x3 in a lock | `result` | convoy results not yet available | computed | changed |
+| sweep optional lock_length_m | `checks[20].message` | absent | overall length 90.00 m <= lock length 85.0 m | changed |
+| sweep optional lock_length_m | `checks[20].name` | absent | within lock length | changed |
+| sweep optional lock_length_m | `checks[20].ok` | absent | False | changed |
+| sweep optional lock_length_m | `checks[20].severity` | absent | error | changed |
+| sweep optional lock_width_m | `checks[12].message` | absent | overall beam 14.00 m <= lock width 13.0 m | changed |
+| sweep optional lock_width_m | `checks[12].name` | absent | within lock width | changed |
+| sweep optional lock_width_m | `checks[12].ok` | absent | False | changed |
+| sweep optional lock_width_m | `checks[12].severity` | absent | error | changed |
+
+### ticket/359-formation-calibration (2026-10-23)
+
+Between `main de050d9` and `this branch 4cd4910e`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| calibration amaggi-box-2000 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 99 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 259 kW, L_S 6.3 m taken as the pusher length, B_S 4.5 m). | Coupling force between the pusher and the pushed craft: 208 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 476 kW, L_S 9.5 m taken as the pusher length, B_S 5.8 m). | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 63 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 178 kW, L_S 4.9 m taken as the pusher length, B_S 3.8 m). | Coupling force between the pusher and the pushed craft: 128 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 319 kW, L_S 7.3 m taken as the pusher length, B_S 4.9 m). | changed |
+| calibration canal-box-200x35x12-cby222 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 86 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 230 kW, L_S 5.9 m taken as the pusher length, B_S 4.2 m). | Coupling force between the pusher and the pushed craft: 178 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 419 kW, L_S 8.7 m taken as the pusher length, B_S 5.5 m). | changed |
+| calibration canal-box-200x35x12-imt201 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 86 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 230 kW, L_S 5.9 m taken as the pusher length, B_S 4.2 m). | Coupling force between the pusher and the pushed craft: 178 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 419 kW, L_S 8.7 m taken as the pusher length, B_S 5.5 m). | changed |
+| calibration canal-box-200x35x12-imt205 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 86 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 230 kW, L_S 5.9 m taken as the pusher length, B_S 4.2 m). | Coupling force between the pusher and the pushed craft: 178 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 419 kW, L_S 8.7 m taken as the pusher length, B_S 5.5 m). | changed |
+| calibration canal-box-200x35x12-pb2012 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 86 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 230 kW, L_S 5.9 m taken as the pusher length, B_S 4.2 m). | Coupling force between the pusher and the pushed craft: 178 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 419 kW, L_S 8.7 m taken as the pusher length, B_S 5.5 m). | changed |
+| calibration canal-box-200x35x12-rci250 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 86 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 230 kW, L_S 5.9 m taken as the pusher length, B_S 4.2 m). | Coupling force between the pusher and the pushed craft: 178 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 419 kW, L_S 8.7 m taken as the pusher length, B_S 5.5 m). | changed |
+| calibration canal-box-200x35x13-cby252 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 86 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 230 kW, L_S 5.9 m taken as the pusher length, B_S 4.2 m). | Coupling force between the pusher and the pushed craft: 178 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 419 kW, L_S 8.7 m taken as the pusher length, B_S 5.5 m). | changed |
+| calibration canal-box-200x35x13-cby400 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 86 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 230 kW, L_S 5.9 m taken as the pusher length, B_S 4.2 m). | Coupling force between the pusher and the pushed craft: 178 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 419 kW, L_S 8.7 m taken as the pusher length, B_S 5.5 m). | changed |
+| calibration canal-box-200x35x13-cby433 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 86 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 230 kW, L_S 5.9 m taken as the pusher length, B_S 4.2 m). | Coupling force between the pusher and the pushed craft: 178 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 419 kW, L_S 8.7 m taken as the pusher length, B_S 5.5 m). | changed |
+| calibration canal-box-200x35x13-pb2352 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 86 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 230 kW, L_S 5.9 m taken as the pusher length, B_S 4.2 m). | Coupling force between the pusher and the pushed craft: 178 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 419 kW, L_S 8.7 m taken as the pusher length, B_S 5.5 m). | changed |
+| calibration cargill-amazon-jumbo | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 147 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 358 kW, L_S 7.8 m taken as the pusher length, B_S 5.1 m). | Coupling force between the pusher and the pushed craft: 319 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 675 kW, L_S 12.0 m taken as the pusher length, B_S 6.9 m). | changed |
+| calibration danube-barge-77 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 109 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 280 kW, L_S 6.7 m taken as the pusher length, B_S 4.6 m). | Coupling force between the pusher and the pushed craft: 228 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 512 kW, L_S 10.0 m taken as the pusher length, B_S 6.1 m). | changed |
+| calibration dsb-holdbarge-1997-76.5 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 139 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 341 kW, L_S 7.6 m taken as the pusher length, B_S 5.0 m). | Coupling force between the pusher and the pushed craft: 295 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 632 kW, L_S 11.5 m taken as the pusher length, B_S 6.7 m). | changed |
+| calibration europa-iib-1635ou | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 121 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 304 kW, L_S 7.0 m taken as the pusher length, B_S 4.8 m). | Coupling force between the pusher and the pushed craft: 254 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 561 kW, L_S 10.6 m taken as the pusher length, B_S 6.3 m). | changed |
+| calibration europa-iib-rdb06 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 120 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 304 kW, L_S 7.0 m taken as the pusher length, B_S 4.8 m). | Coupling force between the pusher and the pushed craft: 254 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 559 kW, L_S 10.6 m taken as the pusher length, B_S 6.3 m). | changed |
+| calibration hidrovia-lhg-3200 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 147 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 358 kW, L_S 7.8 m taken as the pusher length, B_S 5.1 m). | Coupling force between the pusher and the pushed craft: 319 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 675 kW, L_S 12.0 m taken as the pusher length, B_S 6.9 m). | changed |
+| calibration jeffboat-am2100 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 104 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 270 kW, L_S 6.5 m taken as the pusher length, B_S 4.5 m). | Coupling force between the pusher and the pushed craft: 219 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 496 kW, L_S 9.7 m taken as the pusher length, B_S 6.0 m). | changed |
+| calibration mcdonough-195x35x12 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 88 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 236 kW, L_S 5.9 m taken as the pusher length, B_S 4.3 m). | Coupling force between the pusher and the pushed craft: 184 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 430 kW, L_S 8.8 m taken as the pusher length, B_S 5.6 m). | changed |
+| calibration meb-dcb23-ptich | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 331 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 696 kW, L_S 12.2 m taken as the pusher length, B_S 7.0 m). | Coupling force between the pusher and the pushed craft: 743 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 1350 kW, L_S 19.1 m taken as the pusher length, B_S 9.4 m). | changed |
+| calibration meb-dcb24-pola | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 522 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 1012 kW, L_S 15.7 m taken as the pusher length, B_S 8.2 m). | Coupling force between the pusher and the pushed craft: 1196 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 1997 kW, L_S 24.7 m taken as the pusher length, B_S 11.1 m). | changed |
+| calibration meb-rdb12-samarskaya | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 264 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 578 kW, L_S 10.8 m taken as the pusher length, B_S 6.4 m). | Coupling force between the pusher and the pushed craft: 583 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 1107 kW, L_S 16.7 m taken as the pusher length, B_S 8.6 m). | changed |
+| calibration meb-rdb20-belmax9 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 456 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 905 kW, L_S 14.6 m taken as the pusher length, B_S 7.8 m). | Coupling force between the pusher and the pushed craft: 1035 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 1774 kW, L_S 22.8 m taken as the pusher length, B_S 10.6 m). | changed |
+| calibration para-mississippi-2200 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 101 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 263 kW, L_S 6.4 m taken as the pusher length, B_S 4.5 m). | Coupling force between the pusher and the pushed craft: 212 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 483 kW, L_S 9.6 m taken as the pusher length, B_S 5.9 m). | changed |
+| calibration stretch-hopper-light | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 96 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 252 kW, L_S 6.2 m taken as the pusher length, B_S 4.4 m). | Coupling force between the pusher and the pushed craft: 200 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 462 kW, L_S 9.3 m taken as the pusher length, B_S 5.8 m). | changed |
+| calibration taf-danube-2008 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 137 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 338 kW, L_S 7.6 m taken as the pusher length, B_S 5.0 m). | Coupling force between the pusher and the pushed craft: 290 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 624 kW, L_S 11.4 m taken as the pusher length, B_S 6.6 m). | changed |
+| calibration taf-mississippi-2011 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 101 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 263 kW, L_S 6.4 m taken as the pusher length, B_S 4.5 m). | Coupling force between the pusher and the pushed craft: 212 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 483 kW, L_S 9.6 m taken as the pusher length, B_S 5.9 m). | changed |
+| calibration taf-parana-2013 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 141 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 346 kW, L_S 7.6 m taken as the pusher length, B_S 5.1 m). | Coupling force between the pusher and the pushed craft: 305 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 650 kW, L_S 11.7 m taken as the pusher length, B_S 6.8 m). | changed |
+| calibration taf-rhin-1980-covered | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 148 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 359 kW, L_S 7.9 m taken as the pusher length, B_S 5.2 m). | Coupling force between the pusher and the pushed craft: 315 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 669 kW, L_S 11.9 m taken as the pusher length, B_S 6.8 m). | changed |
+| calibration taf-rhin-2000 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 144 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 352 kW, L_S 7.8 m taken as the pusher length, B_S 5.1 m). | Coupling force between the pusher and the pushed craft: 308 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 656 kW, L_S 11.8 m taken as the pusher length, B_S 6.8 m). | changed |
+| calibration taf-rhin-2001 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 145 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 354 kW, L_S 7.8 m taken as the pusher length, B_S 5.1 m). | Coupling force between the pusher and the pushed craft: 310 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 658 kW, L_S 11.8 m taken as the pusher length, B_S 6.8 m). | changed |
+| calibration taf-rhin-2008-covered | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 186 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 433 kW, L_S 8.9 m taken as the pusher length, B_S 5.6 m). | Coupling force between the pusher and the pushed craft: 401 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 814 kW, L_S 13.6 m taken as the pusher length, B_S 7.5 m). | changed |
+| calibration taf-rhin-2019-covered | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 175 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 412 kW, L_S 8.6 m taken as the pusher length, B_S 5.5 m). | Coupling force between the pusher and the pushed craft: 375 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 772 kW, L_S 13.1 m taken as the pusher length, B_S 7.3 m). | changed |
+| calibration taf-seine-1973 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 126 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 315 kW, L_S 7.2 m taken as the pusher length, B_S 4.9 m). | Coupling force between the pusher and the pushed craft: 267 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 582 kW, L_S 10.9 m taken as the pusher length, B_S 6.4 m). | changed |
+| calibration taf-seine-1981 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 89 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 238 kW, L_S 6.0 m taken as the pusher length, B_S 4.3 m). | Coupling force between the pusher and the pushed craft: 188 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 438 kW, L_S 9.0 m taken as the pusher length, B_S 5.6 m). | changed |
+| calibration taf-seine-1993 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 137 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 337 kW, L_S 7.5 m taken as the pusher length, B_S 5.0 m). | Coupling force between the pusher and the pushed craft: 290 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 624 kW, L_S 11.4 m taken as the pusher length, B_S 6.6 m). | changed |
+| calibration taf-seine-1996 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 120 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 304 kW, L_S 7.0 m taken as the pusher length, B_S 4.8 m). | Coupling force between the pusher and the pushed craft: 253 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 559 kW, L_S 10.6 m taken as the pusher length, B_S 6.3 m). | changed |
+| calibration taf-seine-1997 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 139 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 342 kW, L_S 7.6 m taken as the pusher length, B_S 5.1 m). | Coupling force between the pusher and the pushed craft: 296 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 634 kW, L_S 11.5 m taken as the pusher length, B_S 6.7 m). | changed |
+| calibration taf-seine-2000 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 139 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 341 kW, L_S 7.6 m taken as the pusher length, B_S 5.0 m). | Coupling force between the pusher and the pushed craft: 295 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 633 kW, L_S 11.5 m taken as the pusher length, B_S 6.7 m). | changed |
+| calibration taf-seine-2008 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 137 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 337 kW, L_S 7.6 m taken as the pusher length, B_S 5.0 m). | Coupling force between the pusher and the pushed craft: 291 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 625 kW, L_S 11.4 m taken as the pusher length, B_S 6.6 m). | changed |
+| ... | 1302 more changed quantities | | | |
+
+### ticket/359-formation-powering-1 (2026-10-22)
+
+Between `main f9f99bb` and `this branch 74b6e30`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| calibration amaggi-box-2000 | `formation.coupling_force_kn` | absent | 99.4132392689 | changed |
+| calibration amaggi-box-2000 | `formation.design_speed_kn` | absent | 9.7 | changed |
+| calibration amaggi-box-2000 | `formation.environments[0].name` | absent | Deep water | changed |
+| calibration amaggi-box-2000 | `formation.environments[0].power_at_service_kw` | absent | 216.156116384 | changed |
+| calibration amaggi-box-2000 | `formation.environments[0].service_speed_kn` | absent | 9.7 | changed |
+| calibration amaggi-box-2000 | `formation.equivalent_hull.beam_m` | absent | 10.67 | changed |
+| calibration amaggi-box-2000 | `formation.equivalent_hull.block_coefficient` | absent | 0.85831807902 | changed |
+| calibration amaggi-box-2000 | `formation.equivalent_hull.draught_m` | absent | 3.56 | changed |
+| calibration amaggi-box-2000 | `formation.equivalent_hull.length_m` | absent | 67.3018471817 | changed |
+| calibration amaggi-box-2000 | `formation.method_status` | absent | unverified | changed |
+| calibration amaggi-box-2000 | `formation.notes[0]` | absent | The Formation's resistance is that of its Equivalent Hull (the barges and the pusher as one hull) by the single-hull method, times the Formation resistance allowance. The method is unverified. | changed |
+| calibration amaggi-box-2000 | `formation.notes[1]` | absent | Coupling force between the pusher and the pushed craft: 99 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 259 kW, L_S 6.3 m taken as the pusher length, B_S 4.5 m). | changed |
+| calibration amaggi-box-2000 | `formation.resistance_allowance` | absent | 1 | changed |
+| calibration amaggi-box-2000 | `formation.sizing.converged` | absent | True | changed |
+| calibration amaggi-box-2000 | `formation.sizing.max_passes` | absent | 5 | changed |
+| calibration amaggi-box-2000 | `formation.sizing.passes` | absent | 3 | changed |
+| calibration amaggi-box-2000 | `formation.sizing.tolerance` | absent | 0.01 | changed |
+| calibration amaggi-box-2000 | `formation.tug.beam_m` | absent | 4.46770086056 | changed |
+| calibration amaggi-box-2000 | `formation.tug.bollard_pull_t` | absent | 8.08533603776 | changed |
+| calibration amaggi-box-2000 | `formation.tug.depth_m` | absent | 3 | changed |
+| calibration amaggi-box-2000 | `formation.tug.draught_m` | absent | 2 | changed |
+| calibration amaggi-box-2000 | `formation.tug.hull_steel_t` | absent | 8.50004283343 | changed |
+| calibration amaggi-box-2000 | `formation.tug.installed_power_kw` | absent | 259.387339661 | changed |
+| calibration amaggi-box-2000 | `formation.tug.installed_power_sized` | absent | True | changed |
+| calibration amaggi-box-2000 | `formation.tug.length_m` | absent | 6.34184718175 | changed |
+| calibration amaggi-box-2000 | `formation.tug.lightship_t` | absent | 30.0232053222 | changed |
+| calibration amaggi-box-2000 | `formation.tug.machinery_t` | absent | 21.5231624888 | changed |
+| calibration amaggi-box-2000 | `formation.tug.propeller_diameter_m` | absent | 1.6 | changed |
+| calibration amaggi-box-2000 | `formation.tug.propulsor_count` | absent | 2 | changed |
+| calibration amaggi-box-2000 | `formation.tug.propulsor_type` | absent | shaft_nozzle | changed |
+| calibration amaggi-box-2000 | `formation.tug_included` | absent | True | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.coupling_force_kn` | absent | 62.8975612704 | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.design_speed_kn` | absent | 9.7 | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.environments[0].name` | absent | Deep water | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.environments[0].power_at_service_kw` | absent | 148.553198483 | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.environments[0].service_speed_kn` | absent | 9.7 | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.equivalent_hull.beam_m` | absent | 7.62 | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.equivalent_hull.block_coefficient` | absent | 0.888731283183 | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.equivalent_hull.draught_m` | absent | 2.7432 | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.equivalent_hull.length_m` | absent | 65.8895597403 | changed |
+| ... | 3097 more changed quantities | | | |
+
+### ticket/360-arrangement-plan (2026-10-23)
+
+Between `main 71c00cd` and `this branch d13f6d4d`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| calibration amaggi-box-2000 | `formation.sightline.blind_distance_laden_m` | absent | 26.1838360534 | changed |
+| calibration amaggi-box-2000 | `formation.sightline.blind_distance_light_m` | absent | 249.999999999 | changed |
+| calibration amaggi-box-2000 | `formation.sightline.bow_x_m` | absent | 70.4299869491 | changed |
+| calibration amaggi-box-2000 | `formation.sightline.enough` | absent | True | changed |
+| calibration amaggi-box-2000 | `formation.sightline.eye_lowered_above_water_m` | absent | 2.5 | changed |
+| calibration amaggi-box-2000 | `formation.sightline.eye_raised_above_water_m` | absent | 6.00037359585 | changed |
+| calibration amaggi-box-2000 | `formation.sightline.eye_x_m` | absent | 4.73499347453 | changed |
+| calibration amaggi-box-2000 | `formation.sightline.floor_raised_above_water_m` | absent | 4.50037359585 | changed |
+| calibration amaggi-box-2000 | `formation.sightline.lift_needed_m` | absent | 3.50037359584 | changed |
+| calibration amaggi-box-2000 | `formation.sightline.lift_used_m` | absent | 3.50037359585 | changed |
+| calibration amaggi-box-2000 | `formation.sightline.limit_m` | absent | 250 | changed |
+| calibration amaggi-box-2000 | `formation.sightline.max_lift_m` | absent | 6 | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.sightline.blind_distance_laden_m` | absent | 36.4053494856 | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.sightline.blind_distance_light_m` | absent | 250 | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.sightline.bow_x_m` | absent | 68.2531043046 | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.sightline.enough` | absent | True | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.sightline.eye_lowered_above_water_m` | absent | 2.5 | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.sightline.eye_raised_above_water_m` | absent | 5.31177937385 | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.sightline.eye_x_m` | absent | 3.64655215229 | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.sightline.floor_raised_above_water_m` | absent | 3.81177937385 | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.sightline.lift_needed_m` | absent | 2.81177937385 | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.sightline.lift_used_m` | absent | 2.81177937385 | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.sightline.limit_m` | absent | 250 | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.sightline.max_lift_m` | absent | 6 | changed |
+| calibration canal-box-200x35x12-cby222 | `formation.sightline.blind_distance_laden_m` | absent | 36.6716508473 | changed |
+| calibration canal-box-200x35x12-cby222 | `formation.sightline.blind_distance_light_m` | absent | 250 | changed |
+| calibration canal-box-200x35x12-cby222 | `formation.sightline.bow_x_m` | absent | 69.6501065412 | changed |
+| calibration canal-box-200x35x12-cby222 | `formation.sightline.enough` | absent | True | changed |
+| calibration canal-box-200x35x12-cby222 | `formation.sightline.eye_lowered_above_water_m` | absent | 2.5 | changed |
+| calibration canal-box-200x35x12-cby222 | `formation.sightline.eye_raised_above_water_m` | absent | 5.32357278314 | changed |
+| calibration canal-box-200x35x12-cby222 | `formation.sightline.eye_x_m` | absent | 4.34505327061 | changed |
+| calibration canal-box-200x35x12-cby222 | `formation.sightline.floor_raised_above_water_m` | absent | 3.82357278314 | changed |
+| calibration canal-box-200x35x12-cby222 | `formation.sightline.lift_needed_m` | absent | 2.82357278314 | changed |
+| calibration canal-box-200x35x12-cby222 | `formation.sightline.lift_used_m` | absent | 2.82357278314 | changed |
+| calibration canal-box-200x35x12-cby222 | `formation.sightline.limit_m` | absent | 250 | changed |
+| calibration canal-box-200x35x12-cby222 | `formation.sightline.max_lift_m` | absent | 6 | changed |
+| calibration canal-box-200x35x12-imt201 | `formation.sightline.blind_distance_laden_m` | absent | 36.6716508473 | changed |
+| calibration canal-box-200x35x12-imt201 | `formation.sightline.blind_distance_light_m` | absent | 250 | changed |
+| calibration canal-box-200x35x12-imt201 | `formation.sightline.bow_x_m` | absent | 69.6501065412 | changed |
+| calibration canal-box-200x35x12-imt201 | `formation.sightline.enough` | absent | True | changed |
+| ... | 1182 more changed quantities | | | |
+
+### ticket/362-atb-notch (2026-10-22)
+
+Between `main c4dd7c9` and `this branch 40d82b0`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep atb notch 100x20 | `checks[10].message` | GM 21.76 m (fluid), max GZ 6.01 m at 34° | GM 21.59 m (fluid), max GZ 6.10 m at 34° | changed |
+| sweep atb notch 100x20 | `checks[11].message` | GM 42.71 m (fluid), max GZ 5.99 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | GM 42.79 m (fluid), max GZ 6.04 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| sweep atb notch 100x20 | `checks[5].message` | intact GM 5.23 m >= 0.15 m at the reported cargo 9514 t, draught 5.70 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 5.63 m >= 0.15 m at the reported cargo 8644 t, draught 5.70 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| sweep atb notch 100x20 | `checks[7].message` | GM 5.23 m (fluid), max GZ 0.26 m at 6° — fails: Area 0–40° 0.060 < 0.09, Area 30–40° -0.017 < 0.03, GZ at ≥ 30° -0.025 < 0.2, Angle of max GZ 6.000 < 25.0 | GM -1.00 m (fluid), max GZ 0.00 m at 0° — fails: Trim within the solver's range 10.000 < 10.0 | changed |
+| sweep atb notch 100x20 | `checks[8].message` | GM 5.23 m (fluid), max GZ 0.26 m at 6° — fails: Area 0–40° 0.060 < 0.09, Area 30–40° -0.017 < 0.03, GZ at ≥ 30° -0.025 < 0.2, Angle of max GZ 6.000 < 25.0 | GM -1.00 m (fluid), max GZ 0.00 m at 0° — fails: Trim within the solver's range 10.000 < 10.0 | changed |
+| sweep atb notch 100x20 | `checks[9].message` | GM 21.76 m (fluid), max GZ 6.01 m at 34° | GM 21.59 m (fluid), max GZ 6.10 m at 34° | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[0].name` | Area 0–30° | Trim within the solver's range | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[0].ok` | True | False | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[0].source` | IMO IS Code 2008, Part A 2.2.1 | the hull would trim more than 10 degrees | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[1].limit` | 0.09 | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[1].name` | Area 0–40° | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[1].ok` | False | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[1].source` | IMO IS Code 2008, Part A 2.2.1 | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[1].value` | 0.0595769450525 | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[2].limit` | 0.03 | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[2].name` | Area 30–40° | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[2].ok` | False | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[2].source` | IMO IS Code 2008, Part A 2.2.1 | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[2].value` | -0.0174270075878 | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[3].limit` | 0.2 | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[3].name` | GZ at ≥ 30° | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[3].ok` | False | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[3].source` | IMO IS Code 2008, Part A 2.2.2 | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[3].value` | -0.0245749165226 | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[4].limit` | 25 | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[4].name` | Angle of max GZ | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[4].ok` | False | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[4].source` | IMO IS Code 2008, Part A 2.2.3 | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[4].value` | 6 | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[5].limit` | 0.15 | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[5].name` | Initial GM (fluid) | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[5].ok` | True | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[5].source` | IMO IS Code 2008, Part A 2.2.4 | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].criteria[5].value` | 5.23385487843 | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].deck_edge_deg` | 1.72303841447 | none | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].gz[0][0]` | 0 | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].gz[0][1]` | 1.03852450522e-17 | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].gz[10][0]` | 10 | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].gz[10][1]` | 0.236966966582 | absent | changed |
+| sweep atb notch 100x20 | `loading_conditions.conditions[0].gz[11][0]` | 11 | absent | changed |
+| ... | 1249 more changed quantities | | | |
+
+### ticket/362-atb-powering (2026-10-22)
+
+Between `main 263faba` and `this branch 7476161`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep atb notch 100x20 | `formation.design_speed_kn` | absent | 9.7 | changed |
+| sweep atb notch 100x20 | `formation.environments[0].name` | absent | Deep water | changed |
+| sweep atb notch 100x20 | `formation.environments[0].power_at_service_kw` | absent | 580.247565277 | changed |
+| sweep atb notch 100x20 | `formation.environments[0].service_speed_kn` | absent | 9.7 | changed |
+| sweep atb notch 100x20 | `formation.equivalent_hull.beam_m` | absent | 20 | changed |
+| sweep atb notch 100x20 | `formation.equivalent_hull.block_coefficient` | absent | 0.785483185914 | changed |
+| sweep atb notch 100x20 | `formation.equivalent_hull.draught_m` | absent | 5.7 | changed |
+| sweep atb notch 100x20 | `formation.equivalent_hull.length_m` | absent | 114 | changed |
+| sweep atb notch 100x20 | `formation.method_status` | absent | unverified | changed |
+| sweep atb notch 100x20 | `formation.notch_depth_m` | absent | 14 | changed |
+| sweep atb notch 100x20 | `formation.notes[0]` | absent | The ATB's resistance is that of its Equivalent Hull (the barge and the tug as one hull, as long as the barge and the tug less the Notch the tug sits in) by the single-hull method, times the Formation resistance allowance. The method is unverified. | changed |
+| sweep atb notch 100x20 | `formation.resistance_allowance` | absent | 1.05 | changed |
+| sweep atb notch 100x20 | `formation.sizing.converged` | absent | True | changed |
+| sweep atb notch 100x20 | `formation.sizing.max_passes` | absent | 5 | changed |
+| sweep atb notch 100x20 | `formation.sizing.passes` | absent | 2 | changed |
+| sweep atb notch 100x20 | `formation.sizing.tolerance` | absent | 0.01 | changed |
+| sweep atb notch 100x20 | `formation.tug.beam_m` | absent | 10.6 | changed |
+| sweep atb notch 100x20 | `formation.tug.bollard_pull_t` | absent | 22.881426297 | changed |
+| sweep atb notch 100x20 | `formation.tug.depth_m` | absent | 5.54935622318 | changed |
+| sweep atb notch 100x20 | `formation.tug.draught_m` | absent | 4.54935622318 | changed |
+| sweep atb notch 100x20 | `formation.tug.hull_steel_t` | absent | 164.704892704 | changed |
+| sweep atb notch 100x20 | `formation.tug.installed_power_kw` | absent | 696.297078333 | changed |
+| sweep atb notch 100x20 | `formation.tug.installed_power_sized` | absent | True | changed |
+| sweep atb notch 100x20 | `formation.tug.length_m` | absent | 28 | changed |
+| sweep atb notch 100x20 | `formation.tug.lightship_t` | absent | 252.519484134 | changed |
+| sweep atb notch 100x20 | `formation.tug.machinery_t` | absent | 87.8145914302 | changed |
+| sweep atb notch 100x20 | `formation.tug.propeller_diameter_m` | absent | 2.95708154506 | changed |
+| sweep atb notch 100x20 | `formation.tug.propulsor_count` | absent | 2 | changed |
+| sweep atb notch 100x20 | `formation.tug.propulsor_type` | absent | azimuth_ducted | changed |
+| sweep atb notch 100x20 | `formation.tug_included` | absent | True | changed |
+
+### ticket/365-stern-block-calibration (2026-10-22)
+
+Between `main b68ecb7` and `this branch d416dac`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived bulk 1 (88x16.3) | `checks[12].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 1.65 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 1.45 m of 6.00 m | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `checks[16].message` | GM 4.82 m (fluid), max GZ 1.31 m at 25° | GM 4.82 m (fluid), max GZ 1.30 m at 25° | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `checks[17].message` | GM 4.83 m (fluid), max GZ 1.30 m at 25° | GM 4.83 m (fluid), max GZ 1.29 m at 25° | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `checks[19].message` | GM 16.04 m (fluid), max GZ 4.18 m at 30° | GM 16.03 m (fluid), max GZ 4.18 m at 30° | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `checks[12].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 2.40 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 2.26 m of 6.00 m | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `checks[16].message` | GM 3.79 m (fluid), max GZ 0.84 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | GM 3.79 m (fluid), max GZ 0.83 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `checks[12].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 2.35 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 2.21 m of 6.00 m | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `checks[18].message` | GM 18.96 m (fluid), max GZ 4.52 m at 30° | GM 18.96 m (fluid), max GZ 4.52 m at 29° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 3.60 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 3.54 m of 6.00 m | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[21].message` | tank length 28.49 m / inner diameter 6.80 m = 4.19 <= 7.0 | tank length 27.29 m / inner diameter 6.80 m = 4.02 <= 7.0 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[22].message` | freeboard 2.93 m at the carried draught 2.77 m >= required 0.3 m | freeboard 3.01 m at the carried draught 2.69 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[23].message` | GM 5.89 m (fluid), max GZ 2.51 m at 29° | GM 6.09 m (fluid), max GZ 2.57 m at 29° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[24].message` | GM 5.90 m (fluid), max GZ 2.51 m at 29° | GM 6.10 m (fluid), max GZ 2.56 m at 29° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[25].message` | GM 12.48 m (fluid), max GZ 3.47 m at 28° | GM 12.70 m (fluid), max GZ 3.49 m at 28° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[26].message` | GM 12.56 m (fluid), max GZ 3.46 m at 28° | GM 12.79 m (fluid), max GZ 3.48 m at 28° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[3].message` | freeboard 2.93 m >= required 0.3 m | freeboard 3.01 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[4].message` | cargo zone 58.99 m = LOA 88.0 - bow void 9.32 m - stern void 19.69 m | cargo zone 56.59 m = LOA 88.0 - bow void 9.32 m - stern void 22.09 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[14].message` | blind distance ahead of the bow 2751.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 6.00 m of 6.00 m | blind distance ahead of the bow 2800.2 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 6.00 m of 6.00 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[22].message` | tank length 49.49 m / inner diameter 10.04 m = 4.93 <= 7.0 | tank length 48.29 m / inner diameter 10.05 m = 4.80 <= 7.0 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[23].message` | freeboard 2.51 m at the carried draught 3.19 m >= required 0.3 m | freeboard 2.56 m at the carried draught 3.14 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[24].message` | GM 3.74 m (fluid), max GZ 1.51 m at 25° | GM 3.82 m (fluid), max GZ 1.55 m at 26° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[25].message` | GM 3.74 m (fluid), max GZ 1.52 m at 25° | GM 3.82 m (fluid), max GZ 1.55 m at 26° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[26].message` | GM 10.31 m (fluid), max GZ 2.90 m at 25° | GM 10.44 m (fluid), max GZ 2.92 m at 25° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[27].message` | GM 10.36 m (fluid), max GZ 2.90 m at 25° | GM 10.49 m (fluid), max GZ 2.91 m at 25° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[4].message` | freeboard 2.51 m >= required 0.3 m | freeboard 2.56 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[5].message` | cargo zone 100.99 m = LOA 130.0 - bow void 9.32 m - stern void 19.69 m | cargo zone 98.59 m = LOA 130.0 - bow void 9.32 m - stern void 22.09 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `warnings[1]` | The blind distance needs 10.10 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | The blind distance needs 10.02 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 5.52 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 5.46 m of 6.00 m | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[21].message` | tank length 49.49 m / inner diameter 7.20 m = 6.88 <= 7.0 | tank length 48.29 m / inner diameter 7.20 m = 6.71 <= 7.0 | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[22].message` | freeboard 2.60 m at the carried draught 3.10 m >= required 0.3 m | freeboard 2.65 m at the carried draught 3.05 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[23].message` | GM 5.67 m (fluid), max GZ 2.26 m at 27° | GM 5.78 m (fluid), max GZ 2.30 m at 27° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[24].message` | GM 5.68 m (fluid), max GZ 2.26 m at 27° | GM 5.79 m (fluid), max GZ 2.30 m at 27° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[25].message` | GM 13.43 m (fluid), max GZ 3.64 m at 27° | GM 13.58 m (fluid), max GZ 3.66 m at 27° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[26].message` | GM 13.50 m (fluid), max GZ 3.64 m at 27° | GM 13.65 m (fluid), max GZ 3.65 m at 27° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[3].message` | freeboard 2.60 m >= required 0.3 m | freeboard 2.65 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[4].message` | cargo zone 100.99 m = LOA 130.0 - bow void 9.32 m - stern void 19.69 m | cargo zone 98.59 m = LOA 130.0 - bow void 9.32 m - stern void 22.09 m | changed |
+| sweep box self-propelled 60x10 | `checks[12].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 0.17 m of 6.00 m | blind distance ahead of the bow 245.1 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 0.00 m of 6.00 m | changed |
+| sweep box self-propelled 60x10 | `checks[14].message` | intact GM 1.98 m >= 0.15 m at the reported cargo 878 t, draught 2.68 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.28 m >= 0.15 m at the reported cargo 728 t, draught 2.41 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| sweep box self-propelled 60x10 | `checks[16].message` | GM 2.03 m (fluid), max GZ 0.49 m at 25° | GM 2.37 m (fluid), max GZ 0.68 m at 28° | changed |
+| sweep box self-propelled 60x10 | `checks[17].message` | GM 2.03 m (fluid), max GZ 0.46 m at 25° | GM 2.39 m (fluid), max GZ 0.65 m at 27° | changed |
+| ... | 107489 more changed quantities | | | |
+
+### ticket/381-opening-setback (2026-10-22)
+
+Between `main 33e1cb2` and `this branch 6adfac4`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived liquid 1 (88x16.3) | `checks[15].message` | aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11) | distance 2.00 m from the cargo area (end space included) to any entrance or openable window >= 2.00 m (cl. 3.3.7 / 3.3.11) | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[21].message` | tank length 28.59 m / inner diameter 6.80 m = 4.21 <= 7.0 | tank length 28.49 m / inner diameter 6.80 m = 4.19 <= 7.0 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[22].message` | freeboard 2.92 m at the carried draught 2.78 m >= required 0.3 m | freeboard 2.93 m at the carried draught 2.77 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[23].message` | GM 5.87 m (fluid), max GZ 2.51 m at 29° | GM 5.89 m (fluid), max GZ 2.51 m at 29° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[24].message` | GM 5.89 m (fluid), max GZ 2.51 m at 29° | GM 5.90 m (fluid), max GZ 2.51 m at 29° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[25].message` | GM 12.46 m (fluid), max GZ 3.46 m at 28° | GM 12.48 m (fluid), max GZ 3.47 m at 28° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[26].message` | GM 12.54 m (fluid), max GZ 3.46 m at 28° | GM 12.56 m (fluid), max GZ 3.46 m at 28° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[3].message` | freeboard 2.92 m >= required 0.3 m | freeboard 2.93 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[4].message` | cargo zone 59.19 m = LOA 88.0 - bow void 9.32 m - stern void 19.49 m | cargo zone 58.99 m = LOA 88.0 - bow void 9.32 m - stern void 19.69 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[14].message` | blind distance ahead of the bow 2741.8 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 6.00 m of 6.00 m | blind distance ahead of the bow 2751.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 6.00 m of 6.00 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[16].message` | aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11) | distance 2.00 m from the cargo area (end space included) to any entrance or openable window >= 2.00 m (cl. 3.3.7 / 3.3.11) | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[22].message` | tank length 49.59 m / inner diameter 10.04 m = 4.94 <= 7.0 | tank length 49.49 m / inner diameter 10.04 m = 4.93 <= 7.0 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[23].message` | freeboard 2.50 m at the carried draught 3.20 m >= required 0.3 m | freeboard 2.51 m at the carried draught 3.19 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[24].message` | GM 3.73 m (fluid), max GZ 1.51 m at 25° | GM 3.74 m (fluid), max GZ 1.51 m at 25° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[25].message` | GM 3.73 m (fluid), max GZ 1.51 m at 25° | GM 3.74 m (fluid), max GZ 1.52 m at 25° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[26].message` | GM 10.30 m (fluid), max GZ 2.90 m at 25° | GM 10.31 m (fluid), max GZ 2.90 m at 25° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[27].message` | GM 10.35 m (fluid), max GZ 2.90 m at 25° | GM 10.36 m (fluid), max GZ 2.90 m at 25° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[4].message` | freeboard 2.50 m >= required 0.3 m | freeboard 2.51 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[5].message` | cargo zone 101.19 m = LOA 130.0 - bow void 9.32 m - stern void 19.49 m | cargo zone 100.99 m = LOA 130.0 - bow void 9.32 m - stern void 19.69 m | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[15].message` | aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11) | distance 2.00 m from the cargo area (end space included) to any entrance or openable window >= 2.00 m (cl. 3.3.7 / 3.3.11) | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[21].message` | tank length 49.59 m / inner diameter 7.20 m = 6.89 <= 7.0 | tank length 49.49 m / inner diameter 7.20 m = 6.88 <= 7.0 | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[22].message` | freeboard 2.59 m at the carried draught 3.11 m >= required 0.3 m | freeboard 2.60 m at the carried draught 3.10 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[23].message` | GM 5.66 m (fluid), max GZ 2.25 m at 27° | GM 5.67 m (fluid), max GZ 2.26 m at 27° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[24].message` | GM 5.67 m (fluid), max GZ 2.26 m at 27° | GM 5.68 m (fluid), max GZ 2.26 m at 27° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[25].message` | GM 13.42 m (fluid), max GZ 3.64 m at 27° | GM 13.43 m (fluid), max GZ 3.64 m at 27° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[26].message` | GM 13.49 m (fluid), max GZ 3.64 m at 27° | GM 13.50 m (fluid), max GZ 3.64 m at 27° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[3].message` | freeboard 2.59 m >= required 0.3 m | freeboard 2.60 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[4].message` | cargo zone 101.19 m = LOA 130.0 - bow void 9.32 m - stern void 19.49 m | cargo zone 100.99 m = LOA 130.0 - bow void 9.32 m - stern void 19.69 m | changed |
+| sweep default depth gas 90x14 | `checks[15].message` | aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11) | distance 2.00 m from the cargo area (end space included) to any entrance or openable window >= 2.00 m (cl. 3.3.7 / 3.3.11) | changed |
+| sweep default depth gas 90x14 | `checks[21].message` | tank length 26.04 m / inner diameter 9.23 m = 2.82 <= 7.0 | tank length 25.94 m / inner diameter 9.23 m = 2.81 <= 7.0 | changed |
+| sweep default depth gas 90x14 | `checks[23].message` | GM 3.00 m (fluid), max GZ 1.89 m at 40° | GM 3.01 m (fluid), max GZ 1.89 m at 40° | changed |
+| sweep default depth gas 90x14 | `checks[24].message` | GM 3.00 m (fluid), max GZ 1.88 m at 40° | GM 3.01 m (fluid), max GZ 1.88 m at 40° | changed |
+| sweep default depth gas 90x14 | `checks[26].message` | GM 6.99 m (fluid), max GZ 2.11 m at 27° | GM 7.00 m (fluid), max GZ 2.11 m at 27° | changed |
+| sweep default depth gas 90x14 | `checks[4].message` | cargo zone 54.09 m = LOA 90.0 - bow void 12.52 m - stern void 23.39 m | cargo zone 53.89 m = LOA 90.0 - bow void 12.52 m - stern void 23.59 m | changed |
+| sweep gas IGC_2G 60x10 | `checks[15].message` | aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11) | distance 2.00 m from the cargo area (end space included) to any entrance or openable window >= 2.00 m (cl. 3.3.7 / 3.3.11) | changed |
+| sweep gas IGC_2G 60x10 | `checks[21].message` | tank length 12.80 m / inner diameter 8.34 m = 1.54 <= 7.0 | tank length 12.70 m / inner diameter 8.34 m = 1.52 <= 7.0 | changed |
+| sweep gas IGC_2G 60x10 | `checks[22].message` | freeboard 2.65 m at the carried draught 2.85 m >= required 0.3 m | freeboard 2.66 m at the carried draught 2.84 m >= required 0.3 m | changed |
+| sweep gas IGC_2G 60x10 | `checks[23].message` | GM 0.57 m (fluid), max GZ 0.58 m at 35° | GM 0.57 m (fluid), max GZ 0.59 m at 35° | changed |
+| sweep gas IGC_2G 60x10 | `checks[24].message` | GM 0.54 m (fluid), max GZ 0.57 m at 35° | GM 0.55 m (fluid), max GZ 0.57 m at 35° | changed |
+| sweep gas IGC_2G 60x10 | `checks[25].message` | GM 1.73 m (fluid), max GZ 0.86 m at 33° | GM 1.74 m (fluid), max GZ 0.87 m at 33° | changed |
+| ... | 79448 more changed quantities | | | |
+
+### ticket/404-steel-warning (2026-10-23)
+
+Between `main e4b0ce9` and `this branch 7effe71d`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep default depth gas 90x14 | `warnings[2]` | absent | The lightship uses 970.2 t of hull steel (top-down); the cost prices 777.7 t (bottom-up). They differ by 192.5 t (24.7 %), more than the 20 % limit (an Estimate). The cost keeps the bottom-up mass. | changed |
+| sweep gas wide hull IGC_2G 110x24 | `warnings[2]` | absent | The lightship uses 1716.0 t of hull steel (top-down); the cost prices 1136.4 t (bottom-up). They differ by 579.6 t (51.0 %), more than the 20 % limit (an Estimate). The cost keeps the bottom-up mass. | changed |
+| sweep gas wide hull IGC_2G_EXACT 110x24 | `warnings[2]` | absent | The lightship uses 1716.0 t of hull steel (top-down); the cost prices 1136.4 t (bottom-up). They differ by 579.6 t (51.0 %), more than the 20 % limit (an Estimate). The cost keeps the bottom-up mass. | changed |
+
+### ticket/431-box-k (2026-10-22)
+
+Between `main ae3413f` and `this branch f9bf82a`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| calibration amaggi-box-2000 | `checks[10].message` | GM 6.40 m (fluid), max GZ 1.85 m at 25° | GM 6.42 m (fluid), max GZ 1.85 m at 25° | changed |
+| calibration amaggi-box-2000 | `checks[11].message` | GM 15.82 m (fluid), max GZ 2.80 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | GM 15.93 m (fluid), max GZ 2.81 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | changed |
+| calibration amaggi-box-2000 | `checks[5].message` | intact GM 1.70 m >= 0.15 m at the reported cargo 1861 t, draught 3.56 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 1.70 m >= 0.15 m at the reported cargo 1863 t, draught 3.56 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration amaggi-box-2000 | `checks[7].message` | GM 1.70 m (fluid), max GZ 0.31 m at 15° — fails: Area 30–40° 0.019 < 0.03, GZ at ≥ 30° 0.177 < 0.2, Angle of max GZ 15.000 < 25.0 | GM 1.70 m (fluid), max GZ 0.31 m at 14° — fails: Area 30–40° 0.019 < 0.03, GZ at ≥ 30° 0.176 < 0.2, Angle of max GZ 14.000 < 25.0 | changed |
+| calibration amaggi-box-2000 | `checks[8].message` | GM 1.70 m (fluid), max GZ 0.31 m at 15° — fails: Area 30–40° 0.019 < 0.03, GZ at ≥ 30° 0.177 < 0.2, Angle of max GZ 15.000 < 25.0 | GM 1.70 m (fluid), max GZ 0.31 m at 14° — fails: Area 30–40° 0.019 < 0.03, GZ at ≥ 30° 0.176 < 0.2, Angle of max GZ 14.000 < 25.0 | changed |
+| calibration amaggi-box-2000 | `checks[9].message` | GM 6.40 m (fluid), max GZ 1.85 m at 25° | GM 6.42 m (fluid), max GZ 1.85 m at 25° | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[10].message` | GM 3.94 m (fluid), max GZ 1.22 m at 26° | GM 3.96 m (fluid), max GZ 1.22 m at 26° | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[11].message` | GM 9.19 m (fluid), max GZ 1.80 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | GM 9.26 m (fluid), max GZ 1.81 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[5].message` | intact GM 0.63 m >= 0.15 m at the reported cargo 1012 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 0.63 m >= 0.15 m at the reported cargo 1013 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[9].message` | GM 3.94 m (fluid), max GZ 1.22 m at 26° | GM 3.96 m (fluid), max GZ 1.22 m at 26° | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[10].message` | GM 6.97 m (fluid), max GZ 1.94 m at 25° | GM 6.99 m (fluid), max GZ 1.94 m at 25° | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[11].message` | GM 19.56 m (fluid), max GZ 3.03 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | GM 19.69 m (fluid), max GZ 3.03 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[5].message` | intact GM 2.39 m >= 0.15 m at the reported cargo 1417 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.39 m >= 0.15 m at the reported cargo 1419 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[9].message` | GM 6.97 m (fluid), max GZ 1.94 m at 25° | GM 6.99 m (fluid), max GZ 1.94 m at 25° | changed |
+| calibration canal-box-200x35x12-imt201 | `checks[10].message` | GM 6.97 m (fluid), max GZ 1.94 m at 25° | GM 6.99 m (fluid), max GZ 1.94 m at 25° | changed |
+| calibration canal-box-200x35x12-imt201 | `checks[11].message` | GM 19.56 m (fluid), max GZ 3.03 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | GM 19.69 m (fluid), max GZ 3.03 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| calibration canal-box-200x35x12-imt201 | `checks[5].message` | intact GM 2.39 m >= 0.15 m at the reported cargo 1417 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.39 m >= 0.15 m at the reported cargo 1419 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration canal-box-200x35x12-imt201 | `checks[9].message` | GM 6.97 m (fluid), max GZ 1.94 m at 25° | GM 6.99 m (fluid), max GZ 1.94 m at 25° | changed |
+| calibration canal-box-200x35x12-imt205 | `checks[10].message` | GM 6.97 m (fluid), max GZ 1.94 m at 25° | GM 6.99 m (fluid), max GZ 1.94 m at 25° | changed |
+| calibration canal-box-200x35x12-imt205 | `checks[11].message` | GM 19.56 m (fluid), max GZ 3.03 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | GM 19.69 m (fluid), max GZ 3.03 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| calibration canal-box-200x35x12-imt205 | `checks[5].message` | intact GM 2.39 m >= 0.15 m at the reported cargo 1417 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.39 m >= 0.15 m at the reported cargo 1419 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration canal-box-200x35x12-imt205 | `checks[9].message` | GM 6.97 m (fluid), max GZ 1.94 m at 25° | GM 6.99 m (fluid), max GZ 1.94 m at 25° | changed |
+| calibration canal-box-200x35x12-pb2012 | `checks[10].message` | GM 6.97 m (fluid), max GZ 1.94 m at 25° | GM 6.99 m (fluid), max GZ 1.94 m at 25° | changed |
+| calibration canal-box-200x35x12-pb2012 | `checks[11].message` | GM 19.56 m (fluid), max GZ 3.03 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | GM 19.69 m (fluid), max GZ 3.03 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| calibration canal-box-200x35x12-pb2012 | `checks[5].message` | intact GM 2.39 m >= 0.15 m at the reported cargo 1417 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.39 m >= 0.15 m at the reported cargo 1419 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration canal-box-200x35x12-pb2012 | `checks[9].message` | GM 6.97 m (fluid), max GZ 1.94 m at 25° | GM 6.99 m (fluid), max GZ 1.94 m at 25° | changed |
+| calibration canal-box-200x35x12-rci250 | `checks[10].message` | GM 6.97 m (fluid), max GZ 1.94 m at 25° | GM 6.99 m (fluid), max GZ 1.94 m at 25° | changed |
+| calibration canal-box-200x35x12-rci250 | `checks[11].message` | GM 19.56 m (fluid), max GZ 3.03 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | GM 19.69 m (fluid), max GZ 3.03 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| calibration canal-box-200x35x12-rci250 | `checks[5].message` | intact GM 2.39 m >= 0.15 m at the reported cargo 1417 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.39 m >= 0.15 m at the reported cargo 1419 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration canal-box-200x35x12-rci250 | `checks[9].message` | GM 6.97 m (fluid), max GZ 1.94 m at 25° | GM 6.99 m (fluid), max GZ 1.94 m at 25° | changed |
+| calibration canal-box-200x35x13-cby252 | `checks[10].message` | GM 6.79 m (fluid), max GZ 1.89 m at 25° | GM 6.60 m (fluid), max GZ 1.91 m at 25° | changed |
+| calibration canal-box-200x35x13-cby252 | `checks[11].message` | GM 17.56 m (fluid), max GZ 2.92 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | GM 17.68 m (fluid), max GZ 2.92 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| calibration canal-box-200x35x13-cby252 | `checks[5].message` | intact GM 2.25 m >= 0.15 m at the reported cargo 1381 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.25 m >= 0.15 m at the reported cargo 1383 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration canal-box-200x35x13-cby252 | `checks[9].message` | GM 6.79 m (fluid), max GZ 1.89 m at 25° | GM 6.60 m (fluid), max GZ 1.91 m at 25° | changed |
+| calibration canal-box-200x35x13-cby400 | `checks[10].message` | GM 6.79 m (fluid), max GZ 1.89 m at 25° | GM 6.60 m (fluid), max GZ 1.91 m at 25° | changed |
+| calibration canal-box-200x35x13-cby400 | `checks[11].message` | GM 17.56 m (fluid), max GZ 2.92 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | GM 17.68 m (fluid), max GZ 2.92 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| calibration canal-box-200x35x13-cby400 | `checks[5].message` | intact GM 2.25 m >= 0.15 m at the reported cargo 1381 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.25 m >= 0.15 m at the reported cargo 1383 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration canal-box-200x35x13-cby400 | `checks[9].message` | GM 6.79 m (fluid), max GZ 1.89 m at 25° | GM 6.60 m (fluid), max GZ 1.91 m at 25° | changed |
+| calibration canal-box-200x35x13-cby433 | `checks[10].message` | GM 6.79 m (fluid), max GZ 1.89 m at 25° | GM 6.60 m (fluid), max GZ 1.91 m at 25° | changed |
+| calibration canal-box-200x35x13-cby433 | `checks[11].message` | GM 17.56 m (fluid), max GZ 2.92 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | GM 17.68 m (fluid), max GZ 2.92 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| ... | 80848 more changed quantities | | | |
+
+### ticket/452-shipd-hull (2026-10-22)
+
+Between `main ae4ba7f` and `this branch 2bc82c6`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep hull shipd 80x14 | `result` | fill: warning: Option 'sweep hull shipd 80x14': `service_area` was not stored in the file; wrote in the Defaults Profile value river-only, marked default \| warning: Option 'sweep hull shipd 80x14': `rule_sets` was not stored in the file; wrote in the Defaults Profile value [{"id":"is2008-a","version":"2.0.0","hash":"7dfa155b0d58383f73d35b9b0c037c89dbd928ad4bf22fe93a0a32b1eaee744f","source":"default"},{"id":"es-trin-2025","version":"1.0.0","hash":"a37a0c98b24d77e205b4cc04d4803b2de27912ba81232cc695a1984ef8e58d6a","source":"default"},{"id":"ovcd","version":"2.1.0","hash":"7daa76a269bcad107d2e87ca16df70669aa985aab05473296555b853124cce96","source":"default"}], marked default \| ovcd fill: 1 error(s); nothing written | computed | changed |
+
+### ticket/453-shipd-bulbs (2026-10-22)
+
+Between `main 5d5ec18` and `this branch 8f81496`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep hull shipd bulbs 80 m | `result` | fill: warning: Option 'sweep hull shipd bulbs 80 m': `service_area` was not stored in the file; wrote in the Defaults Profile value river-only, marked default \| warning: Option 'sweep hull shipd bulbs 80 m': `rule_sets` was not stored in the file; wrote in the Defaults Profile value [{"id":"is2008-a","version":"2.0.0","hash":"7dfa155b0d58383f73d35b9b0c037c89dbd928ad4bf22fe93a0a32b1eaee744f","source":"default"},{"id":"es-trin-2025","version":"1.0.0","hash":"a37a0c98b24d77e205b4cc04d4803b2de27912ba81232cc695a1984ef8e58d6a","source":"default"},{"id":"ovcd","version":"2.1.0","hash":"7daa76a269bcad107d2e87ca16df70669aa985aab05473296555b853124cce96","source":"default"}], marked default \| ovcd fill: 1 error(s); nothing written | computed | changed |
+
+### ticket/455-clipped-spaces (2026-10-22)
+
+Between `main 54e0b1f` and `this branch 8c69483`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep gas cargo LNG pushed | `checks[16].message` | GM 5.74 m (fluid), max GZ 1.88 m at 25° | GM 4.60 m (fluid), max GZ 1.62 m at 25° | changed |
+| sweep gas cargo LNG pushed | `checks[17].message` | GM 5.74 m (fluid), max GZ 1.88 m at 25° | GM 4.60 m (fluid), max GZ 1.62 m at 25° | changed |
+| sweep gas cargo LNG pushed | `checks[18].message` | GM 9.52 m (fluid), max GZ 2.34 m at 21° — warning, not a failure: angle of max GZ 21 < 25 (IS Code 2.2.3) with no ballast; every other criterion holds. To sail light, take 537 t of ballast (the Ballast, departure condition meets every criterion) | GM 9.52 m (fluid), max GZ 2.34 m at 21° — warning, not a failure: angle of max GZ 21 < 25 (IS Code 2.2.3) with no ballast; every other criterion holds. To sail light, take 708 t of ballast (the Ballast, departure condition meets every criterion) | changed |
+| sweep gas cargo LNG_ethane pushed | `checks[16].message` | GM 5.68 m (fluid), max GZ 1.88 m at 25° | GM 4.74 m (fluid), max GZ 1.64 m at 25° | changed |
+| sweep gas cargo LNG_ethane pushed | `checks[17].message` | GM 5.68 m (fluid), max GZ 1.88 m at 25° | GM 4.74 m (fluid), max GZ 1.64 m at 25° | changed |
+| sweep gas cargo LNG_ethane pushed | `checks[18].message` | GM 9.42 m (fluid), max GZ 2.33 m at 21° — warning, not a failure: angle of max GZ 21 < 25 (IS Code 2.2.3) with no ballast; every other criterion holds. To sail light, take 537 t of ballast (the Ballast, departure condition meets every criterion) | GM 9.42 m (fluid), max GZ 2.33 m at 21° — warning, not a failure: angle of max GZ 21 < 25 (IS Code 2.2.3) with no ballast; every other criterion holds. To sail light, take 665 t of ballast (the Ballast, departure condition meets every criterion) | changed |
+| sweep gas channel 60x10 | `checks[16].message` | GM 4.35 m (fluid), max GZ 1.38 m at 25° | GM 3.30 m (fluid), max GZ 1.11 m at 25° | changed |
+| sweep gas channel 60x10 | `checks[17].message` | GM 4.35 m (fluid), max GZ 1.38 m at 25° | GM 3.30 m (fluid), max GZ 1.11 m at 25° | changed |
+| sweep gas channel 60x10 | `checks[18].message` | GM 8.76 m (fluid), max GZ 1.96 m at 21° — warning, not a failure: angle of max GZ 21 < 25 (IS Code 2.2.3) with no ballast; every other criterion holds. To sail light, take 241 t of ballast (the Ballast, departure condition meets every criterion) | GM 8.76 m (fluid), max GZ 1.96 m at 21° — warning, not a failure: angle of max GZ 21 < 25 (IS Code 2.2.3) with no ballast; every other criterion holds. To sail light, take 310 t of ballast (the Ballast, departure condition meets every criterion) | changed |
+| sweep gas channel 90x14 | `checks[16].message` | GM 5.92 m (fluid), max GZ 1.92 m at 25° | GM 4.78 m (fluid), max GZ 1.64 m at 25° | changed |
+| sweep gas channel 90x14 | `checks[17].message` | GM 5.92 m (fluid), max GZ 1.92 m at 25° | GM 4.78 m (fluid), max GZ 1.64 m at 25° | changed |
+| sweep gas channel 90x14 | `checks[18].message` | GM 9.92 m (fluid), max GZ 2.38 m at 21° — warning, not a failure: angle of max GZ 21 < 25 (IS Code 2.2.3) with no ballast; every other criterion holds. To sail light, take 552 t of ballast (the Ballast, departure condition meets every criterion) | GM 9.92 m (fluid), max GZ 2.38 m at 21° — warning, not a failure: angle of max GZ 21 < 25 (IS Code 2.2.3) with no ballast; every other criterion holds. To sail light, take 713 t of ballast (the Ballast, departure condition meets every criterion) | changed |
+| sweep hull offsets 76.5x11.4 | `checks[10].message` | GM 7.87 m (fluid), max GZ 2.10 m at 25° | GM 7.89 m (fluid), max GZ 2.10 m at 25° | changed |
+| sweep hull offsets 76.5x11.4 | `checks[9].message` | GM 7.87 m (fluid), max GZ 2.10 m at 25° | GM 7.89 m (fluid), max GZ 2.10 m at 25° | changed |
+| sweep optional ballast_plan | `checks[9].message` | GM 8.57 m (fluid), max GZ 2.35 m at 24° — fails: Angle of max GZ 24.000 < 25.0 | GM 8.45 m (fluid), max GZ 2.31 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | changed |
+| sweep optional vessel_class | `checks[19].message` | GM 4.43 m (fluid), max GZ 2.12 m at 37° | GM 4.37 m (fluid), max GZ 2.08 m at 36° | changed |
+| sweep optional vessel_class | `checks[22].message` | GM 4.45 m (fluid), max GZ 2.11 m at 37° | GM 4.39 m (fluid), max GZ 2.07 m at 36° | changed |
+| sweep optional vessel_scheme | `checks[19].message` | GM 4.90 m (fluid), max GZ 2.26 m at 36° | GM 4.84 m (fluid), max GZ 2.22 m at 36° | changed |
+| sweep optional vessel_scheme | `checks[22].message` | GM 4.92 m (fluid), max GZ 2.25 m at 36° | GM 4.86 m (fluid), max GZ 2.21 m at 36° | changed |
+| sweep gas channel 60x10 | `loading_conditions.conditions[2].gz[60][1]` | 0.168113603517 | -0.250941565353 | -249 % |
+| sweep gas channel 60x10 | `loading_conditions.conditions[3].gz[60][1]` | 0.168113603517 | -0.250941565353 | -249 % |
+| sweep gas channel 60x10 | `stability.conditions[2].gz[60][1]` | 0.168113603517 | -0.250941565353 | -249 % |
+| sweep gas channel 60x10 | `stability.conditions[3].gz[60][1]` | 0.168113603517 | -0.250941565353 | -249 % |
+| sweep gas channel 60x10 | `loading_conditions.conditions[2].gz[59][1]` | 0.224266750108 | -0.192253538973 | -186 % |
+| sweep gas channel 60x10 | `loading_conditions.conditions[3].gz[59][1]` | 0.224266750108 | -0.192253538973 | -186 % |
+| sweep gas channel 60x10 | `stability.conditions[2].gz[59][1]` | 0.224266750108 | -0.192253538973 | -186 % |
+| sweep gas channel 60x10 | `stability.conditions[3].gz[59][1]` | 0.224266750108 | -0.192253538973 | -186 % |
+| sweep gas channel 90x14 | `loading_conditions.conditions[2].gz[60][1]` | 0.26193543596 | -0.159957719097 | -161 % |
+| sweep gas channel 90x14 | `loading_conditions.conditions[3].gz[60][1]` | 0.26193543596 | -0.159957719097 | -161 % |
+| sweep gas channel 90x14 | `stability.conditions[2].gz[60][1]` | 0.26193543596 | -0.159957719097 | -161 % |
+| sweep gas channel 90x14 | `stability.conditions[3].gz[60][1]` | 0.26193543596 | -0.159957719097 | -161 % |
+| sweep gas channel 60x10 | `loading_conditions.conditions[2].gz[58][1]` | 0.279934618547 | -0.133882399651 | -148 % |
+| sweep gas channel 60x10 | `loading_conditions.conditions[3].gz[58][1]` | 0.279934618547 | -0.133882399651 | -148 % |
+| sweep gas channel 60x10 | `stability.conditions[2].gz[58][1]` | 0.279934618547 | -0.133882399651 | -148 % |
+| sweep gas channel 60x10 | `stability.conditions[3].gz[58][1]` | 0.279934618547 | -0.133882399651 | -148 % |
+| sweep gas cargo LNG pushed | `loading_conditions.conditions[2].gz[60][1]` | 0.306991545658 | -0.0846694905296 | -128 % |
+| sweep gas cargo LNG pushed | `loading_conditions.conditions[3].gz[60][1]` | 0.306991545658 | -0.0846694905296 | -128 % |
+| sweep gas cargo LNG pushed | `stability.conditions[2].gz[60][1]` | 0.306991545658 | -0.0846694905296 | -128 % |
+| sweep gas cargo LNG pushed | `stability.conditions[3].gz[60][1]` | 0.306991545658 | -0.0846694905296 | -128 % |
+| sweep gas cargo LNG_ethane pushed | `loading_conditions.conditions[2].gz[60][1]` | 0.298784061272 | -0.0698614353302 | -123 % |
+| ... | 3205 more changed quantities | | | |
+
+### ticket/464-gas-consumption (2026-10-22)
+
+Between `main b68ecb7` and `this branch ad7d92a`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived liquid 1 (88x16.3) | `boil_off.evaluated` | absent | False | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `boil_off.reason` | absent | the boil-off is worked out for LNG only (the latent heat of methane is the data held) | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[28].message` | absent | only methane (LNG) vapour may fuel an engine in a machinery space of category A (IGC Code 16.1); another cargo gas needs the Administration's acceptance (16.9.1) | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[28].name` | absent | cargo as fuel | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[28].ok` | absent | False | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[28].severity` | absent | warning | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `powering.environments[0].fuel_gas_kg_per_h` | absent | 89.5686094878 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `powering.environments[0].fuel_gas_kj_per_kwh` | absent | 8862 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `powering.fuel_gas.alternator_efficiency` | absent | 0.955 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `powering.fuel_gas.basis` | absent | Wartsila 20DF Product Guide 1/2018 p. 3-1 (6L20DF, gas mode, 160 kW per cylinder), a published dual-fuel genset of the same size class: a stand-in Estimate until a maker's sheet for the chosen genset is found | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `powering.fuel_gas.lower_calorific_value_kj_per_kg` | absent | 49620 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `boil_off.evaluated` | absent | False | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `boil_off.reason` | absent | the boil-off is worked out for LNG only (the latent heat of methane is the data held) | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[29].message` | absent | only methane (LNG) vapour may fuel an engine in a machinery space of category A (IGC Code 16.1); another cargo gas needs the Administration's acceptance (16.9.1) | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[29].name` | absent | cargo as fuel | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[29].ok` | absent | False | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[29].severity` | absent | warning | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `powering.environments[0].fuel_gas_kg_per_h` | absent | 125.508350798 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `powering.environments[0].fuel_gas_kj_per_kwh` | absent | 8714.65666838 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `powering.fuel_gas.alternator_efficiency` | absent | 0.955 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `powering.fuel_gas.basis` | absent | Wartsila 20DF Product Guide 1/2018 p. 3-1 (6L20DF, gas mode, 160 kW per cylinder), a published dual-fuel genset of the same size class: a stand-in Estimate until a maker's sheet for the chosen genset is found | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `powering.fuel_gas.lower_calorific_value_kj_per_kg` | absent | 49620 | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `boil_off.evaluated` | absent | False | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `boil_off.reason` | absent | the boil-off is worked out for LNG only (the latent heat of methane is the data held) | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[28].message` | absent | only methane (LNG) vapour may fuel an engine in a machinery space of category A (IGC Code 16.1); another cargo gas needs the Administration's acceptance (16.9.1) | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[28].name` | absent | cargo as fuel | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[28].ok` | absent | False | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[28].severity` | absent | warning | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `powering.environments[0].fuel_gas_kg_per_h` | absent | 129.922498711 | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `powering.environments[0].fuel_gas_kj_per_kwh` | absent | 8664.45951741 | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `powering.fuel_gas.alternator_efficiency` | absent | 0.955 | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `powering.fuel_gas.basis` | absent | Wartsila 20DF Product Guide 1/2018 p. 3-1 (6L20DF, gas mode, 160 kW per cylinder), a published dual-fuel genset of the same size class: a stand-in Estimate until a maker's sheet for the chosen genset is found | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `powering.fuel_gas.lower_calorific_value_kj_per_kg` | absent | 49620 | changed |
+| sweep default depth gas 90x14 | `boil_off.ambient_air_c` | absent | 45 | changed |
+| sweep default depth gas 90x14 | `boil_off.basis` | absent | Conduction through the insulation at the upper ambient design air temperature (IGC Code 7.2), over the latent heat of methane (NIST saturation table); domes, saddles and pipes are not in the heat leak. The conductivity is an Estimate. | changed |
+| sweep default depth gas 90x14 | `boil_off.boil_off_kg_per_h` | absent | 176.765923467 | changed |
+| sweep default depth gas 90x14 | `boil_off.cargo_temperature_c` | absent | -162 | changed |
+| sweep default depth gas 90x14 | `boil_off.conductivity_w_per_mk` | absent | 0.026 | changed |
+| sweep default depth gas 90x14 | `boil_off.evaluated` | absent | True | changed |
+| sweep default depth gas 90x14 | `boil_off.gas_use_kg_per_h` | absent | 66.6792680576 | changed |
+| ... | 1192 more changed quantities | | | |
+
+### ticket/522-igc-min-pressure (2026-10-22)
+
+Between `main fc7e931` and `this branch abbf71f`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.97 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.95 m of 6.00 m | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[21].message` | tank length 37.25 m / inner diameter 7.63 m = 4.88 <= 7.0 | tank length 37.25 m / inner diameter 7.62 m = 4.89 <= 7.0 | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[22].message` | freeboard 3.09 m at the carried draught 2.91 m >= required 0.3 m | freeboard 3.05 m at the carried draught 2.95 m >= required 0.3 m | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[23].message` | GM 1.50 m (fluid), max GZ 1.13 m at 36° | GM 1.45 m (fluid), max GZ 1.10 m at 36° | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[24].message` | GM 1.49 m (fluid), max GZ 1.12 m at 36° | GM 1.45 m (fluid), max GZ 1.09 m at 36° | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[25].message` | GM 5.77 m (fluid), max GZ 1.69 m at 26° | GM 5.43 m (fluid), max GZ 1.64 m at 26° | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[26].message` | GM 5.82 m (fluid), max GZ 1.68 m at 26° | GM 5.47 m (fluid), max GZ 1.64 m at 26° | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[3].message` | freeboard 3.09 m >= required 0.3 m | freeboard 3.05 m >= required 0.3 m | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.97 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.95 m of 6.00 m | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[21].message` | tank length 37.25 m / inner diameter 7.63 m = 4.88 <= 7.0 | tank length 37.25 m / inner diameter 7.62 m = 4.89 <= 7.0 | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[22].message` | freeboard 3.11 m at the carried draught 2.89 m >= required 0.3 m | freeboard 3.07 m at the carried draught 2.93 m >= required 0.3 m | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[23].message` | GM 1.51 m (fluid), max GZ 1.13 m at 36° | GM 1.46 m (fluid), max GZ 1.10 m at 36° | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[24].message` | GM 1.50 m (fluid), max GZ 1.13 m at 36° | GM 1.46 m (fluid), max GZ 1.10 m at 36° | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[25].message` | GM 5.77 m (fluid), max GZ 1.69 m at 26° | GM 5.43 m (fluid), max GZ 1.64 m at 26° | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[26].message` | GM 5.82 m (fluid), max GZ 1.68 m at 26° | GM 5.47 m (fluid), max GZ 1.64 m at 26° | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[3].message` | freeboard 3.11 m >= required 0.3 m | freeboard 3.07 m >= required 0.3 m | changed |
+| sweep gas carriage LPG_propane fully_refrigerated | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.97 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.95 m of 6.00 m | changed |
+| sweep gas carriage LPG_propane fully_refrigerated | `checks[21].message` | tank length 37.25 m / inner diameter 7.63 m = 4.88 <= 7.0 | tank length 37.25 m / inner diameter 7.62 m = 4.89 <= 7.0 | changed |
+| sweep gas carriage LPG_propane fully_refrigerated | `checks[22].message` | freeboard 3.15 m at the carried draught 2.85 m >= required 0.3 m | freeboard 3.11 m at the carried draught 2.89 m >= required 0.3 m | changed |
+| sweep gas carriage LPG_propane fully_refrigerated | `checks[23].message` | GM 1.54 m (fluid), max GZ 1.15 m at 36° | GM 1.49 m (fluid), max GZ 1.12 m at 36° | changed |
+| sweep gas carriage LPG_propane fully_refrigerated | `checks[24].message` | GM 1.54 m (fluid), max GZ 1.15 m at 36° | GM 1.49 m (fluid), max GZ 1.12 m at 36° | changed |
+| sweep gas carriage LPG_propane fully_refrigerated | `checks[25].message` | GM 5.77 m (fluid), max GZ 1.69 m at 26° | GM 5.43 m (fluid), max GZ 1.64 m at 26° | changed |
+| sweep gas carriage LPG_propane fully_refrigerated | `checks[26].message` | GM 5.82 m (fluid), max GZ 1.68 m at 26° | GM 5.47 m (fluid), max GZ 1.64 m at 26° | changed |
+| sweep gas carriage LPG_propane fully_refrigerated | `checks[3].message` | freeboard 3.15 m >= required 0.3 m | freeboard 3.11 m >= required 0.3 m | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `loading_conditions.conditions[2].draught_fwd_m` | 0.582449890263 | 0.653952017041 | +12.3 % |
+| sweep gas carriage LPG_butane fully_refrigerated | `stability.conditions[2].draught_fwd_m` | 0.582449890263 | 0.653952017041 | +12.3 % |
+| sweep gas carriage LPG_mix fully_refrigerated | `loading_conditions.conditions[2].draught_fwd_m` | 0.582449890263 | 0.653952017041 | +12.3 % |
+| sweep gas carriage LPG_mix fully_refrigerated | `stability.conditions[2].draught_fwd_m` | 0.582449890263 | 0.653952017041 | +12.3 % |
+| sweep gas carriage LPG_propane fully_refrigerated | `loading_conditions.conditions[2].draught_fwd_m` | 0.582449890263 | 0.653952017041 | +12.3 % |
+| sweep gas carriage LPG_propane fully_refrigerated | `stability.conditions[2].draught_fwd_m` | 0.582449890263 | 0.653952017041 | +12.3 % |
+| sweep gas carriage LPG_butane fully_refrigerated | `loading_conditions.conditions[3].draught_fwd_m` | 0.622107621598 | 0.693418765958 | +11.5 % |
+| sweep gas carriage LPG_butane fully_refrigerated | `stability.conditions[3].draught_fwd_m` | 0.622107621598 | 0.693418765958 | +11.5 % |
+| sweep gas carriage LPG_mix fully_refrigerated | `loading_conditions.conditions[3].draught_fwd_m` | 0.622107621598 | 0.693418765958 | +11.5 % |
+| sweep gas carriage LPG_mix fully_refrigerated | `stability.conditions[3].draught_fwd_m` | 0.622107621598 | 0.693418765958 | +11.5 % |
+| sweep gas carriage LPG_propane fully_refrigerated | `loading_conditions.conditions[3].draught_fwd_m` | 0.622107621598 | 0.693418765958 | +11.5 % |
+| sweep gas carriage LPG_propane fully_refrigerated | `stability.conditions[3].draught_fwd_m` | 0.622107621598 | 0.693418765958 | +11.5 % |
+| sweep gas carriage LPG_propane fully_refrigerated | `loading_conditions.conditions[0].trim_m` | 0.485692462593 | 0.515445476217 | +6.13 % |
+| sweep gas carriage LPG_propane fully_refrigerated | `stability.conditions[0].trim_m` | 0.485692462593 | 0.515445476217 | +6.13 % |
+| sweep gas carriage LPG_butane fully_refrigerated | `loading_conditions.conditions[3].criteria[5].value` | 5.81786874375 | 5.46585415334 | -6.05 % |
+| sweep gas carriage LPG_butane fully_refrigerated | `loading_conditions.conditions[3].gm_fluid_m` | 5.81786874375 | 5.46585415334 | -6.05 % |
+| ... | 2156 more changed quantities | | | |
+
+### ticket/526-one-g-knot (2026-10-22)
+
+Between `main 263faba` and `this branch ced6c75`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| calibration europa-iib-rdb06 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 120 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 303 kW, L_S 7.0 m taken as the pusher length, B_S 4.8 m). | Coupling force between the pusher and the pushed craft: 120 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 304 kW, L_S 7.0 m taken as the pusher length, B_S 4.8 m). | changed |
+| calibration mcdonough-195x35x12 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 88 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 235 kW, L_S 5.9 m taken as the pusher length, B_S 4.3 m). | Coupling force between the pusher and the pushed craft: 88 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 236 kW, L_S 5.9 m taken as the pusher length, B_S 4.3 m). | changed |
+| calibration taf-seine-1973 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 126 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 314 kW, L_S 7.2 m taken as the pusher length, B_S 4.9 m). | Coupling force between the pusher and the pushed craft: 126 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 315 kW, L_S 7.2 m taken as the pusher length, B_S 4.9 m). | changed |
+| calibration taf-seine-1996 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 120 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 303 kW, L_S 7.0 m taken as the pusher length, B_S 4.8 m). | Coupling force between the pusher and the pushed craft: 120 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 304 kW, L_S 7.0 m taken as the pusher length, B_S 4.8 m). | changed |
+| calibration taf-seine-1997 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 139 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 341 kW, L_S 7.6 m taken as the pusher length, B_S 5.1 m). | Coupling force between the pusher and the pushed craft: 139 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 342 kW, L_S 7.6 m taken as the pusher length, B_S 5.1 m). | changed |
+| calibration taf-seine-2008 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 137 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 337 kW, L_S 7.5 m taken as the pusher length, B_S 5.0 m). | Coupling force between the pusher and the pushed craft: 137 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 337 kW, L_S 7.6 m taken as the pusher length, B_S 5.0 m). | changed |
+| sweep box convoy 2x3 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 1118 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 1889 kW, L_S 23.8 m taken as the pusher length, B_S 10.9 m). | Coupling force between the pusher and the pushed craft: 1118 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 1890 kW, L_S 23.8 m taken as the pusher length, B_S 10.9 m). | changed |
+| sweep box convoy 2x3 in a lock | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 1118 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 1889 kW, L_S 23.8 m taken as the pusher length, B_S 10.9 m). | Coupling force between the pusher and the pushed craft: 1118 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 1890 kW, L_S 23.8 m taken as the pusher length, B_S 10.9 m). | changed |
+| sweep crude carries nothing (draught limit) | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 672 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 1245 kW, L_S 18.0 m taken as the pusher length, B_S 9.0 m). | Coupling force between the pusher and the pushed craft: 673 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 1245 kW, L_S 18.0 m taken as the pusher length, B_S 9.0 m). | changed |
+| sweep crude channel 90x14 | `checks[5].message` | Channel: service 7.5 kn <= 0.95 x Schijf limit 8.07 kn | Channel: service 7.5 kn <= 0.95 x Schijf limit 8.06 kn | changed |
+| sweep diesel carries nothing (draught limit) | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 672 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 1245 kW, L_S 18.0 m taken as the pusher length, B_S 9.0 m). | Coupling force between the pusher and the pushed craft: 673 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 1245 kW, L_S 18.0 m taken as the pusher length, B_S 9.0 m). | changed |
+| sweep gas cargo LPG_mix pushed | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 204 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 468 kW, L_S 9.4 m taken as the pusher length, B_S 5.8 m). | Coupling force between the pusher and the pushed craft: 204 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 469 kW, L_S 9.4 m taken as the pusher length, B_S 5.8 m). | changed |
+| sweep gas channel 90x14 | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 197 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 455 kW, L_S 9.2 m taken as the pusher length, B_S 5.7 m). | Coupling force between the pusher and the pushed craft: 197 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 456 kW, L_S 9.2 m taken as the pusher length, B_S 5.7 m). | changed |
+| sweep hopper channel 60x10 | `checks[15].message` | Channel: service 9.0 kn <= 0.95 x Schijf limit 9.69 kn | Channel: service 9.0 kn <= 0.95 x Schijf limit 9.68 kn | changed |
+| sweep optional channel_bank_slope | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 169 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 401 kW, L_S 8.5 m taken as the pusher length, B_S 5.4 m). | Coupling force between the pusher and the pushed craft: 169 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 402 kW, L_S 8.5 m taken as the pusher length, B_S 5.4 m). | changed |
+| sweep optional channel_current_kn | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 169 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 401 kW, L_S 8.5 m taken as the pusher length, B_S 5.4 m). | Coupling force between the pusher and the pushed craft: 169 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 402 kW, L_S 8.5 m taken as the pusher length, B_S 5.4 m). | changed |
+| sweep optional channel_under_keel_clearance_m | `checks[6].message` | Channel: service 4.0 kn <= 0.95 x Schijf limit 4.25 kn | Channel: service 4.0 kn <= 0.95 x Schijf limit 4.24 kn | changed |
+| sweep optional cofferdam_m | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 187 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 435 kW, L_S 9.0 m taken as the pusher length, B_S 5.6 m). | Coupling force between the pusher and the pushed craft: 187 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 436 kW, L_S 9.0 m taken as the pusher length, B_S 5.6 m). | changed |
+| sweep optional double_bottom_m | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 184 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 429 kW, L_S 8.9 m taken as the pusher length, B_S 5.6 m). | Coupling force between the pusher and the pushed craft: 184 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 430 kW, L_S 8.9 m taken as the pusher length, B_S 5.6 m). | changed |
+| sweep optional slop_share | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 185 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 433 kW, L_S 8.9 m taken as the pusher length, B_S 5.6 m). | Coupling force between the pusher and the pushed craft: 186 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 433 kW, L_S 8.9 m taken as the pusher length, B_S 5.6 m). | changed |
+| sweep optional squat_safety_margin_m | `formation.notes[1]` | Coupling force between the pusher and the pushed craft: 169 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 401 kW, L_S 8.5 m taken as the pusher length, B_S 5.4 m). | Coupling force between the pusher and the pushed craft: 169 kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B 402 kW, L_S 8.5 m taken as the pusher length, B_S 5.4 m). | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `loading_conditions.conditions[0].gz[57][1]` | -8.211692023e-05 | -8.30334010178e-05 | -1.12 % |
+| sweep CN-derived liquid 2 (130x16.3) | `stability.conditions[0].gz[57][1]` | -8.211692023e-05 | -8.30334010178e-05 | -1.12 % |
+| sweep box self-propelled 60x10 | `loading_conditions.conditions[0].gz[58][1]` | -0.000988771695421 | -0.000984665289963 | +0.415 % |
+| sweep box self-propelled 60x10 | `stability.conditions[0].gz[58][1]` | -0.000988771695421 | -0.000984665289963 | +0.415 % |
+| sweep gas IGC_2G 60x10 | `loading_conditions.conditions[1].gz[59][1]` | 0.000803167014991 | 0.000802304002826 | -0.107 % |
+| sweep gas IGC_2G 60x10 | `stability.conditions[1].gz[59][1]` | 0.000803167014991 | 0.000802304002826 | -0.107 % |
+| sweep gas IGC_2G_EXACT 60x10 | `loading_conditions.conditions[1].gz[59][1]` | 0.000803167014991 | 0.000802304002826 | -0.107 % |
+| sweep gas IGC_2G_EXACT 60x10 | `stability.conditions[1].gz[59][1]` | 0.000803167014991 | 0.000802304002826 | -0.107 % |
+| sweep hopper 90x14 | `loading_conditions.conditions[1].gz[57][1]` | 0.00114481196123 | 0.00114364597197 | -0.102 % |
+| sweep hopper 90x14 | `stability.conditions[1].gz[57][1]` | 0.00114481196123 | 0.00114364597197 | -0.102 % |
+| sweep optional accommodation_unit_count_dry | `loading_conditions.conditions[1].gz[57][1]` | 0.00114481196123 | 0.00114364597197 | -0.102 % |
+| sweep optional accommodation_unit_count_dry | `stability.conditions[1].gz[57][1]` | 0.00114481196123 | 0.00114364597197 | -0.102 % |
+| sweep optional battery_unit_count_dry | `loading_conditions.conditions[1].gz[57][1]` | 0.00114481196123 | 0.00114364597197 | -0.102 % |
+| sweep optional battery_unit_count_dry | `stability.conditions[1].gz[57][1]` | 0.00114481196123 | 0.00114364597197 | -0.102 % |
+| sweep optional bow_rake_length_m | `loading_conditions.conditions[1].gz[57][1]` | 0.00114481196123 | 0.00114364597197 | -0.102 % |
+| sweep optional bow_rake_length_m | `stability.conditions[1].gz[57][1]` | 0.00114481196123 | 0.00114364597197 | -0.102 % |
+| sweep optional bow_rake_length_to_depth_ratio | `loading_conditions.conditions[1].gz[57][1]` | 0.00114481196123 | 0.00114364597197 | -0.102 % |
+| sweep optional bow_rake_length_to_depth_ratio | `stability.conditions[1].gz[57][1]` | 0.00114481196123 | 0.00114364597197 | -0.102 % |
+| sweep optional bow_rake_rise_m | `loading_conditions.conditions[1].gz[57][1]` | 0.00114481196123 | 0.00114364597197 | -0.102 % |
+| ... | 110658 more changed quantities | | | |
+
+### ticket/534-governing-names (2026-10-22)
+
+Between `main 54e0b1f` and `this branch 4d0d141`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| calibration amaggi-box-2000 | `stability.governing` | Full load, departure | absent | changed |
+| calibration amaggi-box-2000 | `stability.lowest_gm_condition` | absent | Full load, departure | changed |
+| calibration canal-box-200x25x12-pb2230 | `stability.governing` | Full load, departure | absent | changed |
+| calibration canal-box-200x25x12-pb2230 | `stability.lowest_gm_condition` | absent | Full load, departure | changed |
+| calibration canal-box-200x35x12-cby222 | `stability.governing` | Full load, departure | absent | changed |
+| calibration canal-box-200x35x12-cby222 | `stability.lowest_gm_condition` | absent | Full load, departure | changed |
+| calibration canal-box-200x35x12-imt201 | `stability.governing` | Full load, departure | absent | changed |
+| calibration canal-box-200x35x12-imt201 | `stability.lowest_gm_condition` | absent | Full load, departure | changed |
+| calibration canal-box-200x35x12-imt205 | `stability.governing` | Full load, departure | absent | changed |
+| calibration canal-box-200x35x12-imt205 | `stability.lowest_gm_condition` | absent | Full load, departure | changed |
+| calibration canal-box-200x35x12-pb2012 | `stability.governing` | Full load, departure | absent | changed |
+| calibration canal-box-200x35x12-pb2012 | `stability.lowest_gm_condition` | absent | Full load, departure | changed |
+| calibration canal-box-200x35x12-rci250 | `stability.governing` | Full load, departure | absent | changed |
+| calibration canal-box-200x35x12-rci250 | `stability.lowest_gm_condition` | absent | Full load, departure | changed |
+| calibration canal-box-200x35x13-cby252 | `stability.governing` | Full load, departure | absent | changed |
+| calibration canal-box-200x35x13-cby252 | `stability.lowest_gm_condition` | absent | Full load, departure | changed |
+| calibration canal-box-200x35x13-cby400 | `stability.governing` | Full load, departure | absent | changed |
+| calibration canal-box-200x35x13-cby400 | `stability.lowest_gm_condition` | absent | Full load, departure | changed |
+| calibration canal-box-200x35x13-cby433 | `stability.governing` | Full load, departure | absent | changed |
+| calibration canal-box-200x35x13-cby433 | `stability.lowest_gm_condition` | absent | Full load, departure | changed |
+| calibration canal-box-200x35x13-pb2352 | `stability.governing` | Full load, departure | absent | changed |
+| calibration canal-box-200x35x13-pb2352 | `stability.lowest_gm_condition` | absent | Full load, departure | changed |
+| calibration cargill-amazon-jumbo | `stability.governing` | Full load, departure | absent | changed |
+| calibration cargill-amazon-jumbo | `stability.lowest_gm_condition` | absent | Full load, departure | changed |
+| calibration danube-barge-77 | `stability.governing` | Full load, departure | absent | changed |
+| calibration danube-barge-77 | `stability.lowest_gm_condition` | absent | Full load, departure | changed |
+| calibration dsb-holdbarge-1997-76.5 | `stability.governing` | Full load, departure | absent | changed |
+| calibration dsb-holdbarge-1997-76.5 | `stability.lowest_gm_condition` | absent | Full load, departure | changed |
+| calibration europa-iib-1635ou | `stability.governing` | Full load, departure | absent | changed |
+| calibration europa-iib-1635ou | `stability.lowest_gm_condition` | absent | Full load, departure | changed |
+| calibration europa-iib-rdb06 | `stability.governing` | Full load, departure | absent | changed |
+| calibration europa-iib-rdb06 | `stability.lowest_gm_condition` | absent | Full load, departure | changed |
+| calibration hidrovia-lhg-3200 | `stability.governing` | Full load, departure | absent | changed |
+| calibration hidrovia-lhg-3200 | `stability.lowest_gm_condition` | absent | Full load, departure | changed |
+| calibration jeffboat-am2100 | `stability.governing` | Full load, departure | absent | changed |
+| calibration jeffboat-am2100 | `stability.lowest_gm_condition` | absent | Full load, departure | changed |
+| calibration mcdonough-195x35x12 | `stability.governing` | Full load, departure | absent | changed |
+| calibration mcdonough-195x35x12 | `stability.lowest_gm_condition` | absent | Full load, departure | changed |
+| calibration meb-dcb23-ptich | `stability.governing` | Full load, departure | absent | changed |
+| calibration meb-dcb23-ptich | `stability.lowest_gm_condition` | absent | Full load, departure | changed |
+| ... | 442 more changed quantities | | | |
+
+### ticket/549-trim-message (2026-10-22)
+
+Between `main fc7e931` and `this branch c6ef045`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep box self-propelled 90x14 | `checks[13].message` | the hull floats within 10 degrees of trim (Laden) | no trim balances the load: Laden: LCG 53.78 m is forward of the furthest LCB the hull reaches (50.24 m) | changed |
+| sweep default depth dry bulk 90x14 | `checks[13].message` | the hull floats within 10 degrees of trim (Laden) | no trim balances the load: Laden: LCG 53.73 m is forward of the furthest LCB the hull reaches (50.24 m) | changed |
+| sweep hull midship section in a channel 80x11.4 | `checks[13].message` | the hull floats within 10 degrees of trim (Laden) | no trim balances the load: Laden: LCG 45.77 m is forward of the furthest LCB the hull reaches (43.23 m) | changed |
+| sweep optional aft_block_all_dry | `checks[13].message` | the hull floats within 10 degrees of trim (Laden) | no trim balances the load: Laden: LCG 53.78 m is forward of the furthest LCB the hull reaches (50.24 m) | changed |
+| sweep optional propulsive_efficiency | `checks[13].message` | the hull floats within 10 degrees of trim (Laden) | no trim balances the load: Laden: LCG 53.80 m is forward of the furthest LCB the hull reaches (50.25 m) | changed |
+| sweep optional vessel_class | `checks[14].message` | the hull floats within 10 degrees of trim (Laden) | no trim balances the load: Laden: LCG 59.80 m is forward of the furthest LCB the hull reaches (54.41 m) | changed |
+| sweep optional vessel_scheme | `checks[14].message` | the hull floats within 10 degrees of trim (Laden) | no trim balances the load: Laden: LCG 61.10 m is forward of the furthest LCB the hull reaches (55.21 m) | changed |
+
+### ticket/577-igc-pressure (2026-10-22)
+
+Between `main 2bd64c3` and `this branch cc0d426`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.96 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.97 m of 6.00 m | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[22].message` | freeboard 3.05 m at the carried draught 2.95 m >= required 0.3 m | freeboard 3.07 m at the carried draught 2.93 m >= required 0.3 m | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[23].message` | GM 1.45 m (fluid), max GZ 1.09 m at 36° | GM 1.47 m (fluid), max GZ 1.11 m at 36° | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[24].message` | GM 1.44 m (fluid), max GZ 1.09 m at 36° | GM 1.46 m (fluid), max GZ 1.10 m at 36° | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[25].message` | GM 5.42 m (fluid), max GZ 1.65 m at 26° | GM 5.56 m (fluid), max GZ 1.66 m at 26° | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[26].message` | GM 5.46 m (fluid), max GZ 1.64 m at 26° | GM 5.60 m (fluid), max GZ 1.66 m at 26° | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[3].message` | freeboard 3.05 m >= required 0.3 m | freeboard 3.07 m >= required 0.3 m | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.96 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.97 m of 6.00 m | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[22].message` | freeboard 3.06 m at the carried draught 2.94 m >= required 0.3 m | freeboard 3.09 m at the carried draught 2.91 m >= required 0.3 m | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[23].message` | GM 1.46 m (fluid), max GZ 1.10 m at 36° | GM 1.49 m (fluid), max GZ 1.12 m at 36° | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[24].message` | GM 1.45 m (fluid), max GZ 1.10 m at 36° | GM 1.48 m (fluid), max GZ 1.11 m at 36° | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[25].message` | GM 5.42 m (fluid), max GZ 1.65 m at 26° | GM 5.63 m (fluid), max GZ 1.67 m at 26° | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[26].message` | GM 5.46 m (fluid), max GZ 1.64 m at 26° | GM 5.67 m (fluid), max GZ 1.67 m at 26° | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[3].message` | freeboard 3.06 m >= required 0.3 m | freeboard 3.09 m >= required 0.3 m | changed |
+| sweep gas carriage LPG_propane fully_refrigerated | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.96 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.97 m of 6.00 m | changed |
+| sweep gas carriage LPG_propane fully_refrigerated | `checks[22].message` | freeboard 3.10 m at the carried draught 2.90 m >= required 0.3 m | freeboard 3.13 m at the carried draught 2.87 m >= required 0.3 m | changed |
+| sweep gas carriage LPG_propane fully_refrigerated | `checks[23].message` | GM 1.49 m (fluid), max GZ 1.12 m at 36° | GM 1.52 m (fluid), max GZ 1.14 m at 36° | changed |
+| sweep gas carriage LPG_propane fully_refrigerated | `checks[24].message` | GM 1.48 m (fluid), max GZ 1.12 m at 36° | GM 1.51 m (fluid), max GZ 1.13 m at 36° | changed |
+| sweep gas carriage LPG_propane fully_refrigerated | `checks[25].message` | GM 5.42 m (fluid), max GZ 1.65 m at 26° | GM 5.63 m (fluid), max GZ 1.67 m at 26° | changed |
+| sweep gas carriage LPG_propane fully_refrigerated | `checks[26].message` | GM 5.46 m (fluid), max GZ 1.64 m at 26° | GM 5.67 m (fluid), max GZ 1.67 m at 26° | changed |
+| sweep gas carriage LPG_propane fully_refrigerated | `checks[3].message` | freeboard 3.10 m >= required 0.3 m | freeboard 3.13 m >= required 0.3 m | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `loading_conditions.conditions[2].draught_fwd_m` | 0.659937267646 | 0.616548668958 | -6.57 % |
+| sweep gas carriage LPG_mix fully_refrigerated | `stability.conditions[2].draught_fwd_m` | 0.659937267646 | 0.616548668958 | -6.57 % |
+| sweep gas carriage LPG_propane fully_refrigerated | `loading_conditions.conditions[2].draught_fwd_m` | 0.659937267646 | 0.616548668958 | -6.57 % |
+| sweep gas carriage LPG_propane fully_refrigerated | `stability.conditions[2].draught_fwd_m` | 0.659937267646 | 0.616548668958 | -6.57 % |
+| sweep gas carriage LPG_mix fully_refrigerated | `loading_conditions.conditions[3].draught_fwd_m` | 0.699399778504 | 0.656126019518 | -6.19 % |
+| sweep gas carriage LPG_mix fully_refrigerated | `stability.conditions[3].draught_fwd_m` | 0.699399778504 | 0.656126019518 | -6.19 % |
+| sweep gas carriage LPG_propane fully_refrigerated | `loading_conditions.conditions[3].draught_fwd_m` | 0.699399778504 | 0.656126019518 | -6.19 % |
+| sweep gas carriage LPG_propane fully_refrigerated | `stability.conditions[3].draught_fwd_m` | 0.699399778504 | 0.656126019518 | -6.19 % |
+| sweep gas carriage LPG_butane fully_refrigerated | `loading_conditions.conditions[2].draught_fwd_m` | 0.659937267646 | 0.631027442165 | -4.38 % |
+| sweep gas carriage LPG_butane fully_refrigerated | `stability.conditions[2].draught_fwd_m` | 0.659937267646 | 0.631027442165 | -4.38 % |
+| sweep gas carriage LPG_butane fully_refrigerated | `loading_conditions.conditions[3].draught_fwd_m` | 0.699399778504 | 0.670566461121 | -4.12 % |
+| sweep gas carriage LPG_butane fully_refrigerated | `stability.conditions[3].draught_fwd_m` | 0.699399778504 | 0.670566461121 | -4.12 % |
+| sweep gas carriage LPG_mix fully_refrigerated | `loading_conditions.conditions[3].criteria[5].value` | 5.46166547222 | 5.66938141668 | +3.8 % |
+| sweep gas carriage LPG_mix fully_refrigerated | `loading_conditions.conditions[3].gm_fluid_m` | 5.46166547222 | 5.66938141668 | +3.8 % |
+| sweep gas carriage LPG_mix fully_refrigerated | `stability.conditions[3].criteria[5].value` | 5.46166547222 | 5.66938141668 | +3.8 % |
+| sweep gas carriage LPG_mix fully_refrigerated | `stability.conditions[3].gm_fluid_m` | 5.46166547222 | 5.66938141668 | +3.8 % |
+| sweep gas carriage LPG_propane fully_refrigerated | `loading_conditions.conditions[3].criteria[5].value` | 5.46166547222 | 5.66938141668 | +3.8 % |
+| sweep gas carriage LPG_propane fully_refrigerated | `loading_conditions.conditions[3].gm_fluid_m` | 5.46166547222 | 5.66938141668 | +3.8 % |
+| sweep gas carriage LPG_propane fully_refrigerated | `stability.conditions[3].criteria[5].value` | 5.46166547222 | 5.66938141668 | +3.8 % |
+| ... | 2153 more changed quantities | | | |
+
+### ticket/592-downflooding-openings (2026-10-22)
+
+Between `main 8b47128` and `this branch 73cf6bf`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep downflooding opening gas 90x11.4 | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 5.67 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 1.06 m of 6.00 m | changed |
+| sweep downflooding opening gas 90x11.4 | `checks[21].message` | tank length 28.10 m / inner diameter 7.70 m = 3.65 <= 7.0 | tank length 28.10 m / inner diameter 4.06 m = 6.92 <= 7.0 | changed |
+| sweep downflooding opening gas 90x11.4 | `checks[22].message` | freeboard 2.78 m at the carried draught 2.22 m >= required 0.3 m | freeboard 3.40 m at the carried draught 1.60 m >= required 0.3 m | changed |
+| sweep downflooding opening gas 90x11.4 | `checks[23].message` | GM 2.45 m (fluid), max GZ 1.34 m at 32° | GM 5.01 m (fluid), max GZ 2.20 m at 37° | changed |
+| sweep downflooding opening gas 90x11.4 | `checks[24].message` | GM 2.46 m (fluid), max GZ 1.33 m at 32° | GM 5.04 m (fluid), max GZ 2.19 m at 37° | changed |
+| sweep downflooding opening gas 90x11.4 | `checks[25].message` | GM 6.76 m (fluid), max GZ 1.87 m at 25° | GM 9.17 m (fluid), max GZ 2.33 m at 28° | changed |
+| sweep downflooding opening gas 90x11.4 | `checks[26].message` | GM 6.84 m (fluid), max GZ 1.87 m at 25° | GM 9.30 m (fluid), max GZ 2.33 m at 27° | changed |
+| sweep downflooding opening gas 90x11.4 | `checks[3].message` | freeboard 2.78 m >= required 0.3 m | freeboard 3.40 m >= required 0.3 m | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.ballast_tanks[0].kind` | wing_ballast | peak_ballast | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.ballast_tanks[0].name` | WB1P | FP1C | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.ballast_tanks[0].side` | port | centre | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.ballast_tanks[1].capacity_m3` | 319.341818054 | absent | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.ballast_tanks[1].capacity_t` | 319.341818054 | absent | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.ballast_tanks[1].kind` | wing_ballast | absent | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.ballast_tanks[1].lcg_m` | 52.696 | absent | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.ballast_tanks[1].name` | WB1S | absent | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.ballast_tanks[1].side` | starboard | absent | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.ballast_tanks[1].tcg_m` | 5.24518729454 | absent | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.ballast_tanks[1].vcg_m` | 3.01564722879 | absent | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.ballast_tanks[2].capacity_m3` | 239.4 | absent | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.ballast_tanks[2].capacity_t` | 239.4 | absent | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.ballast_tanks[2].kind` | peak_ballast | absent | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.ballast_tanks[2].lcg_m` | 83.9 | absent | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.ballast_tanks[2].name` | FP1C | absent | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.ballast_tanks[2].side` | centre | absent | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.ballast_tanks[2].tcg_m` | 0 | absent | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.ballast_tanks[2].vcg_m` | 2.5 | absent | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.conditions[0].criteria[1].name` | Area 0–40° | Area 0–34.8° | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.conditions[0].criteria[2].name` | Area 30–40° | Area 30–34.8° | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.conditions[0].downflooding_deg` | absent | 34.84653041 | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.conditions[1].criteria[1].name` | Area 0–40° | Area 0–35.1° | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.conditions[1].criteria[2].name` | Area 30–40° | Area 30–35.1° | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.conditions[1].downflooding_deg` | absent | 35.1142534465 | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.conditions[2].downflooding_deg` | absent | 50.291477078 | changed |
+| sweep downflooding opening gas 90x11.4 | `loading_conditions.conditions[3].downflooding_deg` | absent | 50.6898479268 | changed |
+| sweep downflooding opening gas 90x11.4 | `stability.conditions[0].criteria[1].name` | Area 0–40° | Area 0–34.8° | changed |
+| sweep downflooding opening gas 90x11.4 | `stability.conditions[0].criteria[2].name` | Area 30–40° | Area 30–34.8° | changed |
+| sweep downflooding opening gas 90x11.4 | `stability.conditions[0].downflooding_deg` | absent | 34.84653041 | changed |
+| sweep downflooding opening gas 90x11.4 | `stability.conditions[1].criteria[1].name` | Area 0–40° | Area 0–35.1° | changed |
+| sweep downflooding opening gas 90x11.4 | `stability.conditions[1].criteria[2].name` | Area 30–40° | Area 30–35.1° | changed |
+| ... | 739 more changed quantities | | | |
+
+### ticket/597-box-hold-default (2026-10-22)
+
+Between `main 5d5ec18` and `this branch 612dd5a`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| calibration amaggi-box-2000 | `checks[10].message` | GM 6.49 m (fluid), max GZ 1.84 m at 25° | GM 6.40 m (fluid), max GZ 1.85 m at 25° | changed |
+| calibration amaggi-box-2000 | `checks[5].message` | intact GM 1.53 m >= 0.15 m at the reported cargo 1861 t, draught 3.56 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 1.70 m >= 0.15 m at the reported cargo 1861 t, draught 3.56 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration amaggi-box-2000 | `checks[7].message` | GM 1.53 m (fluid), max GZ 0.26 m at 13° — fails: Area 30–40° 0.002 < 0.03, GZ at ≥ 30° 0.091 < 0.2, Angle of max GZ 13.000 < 25.0 | GM 1.70 m (fluid), max GZ 0.31 m at 15° — fails: Area 30–40° 0.019 < 0.03, GZ at ≥ 30° 0.177 < 0.2, Angle of max GZ 15.000 < 25.0 | changed |
+| calibration amaggi-box-2000 | `checks[8].message` | GM 1.53 m (fluid), max GZ 0.26 m at 13° — fails: Area 30–40° 0.002 < 0.03, GZ at ≥ 30° 0.091 < 0.2, Angle of max GZ 13.000 < 25.0 | GM 1.70 m (fluid), max GZ 0.31 m at 15° — fails: Area 30–40° 0.019 < 0.03, GZ at ≥ 30° 0.177 < 0.2, Angle of max GZ 15.000 < 25.0 | changed |
+| calibration amaggi-box-2000 | `checks[9].message` | GM 6.49 m (fluid), max GZ 1.84 m at 25° | GM 6.40 m (fluid), max GZ 1.85 m at 25° | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[10].message` | GM 3.86 m (fluid), max GZ 1.23 m at 26° | GM 3.94 m (fluid), max GZ 1.22 m at 26° | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[2].ok` | True | False | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[3].message` | freeboard 0.04 m >= required 0.3 m | freeboard 0.00 m >= required 0.3 m | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[5].message` | intact GM 0.46 m >= 0.15 m at the reported cargo 1012 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 0.63 m >= 0.15 m at the reported cargo 1012 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[7].message` | GM 0.46 m (fluid), max GZ 0.14 m at 18° — fails: Area 0–30° 0.047 < 0.055, Area 0–40° 0.045 < 0.09, Area 30–40° -0.001 < 0.03, GZ at ≥ 30° 0.054 < 0.2, Angle of max GZ 18.000 < 25.0 | GM 0.63 m (fluid), max GZ 0.19 m at 19° — fails: Area 0–40° 0.085 < 0.09, Area 30–40° 0.015 < 0.03, GZ at ≥ 30° 0.138 < 0.2, Angle of max GZ 19.000 < 25.0 | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[8].message` | GM 0.46 m (fluid), max GZ 0.14 m at 18° — fails: Area 0–30° 0.047 < 0.055, Area 0–40° 0.045 < 0.09, Area 30–40° -0.001 < 0.03, GZ at ≥ 30° 0.054 < 0.2, Angle of max GZ 18.000 < 25.0 | GM 0.63 m (fluid), max GZ 0.19 m at 19° — fails: Area 0–40° 0.085 < 0.09, Area 30–40° 0.015 < 0.03, GZ at ≥ 30° 0.138 < 0.2, Angle of max GZ 19.000 < 25.0 | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[9].message` | GM 3.86 m (fluid), max GZ 1.23 m at 26° | GM 3.94 m (fluid), max GZ 1.22 m at 26° | changed |
+| calibration canal-box-200x25x12-pb2230 | `loading_conditions.conditions[0].criteria[0].ok` | False | True | changed |
+| calibration canal-box-200x25x12-pb2230 | `loading_conditions.conditions[1].criteria[0].ok` | False | True | changed |
+| calibration canal-box-200x25x12-pb2230 | `stability.conditions[0].criteria[0].ok` | False | True | changed |
+| calibration canal-box-200x25x12-pb2230 | `stability.conditions[1].criteria[0].ok` | False | True | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[5].message` | intact GM 2.22 m >= 0.15 m at the reported cargo 1417 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.39 m >= 0.15 m at the reported cargo 1417 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[7].message` | GM 2.22 m (fluid), max GZ 0.53 m at 19° — fails: Angle of max GZ 19.000 < 25.0 | GM 2.39 m (fluid), max GZ 0.58 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[8].message` | GM 2.22 m (fluid), max GZ 0.53 m at 19° — fails: Angle of max GZ 19.000 < 25.0 | GM 2.39 m (fluid), max GZ 0.58 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | changed |
+| calibration canal-box-200x35x12-imt201 | `checks[5].message` | intact GM 2.22 m >= 0.15 m at the reported cargo 1417 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.39 m >= 0.15 m at the reported cargo 1417 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration canal-box-200x35x12-imt201 | `checks[7].message` | GM 2.22 m (fluid), max GZ 0.53 m at 19° — fails: Angle of max GZ 19.000 < 25.0 | GM 2.39 m (fluid), max GZ 0.58 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | changed |
+| calibration canal-box-200x35x12-imt201 | `checks[8].message` | GM 2.22 m (fluid), max GZ 0.53 m at 19° — fails: Angle of max GZ 19.000 < 25.0 | GM 2.39 m (fluid), max GZ 0.58 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | changed |
+| calibration canal-box-200x35x12-imt205 | `checks[5].message` | intact GM 2.22 m >= 0.15 m at the reported cargo 1417 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.39 m >= 0.15 m at the reported cargo 1417 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration canal-box-200x35x12-imt205 | `checks[7].message` | GM 2.22 m (fluid), max GZ 0.53 m at 19° — fails: Angle of max GZ 19.000 < 25.0 | GM 2.39 m (fluid), max GZ 0.58 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | changed |
+| calibration canal-box-200x35x12-imt205 | `checks[8].message` | GM 2.22 m (fluid), max GZ 0.53 m at 19° — fails: Angle of max GZ 19.000 < 25.0 | GM 2.39 m (fluid), max GZ 0.58 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | changed |
+| calibration canal-box-200x35x12-pb2012 | `checks[5].message` | intact GM 2.22 m >= 0.15 m at the reported cargo 1417 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.39 m >= 0.15 m at the reported cargo 1417 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration canal-box-200x35x12-pb2012 | `checks[7].message` | GM 2.22 m (fluid), max GZ 0.53 m at 19° — fails: Angle of max GZ 19.000 < 25.0 | GM 2.39 m (fluid), max GZ 0.58 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | changed |
+| calibration canal-box-200x35x12-pb2012 | `checks[8].message` | GM 2.22 m (fluid), max GZ 0.53 m at 19° — fails: Angle of max GZ 19.000 < 25.0 | GM 2.39 m (fluid), max GZ 0.58 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | changed |
+| calibration canal-box-200x35x12-rci250 | `checks[5].message` | intact GM 2.22 m >= 0.15 m at the reported cargo 1417 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.39 m >= 0.15 m at the reported cargo 1417 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration canal-box-200x35x12-rci250 | `checks[7].message` | GM 2.22 m (fluid), max GZ 0.53 m at 19° — fails: Angle of max GZ 19.000 < 25.0 | GM 2.39 m (fluid), max GZ 0.58 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | changed |
+| calibration canal-box-200x35x12-rci250 | `checks[8].message` | GM 2.22 m (fluid), max GZ 0.53 m at 19° — fails: Angle of max GZ 19.000 < 25.0 | GM 2.39 m (fluid), max GZ 0.58 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | changed |
+| calibration canal-box-200x35x13-cby252 | `checks[10].message` | GM 6.58 m (fluid), max GZ 1.90 m at 26° | GM 6.79 m (fluid), max GZ 1.89 m at 25° | changed |
+| calibration canal-box-200x35x13-cby252 | `checks[5].message` | intact GM 2.09 m >= 0.15 m at the reported cargo 1381 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.25 m >= 0.15 m at the reported cargo 1381 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration canal-box-200x35x13-cby252 | `checks[7].message` | GM 2.08 m (fluid), max GZ 0.67 m at 25° | GM 2.25 m (fluid), max GZ 0.74 m at 27° | changed |
+| calibration canal-box-200x35x13-cby252 | `checks[8].message` | GM 2.08 m (fluid), max GZ 0.67 m at 25° | GM 2.25 m (fluid), max GZ 0.74 m at 27° | changed |
+| calibration canal-box-200x35x13-cby252 | `checks[9].message` | GM 6.58 m (fluid), max GZ 1.90 m at 26° | GM 6.79 m (fluid), max GZ 1.89 m at 25° | changed |
+| calibration canal-box-200x35x13-cby400 | `checks[10].message` | GM 6.58 m (fluid), max GZ 1.90 m at 26° | GM 6.79 m (fluid), max GZ 1.89 m at 25° | changed |
+| calibration canal-box-200x35x13-cby400 | `checks[5].message` | intact GM 2.09 m >= 0.15 m at the reported cargo 1381 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.25 m >= 0.15 m at the reported cargo 1381 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration canal-box-200x35x13-cby400 | `checks[7].message` | GM 2.08 m (fluid), max GZ 0.67 m at 25° | GM 2.25 m (fluid), max GZ 0.74 m at 27° | changed |
+| calibration canal-box-200x35x13-cby400 | `checks[8].message` | GM 2.08 m (fluid), max GZ 0.67 m at 25° | GM 2.25 m (fluid), max GZ 0.74 m at 27° | changed |
+| ... | 70154 more changed quantities | | | |
+
+### ticket/631-consumables-inside (2026-10-23)
+
+Between `main 584d862` and `this branch e651eb1e`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived bulk 1 (88x16.3) | `checks[16].message` | GM 4.82 m (fluid), max GZ 1.30 m at 25° | GM 4.81 m (fluid), max GZ 1.30 m at 25° | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `checks[17].message` | GM 4.83 m (fluid), max GZ 1.29 m at 25° | GM 4.81 m (fluid), max GZ 1.28 m at 25° | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `checks[18].message` | GM 15.90 m (fluid), max GZ 4.19 m at 31° | GM 15.85 m (fluid), max GZ 4.16 m at 31° | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `checks[19].message` | GM 16.03 m (fluid), max GZ 4.18 m at 30° | GM 15.99 m (fluid), max GZ 4.16 m at 30° | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `checks[16].message` | GM 3.79 m (fluid), max GZ 0.83 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | GM 3.78 m (fluid), max GZ 0.83 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `checks[17].message` | GM 3.79 m (fluid), max GZ 0.83 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | GM 3.78 m (fluid), max GZ 0.83 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `checks[18].message` | GM 16.43 m (fluid), max GZ 4.14 m at 30° | GM 16.40 m (fluid), max GZ 4.13 m at 29° | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `checks[19].message` | GM 16.56 m (fluid), max GZ 4.14 m at 29° | GM 16.53 m (fluid), max GZ 4.12 m at 29° | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `checks[16].message` | GM 4.48 m (fluid), max GZ 0.93 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | GM 4.46 m (fluid), max GZ 0.92 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `checks[17].message` | GM 4.48 m (fluid), max GZ 0.93 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | GM 4.46 m (fluid), max GZ 0.92 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `checks[18].message` | GM 18.96 m (fluid), max GZ 4.52 m at 29° | GM 18.91 m (fluid), max GZ 4.50 m at 29° | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `checks[19].message` | GM 19.11 m (fluid), max GZ 4.52 m at 29° | GM 19.06 m (fluid), max GZ 4.50 m at 29° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[23].message` | GM 6.09 m (fluid), max GZ 2.57 m at 29° | GM 6.08 m (fluid), max GZ 2.56 m at 29° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[24].message` | GM 6.10 m (fluid), max GZ 2.56 m at 29° | GM 6.09 m (fluid), max GZ 2.56 m at 29° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[25].message` | GM 12.70 m (fluid), max GZ 3.49 m at 28° | GM 12.69 m (fluid), max GZ 3.48 m at 28° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[26].message` | GM 12.79 m (fluid), max GZ 3.48 m at 28° | GM 12.78 m (fluid), max GZ 3.48 m at 27° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[26].message` | GM 10.44 m (fluid), max GZ 2.92 m at 25° | GM 10.43 m (fluid), max GZ 2.92 m at 25° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[27].message` | GM 10.49 m (fluid), max GZ 2.91 m at 25° | GM 10.48 m (fluid), max GZ 2.91 m at 25° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[23].message` | GM 5.78 m (fluid), max GZ 2.30 m at 27° | GM 5.77 m (fluid), max GZ 2.30 m at 27° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[24].message` | GM 5.79 m (fluid), max GZ 2.30 m at 27° | GM 5.78 m (fluid), max GZ 2.30 m at 27° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[25].message` | GM 13.58 m (fluid), max GZ 3.66 m at 27° | GM 13.57 m (fluid), max GZ 3.65 m at 27° | changed |
+| sweep box self-propelled 60x10 | `checks[16].message` | GM 2.37 m (fluid), max GZ 0.68 m at 28° | GM 2.35 m (fluid), max GZ 0.67 m at 28° | changed |
+| sweep box self-propelled 60x10 | `checks[17].message` | GM 2.39 m (fluid), max GZ 0.65 m at 27° | GM 2.37 m (fluid), max GZ 0.64 m at 27° | changed |
+| sweep box self-propelled 60x10 | `checks[18].message` | GM 5.92 m (fluid), max GZ 1.78 m at 25° | GM 5.87 m (fluid), max GZ 1.76 m at 25° | changed |
+| sweep box self-propelled 60x10 | `checks[19].message` | GM 5.95 m (fluid), max GZ 1.77 m at 25° | GM 5.86 m (fluid), max GZ 1.75 m at 25° | changed |
+| sweep box self-propelled 90x14 | `checks[19].message` | GM 18.47 m (fluid), max GZ 3.84 m at 26° | GM 18.46 m (fluid), max GZ 3.84 m at 26° | changed |
+| sweep crude coastal service 90x14 | `checks[19].message` | GM 5.47 m (fluid), max GZ 1.78 m at 26° | GM 5.47 m (fluid), max GZ 1.77 m at 26° | changed |
+| sweep crude self-propelled 60x10 | `checks[15].message` | GM 3.62 m (fluid), max GZ 1.53 m at 33° | GM 3.60 m (fluid), max GZ 1.51 m at 33° | changed |
+| sweep crude self-propelled 60x10 | `checks[16].message` | GM 3.66 m (fluid), max GZ 1.50 m at 33° | GM 3.64 m (fluid), max GZ 1.49 m at 33° | changed |
+| sweep crude self-propelled 60x10 | `checks[17].message` | GM 6.85 m (fluid), max GZ 1.95 m at 25° | GM 6.80 m (fluid), max GZ 1.93 m at 25° | changed |
+| sweep crude self-propelled 60x10 | `checks[18].message` | GM 5.78 m (fluid), max GZ 1.74 m at 25° | GM 5.74 m (fluid), max GZ 1.72 m at 25° | changed |
+| sweep crude self-propelled 60x10 | `checks[19].message` | GM 3.69 m (fluid), max GZ 1.56 m at 33° | GM 3.67 m (fluid), max GZ 1.54 m at 33° | changed |
+| sweep crude self-propelled 90x14 | `checks[15].message` | GM 5.22 m (fluid), max GZ 1.66 m at 26° | GM 5.22 m (fluid), max GZ 1.65 m at 26° | changed |
+| sweep default depth dry bulk 90x14 | `checks[19].message` | GM 18.05 m (fluid), max GZ 3.80 m at 26° | GM 18.04 m (fluid), max GZ 3.79 m at 26° | changed |
+| sweep default depth gas 90x14 | `checks[25].message` | GM 7.02 m (fluid), max GZ 2.14 m at 28° | GM 7.01 m (fluid), max GZ 2.14 m at 28° | changed |
+| sweep default depth liquid 90x14 | `checks[15].message` | GM 6.30 m (fluid), max GZ 1.98 m at 27° | GM 6.29 m (fluid), max GZ 1.97 m at 27° | changed |
+| sweep default depth liquid 90x14 | `checks[17].message` | GM 18.03 m (fluid), max GZ 3.86 m at 27° | GM 18.02 m (fluid), max GZ 3.85 m at 27° | changed |
+| sweep default depth liquid 90x14 | `checks[18].message` | GM 18.37 m (fluid), max GZ 3.86 m at 26° | GM 18.35 m (fluid), max GZ 3.85 m at 26° | changed |
+| sweep default depth liquid 90x14 | `checks[19].message` | GM 5.82 m (fluid), max GZ 1.79 m at 25° | GM 5.81 m (fluid), max GZ 1.79 m at 25° | changed |
+| sweep diesel coastal service 90x14 | `checks[18].message` | GM 17.12 m (fluid), max GZ 3.75 m at 26° | GM 17.11 m (fluid), max GZ 3.75 m at 26° | changed |
+| ... | 90828 more changed quantities | | | |
+
+### ticket/649-service-margins (2026-10-23)
+
+Between `main bd497d9` and `this branch 7ab01434`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| calibration amaggi-box-2000 | `formation.notes[2]` | absent | Service margins, shown and not used to size the tug: the still-water power in deep water at the design speed, 397 kW, x the sea margin 1.15 x the engine margin 1/0.90 (MAN B&W, Basic Principles of Ship Propulsion, p. 27 and Fig. 17) = 507 kW, for an installed power of 476 kW. | changed |
+| calibration amaggi-box-2000 | `formation.service_margins.engine_margin` | absent | 1.11111111111 | changed |
+| calibration amaggi-box-2000 | `formation.service_margins.environment` | absent | Deep water | changed |
+| calibration amaggi-box-2000 | `formation.service_margins.power_with_margins_kw` | absent | 506.790640598 | changed |
+| calibration amaggi-box-2000 | `formation.service_margins.sea_margin` | absent | 1.15 | changed |
+| calibration amaggi-box-2000 | `formation.service_margins.still_water_power_kw` | absent | 396.618762207 | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.notes[2]` | absent | Service margins, shown and not used to size the tug: the still-water power in deep water at the design speed, 266 kW, x the sea margin 1.15 x the engine margin 1/0.90 (MAN B&W, Basic Principles of Ship Propulsion, p. 27 and Fig. 17) = 340 kW, for an installed power of 319 kW. | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.service_margins.engine_margin` | absent | 1.11111111111 | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.service_margins.environment` | absent | Deep water | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.service_margins.power_with_margins_kw` | absent | 340.09577544 | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.service_margins.sea_margin` | absent | 1.15 | changed |
+| calibration canal-box-200x25x12-pb2230 | `formation.service_margins.still_water_power_kw` | absent | 266.161911214 | changed |
+| calibration canal-box-200x35x12-cby222 | `formation.notes[2]` | absent | Service margins, shown and not used to size the tug: the still-water power in deep water at the design speed, 349 kW, x the sea margin 1.15 x the engine margin 1/0.90 (MAN B&W, Basic Principles of Ship Propulsion, p. 27 and Fig. 17) = 446 kW, for an installed power of 419 kW. | changed |
+| calibration canal-box-200x35x12-cby222 | `formation.service_margins.engine_margin` | absent | 1.11111111111 | changed |
+| calibration canal-box-200x35x12-cby222 | `formation.service_margins.environment` | absent | Deep water | changed |
+| calibration canal-box-200x35x12-cby222 | `formation.service_margins.power_with_margins_kw` | absent | 445.812977657 | changed |
+| calibration canal-box-200x35x12-cby222 | `formation.service_margins.sea_margin` | absent | 1.15 | changed |
+| calibration canal-box-200x35x12-cby222 | `formation.service_margins.still_water_power_kw` | absent | 348.897112949 | changed |
+| calibration canal-box-200x35x12-imt201 | `formation.notes[2]` | absent | Service margins, shown and not used to size the tug: the still-water power in deep water at the design speed, 349 kW, x the sea margin 1.15 x the engine margin 1/0.90 (MAN B&W, Basic Principles of Ship Propulsion, p. 27 and Fig. 17) = 446 kW, for an installed power of 419 kW. | changed |
+| calibration canal-box-200x35x12-imt201 | `formation.service_margins.engine_margin` | absent | 1.11111111111 | changed |
+| calibration canal-box-200x35x12-imt201 | `formation.service_margins.environment` | absent | Deep water | changed |
+| calibration canal-box-200x35x12-imt201 | `formation.service_margins.power_with_margins_kw` | absent | 445.812977657 | changed |
+| calibration canal-box-200x35x12-imt201 | `formation.service_margins.sea_margin` | absent | 1.15 | changed |
+| calibration canal-box-200x35x12-imt201 | `formation.service_margins.still_water_power_kw` | absent | 348.897112949 | changed |
+| calibration canal-box-200x35x12-imt205 | `formation.notes[2]` | absent | Service margins, shown and not used to size the tug: the still-water power in deep water at the design speed, 349 kW, x the sea margin 1.15 x the engine margin 1/0.90 (MAN B&W, Basic Principles of Ship Propulsion, p. 27 and Fig. 17) = 446 kW, for an installed power of 419 kW. | changed |
+| calibration canal-box-200x35x12-imt205 | `formation.service_margins.engine_margin` | absent | 1.11111111111 | changed |
+| calibration canal-box-200x35x12-imt205 | `formation.service_margins.environment` | absent | Deep water | changed |
+| calibration canal-box-200x35x12-imt205 | `formation.service_margins.power_with_margins_kw` | absent | 445.812977657 | changed |
+| calibration canal-box-200x35x12-imt205 | `formation.service_margins.sea_margin` | absent | 1.15 | changed |
+| calibration canal-box-200x35x12-imt205 | `formation.service_margins.still_water_power_kw` | absent | 348.897112949 | changed |
+| calibration canal-box-200x35x12-pb2012 | `formation.notes[2]` | absent | Service margins, shown and not used to size the tug: the still-water power in deep water at the design speed, 349 kW, x the sea margin 1.15 x the engine margin 1/0.90 (MAN B&W, Basic Principles of Ship Propulsion, p. 27 and Fig. 17) = 446 kW, for an installed power of 419 kW. | changed |
+| calibration canal-box-200x35x12-pb2012 | `formation.service_margins.engine_margin` | absent | 1.11111111111 | changed |
+| calibration canal-box-200x35x12-pb2012 | `formation.service_margins.environment` | absent | Deep water | changed |
+| calibration canal-box-200x35x12-pb2012 | `formation.service_margins.power_with_margins_kw` | absent | 445.812977657 | changed |
+| calibration canal-box-200x35x12-pb2012 | `formation.service_margins.sea_margin` | absent | 1.15 | changed |
+| calibration canal-box-200x35x12-pb2012 | `formation.service_margins.still_water_power_kw` | absent | 348.897112949 | changed |
+| calibration canal-box-200x35x12-rci250 | `formation.notes[2]` | absent | Service margins, shown and not used to size the tug: the still-water power in deep water at the design speed, 349 kW, x the sea margin 1.15 x the engine margin 1/0.90 (MAN B&W, Basic Principles of Ship Propulsion, p. 27 and Fig. 17) = 446 kW, for an installed power of 419 kW. | changed |
+| calibration canal-box-200x35x12-rci250 | `formation.service_margins.engine_margin` | absent | 1.11111111111 | changed |
+| calibration canal-box-200x35x12-rci250 | `formation.service_margins.environment` | absent | Deep water | changed |
+| calibration canal-box-200x35x12-rci250 | `formation.service_margins.power_with_margins_kw` | absent | 445.812977657 | changed |
+| ... | 566 more changed quantities | | | |
+
+### ticket/661-bow-rake-cap (2026-10-30)
+
+Between `main 6f8c7e7` and `this branch a4943a6d`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| calibration meb-dcb23-ptich | `checks[10].message` | GM 11.77 m (fluid), max GZ 4.28 m at 40° | GM 12.02 m (fluid), max GZ 4.28 m at 40° | changed |
+| calibration meb-dcb23-ptich | `checks[11].message` | GM 19.19 m (fluid), max GZ 3.93 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | GM 20.24 m (fluid), max GZ 3.96 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| calibration meb-dcb23-ptich | `checks[4].message` | cargo zone 83.18 m = LOA 100.0 - bow void 13.30 m - stern void 3.50 m | cargo zone 85.98 m = LOA 100.0 - bow void 10.50 m - stern void 3.50 m | changed |
+| calibration meb-dcb23-ptich | `checks[5].message` | intact GM 2.67 m >= 0.15 m at the reported cargo 6167 t, draught 5.00 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.61 m >= 0.15 m at the reported cargo 6327 t, draught 5.00 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration meb-dcb23-ptich | `checks[7].message` | GM 2.66 m (fluid), max GZ 1.44 m at 35° | GM 2.60 m (fluid), max GZ 1.41 m at 35° | changed |
+| calibration meb-dcb23-ptich | `checks[8].message` | GM 2.66 m (fluid), max GZ 1.44 m at 35° | GM 2.60 m (fluid), max GZ 1.41 m at 35° | changed |
+| calibration meb-dcb23-ptich | `checks[9].message` | GM 11.77 m (fluid), max GZ 4.28 m at 40° | GM 12.02 m (fluid), max GZ 4.28 m at 40° | changed |
+| calibration meb-dcb23-ptich | `formation.notes[3]` | The tug's view over the barges needs 9.02 m of wheelhouse lift; the tug gives 6.00 m. The Blind Distance light is 1800.4 m, more than 250 m (ES-TRIN 7.02(2)). | The tug's view over the barges needs 9.06 m of wheelhouse lift; the tug gives 6.00 m. The Blind Distance light is 1918.8 m, more than 250 m (ES-TRIN 7.02(2)). | changed |
+| sweep default depth gas 90x14 | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.95 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 5.05 m of 6.00 m | changed |
+| sweep default depth gas 90x14 | `checks[21].message` | tank length 24.74 m / inner diameter 9.24 m = 2.68 <= 7.0 | tank length 25.90 m / inner diameter 9.23 m = 2.81 <= 7.0 | changed |
+| sweep default depth gas 90x14 | `checks[23].message` | GM 3.43 m (fluid), max GZ 1.93 m at 39° | GM 3.39 m (fluid), max GZ 1.89 m at 39° | changed |
+| sweep default depth gas 90x14 | `checks[24].message` | GM 3.44 m (fluid), max GZ 1.91 m at 39° | GM 3.40 m (fluid), max GZ 1.88 m at 39° | changed |
+| sweep default depth gas 90x14 | `checks[25].message` | GM 7.80 m (fluid), max GZ 2.35 m at 26° | GM 7.96 m (fluid), max GZ 2.36 m at 26° | changed |
+| sweep default depth gas 90x14 | `checks[26].message` | GM 7.86 m (fluid), max GZ 2.35 m at 26° | GM 8.03 m (fluid), max GZ 2.35 m at 25° | changed |
+| sweep default depth gas 90x14 | `checks[29].message` | boil-off 169 kg/h > gas use 86 kg/h at the service speed: the excess needs reliquefaction, pressure accumulation or thermal oxidation, as venting is not acceptable (IGC Code 7.1.1, 7.1.3) | boil-off 176 kg/h > gas use 86 kg/h at the service speed: the excess needs reliquefaction, pressure accumulation or thermal oxidation, as venting is not acceptable (IGC Code 7.1.1, 7.1.3) | changed |
+| sweep default depth gas 90x14 | `checks[4].message` | cargo zone 51.49 m = LOA 90.0 - bow void 12.52 m - stern void 25.99 m | cargo zone 53.81 m = LOA 90.0 - bow void 10.20 m - stern void 25.99 m | changed |
+| sweep default depth gas 90x14 | `warnings[2]` | The lightship uses 970.2 t of hull steel (top-down); the cost prices 777.7 t (bottom-up). They differ by 192.5 t (24.7 %), more than the 20 % limit (an Estimate). The cost keeps the bottom-up mass. | The lightship uses 970.2 t of hull steel (top-down); the cost prices 778.6 t (bottom-up). They differ by 191.6 t (24.6 %), more than the 20 % limit (an Estimate). The cost keeps the bottom-up mass. | changed |
+| sweep gas wide hull IGC_2G 110x24 | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 3.91 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 3.93 m of 6.00 m | changed |
+| sweep gas wide hull IGC_2G 110x24 | `checks[21].message` | tank length 37.65 m / inner diameter 6.34 m = 5.94 <= 7.0 | tank length 37.85 m / inner diameter 6.34 m = 5.97 <= 7.0 | changed |
+| sweep gas wide hull IGC_2G 110x24 | `checks[23].message` | GM 18.68 m (fluid), max GZ 5.66 m at 27° | GM 18.67 m (fluid), max GZ 5.65 m at 27° | changed |
+| sweep gas wide hull IGC_2G 110x24 | `checks[24].message` | GM 18.73 m (fluid), max GZ 5.66 m at 27° | GM 18.72 m (fluid), max GZ 5.65 m at 27° | changed |
+| sweep gas wide hull IGC_2G 110x24 | `checks[25].message` | GM 27.48 m (fluid), max GZ 6.96 m at 31° | GM 27.51 m (fluid), max GZ 6.96 m at 31° | changed |
+| sweep gas wide hull IGC_2G 110x24 | `checks[26].message` | GM 27.60 m (fluid), max GZ 6.96 m at 31° | GM 27.63 m (fluid), max GZ 6.96 m at 31° | changed |
+| sweep gas wide hull IGC_2G 110x24 | `checks[29].message` | boil-off 539 kg/h > gas use 175 kg/h at the service speed: the excess needs reliquefaction, pressure accumulation or thermal oxidation, as venting is not acceptable (IGC Code 7.1.1, 7.1.3) | boil-off 542 kg/h > gas use 176 kg/h at the service speed: the excess needs reliquefaction, pressure accumulation or thermal oxidation, as venting is not acceptable (IGC Code 7.1.1, 7.1.3) | changed |
+| sweep gas wide hull IGC_2G 110x24 | `checks[4].message` | cargo zone 77.31 m = LOA 110.0 - bow void 10.60 m - stern void 22.09 m | cargo zone 77.71 m = LOA 110.0 - bow void 10.20 m - stern void 22.09 m | changed |
+| sweep gas wide hull IGC_2G_EXACT 110x24 | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 3.91 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 3.93 m of 6.00 m | changed |
+| sweep gas wide hull IGC_2G_EXACT 110x24 | `checks[21].message` | tank length 37.65 m / inner diameter 6.34 m = 5.94 <= 7.0 | tank length 37.85 m / inner diameter 6.34 m = 5.97 <= 7.0 | changed |
+| sweep gas wide hull IGC_2G_EXACT 110x24 | `checks[23].message` | GM 18.68 m (fluid), max GZ 5.66 m at 27° | GM 18.67 m (fluid), max GZ 5.65 m at 27° | changed |
+| sweep gas wide hull IGC_2G_EXACT 110x24 | `checks[24].message` | GM 18.73 m (fluid), max GZ 5.66 m at 27° | GM 18.72 m (fluid), max GZ 5.65 m at 27° | changed |
+| sweep gas wide hull IGC_2G_EXACT 110x24 | `checks[25].message` | GM 27.48 m (fluid), max GZ 6.96 m at 31° | GM 27.51 m (fluid), max GZ 6.96 m at 31° | changed |
+| sweep gas wide hull IGC_2G_EXACT 110x24 | `checks[26].message` | GM 27.60 m (fluid), max GZ 6.96 m at 31° | GM 27.63 m (fluid), max GZ 6.96 m at 31° | changed |
+| sweep gas wide hull IGC_2G_EXACT 110x24 | `checks[29].message` | boil-off 539 kg/h > gas use 175 kg/h at the service speed: the excess needs reliquefaction, pressure accumulation or thermal oxidation, as venting is not acceptable (IGC Code 7.1.1, 7.1.3) | boil-off 542 kg/h > gas use 176 kg/h at the service speed: the excess needs reliquefaction, pressure accumulation or thermal oxidation, as venting is not acceptable (IGC Code 7.1.1, 7.1.3) | changed |
+| sweep gas wide hull IGC_2G_EXACT 110x24 | `checks[4].message` | cargo zone 77.31 m = LOA 110.0 - bow void 10.60 m - stern void 22.09 m | cargo zone 77.71 m = LOA 110.0 - bow void 10.20 m - stern void 22.09 m | changed |
+| sweep hull shipd bulbs 80 m | `checks[4].message` | cargo zone 63.15 m = LOA 80.0 - bow void 13.35 m - stern void 3.50 m | cargo zone 66.00 m = LOA 80.0 - bow void 10.50 m - stern void 3.50 m | changed |
+| sweep optional bow_rake_max_length_m | `checks[12].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 1.44 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 1.53 m of 6.00 m | changed |
+| sweep optional bow_rake_max_length_m | `checks[14].message` | intact GM 4.08 m >= 0.15 m at the reported cargo 2512 t, draught 3.39 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 4.01 m >= 0.15 m at the reported cargo 2570 t, draught 3.41 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| sweep optional bow_rake_max_length_m | `checks[16].message` | GM 4.08 m (fluid), max GZ 0.79 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | GM 4.01 m (fluid), max GZ 0.73 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | changed |
+| sweep optional bow_rake_max_length_m | `checks[17].message` | GM 4.09 m (fluid), max GZ 0.78 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | GM 4.02 m (fluid), max GZ 0.73 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | changed |
+| sweep optional bow_rake_max_length_m | `checks[18].message` | GM 13.40 m (fluid), max GZ 3.63 m at 29° | GM 13.34 m (fluid), max GZ 3.63 m at 29° | changed |
+| sweep optional bow_rake_max_length_m | `checks[19].message` | GM 13.56 m (fluid), max GZ 3.63 m at 29° | GM 13.49 m (fluid), max GZ 3.63 m at 29° | changed |
+| ... | 4752 more changed quantities | | | |
+
+### ticket/675-gas-arrangement-inputs (2026-10-30)
+
+Between `main 913ae6d` and `this branch aade37e7`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived liquid 2 (130x16.3) | `checks[14].message` | blind distance ahead of the bow 2806.8 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 6.00 m of 6.00 m | blind distance ahead of the bow over 250 m, light (ES-TRIN 7.02(2)): lift needed 10.03 m of 6.00 m | changed |
+| sweep gas channel 60x10 | `warnings[2]` | absent | No wing ballast tank: the side space 0.47 m is not more than the wing tank gap 0.60 m. For a wing tank, set `min_side_space_m` above 0.60 m. | changed |
+| sweep gas tank longer than 7 diameters IGC_2G 200x12 | `warnings[2]` | absent | No wing ballast tank: the side space 0.48 m is not more than the wing tank gap 0.60 m. For a wing tank, set `min_side_space_m` above 0.60 m. | changed |
+| sweep gas wide hull IGC_2G 110x24 | `warnings[3]` | absent | No wing ballast tank: the side space 0.48 m is not more than the wing tank gap 0.60 m. For a wing tank, set `min_side_space_m` above 0.60 m. | changed |
+| sweep gas wide hull IGC_2G_EXACT 110x24 | `warnings[3]` | absent | No wing ballast tank: the side space 0.48 m is not more than the wing tank gap 0.60 m. For a wing tank, set `min_side_space_m` above 0.60 m. | changed |
+
+### ticket/680-laden-draught-cap (2026-10-30)
+
+Between `main c0446ef` and `this branch 8b298a15`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived bulk 2 (130x16.3) | `checks[14].message` | intact GM 3.80 m >= 0.15 m at the reported cargo 5956 t, draught 4.30 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 3.81 m >= 0.15 m at the reported cargo 5941 t, draught 4.29 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `checks[16].message` | GM 3.78 m (fluid), max GZ 0.83 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | GM 3.79 m (fluid), max GZ 0.84 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `checks[17].message` | GM 3.78 m (fluid), max GZ 0.83 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | GM 3.79 m (fluid), max GZ 0.83 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `checks[14].message` | intact GM 4.49 m >= 0.15 m at the reported cargo 6333 t, draught 4.30 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 4.49 m >= 0.15 m at the reported cargo 6323 t, draught 4.30 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `checks[16].message` | GM 4.46 m (fluid), max GZ 0.92 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | GM 4.47 m (fluid), max GZ 0.93 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `checks[17].message` | GM 4.46 m (fluid), max GZ 0.92 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | GM 4.47 m (fluid), max GZ 0.93 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| sweep hull midship section in a channel 80x11.4 | `checks[14].message` | intact GM 3.24 m >= 0.15 m at the reported cargo 1488 t, draught 2.50 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 3.26 m >= 0.15 m at the reported cargo 1476 t, draught 2.49 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| sweep hull midship section in a channel 80x11.4 | `checks[15].message` | Channel: service 4.0 kn <= 0.95 x Schijf limit 4.47 kn | Channel: service 4.0 kn <= 0.95 x Schijf limit 4.48 kn | changed |
+| sweep hull midship section in a channel 80x11.4 | `checks[16].message` | Channel: blockage n = 0.244 must be in (0, 1) | Channel: blockage n = 0.242 must be in (0, 1) | changed |
+| sweep hull midship section in a channel 80x11.4 | `checks[17].message` | dynamic UKC 0.23 m = static 0.49 m - squat 0.26 m (Barrass II) at 4.00 kn | dynamic UKC 0.24 m = static 0.50 m - squat 0.26 m (Barrass II) at 4.00 kn | changed |
+| sweep hull midship section in a channel 80x11.4 | `checks[18].message` | dynamic UKC 0.23 m against a 0.15 m working margin | dynamic UKC 0.24 m against a 0.15 m working margin | changed |
+| sweep hull midship section in a channel 80x11.4 | `checks[20].message` | blockage 0.244; Barrass is fitted below about 0.35 and extrapolates above it | blockage 0.242; Barrass is fitted below about 0.35 and extrapolates above it | changed |
+| sweep hull midship section in a channel 80x11.4 | `checks[24].message` | GM 3.19 m (fluid), max GZ 1.05 m at 26° | GM 3.21 m (fluid), max GZ 1.07 m at 26° | changed |
+| sweep hull midship section in a channel 80x11.4 | `checks[25].message` | GM 3.20 m (fluid), max GZ 1.04 m at 26° | GM 3.22 m (fluid), max GZ 1.06 m at 26° | changed |
+| sweep optional vessel_class | `checks[15].message` | intact GM 2.30 m >= 0.15 m at the reported cargo 2280 t, draught 2.80 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.31 m >= 0.15 m at the reported cargo 2264 t, draught 2.79 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| sweep optional vessel_class | `checks[17].message` | GM 2.28 m (fluid), max GZ 0.93 m at 29° | GM 2.29 m (fluid), max GZ 0.94 m at 29° | changed |
+| sweep optional vessel_class | `checks[18].message` | GM 2.27 m (fluid), max GZ 0.93 m at 29° | GM 2.29 m (fluid), max GZ 0.94 m at 29° | changed |
+| sweep optional vessel_scheme | `checks[15].message` | intact GM 2.58 m >= 0.15 m at the reported cargo 2422 t, draught 2.80 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.60 m >= 0.15 m at the reported cargo 2406 t, draught 2.79 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| sweep optional vessel_scheme | `checks[17].message` | GM 2.55 m (fluid), max GZ 1.01 m at 29° | GM 2.57 m (fluid), max GZ 1.03 m at 29° | changed |
+| sweep optional vessel_scheme | `checks[18].message` | GM 2.55 m (fluid), max GZ 1.01 m at 29° | GM 2.57 m (fluid), max GZ 1.02 m at 29° | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `loading_conditions.conditions[1].gz[56][1]` | 0.00755512662723 | 0.0141691054871 | +87.5 % |
+| sweep CN-derived bulk 2 (130x16.3) | `stability.conditions[1].gz[56][1]` | 0.00755512662723 | 0.0141691054871 | +87.5 % |
+| sweep CN-derived bulk 2 (130x16.3) | `loading_conditions.conditions[0].gz[56][1]` | 0.0139170081043 | 0.0205422516975 | +47.6 % |
+| sweep CN-derived bulk 2 (130x16.3) | `stability.conditions[0].gz[56][1]` | 0.0139170081043 | 0.0205422516975 | +47.6 % |
+| sweep CN-derived bulk 3 (130x17.2) | `loading_conditions.conditions[1].gz[58][1]` | 0.00990580070599 | 0.0143666646264 | +45 % |
+| sweep CN-derived bulk 3 (130x17.2) | `stability.conditions[1].gz[58][1]` | 0.00990580070599 | 0.0143666646264 | +45 % |
+| sweep CN-derived bulk 2 (130x16.3) | `loading_conditions.conditions[0].gz[57][1]` | -0.020605547047 | -0.0141157465983 | +31.5 % |
+| sweep CN-derived bulk 2 (130x16.3) | `stability.conditions[0].gz[57][1]` | -0.020605547047 | -0.0141157465983 | +31.5 % |
+| sweep CN-derived bulk 3 (130x17.2) | `loading_conditions.conditions[0].gz[58][1]` | 0.016312250089 | 0.0207781605855 | +27.4 % |
+| sweep CN-derived bulk 3 (130x17.2) | `stability.conditions[0].gz[58][1]` | 0.016312250089 | 0.0207781605855 | +27.4 % |
+| sweep CN-derived bulk 2 (130x16.3) | `loading_conditions.conditions[1].gz[57][1]` | -0.0270454921323 | -0.0205671812516 | +24 % |
+| sweep CN-derived bulk 2 (130x16.3) | `stability.conditions[1].gz[57][1]` | -0.0270454921323 | -0.0205671812516 | +24 % |
+| sweep CN-derived bulk 3 (130x17.2) | `loading_conditions.conditions[0].gz[59][1]` | -0.0190954299044 | -0.014732810639 | +22.8 % |
+| sweep CN-derived bulk 3 (130x17.2) | `stability.conditions[0].gz[59][1]` | -0.0190954299044 | -0.014732810639 | +22.8 % |
+| sweep CN-derived bulk 3 (130x17.2) | `loading_conditions.conditions[1].gz[59][1]` | -0.0255659216254 | -0.0212085872571 | +17 % |
+| sweep CN-derived bulk 3 (130x17.2) | `stability.conditions[1].gz[59][1]` | -0.0255659216254 | -0.0212085872571 | +17 % |
+| sweep CN-derived bulk 2 (130x16.3) | `loading_conditions.conditions[1].gz[55][1]` | 0.0419894983221 | 0.0487360280749 | +16.1 % |
+| sweep CN-derived bulk 2 (130x16.3) | `stability.conditions[1].gz[55][1]` | 0.0419894983221 | 0.0487360280749 | +16.1 % |
+| sweep CN-derived bulk 2 (130x16.3) | `loading_conditions.conditions[0].gz[55][1]` | 0.0482703905943 | 0.0550279475037 | +14 % |
+| sweep CN-derived bulk 2 (130x16.3) | `stability.conditions[0].gz[55][1]` | 0.0482703905943 | 0.0550279475037 | +14 % |
+| ... | 1931 more changed quantities | | | |
+
+### ticket/687-tank-spaces-results (2026-10-30)
+
+Between `main 6f8c7e7` and `this branch d0c40c25`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[0].kind` | absent | cargo_tank | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[0].lcg_m` | absent | 35.739 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[0].name` | absent | CT1P | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[0].side` | absent | port | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[0].tcg_m` | absent | -3.925 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[0].vcg_m` | absent | 4.51166666667 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[0].volume_m3` | absent | 948.581622 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[1].kind` | absent | cargo_tank | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[1].lcg_m` | absent | 35.739 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[1].name` | absent | CT1S | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[1].side` | absent | starboard | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[1].tcg_m` | absent | 3.925 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[1].vcg_m` | absent | 4.51166666667 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[1].volume_m3` | absent | 948.581622 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[2].kind` | absent | cargo_tank | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[2].lcg_m` | absent | 65.033 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[2].name` | absent | CT2P | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[2].side` | absent | port | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[2].tcg_m` | absent | -3.925 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[2].vcg_m` | absent | 4.51166666667 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[2].volume_m3` | absent | 948.581622 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[3].kind` | absent | cargo_tank | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[3].lcg_m` | absent | 65.033 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[3].name` | absent | CT2S | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[3].side` | absent | starboard | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[3].tcg_m` | absent | 3.925 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[3].vcg_m` | absent | 4.51166666667 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `spaces[3].volume_m3` | absent | 948.581622 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `spaces[0].kind` | absent | cargo_tank | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `spaces[0].lcg_m` | absent | 46.239 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `spaces[0].name` | absent | CT1C | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `spaces[0].side` | absent | centre | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `spaces[0].tcg_m` | absent | 0 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `spaces[0].vcg_m` | absent | 6.15261830238 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `spaces[0].volume_m3` | absent | 3698.64119127 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `spaces[1].kind` | absent | cargo_tank | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `spaces[1].lcg_m` | absent | 96.533 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `spaces[1].name` | absent | CT2C | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `spaces[1].side` | absent | centre | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `spaces[1].tcg_m` | absent | 0 | changed |
+| ... | 1626 more changed quantities | | | |
+
+### ticket/702-stern-block-propulsor-count (2026-10-30)
+
+Between `main 2e0eafc` and `this branch a7b10c12`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived liquid 1 (88x16.3) | `checks[5].message` | 3 x 2.60 m thrusters need 10.20 m across a 16.30 m beam | 2 x 1.35 m thrusters need 4.50 m across a 16.30 m beam | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[6].message` | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 16.30 m beam | 2 of 2 requested thrusters fit; 2 would need 4.50 m of 16.30 m beam | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[6].message` | 3 x 2.60 m thrusters need 10.20 m across a 16.30 m beam | 2 x 1.55 m thrusters need 4.91 m across a 16.30 m beam | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[7].message` | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 16.30 m beam | 2 of 2 requested thrusters fit; 2 would need 4.91 m of 16.30 m beam | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[5].message` | 3 x 2.60 m thrusters need 10.20 m across a 17.20 m beam | 2 x 1.55 m thrusters need 4.91 m across a 17.20 m beam | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[6].message` | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 17.20 m beam | 2 of 2 requested thrusters fit; 2 would need 4.91 m of 17.20 m beam | changed |
+| sweep default depth gas 90x14 | `checks[5].message` | 3 x 2.60 m thrusters need 10.20 m across a 14.00 m beam | 2 x 1.62 m thrusters need 5.04 m across a 14.00 m beam | changed |
+| sweep default depth gas 90x14 | `checks[6].message` | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 14.00 m beam | 2 of 2 requested thrusters fit; 2 would need 5.04 m of 14.00 m beam | changed |
+| sweep downflooding opening gas 90x11.4 | `checks[5].message` | 3 x 2.60 m thrusters need 10.20 m across a 11.40 m beam | 2 x 1.55 m thrusters need 4.91 m across a 11.40 m beam | changed |
+| sweep downflooding opening gas 90x11.4 | `checks[6].message` | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 11.40 m beam | 2 of 2 requested thrusters fit; 2 would need 4.91 m of 11.40 m beam | changed |
+| sweep gas IGC_2G 60x10 | `checks[5].message` | 2 x 2.60 m thrusters need 7.00 m across a 10.00 m beam | 2 x 1.22 m thrusters need 4.23 m across a 10.00 m beam | changed |
+| sweep gas IGC_2G 60x10 | `checks[6].message` | 2 of 3 requested thrusters fit; 3 would need 10.20 m of 10.00 m beam | 2 of 2 requested thrusters fit; 2 would need 4.23 m of 10.00 m beam | changed |
+| sweep gas IGC_2G 60x10 | `checks[6].ok` | False | True | changed |
+| sweep gas IGC_2G 90x14 | `checks[5].message` | 3 x 2.60 m thrusters need 10.20 m across a 14.00 m beam | 2 x 1.35 m thrusters need 4.50 m across a 14.00 m beam | changed |
+| sweep gas IGC_2G 90x14 | `checks[6].message` | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 14.00 m beam | 2 of 2 requested thrusters fit; 2 would need 4.50 m of 14.00 m beam | changed |
+| sweep gas IGC_2G_EXACT 60x10 | `checks[5].message` | 2 x 2.60 m thrusters need 7.00 m across a 10.00 m beam | 2 x 1.22 m thrusters need 4.23 m across a 10.00 m beam | changed |
+| sweep gas IGC_2G_EXACT 60x10 | `checks[6].message` | 2 of 3 requested thrusters fit; 3 would need 10.20 m of 10.00 m beam | 2 of 2 requested thrusters fit; 2 would need 4.23 m of 10.00 m beam | changed |
+| sweep gas IGC_2G_EXACT 60x10 | `checks[6].ok` | False | True | changed |
+| sweep gas IGC_2G_EXACT 90x14 | `checks[5].message` | 3 x 2.60 m thrusters need 10.20 m across a 14.00 m beam | 2 x 1.35 m thrusters need 4.50 m across a 14.00 m beam | changed |
+| sweep gas IGC_2G_EXACT 90x14 | `checks[6].message` | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 14.00 m beam | 2 of 2 requested thrusters fit; 2 would need 4.50 m of 14.00 m beam | changed |
+| sweep gas cargo LNG | `checks[5].message` | 3 x 2.60 m thrusters need 10.20 m across a 14.00 m beam | 2 x 1.22 m thrusters need 4.23 m across a 14.00 m beam | changed |
+| sweep gas cargo LNG | `checks[6].message` | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 14.00 m beam | 2 of 2 requested thrusters fit; 2 would need 4.23 m of 14.00 m beam | changed |
+| sweep gas cargo LNG_ethane | `checks[5].message` | 3 x 2.60 m thrusters need 10.20 m across a 14.00 m beam | 2 x 1.22 m thrusters need 4.23 m across a 14.00 m beam | changed |
+| sweep gas cargo LNG_ethane | `checks[6].message` | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 14.00 m beam | 2 of 2 requested thrusters fit; 2 would need 4.23 m of 14.00 m beam | changed |
+| sweep gas cargo LPG_butane | `checks[5].message` | 3 x 2.60 m thrusters need 10.20 m across a 14.00 m beam | 2 x 1.28 m thrusters need 4.37 m across a 14.00 m beam | changed |
+| sweep gas cargo LPG_butane | `checks[6].message` | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 14.00 m beam | 2 of 2 requested thrusters fit; 2 would need 4.37 m of 14.00 m beam | changed |
+| sweep gas cargo LPG_mix | `checks[5].message` | 3 x 2.60 m thrusters need 10.20 m across a 14.00 m beam | 2 x 1.28 m thrusters need 4.37 m across a 14.00 m beam | changed |
+| sweep gas cargo LPG_mix | `checks[6].message` | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 14.00 m beam | 2 of 2 requested thrusters fit; 2 would need 4.37 m of 14.00 m beam | changed |
+| sweep gas cargo LPG_propane | `checks[5].message` | 3 x 2.60 m thrusters need 10.20 m across a 14.00 m beam | 2 x 1.28 m thrusters need 4.37 m across a 14.00 m beam | changed |
+| sweep gas cargo LPG_propane | `checks[6].message` | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 14.00 m beam | 2 of 2 requested thrusters fit; 2 would need 4.37 m of 14.00 m beam | changed |
+| sweep gas carriage LPG_butane fully_pressurised | `checks[5].message` | 3 x 2.60 m thrusters need 10.20 m across a 11.40 m beam | 2 x 1.42 m thrusters need 4.64 m across a 11.40 m beam | changed |
+| sweep gas carriage LPG_butane fully_pressurised | `checks[6].message` | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 11.40 m beam | 2 of 2 requested thrusters fit; 2 would need 4.64 m of 11.40 m beam | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[5].message` | 3 x 2.60 m thrusters need 10.20 m across a 11.40 m beam | 2 x 1.35 m thrusters need 4.50 m across a 11.40 m beam | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[6].message` | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 11.40 m beam | 2 of 2 requested thrusters fit; 2 would need 4.50 m of 11.40 m beam | changed |
+| sweep gas carriage LPG_butane semi_pressurised | `checks[5].message` | 3 x 2.60 m thrusters need 10.20 m across a 11.40 m beam | 2 x 1.35 m thrusters need 4.50 m across a 11.40 m beam | changed |
+| sweep gas carriage LPG_butane semi_pressurised | `checks[6].message` | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 11.40 m beam | 2 of 2 requested thrusters fit; 2 would need 4.50 m of 11.40 m beam | changed |
+| sweep gas carriage LPG_mix fully_pressurised | `checks[5].message` | 3 x 2.60 m thrusters need 10.20 m across a 11.40 m beam | 2 x 1.42 m thrusters need 4.64 m across a 11.40 m beam | changed |
+| sweep gas carriage LPG_mix fully_pressurised | `checks[6].message` | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 11.40 m beam | 2 of 2 requested thrusters fit; 2 would need 4.64 m of 11.40 m beam | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[5].message` | 3 x 2.60 m thrusters need 10.20 m across a 11.40 m beam | 2 x 1.35 m thrusters need 4.50 m across a 11.40 m beam | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[6].message` | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 11.40 m beam | 2 of 2 requested thrusters fit; 2 would need 4.50 m of 11.40 m beam | changed |
+| ... | 170 more changed quantities | | | |
 
 ### ticket/451-offsets-import (2026-10-22)
 

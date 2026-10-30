@@ -1,2 +1,0 @@
-<!-- unreleased -->
-- App (issue #551): a pushed convoy has a "Convoy totals" view in the Drawings group. It shows the convoy (barges abreast and in line), the figures of one barge and the totals of the convoy (cargo, lightship, deadweight, displacement, cargo volume, overall length and beam), as the core gives them, and says that the pusher is not in the totals yet. No other Formation has the view. No result moves.
