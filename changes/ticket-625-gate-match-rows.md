@@ -1,2 +1,0 @@
-<!-- unreleased -->
-- Tooling (issue #625): the design-impact gate passes a changelog fragment whose table names the same (case, quantity) rows that the branch moves. The numbers may come from an earlier base, so a merge on main no longer forces every open pull request to regenerate its table. The gate still fails when a moved row is missing, when the table names a row that does not move, or when there is no table. The merge-group check is unchanged.

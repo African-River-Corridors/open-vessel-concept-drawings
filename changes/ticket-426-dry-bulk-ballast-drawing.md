@@ -1,2 +1,0 @@
-<!-- unreleased -->
-- Drawings (issue #426, part 4): the plan, side elevation and typical section of a dry bulk hull in the IS Code loading conditions show the ballast tanks: the wing tanks hatched in plan and section, the double bottom hatched in section, and both named. The tanks come from the compartment model through a new `drawing.ballast_spaces` block, which is outside the results hash. A Design saved with the legacy conditions draws none. No result moves.

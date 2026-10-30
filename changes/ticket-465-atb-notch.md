@@ -1,2 +1,0 @@
-<!-- unreleased -->
-- Vessel Model (issue #465): the Notch of an ATB barge is a stern parameter of the Sections Table. `stern_form::apply_notch` cuts a full-depth slot of the Notch width on the centre line, from the aft end to the Notch depth; the forward end is a step. A slotted section is two polygons, port and starboard, and the integrator sums over both. A Notch of zero leaves the table unchanged; a Notch as wide as the beam or as long as the hull is a typed error. Not wired into any result yet: the ATB results come with #362.

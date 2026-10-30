@@ -20,6 +20,76 @@
       "id": "lr-inland-gas",
       "version": "1.1.0",
       "hash": "78652a0f9187ba0c5e83b1983cdf6a188d0277928ccb49fd36eaf98d406e7e0a"
+    },
+    {
+      "id": "is2008-a",
+      "version": "2.0.0",
+      "hash": "c8fb5651866ea1f2e9d8197a866b320e3b6ab33e398e4d926b9158bc82e7d7a2"
+    },
+    {
+      "id": "adn-tank",
+      "version": "1.0.0",
+      "hash": "3c73961fe949a0a2088322a68fa66cb20115870967db94d4593d5a532c73e783"
+    },
+    {
+      "id": "marpol-i",
+      "version": "1.0.0",
+      "hash": "6395f8fca95d792fd201cd9965a2aed42d1880f07a073d09c1c1f23d80277feb"
+    },
+    {
+      "id": "normam-202",
+      "version": "1.0.0",
+      "hash": "1af20632798a7e5d0cc68ee1e7e0b73d1da3cc522c9806a8429b8ecfac312632"
+    },
+    {
+      "id": "es-trin-2025",
+      "version": "1.0.0",
+      "hash": "3c2d303e27ffcd07a7f8abf67e49bba28b4832a40f2fba7fea6371ff4a9b1744"
+    },
+    {
+      "id": "icll-freeboard",
+      "version": "1.0.0",
+      "hash": "746c3556daa85242bcbcce64cf52bd65319bfe092dfc0b1698324d0797d39d28"
+    },
+    {
+      "id": "icll-freeboard",
+      "version": "2.0.0",
+      "hash": "eb2d8334bb0a284b4df706f72f3859904f0fc5b14b6cddc745c8a81afd46107c"
+    },
+    {
+      "id": "rheinschpv",
+      "version": "1.0.0",
+      "hash": "c0c05473f0cb4625c199b29af967d82bf098db5dd08546adb8edefb071bf2cdc"
+    },
+    {
+      "id": "solas-v22",
+      "version": "1.0.0",
+      "hash": "75030377beb5e74d6641cd536669159dea2dccf2e884f2372786d0b880f1b0fc"
+    },
+    {
+      "id": "abs-barges",
+      "version": "1.0.0",
+      "hash": "c0b02c7e5c9743a20d7aa83101fcdc5d76901b60fd828fa080eab3af6b75578b"
+    },
+    {
+      "id": "igc-2g",
+      "version": "1.1.0",
+      "hash": "196cc7e876e97855f9f3d90705ba9cd350bdc883f9a5c5e5c69aec45cce07460"
+    },
+    {
+      "id": "igc-2g",
+      "version": "2.0.0",
+      "hash": "bdab7d84a4e89aa293f241f752bffb67725ebd1c51b98f5bd264c124e759b2b5"
+    },
+    {
+      "id": "lr-inland-gas",
+      "version": "2.0.0",
+      "hash": "d48daf283c393b48dfd37441bac44b573718d44b1fc93d2d6291d77ee76e4564"
+    },
+    {
+      "id": "ovd",
+      "version": "3.0.0",
+      "hash": "88869f85bacb1baab3ecd5336a60642423a5e82cac6960c9d8e329cdceb63333"
     }
   ]
 }

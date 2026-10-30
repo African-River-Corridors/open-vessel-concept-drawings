@@ -1,2 +1,0 @@
-<!-- unreleased -->
-- App (issue #426, part 4): a new "Ballast tanks" view in the Stability and Propulsion group. It lists the ballast tanks (name, kind, side, capacity, centre of gravity) and, for each condition that carries ballast, the plan: fill, mass, centre and free surface moment of each tank, with the ballast mass in the heading. A condition with no workable plan says so. A Design saved before the IS Code conditions shows a note instead. The drawings already show the ballast tanks of gas and liquid bulk hulls.

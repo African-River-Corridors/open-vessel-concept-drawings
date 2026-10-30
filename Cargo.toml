@@ -5,7 +5,7 @@ members = ["crates/arc-rules", "crates/ovd-core", "crates/ovd-format", "crates/o
 default-members = ["crates/arc-rules", "crates/ovd-core", "crates/ovd-format", "crates/ovd-cli", "crates/ovd-shell", "crates/ovd-web", "xtask"]
 
 [workspace.package]
-version = "0.2.4"
+version = "0.3.0"
 edition = "2024"
 rust-version = "1.99"
 license = "Apache-2.0"
