@@ -256,6 +256,8 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
         "slop_share",
         "heating_kw_per_m3",
         "liquid_fill_ratio",
+        // Issue #723: the residuary resistance method.
+        "resistance_method",
     ] {
         put(name, name);
     }

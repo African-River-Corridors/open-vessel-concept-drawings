@@ -28,6 +28,7 @@
 use crate::aft_arrangement::PyException;
 use crate::checks::{Check, all_ok};
 use crate::confined_water::LIMITING_SPEED_MARGIN;
+use crate::holtrop_mennen::{self, Envelope, Flow, HullInputs, Variant};
 use crate::pyfmt::round_to;
 use crate::squat::{self, SquatInputs};
 use crate::text;
@@ -151,6 +152,80 @@ pub fn default_environments() -> Vec<EnvironmentInputs> {
     ]
 }
 
+/// How the calm-water residuary resistance is worked out (issue #723, ADR 0023).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ResistanceMethod {
+    /// ITTC-1957 friction x (1 + Cr/Cf(Fn)), the bluff-barge fit [`residuary_ratio`]: no hull-form
+    /// term. The method of every Design before issue #723, and still the default.
+    #[default]
+    BargeFit,
+    /// Holtrop 1984 ([`crate::holtrop_mennen`]) at any fullness, with a warning outside its range.
+    HoltropMennen,
+    /// Holtrop 1984 up to C_P [`FORM_METHOD_CP_MAX`], the bluff-barge fit above it.
+    ByBlockCoefficient,
+}
+
+/// The values of the `resistance_method` input, in the order of [`ResistanceMethod`].
+pub const RESISTANCE_METHODS: &[&str] = &["barge_fit", "holtrop_mennen", "by_block_coefficient"];
+
+impl ResistanceMethod {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::BargeFit => "barge_fit",
+            Self::HoltropMennen => "holtrop_mennen",
+            Self::ByBlockCoefficient => "by_block_coefficient",
+        }
+    }
+
+    /// The method of an input value; `None` for a value that names none.
+    pub fn parse(value: &str) -> Option<Self> {
+        match value {
+            "barge_fit" => Some(Self::BargeFit),
+            "holtrop_mennen" => Some(Self::HoltropMennen),
+            "by_block_coefficient" => Some(Self::ByBlockCoefficient),
+            _ => None,
+        }
+    }
+}
+
+/// The prismatic coefficient up to which `by_block_coefficient` uses Holtrop–Mennen: the top of
+/// its full-form range ([`holtrop_mennen::HOLTROP_FULL_FORM`]).
+pub const FORM_METHOD_CP_MAX: f64 = 0.85;
+
+/// The declared range of the bluff-barge fit: C_P from 0.85 to 1. An Estimate (no source): the fit
+/// was set for bluff barges, Cb about 0.9 to 1, and has no hull-form term, so it cannot rank
+/// finer hulls.
+pub const BARGE_FIT_ENVELOPE: Envelope = Envelope {
+    froude_max: None,
+    cp: (0.85, 1.0),
+    l_over_b: (0.0, f64::INFINITY),
+    b_over_t: (0.0, f64::INFINITY),
+};
+
+/// The method that gives the resistance of one hull: the bluff-barge fit or Holtrop 1984.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AppliedMethod {
+    BargeFit,
+    Holtrop1984,
+}
+
+impl AppliedMethod {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::BargeFit => "bluff-barge fit",
+            Self::Holtrop1984 => "Holtrop-Mennen 1984",
+        }
+    }
+
+    /// The declared validity range at a prismatic coefficient.
+    pub fn envelope(self, cp: f64) -> Envelope {
+        match self {
+            Self::BargeFit => BARGE_FIT_ENVELOPE,
+            Self::Holtrop1984 => holtrop_mennen::holtrop_envelope(cp),
+        }
+    }
+}
+
 /// All inputs for the resistance calculation.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ResistanceInputs {
@@ -176,6 +251,10 @@ pub struct ResistanceInputs {
     pub speed_min_knots: f64,
     pub speed_max_knots: f64,
     pub speed_step_knots: f64,
+    /// Issue #723: the residuary resistance method. The default keeps the bluff-barge fit.
+    pub method: ResistanceMethod,
+    /// Issue #723: the hull's waterplane coefficient, for Holtrop–Mennen; `None`: (1 + 2 Cb) / 3.
+    pub waterplane_coefficient: Option<f64>,
 }
 
 impl Default for ResistanceInputs {
@@ -196,6 +275,8 @@ impl Default for ResistanceInputs {
             speed_min_knots: 2.0,
             speed_max_knots: 12.0,
             speed_step_knots: 0.5,
+            method: ResistanceMethod::BargeFit,
+            waterplane_coefficient: None,
         }
     }
 }
@@ -255,6 +336,8 @@ pub struct EnvironmentResult {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ResistanceResults {
     pub inputs: ResistanceInputs,
+    /// Issue #723: the method that gave the residuary resistance of this hull.
+    pub method_used: AppliedMethod,
     pub wetted_surface_area: f64,
     pub environments: Vec<EnvironmentResult>,
     pub checks: Vec<Check>,
@@ -340,6 +423,52 @@ pub struct ResistanceCalculator<'a> {
 impl<'a> ResistanceCalculator<'a> {
     pub fn new(inputs: &'a ResistanceInputs) -> Self {
         Self { inputs }
+    }
+
+    /// Midship section coefficient: the midship area over B x T.
+    fn cm(&self) -> f64 {
+        let inp = self.inputs;
+        self.midship_section_area() / (inp.beam * inp.draft)
+    }
+
+    /// Prismatic coefficient Cb / Cm.
+    pub fn prismatic(&self) -> f64 {
+        self.inputs.block_coefficient / self.cm()
+    }
+
+    /// The method that gives the residuary resistance of this hull (issue #723).
+    pub fn applied_method(&self) -> AppliedMethod {
+        match self.inputs.method {
+            ResistanceMethod::BargeFit => AppliedMethod::BargeFit,
+            ResistanceMethod::HoltropMennen => AppliedMethod::Holtrop1984,
+            ResistanceMethod::ByBlockCoefficient => {
+                if self.prismatic() <= FORM_METHOD_CP_MAX {
+                    AppliedMethod::Holtrop1984
+                } else {
+                    AppliedMethod::BargeFit
+                }
+            }
+        }
+    }
+
+    /// The hull as Holtrop–Mennen reads it: no bulb, no immersed transom, no appendages, a normal
+    /// afterbody, lcb estimated from C_P, the given wetted surface (issue #723).
+    fn holtrop_hull(&self, wetted_surface: f64) -> HullInputs {
+        let inp = self.inputs;
+        let cb = inp.block_coefficient;
+        let cwp = inp
+            .waterplane_coefficient
+            .unwrap_or_else(|| holtrop_mennen::cwp_estimate(cb));
+        let mut h = HullInputs::plain(
+            inp.lwl,
+            inp.beam,
+            inp.draft,
+            cb * inp.lwl * inp.beam * inp.draft,
+            self.cm(),
+            cwp,
+        );
+        h.wetted_surface_m2 = wetted_surface;
+        h
     }
 
     /// Wetted surface of a box barge: bottom plus two sides, times a 1.02 rake form factor.
@@ -514,7 +643,33 @@ impl<'a> ResistanceCalculator<'a> {
 
         // Deep-water resistance components
         let rf = self.frictional_resistance(v, wetted_surface, rho, nu);
-        let rr = self.residuary_resistance(v, rf)?;
+        let rr = match self.applied_method() {
+            AppliedMethod::BargeFit => self.residuary_resistance(v, rf)?,
+            // Issue #723: everything Holtrop–Mennen adds to the ITTC-1957 friction.
+            AppliedMethod::Holtrop1984 => {
+                let flow = Flow {
+                    speed_ms: v,
+                    rho,
+                    nu,
+                    g: GRAVITY,
+                };
+                let hull = self.holtrop_hull(wetted_surface);
+                let total = holtrop_mennen::components(&hull, flow, Variant::Hm1984).total_kn;
+                if !total.is_finite() {
+                    // A hull this full leaves 1 - Cp - 0.0225 lcb (the entrance angle) or 1 - Cp
+                    // (the form factor) at or below zero, where the formulas have no value.
+                    return Err(PyException::ValueError(format!(
+                        "Holtrop-Mennen has no value for this hull (Cp {:.3}, lcb {:.2} % of L): \
+                         it needs 1 - Cp - 0.0225 lcb > 0; use resistance_method \
+                         by_block_coefficient, which takes the bluff-barge fit above Cp {}",
+                        hull.cp(),
+                        hull.lcb_pct,
+                        FORM_METHOD_CP_MAX
+                    )));
+                }
+                total - rf
+            }
+        };
         let r_deep = rf + rr;
 
         // Shallow/confined correction
@@ -656,10 +811,59 @@ impl<'a> ResistanceCalculator<'a> {
                 "warning",
             ));
         }
+        if self.inputs.method != ResistanceMethod::BargeFit {
+            checks.push(self.method_range_check(point.froude_number));
+        }
         for c in &mut checks {
             c.name = format!("{}[{}]", c.name, out.name);
         }
         Ok(checks)
+    }
+
+    /// Issue #723: the resistance method used and whether the hull and the service speed are in its
+    /// declared range (a warning). Only for a Design that chose a method, so the results of a
+    /// Design saved before the choice do not change.
+    fn method_range_check(&self, froude: f64) -> Check {
+        let inp = self.inputs;
+        let method = self.applied_method();
+        let cp = self.prismatic();
+        let (lb, bt) = (inp.lwl / inp.beam, inp.beam / inp.draft);
+        let envelope = method.envelope(cp);
+        let outside = envelope.outside(froude, cp, lb, bt);
+        let list = if outside.is_empty() {
+            "none".to_string()
+        } else {
+            outside
+                .iter()
+                .map(|o| {
+                    if o.high.is_finite() {
+                        format!(
+                            "{} {:.2} (range {:.2} to {:.2})",
+                            o.name, o.value, o.low, o.high
+                        )
+                    } else {
+                        format!("{} {:.2} (range from {:.2})", o.name, o.value, o.low)
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        Check::with_severity(
+            "resistance_method_in_range",
+            outside.is_empty(),
+            text!(
+                "check-resistance-method-in-range",
+                "{method} at the service speed: Fn {froude}, Cp {cp}, L/B {lb}, B/T {bt}; outside \
+                 its range: {outside}",
+                method = method.as_str(),
+                froude = Arg::fixed(froude, 3),
+                cp = Arg::fixed(cp, 3),
+                lb = Arg::fixed(lb, 2),
+                bt = Arg::fixed(bt, 2),
+                outside = list,
+            ),
+            "warning",
+        )
     }
 
     fn compute_environment(
@@ -782,6 +986,7 @@ impl<'a> ResistanceCalculator<'a> {
         }
         Ok(ResistanceResults {
             inputs: self.inputs.clone(),
+            method_used: self.applied_method(),
             wetted_surface_area: ws,
             environments: env_results,
             checks: Vec::new(),

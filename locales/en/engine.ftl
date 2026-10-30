@@ -159,6 +159,8 @@ msg-offsets-self-crossing = station { $station } of the offsets table crosses it
 
 check-name-lackenby-fit-subcritical = lackenby fit subcritical
 check-lackenby-fit-subcritical = depth Froude { $froude } at the service speed; the shallow-water fit holds below { $limit }, above it a fixed factor stands in
+check-name-resistance-method-in-range = resistance method in range
+check-resistance-method-in-range = { $method } at the service speed: Fn { $froude }, Cp { $cp }, L/B { $lb }, B/T { $bt }; outside its range: { $outside }
 check-service-speed-below-limiting = { $environment }: service { $service } kn <= 0.95 x Schijf limit { $limit } kn
 check-power-within-installed = { $environment }: power { $power } kW <= installed { $installed } kW
 check-blockage-in-range = { $environment }: blockage n = { $blockage } must be in (0, 1)

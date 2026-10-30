@@ -91,6 +91,10 @@ const BUILT_IN: &[(&str, &str)] = &[
         "rules/ovd/3.0.0.json",
         include_str!("../rules/ovd/3.0.0.json"),
     ),
+    (
+        "rules/ovd/3.1.0.json",
+        include_str!("../rules/ovd/3.1.0.json"),
+    ),
 ];
 
 /// What OVD declares to the kernel's loader: its Measure registry (`ovd rules --measures`), the

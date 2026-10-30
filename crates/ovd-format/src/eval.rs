@@ -2277,6 +2277,9 @@ fn resistance_inputs(args: &Value) -> Result<core_resistance::ResistanceInputs, 
         speed_min_knots: f64_or(o, "speed_min_knots", d.speed_min_knots)?,
         speed_max_knots: f64_or(o, "speed_max_knots", d.speed_max_knots)?,
         speed_step_knots: f64_or(o, "speed_step_knots", d.speed_step_knots)?,
+        // The Python API has no resistance method (issue #723): the bluff-barge fit.
+        method: d.method,
+        waterplane_coefficient: d.waterplane_coefficient,
     })
 }
 
