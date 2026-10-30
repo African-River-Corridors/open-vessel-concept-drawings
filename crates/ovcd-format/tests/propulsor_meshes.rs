@@ -471,3 +471,90 @@ fn every_propulsor_part_is_a_named_gltf_node_with_the_propulsor_material() {
     }
     assert!(seen >= 20, "{seen}");
 }
+
+fn new_self_propelled(propulsor: &str, stern: &str) -> ovcd_format::DesignSession {
+    let mut s = ovcd_format::DesignSession::new_design(Profile::built_in()).unwrap();
+    for (n, v) in [
+        ("cargo", serde_json::json!("bauxite")),
+        ("length_overall_m", serde_json::json!(110.0)),
+        ("beam_m", serde_json::json!(11.4)),
+        ("moulded_depth_m", serde_json::json!(4.0)),
+        ("propulsor_type", serde_json::json!(propulsor)),
+        ("stern_form", serde_json::json!(stern)),
+        ("stern_block_mass_included", serde_json::json!(true)),
+    ] {
+        if n == "propulsor_type" {
+            s.set_formation("Option 1", "self_propelled", None, None)
+                .unwrap();
+        }
+        s.set_input("Option 1", n, v).unwrap();
+    }
+    s
+}
+
+/// Label: property - the link of each propulsor's place to its mass item, per type (criterion 1 of
+/// #692 as agreed by the coordinator overnight on 2026-10-30, pending the maintainer's review). The
+/// mass items carry no TCG, so the link is in x and z:
+/// - an azimuth or Voith Schneider unit: the place's x is the item's LCG, and the place's z is the
+///   item's KCG less D / 2 (the item sits at the base + D, spec 0007 "Machinery space and mass",
+///   `machinery::drive_unit_positions`; the disc axis at D / 2, spec 0009 "Propulsors");
+/// - a pump jet: the item is on the axis, so the place is the item's LCG and KCG;
+/// - a shaft drive: the place is the aft end of the shaft line the `shaft lines` item spans (the
+///   item's LCG less half the shaft length), on the item's KCG, the axis.
+#[test]
+fn each_propulsor_place_is_tied_to_its_mass_item_by_type() {
+    let mut checked = 0;
+    for propulsor in [
+        "azimuth_open",
+        "azimuth_ducted",
+        "voith_schneider",
+        "pump_jet",
+        "shaft_open",
+        "shaft_nozzle",
+    ] {
+        for stern in ["transom", "tunnel"] {
+            let s = new_self_propelled(propulsor, stern);
+            let RunOutcome::Results { results: r, .. } =
+                s.evaluate().options[0].outcome.clone().expect("it ran")
+            else {
+                panic!("{propulsor} {stern}: no results");
+            };
+            let l = &r["drawing"]["propulsors"];
+            let d = f(l, "diameter_m");
+            let label = if propulsor.starts_with("shaft") {
+                "shaft lines"
+            } else {
+                "propulsors"
+            };
+            let item = r["stern_block_mass"]["items"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|i| i["label"] == label)
+                .unwrap_or_else(|| panic!("{propulsor} {stern}: no {label} item"));
+            let (lcg, kcg) = (f(item, "lcg_m"), f(item, "kcg_m"));
+            for u in l["propulsors"].as_array().unwrap() {
+                let (x, z) = (f(u, "x_m"), f(u, "z_m"));
+                let (want_x, want_z) = match propulsor {
+                    "azimuth_open" | "azimuth_ducted" | "voith_schneider" => (lcg, kcg - d / 2.0),
+                    "pump_jet" => (lcg, kcg),
+                    _ => (lcg - f(&u["shaft"], "length_m") / 2.0, kcg),
+                };
+                assert!(
+                    (x - want_x).abs() <= 1e-9,
+                    "{propulsor} {stern}: x {x} vs {want_x}"
+                );
+                assert!(
+                    (z - want_z).abs() <= 1e-9,
+                    "{propulsor} {stern}: z {z} vs {want_z}"
+                );
+                assert!(
+                    (z - f(&r["powering"], "shaft_axis_height_m")).abs() <= 1e-9,
+                    "{propulsor} {stern}: the axis"
+                );
+                checked += 1;
+            }
+        }
+    }
+    assert_eq!(checked, 24, "six types, two sterns, two units each");
+}
