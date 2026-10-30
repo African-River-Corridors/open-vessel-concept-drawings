@@ -18,11 +18,12 @@ use ovcd_core::mesh::Mesh;
 use serde_json::{Value, json};
 
 /// The layers of a mesh in the order they appear in a scene, with the name of the layer's node.
-const LAYERS: [(&str, &str); 5] = [
+const LAYERS: [(&str, &str); 6] = [
     ("hull", "hull"),
     ("deck", "decks"),
     ("bulkhead", "bulkheads"),
     ("space", "spaces"),
+    ("deck_item", "deck_items"),
     ("waterline", "waterlines"),
 ];
 
@@ -44,15 +45,16 @@ fn material(layer: &str) -> ([f64; 4], bool) {
         "deck" => ([0.78, 0.70, 0.50, 1.0], false),
         "bulkhead" => ([0.70, 0.72, 0.80, 1.0], false),
         "space" => ([0.25, 0.60, 0.90, 0.5], true),
+        "deck_item" => ([0.80, 0.80, 0.78, 1.0], false),
         _ => ([0.10, 0.40, 0.90, 0.8], true),
     }
 }
 
 /// The `.glb` of `mesh`: one node for each layer, named for it (`hull`, `decks`, `bulkheads`,
-/// `spaces`, `waterlines`), holding one child node for each part, named for the part (a deck or
-/// bulkhead key, a Space name, a loading condition). The hull is the layer's own node, with its mesh.
-/// One material for each layer. All of them sit under one root node, `vessel`, which maps the model
-/// axes to glTF's. An empty mesh gives a scene with no nodes.
+/// `spaces`, `deck_items`, `waterlines`), holding one child node for each part, named for the part
+/// (a deck or bulkhead key, a Space name, a Deck Item id, a loading condition). The hull is the
+/// layer's own node, with its mesh. One material for each layer. All of them sit under one root
+/// node, `vessel`, which maps the model axes to glTF's. An empty mesh gives a scene with no nodes.
 pub fn gltf_glb(mesh: &Mesh) -> Vec<u8> {
     let mut bin: Vec<u8> = Vec::with_capacity(4 * (mesh.positions.len() + mesh.indices.len()));
     for p in &mesh.positions {
