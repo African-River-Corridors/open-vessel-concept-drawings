@@ -53,7 +53,7 @@ def test_the_0_3_0_notes_fit_and_keep_the_rename_text_and_the_calibration_cases(
     assert len(text) > rn.LIMIT, "the 0.3.0 section is the case that failed; it should still need a cut"
     out = rn.cap(text, LINK)
     assert len(out) + FOOTER <= rn.GITHUB_LIMIT
-    assert "OVCD is now Open Vessel Designer (OVD)." in out
+    assert "is now Open Vessel Designer (OVD). The repository, crates" in out
     assert "`wilcarry-1750-45x20`" in out  # the last calibration case named
     assert out.endswith(f"[CHANGELOG.md]({LINK}).\n")
 
