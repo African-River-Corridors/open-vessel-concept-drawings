@@ -3,7 +3,8 @@
 
     python3 tools/old_name_gate.py
 
-Fails when a tracked text file holds the old short name, in any case, outside:
+Fails when a tracked text file holds the old short name or the old long name (with a space or a hyphen),
+in any case, outside:
   - the history: CHANGELOG.md, changes/, docs/adr/ (earlier ADRs), spec 0010 itself;
   - this file;
   - the 0.2.4 file that proves an old file does not open (crates/ovd-format/tests/legacy/before_ovd_*);
@@ -18,6 +19,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OLD = "ov" + "cd"  # split, so this file needs no exemption for the pattern itself
+OLD_LONG = ("open vessel " + "concept", "open-vessel-" + "concept")
 HISTORY = re.compile(
     r"^(CHANGELOG\.md|changes/|docs/adr/|docs/specs/0010-rename-to-open-vessel-designer\.md"
     r"|tools/old_name_gate\.py|crates/ovd-format/tests/legacy/before_ovd_)"
@@ -51,7 +53,8 @@ def problems() -> list[str]:
         if b"\0" in data[:8192]:
             continue  # binary
         for n, line in enumerate(data.decode("utf-8", "replace").splitlines(), 1):
-            if OLD in line.lower() and MARK not in line:
+            low = line.lower()
+            if (OLD in low or any(o in low for o in OLD_LONG)) and MARK not in line:
                 found.append(f"{path}:{n}:{line.strip()[:120]}")
     return found
 
