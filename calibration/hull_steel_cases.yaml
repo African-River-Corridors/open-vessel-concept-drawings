@@ -1,6 +1,7 @@
 # Hull steel calibration of the panel model (issue #722, `crates/ovd-core/src/hull_panels.rs`).
-# Hand-written. The figures under `panel` are what the model printed on 2026-10-30 (branch
-# fix/722-gas-hull-steel); they are a record, not a test. The library table is printed by
+# Hand-written. The `ovd` figures are what the model printed on 2026-10-30 (branch
+# fix/722-gas-hull-steel, after the panel steel became the gas-hull lightship steel, with Cb = the
+# 0.85 `block_coefficient` input in the hull girder rule); they are a record, not a test. The library table is printed by
 # `cargo test -p ovd-core --test hull_panels_calibration -- --nocapture`.
 #
 # Concept and preliminary design only (ADR 0011). The panel model takes class minimum scantlings; it
@@ -33,10 +34,10 @@ reference_vessels:
       steel_top_down_t: 1900
       steel_bottom_up_t: 1148
       steel_panel_t: 1528
-      lightship_top_down_t: 2677
-      lightship_with_panel_steel_t: 2278
-      residual_lightship_with_panel_pct: -15.2
-      residual_lightship_top_down_pct: -0.4
+      lightship_t: 2278            # the panel steel drives it (issue #722)
+      lightship_before_t: 2677     # OVD 0.3.0, the top-down rate
+      residual_lightship_pct: -15.2
+      residual_lightship_before_pct: -0.4
     watson_gilfillan_benchmark:
       formula: "Ws = K E^1.36, E = L(B+T) + 0.85 L (D-T); K 0.029 to 0.035 (tanker values, secondary, unverified)"
       steel_t: [1391, 1679]
@@ -45,9 +46,9 @@ benchmarks:
   - id: gas-140x29-coastal-lng-A
     what: "Worked example examples/gas-140x29-coastal-lng, Option A basis (140 x 29 x 12 m, 2 x 2 tanks of 11 m OD)"
     ovd:
-      steel_top_down_t: 4872
-      steel_bottom_up_t: 2285
-      steel_panel_t: 3574
+      steel_top_down_t: 4872     # reported only
+      steel_bottom_up_before_t: 2285  # OVD 0.3.0: plating x 2.0 + wing plate + shield
+      steel_panel_t: 3591        # drives the lightship and the cost
     watson_gilfillan_benchmark:
       steel_t: [3605, 4351]
       note: "T = 3.96 m (laden). Benchmark only: no barge K is published."

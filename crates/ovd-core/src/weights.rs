@@ -226,6 +226,10 @@ pub struct TankMassOptions {
     pub dome_wall_thickness_mm: f64,
     /// Diameter of the cylindrical dome (m).
     pub dome_diameter_m: f64,
+    /// Issue #722: weigh the hull from its structural members (`hull_panels`) and let that steel
+    /// drive the lightship and the cost, in place of the top-down rate and the plating x factor.
+    /// The gas capacity calculation sets it; the legacy API leaves it off.
+    pub hull_panels: bool,
 }
 
 /// The mass of the tank domes as one lightship item (issue #412): per tank a cylinder of the dome
@@ -396,20 +400,83 @@ pub fn calculate_weights_with(
     let covering =
         total_mass(&covering_items(inputs, tanks)?) + total_mass(&dome_items(inputs, tanks, opts)?);
 
+    // Issue #722: the hull to D from its structural members. Its steel drives the lightship, the
+    // piping, the outfitting and the cost; the covering above D stays non-structural (its own items),
+    // and the cost prices only the covering's parts above D, so the members below D are not counted
+    // twice. The block coefficient for the hull girder rule is the input's (an Estimate: the laden
+    // block coefficient would need the lightship first).
+    let (
+        w_bottom,
+        w_side,
+        w_deck,
+        w_rake,
+        w_structure,
+        w_hull_total,
+        w_wing_plate,
+        w_weather_shield,
+        steel_lightship,
+    ) = if opts.hull_panels {
+        let spec = crate::hull_panels::gas_hull_spec(inputs, tanks, inputs.block_coefficient);
+        let m = crate::hull_panels::double_hull_panels(&spec, &Default::default());
+        let plate_of = |prefix: &str| -> f64 {
+            m.members
+                .iter()
+                .filter(|p| p.member.starts_with(prefix))
+                .map(|p| p.plate_t)
+                .sum()
+        };
+        let (b, s, d) = (
+            plate_of("bottom shell"),
+            plate_of("side shell"),
+            plate_of("strength deck"),
+        );
+        let cover = covering_items(inputs, tanks)?;
+        let part = |labels: &[&str]| -> f64 {
+            cover
+                .iter()
+                .filter(|i| labels.contains(&i.label))
+                .map(|i| i.mass_t)
+                .sum()
+        };
+        (
+            b,
+            s,
+            d,
+            0.0,
+            m.total_t - (b + s + d),
+            m.total_t,
+            part(&["wing plate", "side plating to the wing plate"]),
+            part(&["weather shield top", "weather shield sides and ends"]),
+            m.total_t,
+        )
+    } else {
+        (
+            w_bottom,
+            w_side,
+            w_deck,
+            w_rake,
+            w_structure,
+            w_hull_total,
+            w_wing_plate,
+            w_weather_shield,
+            steel_top_down,
+        )
+    };
+
     // Bottom-up: hull steel only (excluding tanks, which are separate).
     let steel_bottom_up = w_hull_total + w_wing_plate + w_weather_shield;
     let steel_delta = steel_top_down - steel_bottom_up;
 
-    // --- Piping and machinery (based on top-down steel + tanks) ---
-    let w_piping = inputs.piping_factor * (steel_top_down + w_tank_total);
+    // --- Piping and machinery (based on the lightship's hull steel + tanks) ---
+    let w_piping = inputs.piping_factor * (steel_lightship + w_tank_total);
 
     // --- Outfitting (percentage of steel + tanks) ---
-    let w_outfitting = inputs.outfitting_factor * (steel_top_down + w_tank_total);
+    let w_outfitting = inputs.outfitting_factor * (steel_lightship + w_tank_total);
 
-    // --- Lightship total (top-down hull steel + bottom-up tanks + insulation + piping + outfitting
-    // + the covering above D) ---
+    // --- Lightship total (hull steel: top-down, or the panel model for a gas hull + bottom-up tanks
+    // + insulation + piping + outfitting + the covering above D) ---
     let lightship =
-        steel_top_down + w_tank_total + w_insulation + w_piping + w_outfitting + covering;
+        steel_lightship + w_tank_total + w_insulation + w_piping + w_outfitting + covering;
 
     Ok(WeightBreakdown {
         hull_bottom_plating: w_bottom,

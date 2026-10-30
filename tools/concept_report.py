@@ -6,7 +6,7 @@ that no figure is typed:
 
   particulars(o, ref)       main particulars, with a reference Option beside them when given
   lightship(o)              lightship by item (the items add to the lightship; checked)
-  steel(o, status)          the two hull steel figures (top-down, bottom-up) and the gap between them
+  steel(o, status)          the hull steel figures (the panel model since #722, the top-down rate) and the gap
   hydrostatics(o)           a hydrostatic table by draught, with Cb
   stability(o)              the loading conditions table; gz_chart(o, path) draws the GZ curves
   powering(o)               installed power, speeds and the gas balance; POWERING_METHOD names the method
@@ -124,13 +124,21 @@ def particulars(o, ref=None, extra_rows=()):
 
 
 def steel(o, status=None):
-    """The two hull steel figures and the gap between them. `status` labels both (for example a review)."""
+    """The hull steel figures. `status` labels them (for example a review). Since issue #722 the panel
+    model (structural members with class minimum scantlings) drives the lightship and the cost; the
+    top-down rate is printed for comparison only. A results file from before has no `panel_t`."""
     st = R(o)["cost_masses"]["steel"]
     td, bu = st["top_down_t"], st["bottom_up_t"]
-    rows = [["Top-down: rate × L × B × D", n(td), "Drives the lightship"],
-            ["Bottom-up: plating build-up", n(bu), "Prices the cost only"],
-            ["Gap, top-down over bottom-up", f"{n(td - bu)} (+{td / bu - 1:.0%})", "Not resolved"]]
-    cap = f"Hull steel: the two figures OVD prints, {o['name']}" + (f", {status}" if status else "")
+    if "panel_t" in st:
+        pn = st["panel_t"]
+        rows = [["Panel model: members with class minimum scantlings", n(pn), "Drives the lightship and the cost"],
+                ["Top-down: rate × L × B × D", n(td), "Comparison only"],
+                ["Gap, top-down over panel", f"{n(td - pn)} ({td / pn - 1:+.0%})", "Reported"]]
+    else:
+        rows = [["Top-down: rate × L × B × D", n(td), "Drives the lightship"],
+                ["Bottom-up: plating build-up", n(bu), "Prices the cost only"],
+                ["Gap, top-down over bottom-up", f"{n(td - bu)} (+{td / bu - 1:.0%})", "Not resolved"]]
+    cap = f"Hull steel: the figures OVD prints, {o['name']}" + (f", {status}" if status else "")
     return table("tbl-steel", cap, ["Figure", "Hull steel (t)", "Use"], rows, aligns=[None, "right", None],
                  notes=f"Both figures are {status}." if status else None)
 
@@ -140,7 +148,8 @@ def lightship_items(o):
     r = R(o)
     m, st = r["cost_masses"]["masses"], r["cost_masses"]["steel"]
     items = [
-        ("Hull steel to the moulded depth", st["top_down_t"], "Top-down: rate × L × B × D"),
+        ("Hull steel to the moulded depth", st.get("panel_t", st["top_down_t"]),
+         "Panel model: members with class minimum scantlings" if "panel_t" in st else "Top-down: rate × L × B × D"),
         ("Cargo tanks, shells and supports", m["tank_shell_t"] + m["tank_supports_t"], "Tank shell × structure factor"),
         ("Tank insulation", m["insulation_t"], "Area × thickness × density"),
         ("Piping and machinery", m["piping_machinery_t"], "Factor on hull steel and tanks"),
@@ -160,9 +169,12 @@ def lightship(o):
     rows.append(["Lightship", n(total), "100%", "Uncalibrated for a gas hull"])
     st = R(o)["cost_masses"]["steel"]
     return table("tbl-lightship", f"Lightship by item, {o['name']}", ["Item", "Mass (t)", "Share", "Basis"], rows,
-                 notes=(f"The hull steel has two figures in OVD. The lightship uses the top-down one ({n(st['top_down_t'])} t). "
-                        f"The bottom-up plating build-up ({n(st['bottom_up_t'])} t) prices the cost only. "
-                        "The covering above the moulded depth is weighed once, as its own items."),
+                 notes=((f"The hull steel is the panel model ({n(st['panel_t'])} t): structural members with class minimum "
+                         "scantlings, which drive the lightship and the cost. The top-down rate "
+                         f"({n(st['top_down_t'])} t) is printed for comparison only. " if "panel_t" in st else
+                         f"The hull steel has two figures in OVD. The lightship uses the top-down one ({n(st['top_down_t'])} t). "
+                         f"The bottom-up plating build-up ({n(st['bottom_up_t'])} t) prices the cost only. ")
+                        + "The covering above the moulded depth is weighed once, as its own items."),
                  aligns=[None, "right", "right", None])
 
 

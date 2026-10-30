@@ -3029,7 +3029,7 @@ fn simulate_gas(
                     pw["installed_power_kw"].as_f64().unwrap_or(0.0),
                 ),
                 None => crate::cost::gas_masses(&b.weights),
-            }, &gas_hull_panels(r, b))),
+            }, &gas_hull_panels(b))),
         }),
             (&r.stern_block_items, &r.trim_conditions),
         ),
@@ -3517,19 +3517,12 @@ pub(crate) fn formation_curves(
         .map_err(stop_text)
 }
 
-/// Issue #722: the panel model of a gas hull, with the block coefficient of its laden condition
-/// (ABS 3-1-1/31: the moulded displacement over L x B x d).
+/// Issue #722: the panel model of a gas hull, the same one that drives its lightship and cost.
 fn gas_hull_panels(
-    r: &ovd_core::barge_capacity::BargeCapacityResult,
     b: &ovd_core::barge_capacity::GasBasis,
 ) -> ovd_core::hull_panels::HullPanelModel {
     let i = &b.inputs;
-    let t = r.full_load_draft_m;
-    let cb = if t > 0.0 && i.loa > 0.0 && i.beam > 0.0 {
-        r.displacement_t / (i.water_density * i.loa * i.beam * t)
-    } else {
-        i.block_coefficient
-    };
-    let spec = ovd_core::hull_panels::gas_hull_spec(i, &b.tanks, cb);
+    // The same block coefficient as the lightship's panel model (`weights::calculate_weights_with`).
+    let spec = ovd_core::hull_panels::gas_hull_spec(i, &b.tanks, i.block_coefficient);
     ovd_core::hull_panels::double_hull_panels(&spec, &Default::default())
 }

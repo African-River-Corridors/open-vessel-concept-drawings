@@ -331,9 +331,18 @@ fn tanks_in_line_sets_the_tanks_along_the_hull_and_the_length_over_diameter_chec
 fn the_weather_shield_inputs_move_the_lightship_and_its_centre() {
     // Issue #410, part 1b. The self-propelled fixture's wing plate stands above D, so its shield is
     // a lightship item. No shield weighs less; a higher shield weighs more and sits higher.
+    // Issue #722: the shield's mass is compared, not the whole lightship. With the hull steel from the
+    // panel model, the arrangement search may take another tank size when the shield changes, and the
+    // hull steel then moves too. The shield's mass is the lightship item of the covering
+    // (`cost_masses.masses.weather_shield_t`, the parts above D).
     let base = results(SELF, &[]);
-    let ls = |v: &Value| v["results"]["lightship_t"].as_f64().unwrap();
+    let ls = |v: &Value| {
+        v["cost_masses"]["masses"]["weather_shield_t"]
+            .as_f64()
+            .unwrap()
+    };
     let none = results(SELF, &[("weather_shield_thickness_mm", json!(0.0))]);
+    assert_eq!(ls(&none), 0.0);
     assert!(ls(&none) < ls(&base), "{} vs {}", ls(&none), ls(&base));
     let thick = results(SELF, &[("weather_shield_thickness_mm", json!(12.0))]);
     assert!(ls(&thick) > ls(&base), "{} vs {}", ls(&thick), ls(&base));

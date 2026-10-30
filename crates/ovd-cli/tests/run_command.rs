@@ -464,6 +464,8 @@ fn json_results_are_what_simulate_answers_for_a_self_propelled_gas_hull() {
     // condition with no ballast is a warning; the one-wide arrangement is feasible again): was
     // 1405.8516419707348 and 1509.0556682648712; the lightship is what the code prints now (the
     // stern and covering inputs of the issues since #410 moved it from 1604.5823133024817).
+    // Re-pinned again (issue #722, the hull steel from the panel model): lightship_t was
+    // 1583.438359298561.
     let r = &results["results"];
     assert_close(
         r["cargo_t"].as_f64().unwrap(),
@@ -472,7 +474,7 @@ fn json_results_are_what_simulate_answers_for_a_self_propelled_gas_hull() {
     );
     assert_close(
         r["lightship_t"].as_f64().unwrap(),
-        1583.438359298561,
+        1569.7907856537108,
         "lightship_t",
     );
     // Re-pinned (issue #264); was "tank volume" (stepped IGC_2G) and "draught — Draught limit" (issue #237).

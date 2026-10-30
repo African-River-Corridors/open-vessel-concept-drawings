@@ -173,3 +173,67 @@ fn a_gas_hull_gets_a_panel_model_from_its_arrangement() {
     let m = double_hull_panels(&s, &ScantlingChoices::default());
     assert!(m.total_t > 0.0 && m.total_t.is_finite());
 }
+
+/// Issue #722 (maintainer decision): the panel steel drives a gas hull's lightship and cost; the
+/// structure factor of 2.0 is retired. Property tests: no fixed number.
+mod the_switch {
+    use super::*;
+
+    fn gas() -> ovd_core::barge_capacity::BargeCapacityResult {
+        let mut i = BargeCapacityInputs::new(110.0, 11.4, 6.0);
+        i.cargo_type = "LPG_propane".into();
+        compute(&i).unwrap()
+    }
+
+    fn panel_of(b: &ovd_core::barge_capacity::GasBasis) -> ovd_core::hull_panels::HullPanelModel {
+        let s = gas_hull_spec(&b.inputs, &b.tanks, b.inputs.block_coefficient);
+        double_hull_panels(&s, &ScantlingChoices::default())
+    }
+
+    #[test]
+    fn the_hull_steel_is_the_panel_model() {
+        let r = gas();
+        let b = r.gas_basis.as_ref().unwrap();
+        let m = panel_of(b);
+        assert_eq!(b.weights.hull_steel_total, m.total_t);
+        let parts = b.weights.hull_bottom_plating
+            + b.weights.hull_side_plating
+            + b.weights.hull_deck_plating
+            + b.weights.hull_rake_plating
+            + b.weights.hull_internal_structure;
+        assert!((parts - m.total_t).abs() < 1e-9);
+    }
+
+    #[test]
+    fn the_lightship_takes_the_panel_steel_not_the_top_down_rate() {
+        let r = gas();
+        let w = &r.gas_basis.as_ref().unwrap().weights;
+        let steel = w.hull_steel_total;
+        assert!((w.piping_machinery - 0.04 * (steel + w.tank_total)).abs() < 1e-9);
+        assert!((w.outfitting - 0.035 * (steel + w.tank_total)).abs() < 1e-9);
+        // The top-down figure is still reported, as a comparison only.
+        assert_eq!(w.steel_top_down, 0.10 * 110.0 * 11.4 * 6.0);
+        let b = r.gas_basis.as_ref().unwrap();
+        let cover: f64 = ovd_core::weights::covering_items(&b.inputs, &b.tanks)
+            .unwrap()
+            .iter()
+            .chain(r.dome_items.iter())
+            .map(|i| i.mass_t)
+            .sum();
+        let sum = steel + w.tank_total + w.insulation + w.piping_machinery + w.outfitting + cover;
+        assert!((w.lightship - sum).abs() < 1e-9, "{} vs {sum}", w.lightship);
+        assert_eq!(r.lightship_t, w.lightship);
+    }
+
+    #[test]
+    fn the_cost_prices_only_the_covering_above_d_beside_the_members() {
+        let r = gas();
+        let b = r.gas_basis.as_ref().unwrap();
+        let cover: f64 = ovd_core::weights::covering_items(&b.inputs, &b.tanks)
+            .unwrap()
+            .iter()
+            .map(|i| i.mass_t)
+            .sum();
+        assert!((b.weights.wing_plate + b.weights.weather_shield - cover).abs() < 1e-9);
+    }
+}

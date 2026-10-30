@@ -26,7 +26,7 @@ fn narrow_deep() -> GasCapacityResult {
             total_tank_volume: 850.4955629214109,
             n_tanks_total: 2,
             cylinder_length: 15.35,
-            steel_top_down: 252.0,
+            hull_steel: 252.0,
             tank_total: 179.0007365011633,
             insulation: 17.264591011876167,
             piping_machinery: 17.240029460046532,
@@ -333,7 +333,7 @@ fn a_weight_split_difference_of_exactly_one_tonne_adds_no_note() {
     let mut r = narrow_deep();
     {
         let b = r.gas_basis.as_mut().unwrap();
-        b.steel_top_down = 252.0;
+        b.hull_steel = 252.0;
         b.tank_total = 179.0;
         b.insulation = 17.0;
         b.piping_machinery = 17.0;
@@ -436,7 +436,7 @@ fn the_free_surface_chord_is_not_computed_for_an_empty_tank() {
         b.total_tank_volume = 1000.0;
         b.n_tanks_total = 2;
         b.cylinder_length = 40.0;
-        b.steel_top_down = 500.0;
+        b.hull_steel = 500.0;
         b.tank_total = 200.0;
         b.insulation = 10.0;
         b.piping_machinery = 50.0;
@@ -522,7 +522,7 @@ fn a_half_laden_fill_of_exactly_one_skips_the_chord_that_would_overflow() {
         b.inner_diameter = 2e155;
         b.total_tank_volume = 100.0;
         b.cylinder_length = 40.0;
-        b.steel_top_down = 500.0;
+        b.hull_steel = 500.0;
         b.tank_total = 200.0;
         b.insulation = 10.0;
         b.piping_machinery = 50.0;

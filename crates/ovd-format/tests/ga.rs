@@ -647,8 +647,14 @@ fn a_ballast_waterline_is_drawn_when_the_results_have_a_ballast_condition_apart_
     // Issue #409. The IS Code loading conditions give a "Ballast, departure" draught. It is drawn
     // when it stands at least 1 mm from the light and the loaded waterlines at the scale of the view.
     let (_, mut r) = computed("gas_igc_2g_exact.vdesign").remove(0);
+    // Issue #722 put the light waterline within about 0.8 m of the loaded one, which at the scale of
+    // the view leaves no room for a third line between them. The light draught is set to a quarter of
+    // the loaded one here, and the ballast draught sits halfway between the two.
+    let draught = r["results"]["draught_m"].as_f64().unwrap();
+    r["results"]["light_draught_m"] = serde_json::json!(draught / 4.0);
+    let ballast = (draught / 4.0 + draught) / 2.0;
     r["loading_conditions"] = serde_json::json!({"conditions": [
-        {"role": "ballast_departure", "draught_m": 1.655}
+        {"role": "ballast_departure", "draught_m": ballast}
     ]});
     let v = views(&r);
     for (name, view) in [
@@ -657,7 +663,7 @@ fn a_ballast_waterline_is_drawn_when_the_results_have_a_ballast_condition_apart_
     ] {
         let at = of_layer(view, "WATER", "line")
             .iter()
-            .filter(|e| close(e["from_m"][1].as_f64().unwrap(), 1.655))
+            .filter(|e| close(e["from_m"][1].as_f64().unwrap(), ballast))
             .count();
         assert_eq!(at, 1, "{name}");
         assert!(view.to_string().contains("BALLAST DRAUGHT"), "{name}");

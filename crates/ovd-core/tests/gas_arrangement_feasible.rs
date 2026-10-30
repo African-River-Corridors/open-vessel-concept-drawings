@@ -70,11 +70,13 @@ fn the_search_takes_the_arrangement_with_most_cargo_that_passes() {
 
 #[test]
 fn a_light_condition_that_fails_only_the_angle_of_max_gz_is_a_warning_not_a_failure() {
-    // Issue #498. 60 x 10 x 6 m LPG propane: the legacy Light condition (no ballast) fails the angle of
-    // maximum GZ, IS Code 2.2.3, and nothing else. It was infeasible; now the check is a warning and
+    // Issue #498. 65 x 10 x 6 m LPG propane: the legacy Light condition (no ballast) fails the angle of
+    // maximum GZ, IS Code 2.2.3, and nothing else. (Was 60 x 10 x 6 m until issue #722: with the hull
+    // steel from the panel model that hull's half-laden condition fails the angle too, so it is
+    // infeasible and no longer shows the case.) It was infeasible; now the check is a warning and
     // the arrangement is feasible. The Python assessment (`assess().ok()`) is unchanged: it still
     // says the Light condition does not pass.
-    let f = fit(60.0, 10.0, "LPG_propane", 5.7, &options(6.0)).unwrap();
+    let f = fit(65.0, 10.0, "LPG_propane", 5.7, &options(6.0)).unwrap();
     assert!(f.feasible, "{:?}", f.failed_checks);
     assert!(f.failed_checks.is_empty(), "{:?}", f.failed_checks);
     assert!(f.payload_t > 0.0);

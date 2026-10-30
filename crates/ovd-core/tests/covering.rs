@@ -222,6 +222,7 @@ fn the_tank_domes_are_a_lightship_item_with_their_own_height() {
         forming_allowance_pct: 0.0,
         dome_wall_thickness_mm: 25.0,
         dome_diameter_m: 2.0,
+        hull_panels: false,
     };
     let items = dome_items(&i, &tanks, &opts).unwrap();
     let dome = item(&items, "tank domes");

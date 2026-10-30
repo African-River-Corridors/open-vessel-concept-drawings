@@ -131,13 +131,8 @@ pub const DEFAULT_WEATHER_SHIELD_CLEARANCE_M: f64 = 1.5;
 pub const DEFAULT_TANK_FORMING_ALLOWANCE_PCT: f64 = 5.0;
 /// Default wall of a tank dome (mm, issue #412). An Estimate: the thickness of the tank wall.
 pub const DEFAULT_TANK_DOME_WALL_THICKNESS_MM: f64 = 25.0;
-/// The internal structure of a gas barge hull as a multiple of its plating (issue #401, step 2). The bottom-up
-/// hull steel, which the capital budget prices, is the plating times this, plus the wing plate and the weather
-/// shield. An Estimate, set so that the bottom-up steel is about 0.10 t/m3 of L x B x D (median over the case
-/// designs), the same as the top-down rate. The reference vessel library gives 0.145 for 92 to 110 m cargo
-/// vessels (designer estimates, not weighed ships). A factor this high says the plating thicknesses (12, 10 and
-/// 10 mm) are thin for a hull of this size. The legacy API keeps 1.4 (`BargeInputs::new`). The lightship does not use it.
-pub const GAS_HULL_STRUCTURE_FACTOR: f64 = 2.0;
+// Issue #722: the gas hull's bottom-up steel is the panel model (`hull_panels`); the former structure
+// factor of 2.0 on the plating (issue #401, step 2) is retired.
 /// The share (%) by which the top-down hull steel of the lightship and the bottom-up hull steel that the
 /// cost prices may differ before the result warns (issue #404). An Estimate, to calibrate against the
 /// reference vessel library: no source gives a limit. The share is of the bottom-up steel.
@@ -766,7 +761,6 @@ fn gas_volumetric(
 ) -> Result<Volumetric, PyError> {
     let mut base = BargeInputs::new(inp.loa, inp.beam, inp.depth, inp.depth, inp.depth * 10.0);
     base.vessel_type = inp.vessel_type.clone();
-    base.structure_factor = GAS_HULL_STRUCTURE_FACTOR;
     base.cargo_type = inp.cargo_type.clone();
     // The cargo zone is bounded by the derived voids, not by a fraction of LOA.
     base.bow_non_tank_length = Some(bow_void_m);
@@ -880,6 +874,7 @@ fn gas_volumetric(
         forming_allowance_pct: inp.tank_forming_allowance_pct,
         dome_wall_thickness_mm: inp.tank_dome_wall_thickness_mm,
         dome_diameter_m: dome.0,
+        hull_panels: true,
     };
     let weights = calculate_weights_with(&bi, &hull, &tanks, &mass_opts)?;
     let dome_mass_items = dome_items(&bi, &tanks, &mass_opts)?;
@@ -1745,9 +1740,8 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
     if let Some(s) = &sep {
         warnings.extend(s.warnings.iter().cloned());
     }
-    if let Some(b) = &detail.gas_basis {
-        warnings.extend(steel_mass_disagreement(&b.weights));
-    }
+    // Issue #722: the gas hull's lightship and cost now take the same steel (the panel model), so
+    // the top-down and bottom-up disagreement warning of #404 no longer applies to it.
     let mut gm = None;
     // Issue #448: a draught of a few times 1e-324 m immerses nothing, so it has no GM either.
     let afloat = draft > 0.0 && hull.upright(draft, rho).is_ok();

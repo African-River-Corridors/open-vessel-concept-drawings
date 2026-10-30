@@ -747,7 +747,7 @@ pub fn gas_model(
     let zone_centre = crate::tanks::CargoZone::new(l, g.bow_void_m, g.stern_void_m).centre();
     let mut items = alloc::vec![
         Item {
-            mass_t: g.steel_top_down,
+            mass_t: g.hull_steel,
             kcg_m: 0.5 * d,
             lcg_m: l / 2.0
         },

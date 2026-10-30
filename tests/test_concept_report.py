@@ -52,9 +52,10 @@ def test_the_steel_table_gives_both_figures_and_their_gap():
     """Label: property"""
     st = A["results"]["cost_masses"]["steel"]
     t = cr.steel(A, "under review")
-    assert t["rows"][0][1] == cr.n(st["top_down_t"])
-    assert t["rows"][1][1] == cr.n(st["bottom_up_t"])
-    assert t["rows"][2][1].startswith(cr.n(st["top_down_t"] - st["bottom_up_t"]))
+    # Issue #722: the panel model drives the lightship and the cost; the top-down rate is beside it.
+    assert t["rows"][0][1] == cr.n(st["panel_t"])
+    assert t["rows"][1][1] == cr.n(st["top_down_t"])
+    assert t["rows"][2][1].startswith(cr.n(st["top_down_t"] - st["panel_t"]))
     assert "under review" in t["caption"]
 
 
