@@ -7,7 +7,7 @@
   // The left panel. The groups, their order, the labels, the choices and the ranges all come from
   // the schema. An input is drawn when the Option holds it, so the panel needs no rule for which
   // inputs a Cargo Containment uses: Rust sends only those that apply.
-  let { snap, schema, evaluation, generation, onPick, onEdit, onReset, onFormation, onImportOffsets, onOption, onProfile }: {
+  let { snap, schema, evaluation, generation, onPick, onEdit, onReset, onFormation, onImportOffsets, onOption }: {
     snap: Snapshot | null;
     schema: Schema | null;
     evaluation: OptionEvaluation | undefined;
@@ -20,7 +20,6 @@
     /** Issue #451: import an offsets CSV into the active Option. */
     onImportOffsets: () => void;
     onOption: (action: "add" | "duplicate" | "rename" | "delete", newName?: string) => void;
-    onProfile: (action: "load" | "builtin") => void;
   } = $props();
 
   let option = $derived(snap?.design.options.find((o) => o.name === snap!.active_option));
@@ -94,15 +93,6 @@
       {/if}
     </section>
 
-    <section class="profile">
-      <h2>{t("app-profile")}</h2>
-      <div class="pname">{snap.profile}</div>
-      <div class="buttons">
-        <button onclick={() => onProfile("load")}>{t("app-profile-load")}</button>
-        <button onclick={() => onProfile("builtin")} disabled={snap.profile === "built-in"}>{t("app-profile-builtin")}</button>
-      </div>
-    </section>
-
     {#each groups as g (g.name)}
       <details open={!closed[g.name]} ontoggle={(e) => (closed[g.name] = !e.currentTarget.open)}>
         <summary>{schemaText.group(g.name)}</summary>
@@ -143,7 +133,6 @@
   .buttons button, .inline button { font-size: var(--fs-13); }
   .inline { display: flex; gap: var(--sp-1); margin-top: 6px; align-items: center; font-size: var(--fs-13); }
   .confirm { background: var(--fail-soft); color: var(--fail); padding: var(--sp-1) 6px; }
-  .pname { font-size: var(--fs-13); }
   details { border-top: var(--lw-thin) solid var(--rule); margin-top: 10px; padding-top: var(--sp-1); }
   .gnote { margin: var(--sp-1) 0; font-size: var(--fs-12); color: var(--ink-3); }
   summary { font-family: var(--font-serif); font-weight: 600; color: var(--ink); font-size: var(--fs-16); cursor: pointer; }

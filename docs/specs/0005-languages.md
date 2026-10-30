@@ -105,7 +105,7 @@ locales/
 - The `.ftl` files are bundled with Vite (`?raw`) into both builds, so the web app needs no fetch.
 - **Fallback:** a message missing in the Display Language falls back to English; an id missing in
   English (a bug the check catches) shows the engine's English text, or the id in the app.
-- **Language selection:** a picker in the header, beside the theme control. The choice is kept per
+- **Language selection:** a picker in Settings (app bar), beside the theme control. The choice is kept per
   user (local storage; a Tauri setting later). The first default is the system language if it is one
   of the five, else English. `<html lang>` follows the choice, so browsers pick the right CJK glyphs.
 - **Numbers:** results use `Intl.NumberFormat` with the language's locale: `en-GB`, `es-419`,

@@ -51,6 +51,14 @@ async function start(options = {}) {
 const until = (b, what, check, timeout = 30000) =>
   b.waitUntil(check, { timeout, interval: 100, timeoutMsg: `timed out waiting for: ${what}` });
 const outputs = (b) => b.$("[data-testid=outputs]");
+/** Open Settings (app bar), do `act`, close it again. */
+async function inSettings(b, act) {
+  await (await b.$("[data-testid=settings]")).click();
+  await until(b, "the Settings dialog", async () => (await b.$("[data-testid=settings-dialog]")).isExisting());
+  await act();
+  await (await b.$("[data-testid=settings-close]")).click();
+  await until(b, "Settings to close", async () => !(await b.$("[data-testid=settings-dialog]").isExisting()));
+}
 
 before(async () => {
   ({ server, origin } = await serve(DIST));
@@ -326,7 +334,7 @@ describe("OVCD web smoke tests", () => {
     if (SHOTS) {
       fs.mkdirSync(SHOTS, { recursive: true });
       for (const theme of ["Light", "Dark"]) {
-        await (await b.$(`button=${theme}`)).click();
+        await inSettings(b, async () => (await b.$(`button=${theme}`)).click());
         await new Promise((r) => setTimeout(r, 800));
         await b.saveScreenshot(path.join(SHOTS, `web-3d-${theme.toLowerCase()}.png`));
       }
@@ -757,7 +765,7 @@ describe("OVCD web smoke tests", () => {
     await until(b, "the file name", async () => (await b.$("header")).getText().then((t) => t.includes("gas_igc_2g_self_propelled.vdesign")));
     const seen = {};
     for (const [tag, open] of [["es", "Abrir"], ["pt", "Abrir"], ["zh-Hans", "打开"], ["ak", "Bue"], ["en", "Open"]]) {
-      await (await b.$("[data-testid=language]")).selectByAttribute("value", tag);
+      await inSettings(b, async () => (await b.$("[data-testid=language]")).selectByAttribute("value", tag));
       await until(b, `the header in ${tag}`, async () => (await b.$(`button=${open}`)).isExisting());
       assert.equal(await b.execute(() => document.documentElement.lang), tag);
       seen[tag] = await b.execute(async () => {
@@ -774,7 +782,7 @@ describe("OVCD web smoke tests", () => {
     assert.deepEqual(seen.en.hashes, nativeHashes());
     assert.ok(!seen.en.text.includes("language"), "the language is not in the file");
     // The choice is kept: after a reload the app is in the last language picked.
-    await (await b.$("[data-testid=language]")).selectByAttribute("value", "pt");
+    await inSettings(b, async () => (await b.$("[data-testid=language]")).selectByAttribute("value", "pt"));
     await b.url(`${origin}/ovcd/app`);
     await until(b, "the app in Portuguese again", async () => (await b.$("button=Abrir")).isExisting());
     assert.equal(await b.execute(() => document.documentElement.lang), "pt");
@@ -785,9 +793,9 @@ describe("OVCD web smoke tests", () => {
     fs.mkdirSync(SHOTS, { recursive: true });
     const tabs = (sub) => b.$$(`[data-testid=views-panel] [role=tablist]${sub ? ".sub" : ":not(.sub)"} button`);
     for (const tag of ["en", "es", "pt", "zh-Hans", "ak"]) {
-      await (await b.$("[data-testid=language]")).selectByAttribute("value", tag);
+      await inSettings(b, async () => (await b.$("[data-testid=language]")).selectByAttribute("value", tag));
       for (const [i, theme] of [[1, "light"], [2, "dark"]]) {
-        await (await b.$$(".theme button"))[i].click();
+        await inSettings(b, async () => (await b.$$(".theme button"))[i].click());
         for (let g = 0; g < (await tabs(false)).length; g++) {
           await (await tabs(false))[g].click();
           for (let v = 0; v < (await tabs(true)).length; v++) {
@@ -850,7 +858,7 @@ describe("OVCD web smoke tests", () => {
       for (const [w, h, size] of [[1500, 950, "desktop"], [390, 844, "phone"]]) {
         await b.setWindowSize(w, h);
         for (const [i, theme] of [[1, "light"], [2, "dark"]]) {
-          await (await b.$$(".theme button"))[i].click();
+          await inSettings(b, async () => (await b.$$(".theme button"))[i].click());
           await new Promise((r) => setTimeout(r, 300));
           await b.saveScreenshot(path.join(SHOTS, `436-${size}-${theme}-bar.png`));
           await (await b.$("button=All")).click();

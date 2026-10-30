@@ -6,8 +6,7 @@
   import MainPanel from "./lib/MainPanel.svelte";
   import BottomPanel from "./lib/BottomPanel.svelte";
   import Notice from "./lib/Notice.svelte";
-  import ThemeControl from "./lib/ThemeControl.svelte";
-  import LanguageControl from "./lib/LanguageControl.svelte";
+  import SettingsDialog from "./lib/SettingsDialog.svelte";
   import MessageBar, { type BarMessage } from "./lib/MessageBar.svelte";
   import { loadPanels, savePanels } from "./lib/panels";
   import { list, say, schemaText, setInputLabels, t } from "./lib/i18n.svelte";
@@ -26,6 +25,8 @@
   /** The first-run notice: open on first start, and again from About. */
   let noticeOpen = $state(false);
   let noticeIsFirstRun = $state(false);
+  /** Settings: Display Language, theme and Defaults Profile. */
+  let settingsOpen = $state(false);
   /** The browser build: shows a label and a link to the desktop app. */
   const web = api.isWeb();
 
@@ -220,6 +221,8 @@
 <svelte:window onkeydown={onKey} />
 
 {#if noticeOpen}<Notice onClose={closeNotice} />{/if}
+{#if settingsOpen}<SettingsDialog profile={snap?.profile ?? null} onClose={() => (settingsOpen = false)}
+  onProfile={(a) => command(a === "load" ? api.loadProfile : api.useBuiltInProfile, true)} />{/if}
 
 <div class="shell">
   <header>
@@ -242,8 +245,7 @@
     <span class="grow"></span>
     <button type="button" aria-label={t(showInput ? "app-input-panel-hide" : "app-input-panel-show")} aria-pressed={showInput} onclick={() => (showInput = !showInput)}>{t("app-input-panel")}</button>
     <button type="button" aria-label={t(showOutputs ? "app-outputs-panel-hide" : "app-outputs-panel-show")} aria-pressed={showOutputs} onclick={() => (showOutputs = !showOutputs)}>{t("app-outputs-panel")}</button>
-    <LanguageControl />
-    <ThemeControl />
+    <button type="button" data-testid="settings" aria-haspopup="dialog" onclick={() => (settingsOpen = true)}>{t("app-settings")}</button>
     {#if snap}
       <span class="meta file">{snap.dirty ? t("app-file-unsaved", { file: snap.file_name }) : snap.file_name}</span>
       <span class="meta">{t("app-header-profile", { profile: snap.profile })}</span>
@@ -267,8 +269,7 @@
         const option = active;
         edit(() => api.setFormation(option, kind, abreast, inLine), false);
       }}
-      onOption={optionAction}
-      onProfile={(a) => command(a === "load" ? api.loadProfile : api.useBuiltInProfile, true)} /></section>
+      onOption={optionAction} /></section>
     <div class="handle v" hidden={!showInput} role="separator" aria-orientation="vertical" onpointerdown={drag("x")}></div>
     <section class="main"><MainPanel {evaluation} {active} {lastGood} {blockers} {designSpeed} /></section>
     <div class="handle h" hidden={!showOutputs} role="separator" aria-orientation="horizontal" onpointerdown={drag("y")}></div>

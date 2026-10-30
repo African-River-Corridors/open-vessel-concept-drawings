@@ -44,6 +44,10 @@ app-theme-auto = Auto
 app-theme-light = Claro
 # status: draft
 app-theme-dark = Escuro
+# status: draft
+app-settings = Configurações
+# status: draft
+app-settings-close = Fechar
 
 ## Avisos e palavras comuns
 
