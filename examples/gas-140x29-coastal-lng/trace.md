@@ -153,6 +153,9 @@ One row per Rule and object. Status is the Rule's verification status, then the 
 | ovcd/powering/installed-covers-design-speed | A basis | pass | 1.164 | 1 | - | block | unverified / verified |  |  |
 | ovcd/wheelhouse/lift-enough | A basis | pass | True |  | - | block | unverified / verified |  |  |
 | ovcd/powering/shallow-water-validity |  | not applicable |  |  | - | warn | unverified / verified |  |  |
+| ovcd/propulsion/propeller-fits-stern | A basis | pass | 0.6341 | 1 | - | warn | unverified / verified |  |  |
+| ovcd/propulsion/immersion-light | A basis | warn | 0.02822 | 1 | - | warn | unverified / unverified |  |  |
+| ovcd/propulsion/blade-load | A basis | pass | 0.1023 | 1 | - | warn | unverified / unverified |  |  |
 | ovcd/stability/light-angle-of-max-gz | Full load, departure | not applicable |  |  | deg | warn | unverified / unverified | #498 |  |
 | ovcd/stability/light-angle-of-max-gz | Full load, arrival | not applicable |  |  | deg | warn | unverified / unverified | #498 |  |
 | ovcd/stability/light-angle-of-max-gz | Ballast, departure | not applicable |  |  | deg | warn | unverified / unverified | #498 |  |
@@ -160,7 +163,7 @@ One row per Rule and object. Status is the Rule's verification status, then the 
 
 ## Gaps the trace reports
 
-- `igc/2.7/damage-survival`: the damage cases were not computed: the laden departure condition has no floating position
+- `igc/2.7/damage-survival`: the damage cases were not computed: the assumed damage of IGC 2.3 is not modelled yet, so survival to IGC 2.7 is not checked
 - `igc/6.4.1.1/steel-by-approval`: S690QL1 has a specified minimum yield stress of 690 N/mm2; the tables of 6.4.1 cover carbon-manganese steel up to 410 N/mm2 (notes to Tables 6.1 and 6.2: higher strengths may be approved by the Administration). No permitted design temperature can be read from the text
 - `igc/3.1.1/hold-space-segregation`: the model has no machinery, accommodation or store spaces to segregate the hold spaces from; the arrangement search places the tanks in one hold
 - `igc/3.1.2/hold-space-segregation-means`: the model has no division between the hold and the adjoining spaces; the end bulkhead space (lr-inland 3.5.3) is checked, the fire class is not

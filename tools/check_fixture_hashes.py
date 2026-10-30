@@ -5,8 +5,9 @@
     python3 tools/check_fixture_hashes.py --wasmtime <path to wasmtime> <path to ovcd.wasm> [<fixtures directory>]
 
 The fixtures in crates/ovcd-format/tests/fixtures/*.vdesign store the results hash of each Option. With no
-fixtures directory given, the website examples (website/assets/examples/*.vdesign) are checked too: a
-results change that does not re-stamp them must fail here, not on the website.
+fixtures directory given, the website examples (website/assets/examples/*.vdesign) and the worked
+examples (examples/*/*.vdesign) are checked too: a results change that does not re-stamp them must fail
+here, not on the website or in a reader's run.
 The hash depends on bit-identical maths on every system (spec 0001, "platform-identical maths").
 `cargo test` checks it on Linux. The release gate runs this on Windows and on Intel and Apple-silicon
 macOS, with the release binary, and on WebAssembly: the same CLI built for `wasm32-wasip1` and run
@@ -26,6 +27,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "crates" / "ovcd-format" / "tests" / "fixtures"
 EXAMPLES = ROOT / "website" / "assets" / "examples"
+WORKED_EXAMPLES = ROOT / "examples"
 NO_RESULTS_YET = {"pushed_convoy.vdesign"}      # convoy results are not available yet
 MIN_MATCHED = 6                                 # five computable fixtures, one of them with two Options
 
@@ -36,6 +38,11 @@ def find_binary(path: str) -> Path:
         if candidate.is_file():
             return candidate
     raise SystemExit(f"check_fixture_hashes: no ovcd binary at {path}")
+
+
+def worked_examples() -> list[Path]:
+    """Each folder under examples/ that holds a Design."""
+    return sorted({f.parent for f in WORKED_EXAMPLES.glob("*/*.vdesign")})
 
 
 def command_for(binary: Path, fixtures: Path, wasmtime: Path | None, file: Path) -> list[str]:
@@ -105,7 +112,7 @@ def main(argv: list[str]) -> int:
         return 2
     binary = find_binary(args[0])
     fixtures = Path(args[1]) if len(args) == 2 else FIXTURES
-    also = () if len(args) == 2 else (EXAMPLES,)
+    also = () if len(args) == 2 else (EXAMPLES, *worked_examples())
     print(f"check_fixture_hashes: {binary}" + (f" under {wasmtime}" if wasmtime else ""))
     problems = check(binary, fixtures, wasmtime, also)
     for p in problems:
