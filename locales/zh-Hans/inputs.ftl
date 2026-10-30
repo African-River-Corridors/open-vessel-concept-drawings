@@ -85,6 +85,7 @@ choice-cargo-containment-integral-tanks = 整体式货舱
 input-min-freeboard-m = 最小干舷
 # status: draft
 input-bow-rake-length-to-depth-ratio = 首部斜升段长度与型深之比
+# status: draft
 input-bow-rake-max-length-m = 由型深得出的首部斜升段最大长度
 # status: draft
 input-pushed-stern-void-m = 顶推驳船尾部空舱
