@@ -14,7 +14,7 @@
 //! holds every other node and maps model (x, y, z) to glTF (x, z, y): a mirror, determinant -1, so a
 //! viewer reads the winding clockwise and the faces still face out (section 3.7.4).
 
-use ovcd_core::mesh::Mesh;
+use ovcd_core::mesh::{Mesh, MeshGroup, PartSource};
 use serde_json::{Value, json};
 
 /// The layers of a mesh in the order they appear in a scene, with the name of the layer's node.
@@ -40,17 +40,52 @@ const MODEL_TO_GLTF: [f64; 16] = [
     0.0, 0.0, 0.0, 1.0,
 ];
 
-/// The colour of a layer: base colour factor (RGBA) and whether it blends.
-fn material(layer: &str) -> ([f64; 4], bool) {
-    match layer {
-        "hull" => ([0.55, 0.60, 0.66, 1.0], false),
-        "deck" => ([0.78, 0.70, 0.50, 1.0], false),
-        "bulkhead" => ([0.70, 0.72, 0.80, 1.0], false),
-        "space" => ([0.25, 0.60, 0.90, 0.5], true),
-        "deck_item" => ([0.80, 0.80, 0.78, 1.0], false),
-        "dome" => ([0.25, 0.60, 0.90, 1.0], false),
-        "weather_shield" => ([0.78, 0.70, 0.50, 1.0], false),
-        _ => ([0.10, 0.40, 0.90, 0.8], true),
+/// The Light theme colours of the parts of spec 0009 (`app/src/app.css`, `:root`), as the 3D view
+/// draws them: `(token, sRGB hex)`. A test keeps them equal to the stylesheet.
+pub const LIGHT_PART_COLOURS: [(&str, &str); 4] = [
+    ("--space-cargo", "#9a4a1c"),
+    ("--model-deck", "#8c7b56"),
+    ("--model-deck-item", "#7a5a2c"),
+    ("--model-wheelhouse", "#4f585d"),
+];
+
+/// The linear base colour factor (RGBA, opaque) of a Light theme token (glTF 2.0, 3.9.2: the base
+/// colour factor is linear; the stylesheet's hex is sRGB, IEC 61966-2-1).
+fn light(token: &str) -> [f64; 4] {
+    let hex = LIGHT_PART_COLOURS
+        .iter()
+        .find(|(t, _)| *t == token)
+        .map(|(_, h)| *h)
+        .expect("a token of LIGHT_PART_COLOURS");
+    let channel = |i: usize| {
+        let c = f64::from(u8::from_str_radix(&hex[1 + 2 * i..3 + 2 * i], 16).expect("hex")) / 255.0;
+        if c <= 0.04045 {
+            c / 12.92
+        } else {
+            libm::pow((c + 0.055) / 1.055, 2.4)
+        }
+    };
+    [channel(0), channel(1), channel(2), 1.0]
+}
+
+/// The material of a part: its name, base colour factor (RGBA) and whether it blends. The parts of
+/// spec 0009 take the Light theme colours the 3D view draws them in; the others one per layer.
+fn material(g: &MeshGroup) -> (&'static str, [f64; 4], bool) {
+    match &g.source {
+        PartSource::Tank { .. } => ("tank", light("--space-cargo"), false),
+        PartSource::Dome { .. } => ("dome", light("--space-cargo"), false),
+        PartSource::WeatherShield => ("weather_shield", light("--model-deck"), false),
+        PartSource::Unit(_) => ("deck_unit", light("--model-deck-item"), false),
+        PartSource::Wheelhouse(_) | PartSource::LiftColumn => {
+            ("wheelhouse", light("--model-wheelhouse"), false)
+        }
+        _ => match g.layer.as_str() {
+            "hull" => ("hull", [0.55, 0.60, 0.66, 1.0], false),
+            "deck" => ("deck", [0.78, 0.70, 0.50, 1.0], false),
+            "bulkhead" => ("bulkhead", [0.70, 0.72, 0.80, 1.0], false),
+            "space" => ("space", [0.25, 0.60, 0.90, 0.5], true),
+            _ => ("waterline", [0.10, 0.40, 0.90, 0.8], true),
+        },
     }
 }
 
@@ -107,17 +142,24 @@ pub fn gltf_glb(mesh: &Mesh) -> Vec<u8> {
             if groups.is_empty() {
                 continue;
             }
-            let (colour, blend) = material(layer);
-            let material_index = materials.len();
-            materials.push(json!({
-                "name": layer,
-                "pbrMetallicRoughness": {
-                    "baseColorFactor": colour, "metallicFactor": 0.0, "roughnessFactor": 0.9
-                },
-                "alphaMode": if blend { "BLEND" } else { "OPAQUE" },
-                "doubleSided": true
-            }));
-            let mut primitive_node = |name: &str, start: u32, count: u32| -> usize {
+            let mut primitive_node = |g: &MeshGroup, name: &str| -> usize {
+                let (material_name, colour, blend) = material(g);
+                let material_index = match materials.iter().position(|m| m["name"] == material_name)
+                {
+                    Some(i) => i,
+                    None => {
+                        materials.push(json!({
+                            "name": material_name,
+                            "pbrMetallicRoughness": {
+                                "baseColorFactor": colour, "metallicFactor": 0.0, "roughnessFactor": 0.9
+                            },
+                            "alphaMode": if blend { "BLEND" } else { "OPAQUE" },
+                            "doubleSided": true
+                        }));
+                        materials.len() - 1
+                    }
+                };
+                let (start, count) = (g.start, g.count);
                 let accessor = accessors.len();
                 accessors.push(json!({
                     "bufferView": 1, "byteOffset": 4 * start as usize, "componentType": 5125,
@@ -136,13 +178,11 @@ pub fn gltf_glb(mesh: &Mesh) -> Vec<u8> {
             };
             if layer == "hull" {
                 for g in &groups {
-                    scene_nodes.push(primitive_node(layer_node, g.start, g.count));
+                    scene_nodes.push(primitive_node(g, layer_node));
                 }
             } else {
-                let children: Vec<usize> = groups
-                    .iter()
-                    .map(|g| primitive_node(&g.id, g.start, g.count))
-                    .collect();
+                let children: Vec<usize> =
+                    groups.iter().map(|g| primitive_node(g, &g.id)).collect();
                 nodes.push(json!({ "name": layer_node, "children": children }));
                 scene_nodes.push(nodes.len() - 1);
             }
