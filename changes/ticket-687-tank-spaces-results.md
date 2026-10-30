@@ -4,7 +4,7 @@
 <!-- design-impact -->
 ### ticket/687-tank-spaces-results (2026-10-30)
 
-Between `main 844e706` and `this branch 2db4938f`.
+Between `main 6f8c7e7` and `this branch d0c40c25`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
