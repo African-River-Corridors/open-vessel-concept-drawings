@@ -115,12 +115,13 @@ export function groupSlice(
 }
 
 /**
- * Whether a layer is drawn with flat shading: the hull, the decks, the bulkheads, the Spaces and the
- * waterline planes are made of flat panels, so each face takes its own normal and the knuckles show.
+ * Whether a layer is drawn with flat shading: the hull, the decks, the bulkheads, the Spaces, the
+ * waterline planes and the Deck Items (boxes) are made of flat panels, so each face takes its own
+ * normal and the knuckles show.
  * Any other layer is a curved part (tanks, domes, nozzles: later tickets of spec 0009), drawn smooth.
  */
 export function flatShaded(layer: string): boolean {
-  return ["hull", "deck", "bulkhead", "space", "waterline"].includes(layer);
+  return ["hull", "deck", "bulkhead", "space", "waterline", "deck_item"].includes(layer);
 }
 
 /** The default camera's height above the horizon, in degrees (spec 0009, "The 3D view"). */

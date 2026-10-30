@@ -10,7 +10,7 @@
 
 use std::path::Path;
 
-use ovcd_core::mesh::Mesh;
+use ovcd_core::mesh::{Mesh, PartSource};
 use ovcd_format::export::{bytes_hash, gltf_glb, option_glb};
 use ovcd_format::{Profile, check, option_meshes};
 use serde_json::Value;
@@ -175,15 +175,14 @@ fn an_empty_mesh_gives_a_scene_with_no_nodes() {
 fn a_group_of_no_triangles_has_no_node() {
     let mut m = Mesh::default();
     m.append(
-        "hull",
-        "hull",
+        PartSource::Hull,
         &Mesh {
             positions: vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
             indices: vec![0, 1, 2],
             groups: Vec::new(),
         },
     );
-    m.append("space", "Empty", &Mesh::default());
+    m.append(PartSource::Space("Empty".to_string()), &Mesh::default());
     let (doc, _) = chunks(&gltf_glb(&m));
     let mut all = Vec::new();
     for n in doc["scenes"][0]["nodes"].as_array().unwrap() {

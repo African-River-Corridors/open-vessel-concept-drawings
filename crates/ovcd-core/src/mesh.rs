@@ -17,6 +17,9 @@
 //!   (a deck) or follows the trim (a waterline).
 //! - **Bulkheads:** the hull's section at that x, by ear clipping.
 //! - **Spaces:** each Space as its closed prism.
+//! - **Deck Items:** each as its closed box (spec 0009, ADR 0021).
+//!
+//! Every group carries its source ([`PartSource`]): no geometry without a source (spec 0009).
 //!
 //! No result reads a mesh, so meshes are outside the results hash. The parity check hashes them
 //! (`ovcd_format::mesh_hash`).
@@ -28,15 +31,76 @@ use alloc::vec::Vec;
 
 use crate::compartments::{ClippedSpace, Space, SpaceShape};
 use crate::sections::{Section, SectionsTable};
-use crate::vessel_model::{Bulkhead, Deck, VesselModel};
+use crate::vessel_model::{
+    Bulkhead, Deck, DeckItem, DeckItemKind, VesselModel, WheelhousePosition,
+};
+
+/// Where a mesh group's geometry comes from (spec 0009, "no geometry without a source"): a part of
+/// the Vessel Model that the results hold. The group's layer and id follow from it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PartSource {
+    Hull,
+    /// A deck, by its key.
+    Deck(String),
+    /// A bulkhead, by its key.
+    Bulkhead(String),
+    /// A Space, by its name.
+    Space(String),
+    /// The waterline of a floating position, by its name.
+    Waterline(String),
+    /// Entry `i` of the stern block's `container_units`.
+    Unit(usize),
+    Wheelhouse(WheelhousePosition),
+    LiftColumn,
+}
+
+impl PartSource {
+    /// `hull`, `deck`, `bulkhead`, `space`, `waterline` or `deck_item`.
+    pub fn layer(&self) -> &'static str {
+        match self {
+            PartSource::Hull => "hull",
+            PartSource::Deck(_) => "deck",
+            PartSource::Bulkhead(_) => "bulkhead",
+            PartSource::Space(_) => "space",
+            PartSource::Waterline(_) => "waterline",
+            PartSource::Unit(_) | PartSource::Wheelhouse(_) | PartSource::LiftColumn => "deck_item",
+        }
+    }
+
+    /// The part's name, the same in every language: a deck or bulkhead key, a Space name, a loading
+    /// condition name, `unit_1`, `wheelhouse_lowered`, `wheelhouse_raised` or `lift_column`.
+    pub fn id(&self) -> String {
+        match self {
+            PartSource::Hull => "hull".to_string(),
+            PartSource::Deck(n)
+            | PartSource::Bulkhead(n)
+            | PartSource::Space(n)
+            | PartSource::Waterline(n) => n.clone(),
+            PartSource::Unit(i) => alloc::format!("unit_{}", i + 1),
+            PartSource::Wheelhouse(WheelhousePosition::Lowered) => "wheelhouse_lowered".to_string(),
+            PartSource::Wheelhouse(WheelhousePosition::Raised) => "wheelhouse_raised".to_string(),
+            PartSource::LiftColumn => "lift_column".to_string(),
+        }
+    }
+
+    /// The source of a Deck Item.
+    pub fn of_deck_item(item: &DeckItem) -> Self {
+        match item.kind {
+            DeckItemKind::Unit { index, .. } => PartSource::Unit(index),
+            DeckItemKind::Wheelhouse(p) => PartSource::Wheelhouse(p),
+            DeckItemKind::LiftColumn => PartSource::LiftColumn,
+        }
+    }
+}
 
 /// A named part of a mesh: `count` indices from `start`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MeshGroup {
-    /// `hull`, `deck`, `bulkhead`, `space` or `waterline`.
+    /// `hull`, `deck`, `bulkhead`, `space`, `waterline` or `deck_item` ([`PartSource::layer`]).
     pub layer: String,
-    /// The part's name: a deck or bulkhead key, a Space name, a loading condition name.
+    /// The part's name ([`PartSource::id`]).
     pub id: String,
+    pub source: PartSource,
     pub start: u32,
     pub count: u32,
 }
@@ -50,15 +114,16 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    /// Add `part` as one group.
-    pub fn append(&mut self, layer: &str, id: &str, part: &Mesh) {
+    /// Add `part` as one group, from `source`.
+    pub fn append(&mut self, source: PartSource, part: &Mesh) {
         let base = (self.positions.len() / 3) as u32;
         let start = self.indices.len() as u32;
         self.positions.extend_from_slice(&part.positions);
         self.indices.extend(part.indices.iter().map(|i| i + base));
         self.groups.push(MeshGroup {
-            layer: layer.to_string(),
-            id: id.to_string(),
+            layer: source.layer().to_string(),
+            id: source.id(),
+            source,
             start,
             count: part.indices.len() as u32,
         });
@@ -349,9 +414,22 @@ pub fn bulkhead_mesh(table: &SectionsTable, bulkhead: &Bulkhead) -> Mesh {
 
 /// A Space as its closed prism.
 fn prism_mesh(space: &Space) -> Mesh {
-    let r = space.section();
+    prism(space.section(), space.x_aft, space.x_fwd)
+}
+
+/// A Deck Item as its closed box.
+pub fn deck_item_mesh(item: &DeckItem) -> Mesh {
+    let (y0, y1, z0, z1) = (item.y_port_m, item.y_stbd_m, item.z_base_m, item.z_top_m);
+    prism(
+        &[(y0, z0), (y1, z0), (y1, z1), (y0, z1)],
+        item.x_aft_m,
+        item.x_fwd_m,
+    )
+}
+
+/// The closed prism of section `r` (counter-clockwise in y, z) from `xa` to `xf`.
+fn prism(r: &[(f64, f64)], xa: f64, xf: f64) -> Mesh {
     let n = r.len();
-    let (xa, xf) = (space.x_aft, space.x_fwd);
     let mut b = Builder::default();
     for i in 0..n {
         let (p, q) = (r[i], r[(i + 1) % n]);
@@ -419,15 +497,19 @@ pub fn space_mesh(clipped: &ClippedSpace, table: &SectionsTable) -> Mesh {
 }
 
 /// Every mesh of the model in a fixed order, one group each: the hull, the decks, the bulkheads,
-/// the Spaces, and the waterline of each floating position `(name, aft draught, forward draught)`.
+/// the Spaces, the Deck Items, and the waterline of each floating position `(name, aft draught,
+/// forward draught)`.
 pub fn vessel_meshes(model: &VesselModel, waterlines: &[(String, f64, f64)]) -> Mesh {
     let mut m = Mesh::default();
-    m.append("hull", "hull", &hull_mesh(&model.hull));
+    m.append(PartSource::Hull, &hull_mesh(&model.hull));
     for d in &model.decks {
-        m.append("deck", &d.name, &deck_mesh(&model.hull, d));
+        m.append(PartSource::Deck(d.name.clone()), &deck_mesh(&model.hull, d));
     }
     for b in &model.bulkheads {
-        m.append("bulkhead", &b.name, &bulkhead_mesh(&model.hull, b));
+        m.append(
+            PartSource::Bulkhead(b.name.clone()),
+            &bulkhead_mesh(&model.hull, b),
+        );
     }
     // A tank Space (ADR 0021) has its own mesh (spec 0009); it is not a prism.
     for s in model
@@ -435,10 +517,19 @@ pub fn vessel_meshes(model: &VesselModel, waterlines: &[(String, f64, f64)]) -> 
         .iter()
         .filter(|s| matches!(s.space.shape, SpaceShape::Prism { .. }))
     {
-        m.append("space", &s.space.name, &space_mesh(s, &model.hull));
+        m.append(
+            PartSource::Space(s.space.name.clone()),
+            &space_mesh(s, &model.hull),
+        );
+    }
+    for item in &model.outfit.deck_items {
+        m.append(PartSource::of_deck_item(item), &deck_item_mesh(item));
     }
     for (name, aft, fwd) in waterlines {
-        m.append("waterline", name, &waterline_mesh(&model.hull, *aft, *fwd));
+        m.append(
+            PartSource::Waterline(name.clone()),
+            &waterline_mesh(&model.hull, *aft, *fwd),
+        );
     }
     m
 }
