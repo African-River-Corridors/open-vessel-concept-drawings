@@ -1,0 +1,117 @@
+name: App gate
+
+# The web app and the desktop app smoke tests (issues #246, spec 0002, #716). They left the pull request
+# path: app-e2e and web-app run on release and weekly, not on every PR. release.yml calls this workflow,
+# so a numbered release or a `test-*` release waits on them; app-checks.yml calls it every Monday; a
+# maintainer can start it by hand. It needs no write permission, so a release can call it.
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+
+  # The web app (issue #246): the web build of the front end over the wasm Design session, in
+  # headless Chrome. The wasm-bindgen CLI is the version the ovd-web crate pins.
+  web-app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - name: The pinned wasm-bindgen version
+        id: wb
+        run: echo "version=$(sed -n 's/^wasm-bindgen = "=\([0-9.]*\)".*/\1/p' crates/ovd-web/Cargo.toml)" >> "$GITHUB_OUTPUT"
+      - name: wasm-bindgen CLI (cached)
+        id: cli
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/wasm-bindgen
+          key: wasm-bindgen-cli-${{ steps.wb.outputs.version }}-${{ runner.os }}
+      - name: Install wasm-bindgen CLI
+        if: steps.cli.outputs.cache-hit != 'true'
+        run: cargo install wasm-bindgen-cli --version "${{ steps.wb.outputs.version }}" --locked
+      - name: Build the web package
+        run: bash tools/build_web.sh
+      - name: Build ovd
+        run: cargo build -p ovd-cli
+      - name: Front end (type check, desktop build, web build)
+        working-directory: app
+        run: |
+          npm ci
+          npm run build
+          npm run build:web
+      - name: Web smoke test (headless Chrome)
+        working-directory: app
+        env:
+          # The smoke test saves each view in each language, light and dark, here (spec 0005).
+          OVD_WEB_SHOTS: ${{ runner.temp }}/web-screenshots
+        run: bash e2e/run-web.sh
+      - name: Upload the screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-screenshots
+          path: ${{ runner.temp }}/web-screenshots
+          if-no-files-found: warn
+
+  # End-to-end smoke tests (spec 0002): the built debug app, driven by Tauri's WebDriver on Linux.
+  # It left the pull request path (issue #716): it runs on a release (release.yml calls this workflow),
+  # every week and on request.
+  app-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - name: Tauri system libraries, WebDriver and a virtual display
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential libxdo-dev libssl-dev \
+            libayatana-appindicator3-dev librsvg2-dev webkit2gtk-driver xvfb
+      - name: tauri-driver (cached)
+        id: driver
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/tauri-driver
+          key: tauri-driver-2.1.0-${{ runner.os }}
+      - name: Install tauri-driver
+        if: steps.driver.outputs.cache-hit != 'true'
+        run: cargo install tauri-driver --version 2.1.0 --locked
+      - name: Build the debug app
+        working-directory: app
+        run: |
+          npm ci
+          npx tauri build --debug --no-bundle
+      - name: Build the CLI (the smoke tests compare its mesh hash, issue #457)
+        run: cargo build -p ovd-cli
+      - name: Smoke tests
+        working-directory: app
+        env:
+          # The smoke tests save a screenshot of each view here, for review.
+          OVD_E2E_SHOTS: ${{ runner.temp }}/app-screenshots
+        run: xvfb-run -a bash e2e/run.sh
+      - name: Upload the screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-screenshots
+          path: ${{ runner.temp }}/app-screenshots
+          if-no-files-found: warn
