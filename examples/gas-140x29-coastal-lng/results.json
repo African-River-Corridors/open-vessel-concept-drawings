@@ -5,7 +5,7 @@
     {
       "name": "A basis",
       "status": "results",
-      "results_hash": "2599c5bdb87d4125a094905ea945aafe2aaafcf3a62aa91b2788afed94505e41",
+      "results_hash": "97791882028f2131430d9b08981c971d94d79e9bfb526663fdb78901d86b1a07",
       "hash_status": "matches",
       "results": {
         "vessel": "Gas barge, IMO Type C tanks",
@@ -369,9 +369,8 @@
               ]
             ],
             "thruster_offsets_m": [
-              -3.2,
-              0.0,
-              3.2
+              -3.1350000000000002,
+              3.1350000000000002
             ],
             "thruster_room_length_m": 3.5,
             "container_x0_m": 7.699999999999999,
@@ -402,13 +401,13 @@
               {
                 "name": "thrusters_fit_beam",
                 "ok": true,
-                "message": "3 x 2.60 m thrusters need 10.20 m across a 29.00 m beam",
+                "message": "2 x 5.67 m thrusters need 13.14 m across a 29.00 m beam",
                 "severity": "error"
               },
               {
                 "name": "requested_thruster_count_fits",
                 "ok": true,
-                "message": "3 of 3 requested thrusters fit; 3 would need 10.20 m of 29.00 m beam",
+                "message": "2 of 2 requested thrusters fit; 2 would need 13.14 m of 29.00 m beam",
                 "severity": "warning"
               },
               {
@@ -544,10 +543,11 @@
             "diameter_m": 4.2,
             "axis_z_m": 2.1,
             "ducted": true,
+            "unit_power_kw": 858.5649813185031,
             "propulsors": [
               {
                 "x_m": 4.949999999999999,
-                "y_m": -1.6,
+                "y_m": -3.1350000000000002,
                 "z_m": 2.1,
                 "mass_item": "propulsors",
                 "mass_centre": {
@@ -570,7 +570,7 @@
               },
               {
                 "x_m": 4.949999999999999,
-                "y_m": 1.6,
+                "y_m": 3.1350000000000002,
                 "z_m": 2.1,
                 "mass_item": "propulsors",
                 "mass_centre": {
@@ -605,9 +605,7 @@
                 "kcg_m": 1.0
               }
             },
-            "warnings": [
-              "The stern holds 3 propulsor places for 2 propulsors; the layout spreads the 2 at 3.20 m."
-            ]
+            "warnings": []
           }
         },
         "arrangement": {
@@ -674,13 +672,13 @@
           {
             "name": "thrusters fit beam",
             "ok": true,
-            "message": "3 x 2.60 m thrusters need 10.20 m across a 29.00 m beam",
+            "message": "2 x 5.67 m thrusters need 13.14 m across a 29.00 m beam",
             "severity": "error"
           },
           {
             "name": "requested thruster count fits",
             "ok": true,
-            "message": "3 of 3 requested thrusters fit; 3 would need 10.20 m of 29.00 m beam",
+            "message": "2 of 2 requested thrusters fit; 2 would need 13.14 m of 29.00 m beam",
             "severity": "warning"
           },
           {
@@ -3841,17 +3839,17 @@
               }
             }
           },
-          "3 x 2.60 m thrusters need 10.20 m across a 29.00 m beam": {
+          "2 x 5.67 m thrusters need 13.14 m across a 29.00 m beam": {
             "id": "check-thrusters-fit-beam",
             "args": {
-              "count": 3,
+              "count": 2,
               "envelope": {
-                "num": "2.60",
-                "value": 2.6
+                "num": "5.67",
+                "value": 5.670000000000001
               },
               "needed": {
-                "num": "10.20",
-                "value": 10.2
+                "num": "13.14",
+                "value": 13.14
               },
               "beam": {
                 "num": "29.00",
@@ -3859,14 +3857,14 @@
               }
             }
           },
-          "3 of 3 requested thrusters fit; 3 would need 10.20 m of 29.00 m beam": {
+          "2 of 2 requested thrusters fit; 2 would need 13.14 m of 29.00 m beam": {
             "id": "check-requested-thruster-count-fits",
             "args": {
-              "fit": 3,
-              "requested": 3,
+              "fit": 2,
+              "requested": 2,
               "needed": {
-                "num": "10.20",
-                "value": 10.2
+                "num": "13.14",
+                "value": 13.14
               },
               "beam": {
                 "num": "29.00",
@@ -9457,13 +9455,51 @@
             ],
             "summary": "meets every evaluated blocking Rule; 4 blocking Rule(s) not evaluated: Survival after the assumed damage, Severe wind and rolling criterion (weather criterion), Capacity of each cargo tank within Table 4.3.1, Hull in the cargo area: one of the three designs the clause allows (Type G)"
           }
-        }
+        },
+        "spaces": [
+          {
+            "name": "CT1P",
+            "kind": "cargo_tank",
+            "side": "port",
+            "volume_m3": 3661.9359625113984,
+            "lcg_m": 46.444,
+            "tcg_m": -6.0,
+            "vcg_m": 7.1033333333333335
+          },
+          {
+            "name": "CT1S",
+            "kind": "cargo_tank",
+            "side": "starboard",
+            "volume_m3": 3661.9359625113984,
+            "lcg_m": 46.444,
+            "tcg_m": 6.0,
+            "vcg_m": 7.1033333333333335
+          },
+          {
+            "name": "CT2P",
+            "kind": "cargo_tank",
+            "side": "port",
+            "volume_m3": 3661.9359625113984,
+            "lcg_m": 96.348,
+            "tcg_m": -6.0,
+            "vcg_m": 7.1033333333333335
+          },
+          {
+            "name": "CT2S",
+            "kind": "cargo_tank",
+            "side": "starboard",
+            "volume_m3": 3661.9359625113984,
+            "lcg_m": 96.348,
+            "tcg_m": 6.0,
+            "vcg_m": 7.1033333333333335
+          }
+        ]
       }
     },
     {
       "name": "B profile",
       "status": "results",
-      "results_hash": "d252390d82ddb008e3b8a0ddd7ab512ce6ecab7bd620ad6b9bf1d74e04ce19b5",
+      "results_hash": "01ee0e58b9ab054621a743d7990c1aff53f651954a8b73578ac92b120e12333d",
       "hash_status": "matches",
       "results": {
         "vessel": "Gas barge, IMO Type C tanks",
@@ -9827,9 +9863,8 @@
               ]
             ],
             "thruster_offsets_m": [
-              -3.2,
-              0.0,
-              3.2
+              -3.1350000000000002,
+              3.1350000000000002
             ],
             "thruster_room_length_m": 3.5,
             "container_x0_m": 7.699999999999999,
@@ -9860,13 +9895,13 @@
               {
                 "name": "thrusters_fit_beam",
                 "ok": true,
-                "message": "3 x 2.60 m thrusters need 10.20 m across a 29.00 m beam",
+                "message": "2 x 5.67 m thrusters need 13.14 m across a 29.00 m beam",
                 "severity": "error"
               },
               {
                 "name": "requested_thruster_count_fits",
                 "ok": true,
-                "message": "3 of 3 requested thrusters fit; 3 would need 10.20 m of 29.00 m beam",
+                "message": "2 of 2 requested thrusters fit; 2 would need 13.14 m of 29.00 m beam",
                 "severity": "warning"
               },
               {
@@ -10002,10 +10037,11 @@
             "diameter_m": 4.2,
             "axis_z_m": 2.1,
             "ducted": true,
+            "unit_power_kw": 858.5649813185031,
             "propulsors": [
               {
                 "x_m": 4.949999999999999,
-                "y_m": -1.6,
+                "y_m": -3.1350000000000002,
                 "z_m": 2.1,
                 "mass_item": "propulsors",
                 "mass_centre": {
@@ -10028,7 +10064,7 @@
               },
               {
                 "x_m": 4.949999999999999,
-                "y_m": 1.6,
+                "y_m": 3.1350000000000002,
                 "z_m": 2.1,
                 "mass_item": "propulsors",
                 "mass_centre": {
@@ -10063,9 +10099,7 @@
                 "kcg_m": 1.0
               }
             },
-            "warnings": [
-              "The stern holds 3 propulsor places for 2 propulsors; the layout spreads the 2 at 3.20 m."
-            ]
+            "warnings": []
           }
         },
         "arrangement": {
@@ -10132,13 +10166,13 @@
           {
             "name": "thrusters fit beam",
             "ok": true,
-            "message": "3 x 2.60 m thrusters need 10.20 m across a 29.00 m beam",
+            "message": "2 x 5.67 m thrusters need 13.14 m across a 29.00 m beam",
             "severity": "error"
           },
           {
             "name": "requested thruster count fits",
             "ok": true,
-            "message": "3 of 3 requested thrusters fit; 3 would need 10.20 m of 29.00 m beam",
+            "message": "2 of 2 requested thrusters fit; 2 would need 13.14 m of 29.00 m beam",
             "severity": "warning"
           },
           {
@@ -13299,17 +13333,17 @@
               }
             }
           },
-          "3 x 2.60 m thrusters need 10.20 m across a 29.00 m beam": {
+          "2 x 5.67 m thrusters need 13.14 m across a 29.00 m beam": {
             "id": "check-thrusters-fit-beam",
             "args": {
-              "count": 3,
+              "count": 2,
               "envelope": {
-                "num": "2.60",
-                "value": 2.6
+                "num": "5.67",
+                "value": 5.670000000000001
               },
               "needed": {
-                "num": "10.20",
-                "value": 10.2
+                "num": "13.14",
+                "value": 13.14
               },
               "beam": {
                 "num": "29.00",
@@ -13317,14 +13351,14 @@
               }
             }
           },
-          "3 of 3 requested thrusters fit; 3 would need 10.20 m of 29.00 m beam": {
+          "2 of 2 requested thrusters fit; 2 would need 13.14 m of 29.00 m beam": {
             "id": "check-requested-thruster-count-fits",
             "args": {
-              "fit": 3,
-              "requested": 3,
+              "fit": 2,
+              "requested": 2,
               "needed": {
-                "num": "10.20",
-                "value": 10.2
+                "num": "13.14",
+                "value": 13.14
               },
               "beam": {
                 "num": "29.00",
@@ -18915,13 +18949,51 @@
             ],
             "summary": "meets every evaluated blocking Rule; 4 blocking Rule(s) not evaluated: Survival after the assumed damage, Severe wind and rolling criterion (weather criterion), Capacity of each cargo tank within Table 4.3.1, Hull in the cargo area: one of the three designs the clause allows (Type G)"
           }
-        }
+        },
+        "spaces": [
+          {
+            "name": "CT1P",
+            "kind": "cargo_tank",
+            "side": "port",
+            "volume_m3": 3691.195320111503,
+            "lcg_m": 46.219,
+            "tcg_m": -6.0,
+            "vcg_m": 7.1033333333333335
+          },
+          {
+            "name": "CT1S",
+            "kind": "cargo_tank",
+            "side": "starboard",
+            "volume_m3": 3691.195320111503,
+            "lcg_m": 46.219,
+            "tcg_m": 6.0,
+            "vcg_m": 7.1033333333333335
+          },
+          {
+            "name": "CT2P",
+            "kind": "cargo_tank",
+            "side": "port",
+            "volume_m3": 3691.195320111503,
+            "lcg_m": 96.473,
+            "tcg_m": -6.0,
+            "vcg_m": 7.1033333333333335
+          },
+          {
+            "name": "CT2S",
+            "kind": "cargo_tank",
+            "side": "starboard",
+            "volume_m3": 3691.195320111503,
+            "lcg_m": 96.473,
+            "tcg_m": 6.0,
+            "vcg_m": 7.1033333333333335
+          }
+        ]
       }
     },
     {
       "name": "C deep",
       "status": "results",
-      "results_hash": "d91e1510c0eab3349f5e5539f3452d0c0a3b1103f508540bdfad9f9d8882810e",
+      "results_hash": "9f8b3175e405c4671ceba57a067ab954084a989ab2b4dfcd9d42b451beb12d3c",
       "hash_status": "matches",
       "results": {
         "vessel": "Gas barge, IMO Type C tanks",
@@ -19285,9 +19357,8 @@
               ]
             ],
             "thruster_offsets_m": [
-              -3.2,
-              0.0,
-              3.2
+              -3.1350000000000002,
+              3.1350000000000002
             ],
             "thruster_room_length_m": 3.5,
             "container_x0_m": 7.699999999999999,
@@ -19318,13 +19389,13 @@
               {
                 "name": "thrusters_fit_beam",
                 "ok": true,
-                "message": "3 x 2.60 m thrusters need 10.20 m across a 29.00 m beam",
+                "message": "2 x 5.67 m thrusters need 13.14 m across a 29.00 m beam",
                 "severity": "error"
               },
               {
                 "name": "requested_thruster_count_fits",
                 "ok": true,
-                "message": "3 of 3 requested thrusters fit; 3 would need 10.20 m of 29.00 m beam",
+                "message": "2 of 2 requested thrusters fit; 2 would need 13.14 m of 29.00 m beam",
                 "severity": "warning"
               },
               {
@@ -19460,10 +19531,11 @@
             "diameter_m": 4.2,
             "axis_z_m": 2.1,
             "ducted": true,
+            "unit_power_kw": 1010.9492201541743,
             "propulsors": [
               {
                 "x_m": 4.949999999999999,
-                "y_m": -1.6,
+                "y_m": -3.1350000000000002,
                 "z_m": 2.1,
                 "mass_item": "propulsors",
                 "mass_centre": {
@@ -19486,7 +19558,7 @@
               },
               {
                 "x_m": 4.949999999999999,
-                "y_m": 1.6,
+                "y_m": 3.1350000000000002,
                 "z_m": 2.1,
                 "mass_item": "propulsors",
                 "mass_centre": {
@@ -19521,9 +19593,7 @@
                 "kcg_m": 1.0
               }
             },
-            "warnings": [
-              "The stern holds 3 propulsor places for 2 propulsors; the layout spreads the 2 at 3.20 m."
-            ]
+            "warnings": []
           }
         },
         "arrangement": {
@@ -19590,13 +19660,13 @@
           {
             "name": "thrusters fit beam",
             "ok": true,
-            "message": "3 x 2.60 m thrusters need 10.20 m across a 29.00 m beam",
+            "message": "2 x 5.67 m thrusters need 13.14 m across a 29.00 m beam",
             "severity": "error"
           },
           {
             "name": "requested thruster count fits",
             "ok": true,
-            "message": "3 of 3 requested thrusters fit; 3 would need 10.20 m of 29.00 m beam",
+            "message": "2 of 2 requested thrusters fit; 2 would need 13.14 m of 29.00 m beam",
             "severity": "warning"
           },
           {
@@ -22757,17 +22827,17 @@
               }
             }
           },
-          "3 x 2.60 m thrusters need 10.20 m across a 29.00 m beam": {
+          "2 x 5.67 m thrusters need 13.14 m across a 29.00 m beam": {
             "id": "check-thrusters-fit-beam",
             "args": {
-              "count": 3,
+              "count": 2,
               "envelope": {
-                "num": "2.60",
-                "value": 2.6
+                "num": "5.67",
+                "value": 5.670000000000001
               },
               "needed": {
-                "num": "10.20",
-                "value": 10.2
+                "num": "13.14",
+                "value": 13.14
               },
               "beam": {
                 "num": "29.00",
@@ -22775,14 +22845,14 @@
               }
             }
           },
-          "3 of 3 requested thrusters fit; 3 would need 10.20 m of 29.00 m beam": {
+          "2 of 2 requested thrusters fit; 2 would need 13.14 m of 29.00 m beam": {
             "id": "check-requested-thruster-count-fits",
             "args": {
-              "fit": 3,
-              "requested": 3,
+              "fit": 2,
+              "requested": 2,
               "needed": {
-                "num": "10.20",
-                "value": 10.2
+                "num": "13.14",
+                "value": 13.14
               },
               "beam": {
                 "num": "29.00",
@@ -28373,7 +28443,45 @@
             ],
             "summary": "meets every evaluated blocking Rule; 4 blocking Rule(s) not evaluated: Survival after the assumed damage, Severe wind and rolling criterion (weather criterion), Capacity of each cargo tank within Table 4.3.1, Hull in the cargo area: one of the three designs the clause allows (Type G)"
           }
-        }
+        },
+        "spaces": [
+          {
+            "name": "CT1P",
+            "kind": "cargo_tank",
+            "side": "port",
+            "volume_m3": 4053.4650738709515,
+            "lcg_m": 44.864000000000004,
+            "tcg_m": -6.5,
+            "vcg_m": 7.6033333333333335
+          },
+          {
+            "name": "CT1S",
+            "kind": "cargo_tank",
+            "side": "starboard",
+            "volume_m3": 4053.4650738709515,
+            "lcg_m": 44.864000000000004,
+            "tcg_m": 6.5,
+            "vcg_m": 7.6033333333333335
+          },
+          {
+            "name": "CT2P",
+            "kind": "cargo_tank",
+            "side": "port",
+            "volume_m3": 4053.4650738709515,
+            "lcg_m": 91.608,
+            "tcg_m": -6.5,
+            "vcg_m": 7.6033333333333335
+          },
+          {
+            "name": "CT2S",
+            "kind": "cargo_tank",
+            "side": "starboard",
+            "volume_m3": 4053.4650738709515,
+            "lcg_m": 91.608,
+            "tcg_m": 6.5,
+            "vcg_m": 7.6033333333333335
+          }
+        ]
       }
     }
   ]

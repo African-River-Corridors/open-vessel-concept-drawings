@@ -1,6 +1,6 @@
 # 140 x 29 m coastal LNG gas barge: review run
 
-**Concept and preliminary design only. Not verified. Never for approval.** This folder is a worked example run on `main` (`ovd` 0.2.4, commit f9a4ef7e, 2026-10-29) for an expert review of the tool. The numbers are what the tool prints; nothing here is a design.
+**Concept and preliminary design only. Not verified. Never for approval.** This folder is a worked example for an expert review of the tool, first run on 2026-10-29 and re-run with `ovd` on 2026-10-30 (the rename to OVD, spec 0010). The re-run takes in the propulsor layout changes since the first run (#694, #702, #708): the thruster and propulsor positions in the drawings and the results hashes moved; no figure in the tables below did. The numbers are what the tool prints; nothing here is a design.
 
 ## The design
 
@@ -41,7 +41,7 @@ Self-propelled gas barge, IGC Type C tanks, LNG, 140.0 m x 29.0 m, raked box hul
 | Boil-off (IGC 7.2 ambient) (kg/h) | 731 | 737 | 747 |
 | Gas use at the service speed (kg/h) | 261 | 261 | 300 |
 | Checks | boil-off within gas use | boil-off within gas use | boil-off within gas use |
-| Results hash | 2599c5bdb87d | d252390d82dd | d91e1510c0ea |
+| Results hash | 97791882028f | 01ee0e58b9ab | 9f8b3175e405 |
 
 Power curve, deep water (kW at kn): 8 kn 661; 9 kn 935; 10 kn 1,279; 11 kn 1,701; 12 kn 2,213 (A basis).
 

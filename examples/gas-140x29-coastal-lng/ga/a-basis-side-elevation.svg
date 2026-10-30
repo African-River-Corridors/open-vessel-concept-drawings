@@ -185,7 +185,7 @@
 <line data-origin="viewport.main.leader" data-layer="ANNO" x1="353.293" y1="106.485" x2="321.554" y2="101.158" fill="none" stroke="#000" stroke-width="0.18"/>
 <line data-origin="viewport.main.leader" data-layer="ANNO" x1="353.293" y1="112.485" x2="315.436" y2="104.982" fill="none" stroke="#000" stroke-width="0.18"/>
 <line data-origin="viewport.main.leader" data-layer="ANNO" x1="353.293" y1="118.485" x2="312.424" y2="106.865" fill="none" stroke="#000" stroke-width="0.18"/>
-<text data-origin="viewport.main.leader" data-layer="ANNO" x="73.693" y="116.821" font-size="5" textLength="29.17" lengthAdjust="spacing" fill="#000">THRUSTERS (3)</text>
+<text data-origin="viewport.main.leader" data-layer="ANNO" x="73.693" y="116.821" font-size="5" textLength="29.205" lengthAdjust="spacing" fill="#000">THRUSTERS (2)</text>
 <text data-origin="viewport.main.leader" data-layer="ANNO" x="52.48" y="74.021" font-size="5" textLength="36.505" lengthAdjust="spacing" fill="#000">CONTAINERS (2 x 1)</text>
 <text data-origin="viewport.main.leader" data-layer="ANNO" x="30.467" y="68.021" font-size="5" textLength="67.11" lengthAdjust="spacing" fill="#000">WHEELHOUSE, BLOCK TOP 15.40 m</text>
 <text data-origin="viewport.main.leader" data-layer="ANNO" x="110.577" y="116.821" font-size="5" textLength="23.75" lengthAdjust="spacing" fill="#000">COFFERDAM</text>
