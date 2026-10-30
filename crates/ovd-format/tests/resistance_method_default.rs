@@ -28,7 +28,11 @@ fn a_new_design_takes_the_barge_form_factor() {
 fn a_file_saved_without_the_input_keeps_the_barge_fit_and_its_results() {
     let text = legacy("v1_dry_bulk_box_hold");
     let raw: Value = serde_json::from_str(&text).unwrap();
-    assert!(raw["options"][0]["inputs"].get("resistance_method").is_none());
+    assert!(
+        raw["options"][0]["inputs"]
+            .get("resistance_method")
+            .is_none()
+    );
     let d = check(&text, &Profile::built_in()).design.unwrap();
     assert_eq!(
         d.options[0].input("resistance_method").unwrap().value,
@@ -44,7 +48,9 @@ fn a_stored_method_is_kept() {
     let mut raw: Value = serde_json::from_str(&text).unwrap();
     raw["options"][0]["inputs"]["resistance_method"] =
         json!({ "value": "holtrop_mennen", "source": "typed" });
-    let d = check(&raw.to_string(), &Profile::built_in()).design.unwrap();
+    let d = check(&raw.to_string(), &Profile::built_in())
+        .design
+        .unwrap();
     assert_eq!(
         d.options[0].input("resistance_method").unwrap().value,
         json!("holtrop_mennen")
