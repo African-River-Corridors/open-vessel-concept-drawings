@@ -17,6 +17,10 @@
 //!   (a deck) or follows the trim (a waterline).
 //! - **Bulkheads:** the hull's section at that x, by ear clipping.
 //! - **Spaces:** each Space as its closed prism.
+//! - **Tanks:** each Type C tank Space as a surface of revolution: the cylinder in
+//!   [`TANK_SEGMENTS`] round, each Tank Head in [`HEAD_RINGS`] rings to its pole, at the Tank Outer
+//!   Diameter; each dome a closed cylinder in [`DOME_SEGMENTS`] from where it meets the shell to its
+//!   top; the weather shield as five plates (spec 0009, ADR 0021).
 //! - **Deck Items:** each as its closed box (spec 0009, ADR 0021).
 //!
 //! Every group carries its source ([`PartSource`]): no geometry without a source (spec 0009).
@@ -31,9 +35,17 @@ use alloc::vec::Vec;
 
 use crate::compartments::{ClippedSpace, Space, SpaceShape};
 use crate::sections::{Section, SectionsTable};
+use crate::tanks::{DomePlace, TankHead};
 use crate::vessel_model::{
-    Bulkhead, Deck, DeckItem, DeckItemKind, VesselModel, WheelhousePosition,
+    Bulkhead, Deck, DeckItem, DeckItemKind, VesselModel, WeatherShield, WheelhousePosition,
 };
+
+/// Segments round a tank (spec 0009, "Meshes and the parity hash").
+pub const TANK_SEGMENTS: usize = 48;
+/// Rings of a Tank Head, from its joint with the cylinder to its pole.
+pub const HEAD_RINGS: usize = 12;
+/// Segments round a dome.
+pub const DOME_SEGMENTS: usize = 24;
 
 /// Where a mesh group's geometry comes from (spec 0009, "no geometry without a source"): a part of
 /// the Vessel Model that the results hold. The group's layer and id follow from it.
@@ -46,6 +58,18 @@ pub enum PartSource {
     Bulkhead(String),
     /// A Space, by its name.
     Space(String),
+    /// Tank `index` of the Tank Layout (a tank Space), by its name.
+    Tank {
+        index: usize,
+        name: String,
+    },
+    /// The dome of tank `index` of the Tank Layout.
+    Dome {
+        index: usize,
+        name: String,
+    },
+    /// The weather shield over the tanks.
+    WeatherShield,
     /// The waterline of a floating position, by its name.
     Waterline(String),
     /// Entry `i` of the stern block's `container_units`.
@@ -55,23 +79,30 @@ pub enum PartSource {
 }
 
 impl PartSource {
-    /// `hull`, `deck`, `bulkhead`, `space`, `waterline` or `deck_item`.
+    /// `hull`, `deck`, `bulkhead`, `space` (a tank is a Space, ADR 0021), `dome`,
+    /// `weather_shield`, `waterline` or `deck_item`.
     pub fn layer(&self) -> &'static str {
         match self {
             PartSource::Hull => "hull",
             PartSource::Deck(_) => "deck",
             PartSource::Bulkhead(_) => "bulkhead",
-            PartSource::Space(_) => "space",
+            PartSource::Space(_) | PartSource::Tank { .. } => "space",
+            PartSource::Dome { .. } => "dome",
+            PartSource::WeatherShield => "weather_shield",
             PartSource::Waterline(_) => "waterline",
             PartSource::Unit(_) | PartSource::Wheelhouse(_) | PartSource::LiftColumn => "deck_item",
         }
     }
 
-    /// The part's name, the same in every language: a deck or bulkhead key, a Space name, a loading
-    /// condition name, `unit_1`, `wheelhouse_lowered`, `wheelhouse_raised` or `lift_column`.
+    /// The part's name, the same in every language: a deck or bulkhead key, a Space or tank name,
+    /// the tank's name and `_dome`, `weather_shield`, a loading condition name, `unit_1`,
+    /// `wheelhouse_lowered`, `wheelhouse_raised` or `lift_column`.
     pub fn id(&self) -> String {
         match self {
             PartSource::Hull => "hull".to_string(),
+            PartSource::Tank { name, .. } => name.clone(),
+            PartSource::Dome { name, .. } => alloc::format!("{name}_dome"),
+            PartSource::WeatherShield => "weather_shield".to_string(),
             PartSource::Deck(n)
             | PartSource::Bulkhead(n)
             | PartSource::Space(n)
@@ -417,6 +448,114 @@ fn prism_mesh(space: &Space) -> Mesh {
     prism(space.section(), space.x_aft, space.x_fwd)
 }
 
+/// A Type C tank as a closed surface of revolution about its axis, at its outer diameter: the
+/// cylinder and a Tank Head at each end, each head half an ellipsoid as long as the head and as wide
+/// as the tank (a hemisphere when the head is as long as the radius).
+pub fn tank_mesh(
+    axis: (f64, f64),
+    centre: (f64, f64),
+    outer_diameter: f64,
+    head: TankHead,
+) -> Mesh {
+    let (x0, x1) = axis;
+    let (yc, zc) = centre;
+    let r = outer_diameter / 2.0;
+    let h = head.length_m;
+    // The profile (x, radius) from the aft pole to the forward pole.
+    let mut profile: Vec<(f64, f64)> = Vec::with_capacity(2 * HEAD_RINGS + 2);
+    for k in 0..=HEAD_RINGS {
+        let t = core::f64::consts::FRAC_PI_2 * k as f64 / HEAD_RINGS as f64;
+        profile.push((x0 + h * (1.0 - libm::cos(t)), r * libm::sin(t)));
+    }
+    for k in (0..=HEAD_RINGS).rev() {
+        let t = core::f64::consts::FRAC_PI_2 * k as f64 / HEAD_RINGS as f64;
+        profile.push((x1 - h * (1.0 - libm::cos(t)), r * libm::sin(t)));
+    }
+    // The poles and the joints at exactly their values.
+    profile[0] = (x0, 0.0);
+    profile[HEAD_RINGS] = (x0 + h, r);
+    profile[HEAD_RINGS + 1] = (x1 - h, r);
+    let last = profile.len() - 1;
+    profile[last] = (x1, 0.0);
+    let round: Vec<(f64, f64)> = (0..TANK_SEGMENTS)
+        .map(|j| {
+            let p = 2.0 * core::f64::consts::PI * j as f64 / TANK_SEGMENTS as f64;
+            (libm::cos(p), libm::sin(p))
+        })
+        .map(|(c, s)| (snap(c), snap(s)))
+        .collect();
+    let at = |(x, rad): (f64, f64), j: usize| {
+        let (c, s) = round[j % TANK_SEGMENTS];
+        [x, yc + rad * c, zc + rad * s]
+    };
+    let mut b = Builder::default();
+    for w in profile.windows(2) {
+        for j in 0..TANK_SEGMENTS {
+            // Round, then along: the normal points out.
+            b.quad(at(w[0], j), at(w[0], j + 1), at(w[1], j + 1), at(w[1], j));
+        }
+    }
+    b.mesh()
+}
+
+/// A cosine or sine of a multiple of 90 degrees at exactly 0, 1 or -1, so the tank's box is exact.
+fn snap(v: f64) -> f64 {
+    let r = libm::round(v);
+    if (v - r).abs() < 1e-12 { r + 0.0 } else { v }
+}
+
+/// A tank's dome as a closed vertical cylinder: from where its wall meets the tank shell (the tank
+/// of outer radius `tank_radius` with its axis at `axis_z`) to the dome top.
+pub fn dome_mesh(dome: &DomePlace, tank_radius: f64, axis_z: f64) -> Mesh {
+    let rd = dome.diameter_m / 2.0;
+    let z0 = axis_z + libm::sqrt((tank_radius * tank_radius - rd * rd).max(0.0));
+    let z1 = dome.z_base_m + dome.height_m;
+    let ring: Vec<[f64; 2]> = (0..DOME_SEGMENTS)
+        .map(|j| {
+            let p = 2.0 * core::f64::consts::PI * j as f64 / DOME_SEGMENTS as f64;
+            [
+                dome.x_m + rd * snap(libm::cos(p)),
+                dome.y_m + rd * snap(libm::sin(p)),
+            ]
+        })
+        .collect();
+    let mut b = Builder::default();
+    let (bottom, top) = ([dome.x_m, dome.y_m, z0], [dome.x_m, dome.y_m, z1]);
+    for j in 0..DOME_SEGMENTS {
+        let (p, q) = (ring[j], ring[(j + 1) % DOME_SEGMENTS]);
+        b.quad(
+            [p[0], p[1], z0],
+            [q[0], q[1], z0],
+            [q[0], q[1], z1],
+            [p[0], p[1], z1],
+        );
+        b.triangle(top, [p[0], p[1], z1], [q[0], q[1], z1]);
+        b.triangle(bottom, [q[0], q[1], z0], [p[0], p[1], z0]);
+    }
+    b.mesh()
+}
+
+/// The weather shield as five closed plates that do not overlap: the top plate over all, the side
+/// walls under it at the hull sides, and the end walls between the side walls.
+pub fn weather_shield_mesh(w: &WeatherShield) -> Mesh {
+    let t = w.thickness_m;
+    let (xa, xf, hb) = (w.x_aft_m, w.x_fwd_m, w.half_width_m);
+    let (z0, z1) = (w.z_foot_m, w.z_top_m);
+    let mut m = Mesh::default();
+    let mut plate = |x: (f64, f64), y: (f64, f64), z: (f64, f64)| {
+        let part = prism(&[(y.0, z.0), (y.1, z.0), (y.1, z.1), (y.0, z.1)], x.0, x.1);
+        let base = (m.positions.len() / 3) as u32;
+        m.positions.extend_from_slice(&part.positions);
+        m.indices.extend(part.indices.iter().map(|i| i + base));
+    };
+    plate((xa, xf), (-hb, hb), (z1 - t, z1));
+    plate((xa, xf), (-hb, -hb + t), (z0, z1 - t));
+    plate((xa, xf), (hb - t, hb), (z0, z1 - t));
+    plate((xa, xa + t), (-hb + t, hb - t), (z0, z1 - t));
+    plate((xf - t, xf), (-hb + t, hb - t), (z0, z1 - t));
+    m
+}
+
 /// A Deck Item as its closed box.
 pub fn deck_item_mesh(item: &DeckItem) -> Mesh {
     let (y0, y1, z0, z1) = (item.y_port_m, item.y_stbd_m, item.z_base_m, item.z_top_m);
@@ -497,8 +636,8 @@ pub fn space_mesh(clipped: &ClippedSpace, table: &SectionsTable) -> Mesh {
 }
 
 /// Every mesh of the model in a fixed order, one group each: the hull, the decks, the bulkheads,
-/// the Spaces, the Deck Items, and the waterline of each floating position `(name, aft draught,
-/// forward draught)`.
+/// the Spaces (the tanks among them), the domes, the weather shield, the Deck Items, and the
+/// waterline of each floating position `(name, aft draught, forward draught)`.
 pub fn vessel_meshes(model: &VesselModel, waterlines: &[(String, f64, f64)]) -> Mesh {
     let mut m = Mesh::default();
     m.append(PartSource::Hull, &hull_mesh(&model.hull));
@@ -511,16 +650,48 @@ pub fn vessel_meshes(model: &VesselModel, waterlines: &[(String, f64, f64)]) -> 
             &bulkhead_mesh(&model.hull, b),
         );
     }
-    // A tank Space (ADR 0021) has its own mesh (spec 0009); it is not a prism.
-    for s in model
-        .spaces
-        .iter()
-        .filter(|s| matches!(s.space.shape, SpaceShape::Prism { .. }))
-    {
-        m.append(
-            PartSource::Space(s.space.name.clone()),
-            &space_mesh(s, &model.hull),
-        );
+    // A tank Space (ADR 0021) is a surface of revolution, not a prism.
+    let mut tanks = 0;
+    for s in &model.spaces {
+        match &s.space.shape {
+            SpaceShape::Prism { .. } => m.append(
+                PartSource::Space(s.space.name.clone()),
+                &space_mesh(s, &model.hull),
+            ),
+            SpaceShape::Tank {
+                axis_x0,
+                axis_x1,
+                y,
+                z,
+                outer_diameter,
+                head,
+                ..
+            } => {
+                m.append(
+                    PartSource::Tank {
+                        index: tanks,
+                        name: s.space.name.clone(),
+                    },
+                    &tank_mesh((*axis_x0, *axis_x1), (*y, *z), *outer_diameter, *head),
+                );
+                tanks += 1;
+            }
+        }
+    }
+    if let Some(layout) = &model.tank_layout {
+        let r = layout.outer_diameter_m / 2.0;
+        for (index, (dome, tank)) in layout.domes.iter().zip(&layout.tanks).enumerate() {
+            m.append(
+                PartSource::Dome {
+                    index,
+                    name: tank.name.clone(),
+                },
+                &dome_mesh(dome, r, tank.z_m),
+            );
+        }
+    }
+    if let Some(w) = &model.weather_shield {
+        m.append(PartSource::WeatherShield, &weather_shield_mesh(w));
     }
     for item in &model.outfit.deck_items {
         m.append(PartSource::of_deck_item(item), &deck_item_mesh(item));
