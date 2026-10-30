@@ -2794,7 +2794,7 @@ fn title_fields(
     }
     let name = shown_name(h.option_name.as_deref());
     let mut fields = json!({
-        "owner": label!("draw-owner", "OPEN VESSEL CONCEPT DESIGN"),
+        "owner": label!("draw-owner", "OPEN VESSEL DESIGNER"),
         "title": title,
         "document_number": document_number(&name, kind, sheet),
         "document_type": "GA",
