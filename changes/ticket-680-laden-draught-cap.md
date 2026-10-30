@@ -1,5 +1,5 @@
 <!-- unreleased -->
-- The draught cap binds the draught a dry bulk hull reports (issue #680). With its stern block mass a dry bulk hull floats trimmed, and at the displacement of the level cap its mid-length draught could sit up to a few centimetres below the cap, so its freeboard was less than `min_freeboard_m` (76.5 m bauxite hull at 0.8 m: draught 2.737 m against a 2.70 m cap, freeboard 0.763 m). The cargo is now the most whose reported draught is at the cap, whichever cap governs (hull, draught limit or channel). Five sweep cases move: cargo 0.16 % to 0.81 % less, draught 5 mm to 14 mm less, and each draught now sits on its cap.
+- The draught cap binds the draught a dry bulk hull reports (issue #680). With its stern block mass a dry bulk hull floats trimmed, and at the displacement of the level cap its mid-length draught could be a few centimetres deeper than the cap, so its freeboard was less than `min_freeboard_m` (76.5 m bauxite hull at 0.8 m: draught 2.737 m against a 2.70 m cap, freeboard 0.763 m). The cargo is now the most whose reported draught is at the cap, whichever cap governs (hull, draught limit or channel). Five sweep cases move: cargo 0.16 % to 0.81 % less, draught 5 mm to 14 mm less, and each draught now sits on its cap.
 
 <!-- design-impact -->
 ### ticket/680-laden-draught-cap (2026-10-30)
