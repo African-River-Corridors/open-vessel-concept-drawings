@@ -4,7 +4,9 @@
 //! member is one record: where it sits in the hull (x, y and z bounds), its plate thickness, its
 //! stiffeners (direction, spacing and a named section) and the primary members that support it.
 //! The scantlings are the minimum scantlings of the ABS Rules for Building and Classing Steel Barges
-//! (2021 edition, the free archive copy), cited per member. The weight is the sum over the records:
+//! at the current edition, January 2026 (Part 3 January 2026, Part 5 July 2025), cited per member.
+//! Every formula is a Rule of the Rule Set `abs-steel-barges` (issue #740): a shape and its
+//! coefficients in `scantling_rules`, the same data as `rules/abs-steel-barges/1.0.0.json`. The weight is the sum over the records:
 //! plate area x thickness x density, plus the stiffeners and the primary members, plus one named
 //! allowance for brackets, welds and small items. No structure factor is used.
 //!
@@ -12,18 +14,21 @@
 //! beyond what the rule formulas hold, no openings or lightening holes, no local strengthening
 //! under the tank saddles, no machinery seats, no superstructure. Those are follow-up tickets.
 //!
-//! The rule length L is taken as the length overall (an Estimate: ABS 3-1-1/3 takes it on the
-//! summer load line). Ordinary-strength steel throughout (Q = 1, q = 1). Unrestricted service:
+//! The rule length L is the rule's own (ABS 3-1-1/3.1): 96 % of the length on a waterline at 85 % of
+//! the moulded depth, from the hull's waterplane ([`DoubleHullSpec::rule_length_m`]). The hull's own
+//! extents (the 0.4L midship region, the ends) stay on the length overall. Ordinary-strength steel throughout (Q = 1, q = 1). Unrestricted service:
 //! ABS gives special consideration for restricted service (3-2-1 Table note), not modelled.
 
 use alloc::format;
-use alloc::string::String;
+use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
 use libm::{ceil, fabs, floor, pow, sqrt};
 
 /// The rule edition every scantling here is taken from.
-pub const RULE_EDITION: &str = "ABS Rules for Building and Classing Steel Barges, 2021";
+pub const RULE_EDITION: &str = crate::scantling_rules::EDITION;
+
+use crate::scantling_rules as rules;
 
 /// The allowance for brackets, collars, welds and small items, as a share (%) of the net member
 /// steel. An Estimate: no primary source was found that gives one figure. Weld metal alone is
@@ -49,6 +54,8 @@ pub const OVERFLOW_HEIGHT_M: f64 = 0.76;
 #[derive(Debug, Clone, PartialEq)]
 pub struct DoubleHullSpec {
     pub loa_m: f64,
+    /// The rule length L of ABS 3-1-1/3.1, which every scantling formula takes ([`rule_length_m`]).
+    pub rule_length_m: f64,
     pub beam_m: f64,
     pub depth_m: f64,
     /// Block coefficient for the hull girder section modulus (ABS 3-1-1/31).
@@ -266,6 +273,11 @@ pub struct PanelMember {
     pub total_t: f64,
     /// The rule paragraphs that set the scantlings.
     pub rule: String,
+    /// The Rule Set, its edition and the first paragraph of `rule`, the one that sets the plate
+    /// (issue #740).
+    pub rule_set: &'static str,
+    pub edition: &'static str,
+    pub paragraph: String,
     /// "rule" when the rule formulas set the scantlings; "estimate" when a value is chosen.
     pub basis: &'static str,
     pub note: String,
@@ -299,93 +311,79 @@ pub struct HullPanelModel {
     pub rule_edition: &'static str,
 }
 
-/// C1 of ABS 3-2-1/3.1.
-fn c1(l: f64) -> f64 {
-    if l < 45.0 {
-        4.11
-    } else if l < 95.0 {
-        16.33 * pow(l / 100.0, 2.0) - 15.47 * (l / 100.0) + 7.77
-    } else if l <= 300.0 {
-        10.75 - pow((300.0 - l) / 100.0, 1.5)
-    } else if l < 350.0 {
-        10.75
-    } else {
-        10.75 - pow((l - 350.0) / 150.0, 1.5)
-    }
+/// The rule length L of ABS 3-1-1/3.1: 96 % of the length on a waterline at 85 % of the moulded
+/// depth, from the length of the waterline at that height (`waterline_length_at`, m).
+pub fn rule_length_m(depth_m: f64, waterline_length_at: impl Fn(f64) -> f64) -> f64 {
+    let factor = rules::coefficient("abs-steel-barges/3-1-1.3.1/rule-length", "value");
+    let waterline = rules::coefficient("abs-steel-barges/3-1-1.3.1/rule-length-waterline", "value");
+    factor * waterline_length_at(waterline * depth_m)
 }
 
 /// SMR of ABS 3-2-1/3.1 with K = 1 (cm2-m).
 pub fn required_section_modulus(l: f64, b: f64, cb: f64) -> f64 {
-    c1(l) * 0.01 * l * l * b * (cb + 0.7)
-}
-
-/// k of ABS 3-2-6/5.1 and 3-2-7/3.1 for a panel of aspect ratio a.
-fn panel_k(a: f64) -> f64 {
-    if a > 2.0 {
-        1.0
-    } else {
-        let a = if a < 1.0 { 1.0 } else { a };
-        (3.075 * sqrt(a) - 2.077) / (a + 0.272)
-    }
+    rules::value(
+        "abs-steel-barges/3-2-1.3.1/hull-girder-modulus",
+        &[("l", l), ("b", b), ("cb", cb)],
+    )
 }
 
 /// Plating of a tank boundary, ABS 3-2-7/3.1 (mm): t = s k sqrt(q h)/254 + 2.5, at least 6.5 and
 /// s/150 + 2.5.
 pub fn tank_boundary_plate_mm(s_mm: f64, aspect: f64, h_m: f64) -> f64 {
-    let t = s_mm * panel_k(aspect) * sqrt(h_m.max(0.0)) / 254.0 + 2.5;
-    t.max(6.5).max(s_mm / 150.0 + 2.5)
+    rules::value(
+        "abs-steel-barges/3-2-7.3.1/tank-bulkhead-plating",
+        &[("s", s_mm), ("aspect", aspect), ("h", h_m)],
+    )
 }
 
 /// Plating of a watertight bulkhead, ABS 3-2-6/5.1 (mm): t = s k sqrt(q h)/290 + 1.5, at least 6
 /// and s/200 + 2.5.
 pub fn watertight_bulkhead_plate_mm(s_mm: f64, aspect: f64, h_m: f64) -> f64 {
-    let t = s_mm * panel_k(aspect) * sqrt(h_m.max(0.0)) / 290.0 + 1.5;
-    t.max(6.0).max(s_mm / 200.0 + 2.5)
+    rules::value(
+        "abs-steel-barges/3-2-6.5.1/watertight-bulkhead-plating",
+        &[("s", s_mm), ("aspect", aspect), ("h", h_m)],
+    )
 }
 
-/// SM = 7.8 c h s l^2 (cm3), the stiffener formula of ABS 3-2-6/5.3, 3-2-7/3.3, 5-2-1/7, 5-2-2/3.5.
-pub fn stiffener_sm(c: f64, h: f64, s_m: f64, l: f64) -> f64 {
-    7.8 * c * h * s_m * l * l
-}
-
-/// SM = 4.74 c h s l^2 (cm3), the primary member formula of ABS 3-2-6/5.5, 3-2-7/3.5, 5-2-1/11.
-pub fn primary_sm(c: f64, h: f64, s_m: f64, l: f64) -> f64 {
-    4.74 * c * h * s_m * l * l
+/// A section modulus by a `sm-chsl2` Rule (cm3): factor x k c h s l^2, k = 7.8 for a stiffener and
+/// 4.74 for a primary member (ABS 3-2-6/5.3 and 5.5, 3-2-7/3.3, 5-2-1/7 and 11, 5-2-2/3.5 and 3.7).
+pub fn rule_sm(id: &str, h: f64, s_m: f64, l: f64) -> f64 {
+    rules::value(id, &[("h", h), ("s", s_m), ("l", l)])
 }
 
 /// The scantling head h of ABS 5-2-1/3 for a tank whose overflow runs to the deck: h1 = ht + ha,
 /// ht from the point to the deck at side, ha the larger of ha1 (by L) and the vent setting (none).
 fn tank_head(l: f64, depth: f64, z: f64) -> f64 {
-    let ha1 = if l <= 61.0 {
-        1.22
-    } else if l <= 122.0 {
-        0.02 * l
-    } else {
-        2.44
-    };
-    (depth - z).max(0.0) + ha1
+    rules::value(
+        "abs-steel-barges/5-2-1.3/tank-head",
+        &[("l", l), ("depth", depth), ("z", z)],
+    )
 }
 
 /// The watertight bulkhead head of ABS 3-2-6/5.3 and 5.5: the distance to the deck, taken as
 /// 0.8 x it + 1.22 where it is under 6.10 m.
 fn bulkhead_head(depth: f64, z: f64) -> f64 {
-    let d = (depth - z).max(0.0);
-    if d < 6.10 { 0.8 * d + 1.22 } else { d }
+    rules::value(
+        "abs-steel-barges/3-2-6.5.3/bulkhead-head",
+        &[("depth", depth), ("z", z)],
+    )
 }
 
 /// Web thickness of girders, chords and transverses, ABS 3-2-4/3.11 (mm): 1 mm per 100 mm of depth
 /// plus 3 (at most 11.5), and not less than L/36 + 7.0 in tanks or L/36 + 5.5 clear of tanks
 /// (L >= 75 m; the L < 75 m forms otherwise).
 pub fn web_thickness_mm(l: f64, depth_mm: f64, in_tank: bool) -> f64 {
-    let by_depth = (0.01 * depth_mm + 3.0).min(11.5);
-    let l1 = l.max(29.0);
-    let floor_t = match (in_tank, l >= 75.0) {
-        (true, true) => l1 / 36.0 + 7.0,
-        (true, false) => l1 / 20.0 + 5.33,
-        (false, true) => l1 / 36.0 + 5.5,
-        (false, false) => l1 / 60.0 + 6.35,
+    let id = if in_tank {
+        "abs-steel-barges/3-2-4.3.11.1/web-in-tanks"
+    } else {
+        "abs-steel-barges/3-2-4.3.11.2/web-clear-of-tanks"
     };
-    by_depth.max(floor_t)
+    rules::value(id, &[("l", l), ("depth_mm", depth_mm)])
+}
+
+/// A `linear-ls` family Rule at x (L or the spacing) and the spacing s (mm).
+fn linear(id: &str, x: f64, s: f64) -> f64 {
+    rules::value(id, &[("x", x), ("s", s)])
 }
 
 /// Round a plate up to the next 0.5 mm, as plate is ordered.
@@ -457,11 +455,23 @@ impl Builder<'_> {
             plate_t,
             stiffeners_t: st_t,
             total_t: plate_t + st_t,
+            paragraph: first_paragraph(&p.rule),
             rule: p.rule,
+            rule_set: rules::RULE_SET,
+            edition: rules::EDITION,
             basis: p.basis,
             note: p.note,
         });
     }
+}
+
+/// The first ABS paragraph a member's rule text names (`ABS 3-2-2/3.5.1; ...` gives `3-2-2/3.5.1`).
+fn first_paragraph(rule: &str) -> String {
+    rule.trim_start_matches("ABS ")
+        .split([' ', ';', ','])
+        .next()
+        .unwrap_or("")
+        .to_string()
 }
 
 /// The number of stiffeners across a panel of width `w_m` at spacing `s_mm`.
@@ -472,8 +482,10 @@ fn n_across(w_m: f64, s_mm: f64) -> usize {
 
 /// Build the panel model of a double-hull barge.
 pub fn double_hull_panels(spec: &DoubleHullSpec, ch: &ScantlingChoices) -> HullPanelModel {
+    // The hull's own length, for its extents, and the rule length L of 3-1-1/3.1, which every
+    // scantling formula takes.
     let l = spec.loa_m;
-    let lr = l.min(225.0);
+    let lr = spec.rule_length_m;
     let b = spec.beam_m;
     let d = spec.depth_m;
     let db = spec.double_bottom_m.clamp(0.0, d);
@@ -488,45 +500,33 @@ pub fn double_hull_panels(spec: &DoubleHullSpec, ch: &ScantlingChoices) -> HullP
 
     // --- Rule plate thicknesses ---
     // Bottom shell, ABS 3-2-2/3.5.1 (longitudinal framing), and at the ends 3-2-2/5.1.
-    let t_bottom_mid = if lr <= 123.0 {
-        0.045 * lr + 0.007 * s + 1.8
-    } else {
-        0.08 * lr + 0.007 * s - 2.5
-    };
-    let t_shell_end = if l <= 76.0 {
-        0.055 * lr + 0.007 * s + 1.0
-    } else {
-        0.015 * lr + 0.01 * s + 2.2
-    };
+    let t_bottom_mid = linear("abs-steel-barges/3-2-2.3.5.1/bottom-shell", lr, s);
+    let t_shell_end = linear("abs-steel-barges/3-2-2.5.1/shell-ends", lr, s);
     // Side shell, ABS 3-2-2/3.1, less 0.5 mm with longitudinal bulkheads within 0.2B (3.1.1).
-    let mut t_side_mid = if l <= 150.0 {
-        0.07 * l + 0.007 * s
-    } else {
-        0.03 * l + 0.007 * s + 6.0
-    };
-    if w > 0.0 && w <= 0.2 * b {
-        t_side_mid -= 0.5;
+    let mut t_side_mid = linear("abs-steel-barges/3-2-2.3.1/side-shell", lr, s);
+    let within = rules::coefficient(
+        "abs-steel-barges/3-2-2.3.1.1/side-shell-reduction-breadth",
+        "value",
+    );
+    if w > 0.0 && w <= within * b {
+        t_side_mid -=
+            rules::coefficient("abs-steel-barges/3-2-2.3.1.1/side-shell-reduction", "value");
     }
-    // Strength deck, ABS 3-2-3/1.1.2 (a) and (b), longitudinal beams; ends 3-2-3/1.7.
-    let ta = if s <= 760.0 {
-        0.009 * s + 2.4
-    } else {
-        0.006 * s + 4.7
-    };
-    let lb = l.min(183.0);
-    let tb = s * (lb + 48.76) / (26.0 * lb + 8681.0);
+    // Strength deck, ABS 3-2-3/2.1.2 (a) and (b), longitudinal beams; ends 3-2-3/2.7.
+    let ta = linear("abs-steel-barges/3-2-3.2.1.2(a)/strength-deck", s, s);
+    let tb = rules::value(
+        "abs-steel-barges/3-2-3.2.1.2(b)/strength-deck",
+        &[("l", lr), ("s", s)],
+    );
     let t_deck_mid = ta.max(tb);
-    let t_deck_end = 0.01 * s;
+    let t_deck_end = linear("abs-steel-barges/3-2-3.2.7/deck-ends", lr, s);
     // Inner bottom, ABS 5-2-2/3.3: 5-1-2/5.17 (less 1 mm, longitudinal framing) and 3-2-7/3.1
     // with the head of 5-2-1/3 (the double bottom is a ballast tank).
-    let t_ib = (0.037 * lr + 0.009 * s - 0.5 - 1.0).max(tank_boundary_plate_mm(
-        s,
-        web / sm,
-        tank_head(l, d, db),
-    ));
+    let t_ib = linear("abs-steel-barges/5-1-2.5.17/inner-bottom", lr, s)
+        .max(tank_boundary_plate_mm(s, web / sm, tank_head(lr, d, db)));
 
     // --- Hull girder, ABS 3-2-1/3.1, on the midship section ---
-    let smr = required_section_modulus(l, b, spec.block_coefficient);
+    let smr = required_section_modulus(lr, b, spec.block_coefficient);
     let deck_w = (b - spec.deck_opening_width_m).max(0.0);
     let wing_deck_w = if zw < d && w > 0.0 {
         (b - spec.wing_deck_opening_width_m)
@@ -536,32 +536,62 @@ pub fn double_hull_panels(spec: &DoubleHullSpec, ch: &ScantlingChoices) -> HullP
     } else {
         0.0
     };
-    let t_ws = |z: f64| tank_boundary_plate_mm(s, web / sm, tank_head(l, d, z));
+    let t_ws = |z: f64| tank_boundary_plate_mm(s, web / sm, tank_head(lr, d, z));
     let t_inner_side = t_ws(db);
     let t_wing_deck = t_ws(zw);
     // Side girders of the double bottom, ABS 5-1-2/5.5: at most 4.6 m apart.
-    let n_side_girders = (ceil((b / 2.0) / 4.6 - 1e-9) - 1.0).max(0.0) as usize;
-    let t_cg = 0.056 * l + 5.5;
-    let t_sg = 0.036 * l + 4.5;
+    let girder_spacing =
+        rules::coefficient("abs-steel-barges/5-1-2.5.5/side-girder-spacing", "value");
+    let n_side_girders = (ceil((b / 2.0) / girder_spacing - 1e-9) - 1.0).max(0.0) as usize;
+    let t_cg = linear("abs-steel-barges/5-1-2.5.1.1/center-girder", lr, 0.0);
+    let t_sg = linear("abs-steel-barges/5-1-2.5.5/side-girders", lr, 0.0);
 
     // Longitudinal stiffeners, chosen against the rule SM with the rule plate.
     let ha_ovf = 2.0 / 3.0 * OVERFLOW_HEIGHT_M;
     let ha_wing = ha_ovf.max(0.91);
     let l_floor = web.max(1.83); // ABS 5-1-2/5.13: l not under 1.83 m for L >= 61 m
-    let bottom_long =
-        pick_stiffener(stiffener_sm(1.34, d + ha_ovf, sm, l_floor), t_bottom_mid, s).0;
+    let bottom_long = pick_stiffener(
+        rule_sm(
+            "abs-steel-barges/5-2-2.3.7/bottom-longitudinals",
+            d + ha_ovf,
+            sm,
+            l_floor,
+        ),
+        t_bottom_mid,
+        s,
+    )
+    .0;
     let ib_long = pick_stiffener(
-        stiffener_sm(1.0, tank_head(l, d, db), sm, web)
-            .max(0.85 * stiffener_sm(1.30, d + ha_ovf, sm, l_floor)),
+        rule_sm(
+            "abs-steel-barges/3-2-7.3.3/tank-boundary-longitudinals",
+            tank_head(lr, d, db),
+            sm,
+            web,
+        )
+        .max(rule_sm(
+            "abs-steel-barges/5-2-2.3.5/inner-bottom-longitudinals",
+            d + ha_ovf,
+            sm,
+            l_floor,
+        )),
         t_ib,
         s,
     )
     .0;
     // Deck beams, ABS 5-1-1/3.1: h = 2.9 m (L >= 107) or 0.02L + 0.76; c by the hull girder k,
     // taken first as k = 1 (c = 0.945) and not revised (an Estimate).
-    let h_deck = if l >= 107.0 { 2.9 } else { 0.02 * l + 0.76 };
-    let c_deck = 1.0 / (1.709 - 0.651);
-    let deck_long = pick_stiffener(stiffener_sm(c_deck, h_deck, sm, web), t_deck_mid, s).0;
+    let h_deck = linear("abs-steel-barges/5-1-1.3.1/deck-beam-head", lr, 0.0);
+    let deck_long = pick_stiffener(
+        rule_sm(
+            "abs-steel-barges/5-1-1.3.1/deck-longitudinals",
+            h_deck,
+            sm,
+            web,
+        ),
+        t_deck_mid,
+        s,
+    )
+    .0;
 
     // Side and inner side longitudinals, one per stiffener level (ABS 5-2-2/7 -> 5-2-1/7, c = 1.25,
     // and 3-2-7/3.3, c = 0.90, for the longitudinal bulkhead).
@@ -577,7 +607,12 @@ pub fn double_hull_panels(spec: &DoubleHullSpec, ch: &ScantlingChoices) -> HullP
         .iter()
         .map(|z| {
             pick_stiffener(
-                stiffener_sm(1.25, (d - z) + ha_wing, sm, web),
+                rule_sm(
+                    "abs-steel-barges/5-2-1.7/side-longitudinals",
+                    (d - z) + ha_wing,
+                    sm,
+                    web,
+                ),
                 t_side_mid,
                 s,
             )
@@ -589,7 +624,12 @@ pub fn double_hull_panels(spec: &DoubleHullSpec, ch: &ScantlingChoices) -> HullP
         .iter()
         .map(|z| {
             pick_stiffener(
-                stiffener_sm(0.90, tank_head(l, d, *z), sm, web),
+                rule_sm(
+                    "abs-steel-barges/3-2-7.3.3/longitudinal-bulkhead-stiffeners",
+                    tank_head(lr, d, *z),
+                    sm,
+                    web,
+                ),
                 t_inner_side,
                 s,
             )
@@ -597,7 +637,12 @@ pub fn double_hull_panels(spec: &DoubleHullSpec, ch: &ScantlingChoices) -> HullP
         })
         .collect();
     let wing_deck_long = pick_stiffener(
-        stiffener_sm(1.0, tank_head(l, d, zw), sm, web),
+        rule_sm(
+            "abs-steel-barges/3-2-7.3.3/tank-boundary-longitudinals",
+            tank_head(lr, d, zw),
+            sm,
+            web,
+        ),
         t_wing_deck,
         s,
     )
@@ -691,7 +736,7 @@ pub fn double_hull_panels(spec: &DoubleHullSpec, ch: &ScantlingChoices) -> HullP
     };
     let floors_desc = format!(
         "solid floors {:.1} mm x {:.2} m",
-        order_mm(0.036 * l + 6.0),
+        order_mm(linear("abs-steel-barges/5-1-2.5.7.1/solid-floors", lr, 0.0)),
         db
     );
     let webs_desc = |what: &str| format!("{what} at {web:.2} m");
@@ -791,7 +836,7 @@ pub fn double_hull_panels(spec: &DoubleHullSpec, ch: &ScantlingChoices) -> HullP
         stiffeners: alloc::vec![(deck_long.clone(), n_across(deck_w, s) as f64 * 0.4 * l)],
         primary_spacing: Some(web),
         primary: Some(webs_desc("deck transverses")),
-        rule: "ABS 3-2-3/1.1.2(a)(b); 3-2-1/3.1 hull girder; beams 5-1-1/3.1".into(),
+        rule: "ABS 3-2-3/2.1.2(a)(b); 3-2-1/3.1 hull girder; beams 5-1-1/3.1".into(),
         basis: "rule",
         note: format!(
             "width {deck_w:.2} m outside the tank cut-outs{}",
@@ -814,7 +859,7 @@ pub fn double_hull_panels(spec: &DoubleHullSpec, ch: &ScantlingChoices) -> HullP
         stiffeners: alloc::vec![(deck_long.clone(), ends_long_len)],
         primary_spacing: Some(web),
         primary: Some(webs_desc("deck transverses")),
-        rule: "ABS 3-2-3/1.7, tapered from 3-2-3/1.1.2".into(),
+        rule: "ABS 3-2-3/2.7, tapered from 3-2-3/2.1.2".into(),
         basis: "rule",
         note: "full beam in the end zones; the strips outside the cut-outs in the rest of the cargo zone".into(),
     });
@@ -843,7 +888,14 @@ pub fn double_hull_panels(spec: &DoubleHullSpec, ch: &ScantlingChoices) -> HullP
             y: (0.0, 0.0),
             z: (0.0, db),
             count: 1,
-            area_each: 0.75 * l * db + 0.25 * l * db * 0.85,
+            area_each: 0.75 * l * db
+                + 0.25
+                    * l
+                    * db
+                    * rules::coefficient(
+                        "abs-steel-barges/5-1-2.5.1.2/center-girder-ends",
+                        "value",
+                    ),
             plate_mm: order_mm(t_cg),
             dir: StiffenerDirection::None,
             stiffeners: Vec::new(),
@@ -880,7 +932,7 @@ pub fn double_hull_panels(spec: &DoubleHullSpec, ch: &ScantlingChoices) -> HullP
             z: (0.0, db),
             count: n_floor,
             area_each: b * db,
-            plate_mm: order_mm(0.036 * l + 6.0),
+            plate_mm: order_mm(linear("abs-steel-barges/5-1-2.5.7.1/solid-floors", lr, 0.0)),
             dir: StiffenerDirection::Vertical,
             stiffeners: alloc::vec![(floor_stiff, n_b as f64 * db)],
             primary_spacing: Some(web),
@@ -932,7 +984,7 @@ pub fn double_hull_panels(spec: &DoubleHullSpec, ch: &ScantlingChoices) -> HullP
             });
         }
         let n_web = (floor(lc / web) as usize).max(1);
-        let tw = web_thickness_mm(l, w * 1000.0, true);
+        let tw = web_thickness_mm(lr, w * 1000.0, true);
         bld.add(Panel {
             member: "wing web frames".into(),
             x: (spec.cargo_zone_aft_m, spec.cargo_zone_fwd_m),
@@ -955,8 +1007,13 @@ pub fn double_hull_panels(spec: &DoubleHullSpec, ch: &ScantlingChoices) -> HullP
     // from the inner bottom to the deck in the end zones ---
     let side_web = |span: f64, z_mid: f64| {
         let depth_mm = (125.0 * span).max(2.5 * 200.0);
-        let tw = web_thickness_mm(l, depth_mm, false);
-        let smr_w = primary_sm(1.75, (d - z_mid) + ha_wing, web, span);
+        let tw = web_thickness_mm(lr, depth_mm, false);
+        let smr_w = rule_sm(
+            "abs-steel-barges/5-2-1.11/side-webs",
+            (d - z_mid) + ha_wing,
+            web,
+            span,
+        );
         design_primary(
             smr_w,
             depth_mm,
@@ -1021,9 +1078,14 @@ pub fn double_hull_panels(spec: &DoubleHullSpec, ch: &ScantlingChoices) -> HullP
     };
     if span > 0.0 {
         let depth_mm = (58.5 * span).max(2.0 * deck_long.web_mm.0);
-        let tw = order_mm(web_thickness_mm(l, depth_mm, false));
+        let tw = order_mm(web_thickness_mm(lr, depth_mm, false));
         let sec = design_primary(
-            primary_sm(2.0, h_deck, web, span),
+            rule_sm(
+                "abs-steel-barges/5-2-1.11/deck-transverses",
+                h_deck,
+                web,
+                span,
+            ),
             depth_mm,
             tw,
             t_deck_mid,
@@ -1061,7 +1123,17 @@ pub fn double_hull_panels(spec: &DoubleHullSpec, ch: &ScantlingChoices) -> HullP
         let n_rows = n_across(hb, s);
         for i in 0..n_rows {
             let z = db + (i as f64 + 1.0) * sm;
-            let st = pick_stiffener(stiffener_sm(0.56, bulkhead_head(d, z), sm, web), 6.0, s).0;
+            let st = pick_stiffener(
+                rule_sm(
+                    "abs-steel-barges/3-2-6.5.3/bulkhead-stiffeners",
+                    bulkhead_head(d, z),
+                    sm,
+                    web,
+                ),
+                6.0,
+                s,
+            )
+            .0;
             stiff.push((st, b));
         }
         let mut z = db;
@@ -1074,9 +1146,14 @@ pub fn double_hull_panels(spec: &DoubleHullSpec, ch: &ScantlingChoices) -> HullP
         let n_vweb = (floor(b / web) as usize).max(1);
         let vweb = {
             let depth_mm = 125.0 * hb;
-            let tw = order_mm(web_thickness_mm(l, depth_mm, false));
+            let tw = order_mm(web_thickness_mm(lr, depth_mm, false));
             design_primary(
-                primary_sm(1.0, bulkhead_head(d, db + hb / 2.0), web, hb),
+                rule_sm(
+                    "abs-steel-barges/3-2-6.5.5/bulkhead-webs",
+                    bulkhead_head(d, db + hb / 2.0),
+                    web,
+                    hb,
+                ),
                 depth_mm,
                 tw,
                 t_mean,
@@ -1143,8 +1220,23 @@ pub fn gas_hull_spec(
     let stern = inputs.stern_non_tank_length.unwrap_or(0.0);
     let bow = inputs.bow_non_tank_length.unwrap_or(0.0);
     let n_wide = tanks.n_tanks_wide.max(1) as f64;
+    // The rule length of 3-1-1/3.1 from the raked box the gas hull floats on (`hull::RakedBox`, the
+    // hull of the lightship's hydrostatics): its waterline length at 85 % of the depth. A Stern Form
+    // is not in it (an Estimate: the raked box's square stern).
+    let depth = inputs.depth;
+    let raked = crate::hull::hull_form::RakedBox::new(
+        inputs.loa,
+        inputs.beam,
+        depth,
+        inputs.bow_rake_length,
+        inputs.bow_rake_rise.unwrap_or(depth),
+        inputs.stern_rake_length,
+        inputs.stern_rake_rise.unwrap_or(depth),
+    );
+    let rule_length = rule_length_m(depth, |z| raked.waterplane_area(z) / inputs.beam);
     DoubleHullSpec {
         loa_m: inputs.loa,
+        rule_length_m: rule_length,
         beam_m: inputs.beam,
         depth_m: inputs.depth,
         block_coefficient,

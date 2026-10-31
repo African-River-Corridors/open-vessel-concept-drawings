@@ -1,0 +1,1412 @@
+{
+  "$schema": "../rule-set.schema.json",
+  "id": "abs-steel-barges",
+  "family": "abs-steel-barges",
+  "title": "ABS Steel Barges, current edition: the minimum hull scantlings the panel model sizes with (spec 0013)",
+  "version": "1.0.0",
+  "edition": {
+    "document": "ABS Rules for Building and Classing Steel Barges",
+    "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+    "in_force": "The January 2026 Rules: Part 3 January 2026 and Part 5 July 2025 (Notices and General Information, January 2026, Table 1). Every paragraph was read in the July 2025 Rules; the January 2026 Rule Change Notice (Table 3) changes 3-2-3/15, 3-2-5/3, 3-2-6/2 (commentary), 3-2-8 and 3-2-9, none of the paragraphs here"
+  },
+  "sources": [
+    {
+      "document": "ABS Rules for Building and Classing Steel Barges",
+      "edition": "July 2025",
+      "access": "free",
+      "sha256": "bf1f22723517fc489ea2c800414bee0c36a8388e2ce5c192e4fea86a9562da82"
+    },
+    {
+      "document": "ABS Rules for Building and Classing Steel Barges, Notices and General Information",
+      "edition": "January 2026",
+      "access": "free",
+      "sha256": "e9ee33dd4b53b47e36c70d6b28a460e5901b3e4533c76d96e8cd04e8e49d86a7"
+    }
+  ],
+  "status": "draft",
+  "applies_when": {},
+  "includes": [],
+  "known_conflicts": [],
+  "tables": [],
+  "rules": [
+    {
+      "id": "abs-steel-barges/3-1-1.3.1/rule-length",
+      "title": "The rule length L is 96 % of the length on a waterline at 85 % of the moulded depth",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "3-1-1.3.1",
+        "page": "10-barge-rules-jul25.pdf, 3-1-1/3.1, printed p. 6 (Part 3 is the July 2025 text; the January 2026 Rule Change Notice changes none of this paragraph)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "hull_steel.rule_length_factor"
+      },
+      "compare": "le",
+      "limit": {
+        "value": 0.96,
+        "unit": "-"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/3-1-1.3.1/rule-length-waterline",
+      "title": "The waterline of the rule length is at 85 % of the least moulded depth",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "3-1-1.3.1",
+        "page": "10-barge-rules-jul25.pdf, 3-1-1/3.1, printed p. 6 (Part 3 is the July 2025 text; the January 2026 Rule Change Notice changes none of this paragraph)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "hull_steel.rule_length_waterline"
+      },
+      "compare": "le",
+      "limit": {
+        "value": 0.85,
+        "unit": "-"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/3-2-1.3.1/hull-girder-modulus",
+      "title": "Hull girder section modulus amidships, to deck and bottom, at least SMb = C1 C2 L^2 B (Cb + 0.7), with K = 1",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "3-2-1.3.1",
+        "page": "10-barge-rules-jul25.pdf, 3-2-1/3.1, printed p. 33 (Part 3 is the July 2025 text; the January 2026 Rule Change Notice changes none of this paragraph)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.hull_girder_sm"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "abs-smr",
+        "unit": "cm2-m",
+        "l": "hull_steel.rule_length",
+        "b": "hull_steel.breadth",
+        "cb": "hull_steel.block_coefficient",
+        "c1_min": 4.11,
+        "l_a": 45.0,
+        "qa": 16.33,
+        "qb": 15.47,
+        "qc": 7.77,
+        "l_div": 100.0,
+        "l_b": 95.0,
+        "c1_max": 10.75,
+        "l_c": 300.0,
+        "l_d": 350.0,
+        "l_div_d": 150.0,
+        "p": 1.5,
+        "c2": 0.01,
+        "cb_add": 0.7
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/3-2-2.3.1/side-shell",
+      "title": "Side shell plating within 0.4L amidships, linear in L and the frame spacing",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "3-2-2.3.1",
+        "page": "10-barge-rules-jul25.pdf, 3-2-2/3.1, printed p. 44 (Part 3 is the July 2025 text; the January 2026 Rule Change Notice changes none of this paragraph)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.plate_mm"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "linear-ls-split",
+        "unit": "mm",
+        "x": "hull_steel.rule_length",
+        "s": "hull_steel.longitudinal_spacing_mm",
+        "a1": 0.07,
+        "b1": 0.007,
+        "c1": 0.0,
+        "a2": 0.03,
+        "b2": 0.007,
+        "c2": 6.0,
+        "x_max": 150.0,
+        "strict": 0.0
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/3-2-2.3.1.1/side-shell-reduction",
+      "title": "With longitudinal bulkheads near the side, the side shell may be 0.5 mm thinner",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "3-2-2.3.1.1",
+        "page": "10-barge-rules-jul25.pdf, 3-2-2/3.1.1, printed p. 44 (Part 3 is the July 2025 text; the January 2026 Rule Change Notice changes none of this paragraph)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "hull_steel.side_shell_reduction_mm"
+      },
+      "compare": "le",
+      "limit": {
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/3-2-2.3.1.1/side-shell-reduction-breadth",
+      "title": "The reduction holds for longitudinal bulkheads within 0.2B of the side",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "3-2-2.3.1.1",
+        "page": "10-barge-rules-jul25.pdf, 3-2-2/3.1.1, printed p. 44 (Part 3 is the July 2025 text; the January 2026 Rule Change Notice changes none of this paragraph)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "hull_steel.side_shell_reduction_breadth"
+      },
+      "compare": "le",
+      "limit": {
+        "value": 0.2,
+        "unit": "-"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/3-2-2.3.5.1/bottom-shell",
+      "title": "Bottom shell plating within 0.4L amidships, longitudinal framing; L need not exceed 225 m",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "3-2-2.3.5.1",
+        "page": "10-barge-rules-jul25.pdf, 3-2-2/3.5.1, printed p. 45 (Part 3 is the July 2025 text; the January 2026 Rule Change Notice changes none of this paragraph)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.plate_mm"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "linear-ls-split-capped",
+        "unit": "mm",
+        "x": "hull_steel.rule_length",
+        "s": "hull_steel.longitudinal_spacing_mm",
+        "a1": 0.045,
+        "b1": 0.007,
+        "c1": 1.8,
+        "a2": 0.08,
+        "b2": 0.007,
+        "c2": -2.5,
+        "x_max": 123.0,
+        "x_cap": 225.0
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/3-2-2.5.1/shell-ends",
+      "title": "Shell plating for 0.1L at the ends; L need not exceed 225 m",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "3-2-2.5.1",
+        "page": "10-barge-rules-jul25.pdf, 3-2-2/5.1, printed p. 45 (Part 3 is the July 2025 text; the January 2026 Rule Change Notice changes none of this paragraph)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.plate_mm"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "linear-ls-split-capped",
+        "unit": "mm",
+        "x": "hull_steel.rule_length",
+        "s": "hull_steel.longitudinal_spacing_mm",
+        "a1": 0.055,
+        "b1": 0.007,
+        "c1": 1.0,
+        "a2": 0.015,
+        "b2": 0.01,
+        "c2": 2.2,
+        "x_max": 76.0,
+        "x_cap": 225.0
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/3-2-3.2.1.2(a)/strength-deck",
+      "title": "Strength deck plating with longitudinal beams, by the beam spacing",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "3-2-3.2.1.2(a)",
+        "page": "10-barge-rules-jul25.pdf, 3-2-3/2.1.2(a), printed p. 53 (Part 3 is the July 2025 text; the January 2026 Rule Change Notice changes none of this paragraph)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.plate_mm"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "linear-ls-split",
+        "unit": "mm",
+        "x": "hull_steel.longitudinal_spacing_mm",
+        "s": "hull_steel.longitudinal_spacing_mm",
+        "a1": 0.0,
+        "b1": 0.009,
+        "c1": 2.4,
+        "a2": 0.0,
+        "b2": 0.006,
+        "c2": 4.7,
+        "x_max": 760.0,
+        "strict": 0.0
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/3-2-3.2.1.2(b)/strength-deck",
+      "title": "Strength deck plating with longitudinal beams, by L and the beam spacing",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "3-2-3.2.1.2(b)",
+        "page": "10-barge-rules-jul25.pdf, 3-2-3/2.1.2(b), printed p. 53 (Part 3 is the July 2025 text; the January 2026 Rule Change Notice changes none of this paragraph)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.plate_mm"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "deck-b",
+        "unit": "mm",
+        "l": "hull_steel.rule_length",
+        "s": "hull_steel.longitudinal_spacing_mm",
+        "l_max": 183.0,
+        "c1": 48.76,
+        "k": 26.0,
+        "c2": 8681.0
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/3-2-3.2.7/deck-ends",
+      "title": "Deck plating beyond 0.1L from the ends, 0.01 mm per mm of frame spacing",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "3-2-3.2.7",
+        "page": "10-barge-rules-jul25.pdf, 3-2-3/2.7, printed p. 55 (Part 3 is the July 2025 text; the January 2026 Rule Change Notice changes none of this paragraph)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.plate_mm"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "linear-ls",
+        "unit": "mm",
+        "x": "hull_steel.rule_length",
+        "s": "hull_steel.longitudinal_spacing_mm",
+        "a": 0.0,
+        "b": 0.01,
+        "c": 0.0
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/5-1-2.5.17/inner-bottom",
+      "title": "Inner bottom plating, less 1 mm where longitudinally framed",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "5-1-2.5.17",
+        "page": "10-barge-rules-jul25.pdf, 5-1-2/5.17, printed p. 250",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.plate_mm"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "linear-ls-less",
+        "unit": "mm",
+        "x": "hull_steel.rule_length",
+        "s": "hull_steel.longitudinal_spacing_mm",
+        "a": 0.037,
+        "b": 0.009,
+        "c": -0.5,
+        "less": 1.0
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/3-2-7.3.1/tank-bulkhead-plating",
+      "title": "Tank bulkhead plating by the stiffener spacing and the head, with its minimums",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "3-2-7.3.1",
+        "page": "10-barge-rules-jul25.pdf, 3-2-7/3.1, printed p. 82 (Part 3 is the July 2025 text; the January 2026 Rule Change Notice changes none of this paragraph)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.plate_mm"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "plate-sqrt-head",
+        "unit": "mm",
+        "s": "hull_steel.longitudinal_spacing_mm",
+        "aspect": "hull_steel.panel_aspect",
+        "h": "hull_steel.design_head",
+        "d": 254.0,
+        "c": 2.5,
+        "t_min": 6.5,
+        "e": 150.0,
+        "f": 2.5,
+        "a_max": 2.0,
+        "k_long": 1.0,
+        "a_min": 1.0,
+        "k1": 3.075,
+        "k2": 2.077,
+        "k3": 0.272
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/3-2-6.5.1/watertight-bulkhead-plating",
+      "title": "Watertight bulkhead plating by the stiffener spacing and the head, with its minimums",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "3-2-6.5.1",
+        "page": "10-barge-rules-jul25.pdf, 3-2-6/5.1, printed p. 75 (Part 3 is the July 2025 text; the January 2026 Rule Change Notice changes none of this paragraph)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.plate_mm"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "plate-sqrt-head",
+        "unit": "mm",
+        "s": "hull_steel.longitudinal_spacing_mm",
+        "aspect": "hull_steel.panel_aspect",
+        "h": "hull_steel.design_head",
+        "d": 290.0,
+        "c": 1.5,
+        "t_min": 6.0,
+        "e": 200.0,
+        "f": 2.5,
+        "a_max": 2.0,
+        "k_long": 1.0,
+        "a_min": 1.0,
+        "k1": 3.075,
+        "k2": 2.077,
+        "k3": 0.272
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/5-2-1.3/tank-head",
+      "title": "The scantling head of a tank: to the deck at side plus ha1 by L",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "5-2-1.3",
+        "page": "10-barge-rules-jul25.pdf, 5-2-1/3, printed p. 263",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.design_head"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "tank-head",
+        "unit": "m",
+        "l": "hull_steel.rule_length",
+        "depth": "hull_steel.depth",
+        "z": "hull_steel.member_z",
+        "h_short": 1.22,
+        "l_short": 61.0,
+        "k": 0.02,
+        "l_long": 122.0,
+        "h_long": 2.44
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/3-2-6.5.3/bulkhead-head",
+      "title": "The watertight bulkhead head: the distance to the deck, increased where it is under 6.10 m",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "3-2-6.5.3",
+        "page": "10-barge-rules-jul25.pdf, 3-2-6/5.3, printed p. 76 (Part 3 is the July 2025 text; the January 2026 Rule Change Notice changes none of this paragraph)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.design_head"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "bulkhead-head",
+        "unit": "m",
+        "depth": "hull_steel.depth",
+        "z": "hull_steel.member_z",
+        "d_max": 6.1,
+        "k": 0.8,
+        "c": 1.22
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/3-2-4.3.11.1/web-in-tanks",
+      "title": "Web of girders, chords and transverses in tanks: by its depth, and not less than by L",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "3-2-4.3.11.1",
+        "page": "10-barge-rules-jul25.pdf, 3-2-4/3.11.1, printed p. 64 (Part 3 is the July 2025 text; the January 2026 Rule Change Notice changes none of this paragraph)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.plate_mm"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "web-minimum",
+        "unit": "mm",
+        "l": "hull_steel.rule_length",
+        "depth_mm": "hull_steel.web_depth_mm",
+        "a": 0.01,
+        "c": 3.0,
+        "t_cap": 11.5,
+        "l_floor": 29.0,
+        "l_min": 75.0,
+        "d1": 36.0,
+        "c1": 7.0,
+        "d2": 20.0,
+        "c2": 5.33
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/3-2-4.3.11.2/web-clear-of-tanks",
+      "title": "Web of girders, chords and transverses clear of tanks: by its depth, and not less than by L",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "3-2-4.3.11.2",
+        "page": "10-barge-rules-jul25.pdf, 3-2-4/3.11.2, printed p. 64 (Part 3 is the July 2025 text; the January 2026 Rule Change Notice changes none of this paragraph)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.plate_mm"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "web-minimum",
+        "unit": "mm",
+        "l": "hull_steel.rule_length",
+        "depth_mm": "hull_steel.web_depth_mm",
+        "a": 0.01,
+        "c": 3.0,
+        "t_cap": 11.5,
+        "l_floor": 29.0,
+        "l_min": 75.0,
+        "d1": 36.0,
+        "c1": 5.5,
+        "d2": 60.0,
+        "c2": 6.35
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/5-1-2.5.1.1/center-girder",
+      "title": "Centre girder plate amidships, by L",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "5-1-2.5.1.1",
+        "page": "10-barge-rules-jul25.pdf, 5-1-2/5.1.1, printed p. 244",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.plate_mm"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "linear-ls",
+        "unit": "mm",
+        "x": "hull_steel.rule_length",
+        "s": "hull_steel.none",
+        "a": 0.056,
+        "b": 0.0,
+        "c": 5.5
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/5-1-2.5.1.2/center-girder-ends",
+      "title": "Centre girder plate at the ends, 85 % of amidships",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "5-1-2.5.1.2",
+        "page": "10-barge-rules-jul25.pdf, 5-1-2/5.1.2, printed p. 244",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "hull_steel.center_girder_end_ratio"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 0.85,
+        "unit": "-"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/5-1-2.5.5/side-girders",
+      "title": "Side girder plates of the double bottom, by L",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "5-1-2.5.5",
+        "page": "10-barge-rules-jul25.pdf, 5-1-2/5.5, printed p. 245",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.plate_mm"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "linear-ls",
+        "unit": "mm",
+        "x": "hull_steel.rule_length",
+        "s": "hull_steel.none",
+        "a": 0.036,
+        "b": 0.0,
+        "c": 4.5
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/5-1-2.5.5/side-girder-spacing",
+      "title": "Side girders of the double bottom at most 4.6 m apart",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "5-1-2.5.5",
+        "page": "10-barge-rules-jul25.pdf, 5-1-2/5.5, printed p. 245",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "hull_steel.side_girder_spacing"
+      },
+      "compare": "le",
+      "limit": {
+        "value": 4.6,
+        "unit": "m"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/5-1-2.5.7.1/solid-floors",
+      "title": "Solid floors of a longitudinally framed double bottom, by L",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "5-1-2.5.7.1",
+        "page": "10-barge-rules-jul25.pdf, 5-1-2/5.7.1, printed p. 246",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.plate_mm"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "linear-ls",
+        "unit": "mm",
+        "x": "hull_steel.rule_length",
+        "s": "hull_steel.none",
+        "a": 0.036,
+        "b": 0.0,
+        "c": 6.0
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/5-1-1.3.1/deck-beam-head",
+      "title": "The head of a deck beam, by L, 2.9 m from L = 107 m",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "5-1-1.3.1",
+        "page": "10-barge-rules-jul25.pdf, 5-1-1/3.1, printed p. 233",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.design_head"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "linear-ls-split",
+        "unit": "m",
+        "x": "hull_steel.rule_length",
+        "s": "hull_steel.none",
+        "a1": 0.02,
+        "b1": 0.0,
+        "c1": 0.76,
+        "a2": 0.0,
+        "b2": 0.0,
+        "c2": 2.9,
+        "x_max": 107.0,
+        "strict": 1.0
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/5-1-1.3.1/deck-longitudinals",
+      "title": "Strength deck longitudinals: SM = 7.8 c h s l^2, c = 1/(1.709 - 0.651k)",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "5-1-1.3.1",
+        "page": "10-barge-rules-jul25.pdf, 5-1-1/3.1, printed p. 233",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.section_modulus_cm3"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "sm-chsl2-hull-k",
+        "unit": "cm3",
+        "h": "hull_steel.design_head",
+        "s": "hull_steel.stiffener_spacing_m",
+        "l": "hull_steel.span_m",
+        "k": 7.8,
+        "p": 1.709,
+        "q": 0.651,
+        "hull_k": 1.0
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/5-2-2.3.7/bottom-longitudinals",
+      "title": "Bottom longitudinals of a tank barge: SM = 7.8 c h s l^2, c = 1.34",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "5-2-2.3.7",
+        "page": "10-barge-rules-jul25.pdf, 5-2-2/3.7, printed p. 271",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.section_modulus_cm3"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "sm-chsl2",
+        "unit": "cm3",
+        "h": "hull_steel.design_head",
+        "s": "hull_steel.stiffener_spacing_m",
+        "l": "hull_steel.span_m",
+        "factor": 1.0,
+        "k": 7.8,
+        "c": 1.34
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/5-2-2.3.5/inner-bottom-longitudinals",
+      "title": "Inner bottom longitudinals of a tank barge: 85 % of SM = 7.8 c h s l^2, c = 1.30",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "5-2-2.3.5",
+        "page": "10-barge-rules-jul25.pdf, 5-2-2/3.5, printed p. 270",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.section_modulus_cm3"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "sm-chsl2",
+        "unit": "cm3",
+        "h": "hull_steel.design_head",
+        "s": "hull_steel.stiffener_spacing_m",
+        "l": "hull_steel.span_m",
+        "factor": 0.85,
+        "k": 7.8,
+        "c": 1.3
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/3-2-7.3.3/tank-boundary-longitudinals",
+      "title": "Stiffeners of a tank boundary: SM = 7.8 c h s l^2, c = 1.0",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "3-2-7.3.3",
+        "page": "10-barge-rules-jul25.pdf, 3-2-7/3.3, printed p. 83 (Part 3 is the July 2025 text; the January 2026 Rule Change Notice changes none of this paragraph)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.section_modulus_cm3"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "sm-chsl2",
+        "unit": "cm3",
+        "h": "hull_steel.design_head",
+        "s": "hull_steel.stiffener_spacing_m",
+        "l": "hull_steel.span_m",
+        "factor": 1.0,
+        "k": 7.8,
+        "c": 1.0
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/3-2-7.3.3/longitudinal-bulkhead-stiffeners",
+      "title": "Stiffeners of a longitudinal tank bulkhead: SM = 7.8 c h s l^2, c = 0.90",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "3-2-7.3.3",
+        "page": "10-barge-rules-jul25.pdf, 3-2-7/3.3, printed p. 83 (Part 3 is the July 2025 text; the January 2026 Rule Change Notice changes none of this paragraph)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.section_modulus_cm3"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "sm-chsl2",
+        "unit": "cm3",
+        "h": "hull_steel.design_head",
+        "s": "hull_steel.stiffener_spacing_m",
+        "l": "hull_steel.span_m",
+        "factor": 1.0,
+        "k": 7.8,
+        "c": 0.9
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/5-2-1.7/side-longitudinals",
+      "title": "Side longitudinals of a tank barge: SM = 7.8 c h s l^2, c = 1.25",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "5-2-1.7",
+        "page": "10-barge-rules-jul25.pdf, 5-2-1/7, printed p. 264",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.section_modulus_cm3"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "sm-chsl2",
+        "unit": "cm3",
+        "h": "hull_steel.design_head",
+        "s": "hull_steel.stiffener_spacing_m",
+        "l": "hull_steel.span_m",
+        "factor": 1.0,
+        "k": 7.8,
+        "c": 1.25
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/3-2-6.5.3/bulkhead-stiffeners",
+      "title": "Watertight bulkhead stiffeners with both ends attached: SM = 7.8 c h s l^2, c = 0.56",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "3-2-6.5.3",
+        "page": "10-barge-rules-jul25.pdf, 3-2-6/5.3, printed p. 76 (Part 3 is the July 2025 text; the January 2026 Rule Change Notice changes none of this paragraph)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.section_modulus_cm3"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "sm-chsl2",
+        "unit": "cm3",
+        "h": "hull_steel.design_head",
+        "s": "hull_steel.stiffener_spacing_m",
+        "l": "hull_steel.span_m",
+        "factor": 1.0,
+        "k": 7.8,
+        "c": 0.56
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/3-2-6.5.5/bulkhead-webs",
+      "title": "Watertight bulkhead webs: SM = 4.74 c h s l^2, c = 1.0",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "3-2-6.5.5",
+        "page": "10-barge-rules-jul25.pdf, 3-2-6/5.5, printed p. 76 (Part 3 is the July 2025 text; the January 2026 Rule Change Notice changes none of this paragraph)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.section_modulus_cm3"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "sm-chsl2",
+        "unit": "cm3",
+        "h": "hull_steel.design_head",
+        "s": "hull_steel.stiffener_spacing_m",
+        "l": "hull_steel.span_m",
+        "factor": 1.0,
+        "k": 4.74,
+        "c": 1.0
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/5-2-1.11/side-webs",
+      "title": "Side transverses of a tank barge: SM = 4.74 c h s l^2, c = 1.75",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "5-2-1.11",
+        "page": "10-barge-rules-jul25.pdf, 5-2-1/11, printed p. 265",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.section_modulus_cm3"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "sm-chsl2",
+        "unit": "cm3",
+        "h": "hull_steel.design_head",
+        "s": "hull_steel.stiffener_spacing_m",
+        "l": "hull_steel.span_m",
+        "factor": 1.0,
+        "k": 4.74,
+        "c": 1.75
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "abs-steel-barges/5-2-1.11/deck-transverses",
+      "title": "Deck transverses of a tank barge: SM = 4.74 c h s l^2, c = 2.0",
+      "origin": "class",
+      "source": {
+        "document": "ABS Rules for Building and Classing Steel Barges",
+        "edition": "January 2026 (Part 3 January 2026, Part 5 July 2025)",
+        "locator": "5-2-1.11",
+        "page": "10-barge-rules-jul25.pdf, 5-2-1/11, printed p. 265",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-31",
+        "review": "#740"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull_steel.section_modulus_cm3"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "sm-chsl2",
+        "unit": "cm3",
+        "h": "hull_steel.design_head",
+        "s": "hull_steel.stiffener_spacing_m",
+        "l": "hull_steel.span_m",
+        "factor": 1.0,
+        "k": 4.74,
+        "c": 2.0
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": false,
+      "gap": "A sizing Rule: the panel model (hull_panels) applies it to size the member, so the member meets it by construction. No check of the member against it is evaluated yet (spec 0013 T3/T4); the panel table names the Rule's paragraph on each member",
+      "finding": null,
+      "since": "1.0.0"
+    }
+  ]
+}

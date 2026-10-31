@@ -28,7 +28,20 @@ fn ovd_declares_its_vocabulary() {
             "clamp",
             "at-least",
             "max-capped-less",
-            "lesser-ratio"
+            "lesser-ratio",
+            // Issue #740: the scantling shapes of `abs-steel-barges`.
+            "linear-ls",
+            "linear-ls-less",
+            "linear-ls-split",
+            "linear-ls-split-capped",
+            "deck-b",
+            "abs-smr",
+            "plate-sqrt-head",
+            "sm-chsl2",
+            "sm-chsl2-hull-k",
+            "tank-head",
+            "bulkhead-head",
+            "web-minimum",
         ]
     );
     // Every OVD input has one value per Option.

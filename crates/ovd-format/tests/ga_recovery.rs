@@ -37,6 +37,25 @@ fn results_at_depth(fixture: &str, self_propelled: bool, depth: &str) -> Value {
     }
 }
 
+/// As `results_of`, in the legacy loading conditions (laden, half laden, light), the ones the
+/// plain `ga::fit` of [`gas_fit`] judges stability in.
+fn results_of_legacy_conditions(fixture: &str) -> Value {
+    let text = std::fs::read_to_string(
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures")
+            .join(fixture),
+    )
+    .expect("fixture")
+    .replace("\"value\": \"is_code_2008\"", "\"value\": \"legacy\"");
+    let design = check(&text, &Profile::built_in())
+        .design
+        .expect("a valid Design");
+    match run_design(&design).remove(0).outcome {
+        RunOutcome::Results { results, .. } => results,
+        other => panic!("no results: {other:?}"),
+    }
+}
+
 /// As `results_of`, with a 4 m air draft limit: no arrangement meets it, so the closest one comes
 /// back with its failed checks.
 fn results_of_low_air_draft(fixture: &str, self_propelled: bool) -> Value {
@@ -180,7 +199,10 @@ fn gas_fit(self_propelled: bool) -> ga::ArrangementFit {
 
 #[test]
 fn gas_geometry_has_the_core_values() {
-    let r = results_of("gas_igc_2g_self_propelled.vdesign", true);
+    // Issue #740: in the loading conditions `gas_fit` uses. Since the rule length of ABS 3-1-1/3.1
+    // lightened the hull, the IS Code conditions of the file reject the larger tank the legacy ones
+    // accept, so the two searches no longer choose the same arrangement.
+    let r = results_of_legacy_conditions("gas_igc_2g_self_propelled.vdesign");
     let g = &r["drawing"];
     let fit = gas_fit(true);
     let core = &fit.engine_result;

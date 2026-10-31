@@ -275,16 +275,24 @@ fn the_dome_raises_the_air_draft_and_the_wall_takes_volume() {
 
 #[test]
 fn the_wing_ratio_and_the_support_move_the_lightship_and_the_air_draft_the_expected_way() {
-    let base = results(SELF, &[]);
+    // Issue #740: the tank is held at 7.4 m, so the search keeps one arrangement and the change is
+    // the input's alone (with the rule length of ABS 3-1-1/3.1 the base fits an 8.3 m tank that a
+    // taller wing tank or a heavier tank does not).
+    let r = |ch: &[(&str, Value)]| {
+        let mut v = vec![("max_tank_od_m", json!(7.4))];
+        v.extend_from_slice(ch);
+        results(SELF, &v)
+    };
+    let base = r(&[]);
     let ls = |v: &Value| v["results"]["lightship_t"].as_f64().unwrap();
     // A taller wing tank raises the wing plate above D, and so the side plating up to it, a
     // lightship item since issue #410 (the hull steel stays weighed to D).
-    let tall = results(SELF, &[("wing_tank_height_ratio", json!(0.9))]);
+    let tall = r(&[("wing_tank_height_ratio", json!(0.9))]);
     assert!(ls(&tall) >= ls(&base), "{} vs {}", ls(&tall), ls(&base));
     // A higher support raises the tank: its bottom (the top above the keel less the diameter)
     // rises by the support's rise. The search may then fit a smaller tank (issue #448: on the
     // hull's sections it does here), so the top itself need not rise.
-    let up = results(SELF, &[("tank_support_height_m", json!(1.4))]);
+    let up = r(&[("tank_support_height_m", json!(1.4))]);
     let num = |v: &Value, path: [&str; 2]| v[path[0]][path[1]].as_f64().unwrap();
     let bottom = |v: &Value| {
         num(v, ["results", "air_draft_light_m"]) + num(v, ["results", "light_draught_m"])
@@ -409,47 +417,40 @@ fn a_file_saved_before_the_two_inputs_keeps_its_results_hash() {
 
 #[test]
 fn the_forming_allowance_and_the_dome_wall_add_to_the_lightship() {
+    // Issue #740: the tank is held at 7.4 m, so the search keeps one arrangement and the change is
+    // the input's alone (with the rule length of ABS 3-1-1/3.1 the base fits an 8.3 m tank that a
+    // taller wing tank or a heavier tank does not).
+    let r = |ch: &[(&str, Value)]| {
+        let mut v = vec![("max_tank_od_m", json!(7.4))];
+        v.extend_from_slice(ch);
+        results(SELF, &v)
+    };
     // Issue #412. At 0 the tank is weighed at the required thickness and the dome has no mass; a
     // larger allowance or a thicker dome wall weighs more, and the lightship KG rises with the dome.
     let ls = |v: &Value| v["results"]["lightship_t"].as_f64().unwrap();
-    let plain = results(
-        SELF,
-        &[
-            ("tank_forming_allowance_pct", json!(0.0)),
-            ("tank_dome_wall_thickness_mm", json!(0.0)),
-        ],
-    );
+    let plain = r(&[
+        ("tank_forming_allowance_pct", json!(0.0)),
+        ("tank_dome_wall_thickness_mm", json!(0.0)),
+    ]);
     // A file that lacks the two inputs keeps the legacy 0.
-    assert_eq!(results(SELF, &[])["results"], plain["results"]);
-    let base = results(
-        SELF,
-        &[
-            ("tank_forming_allowance_pct", json!(5.0)),
-            ("tank_dome_wall_thickness_mm", json!(25.0)),
-        ],
-    );
+    assert_eq!(r(&[])["results"], plain["results"]);
+    let base = r(&[
+        ("tank_forming_allowance_pct", json!(5.0)),
+        ("tank_dome_wall_thickness_mm", json!(25.0)),
+    ]);
     assert!(ls(&base) > ls(&plain), "{} vs {}", ls(&base), ls(&plain));
-    let formed = results(
-        SELF,
-        &[
-            ("tank_forming_allowance_pct", json!(10.0)),
-            ("tank_dome_wall_thickness_mm", json!(0.0)),
-        ],
-    );
+    let formed = r(&[
+        ("tank_forming_allowance_pct", json!(10.0)),
+        ("tank_dome_wall_thickness_mm", json!(0.0)),
+    ]);
     assert!(ls(&formed) > ls(&plain));
-    let domed = results(
-        SELF,
-        &[
-            ("tank_forming_allowance_pct", json!(0.0)),
-            ("tank_dome_wall_thickness_mm", json!(40.0)),
-        ],
-    );
-    let domed_less = results(
-        SELF,
-        &[
-            ("tank_forming_allowance_pct", json!(0.0)),
-            ("tank_dome_wall_thickness_mm", json!(20.0)),
-        ],
-    );
+    let domed = r(&[
+        ("tank_forming_allowance_pct", json!(0.0)),
+        ("tank_dome_wall_thickness_mm", json!(40.0)),
+    ]);
+    let domed_less = r(&[
+        ("tank_forming_allowance_pct", json!(0.0)),
+        ("tank_dome_wall_thickness_mm", json!(20.0)),
+    ]);
     assert!(ls(&domed) > ls(&domed_less) && ls(&domed_less) > ls(&plain));
 }

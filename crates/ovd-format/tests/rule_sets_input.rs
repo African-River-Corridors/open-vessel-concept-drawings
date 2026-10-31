@@ -123,6 +123,7 @@ fn the_schema_lists_the_two_new_inputs_and_not_the_ruleset() {
             "icll-freeboard",
             "solas-v22",
             "abs-barges",
+            "abs-steel-barges",
             "ovd"
         ])
     );

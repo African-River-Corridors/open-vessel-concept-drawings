@@ -655,6 +655,98 @@ pub static FORMULA_SHAPES: &[FormulaShape] = &[
     // `min(rm / a, re / b)`: the lesser of two ratios (IGC 4.23.3.1, f = the lesser of Rm/A or
     // Re/B).
     shape("lesser-ratio", &["rm", "re", "a", "b"], &[], &["a", "b"]),
+    // Issue #740 (spec 0013): the scantling formulas of ABS Steel Barges (`abs-steel-barges`). The
+    // panel model (`hull_panels`) sizes its members with them; each keeps the order of operations of
+    // the text and of the code before the move, so the move changes no bit.
+    // `a * x + b * s + c`: a plate or web thickness linear in L and the spacing (5-1-2/5.1.1).
+    shape("linear-ls", &["x", "s"], &["a", "b", "c"], &["x", "s"]),
+    // The same, less a reduction (5-1-2/5.17: less 1 mm with longitudinal framing).
+    shape(
+        "linear-ls-less",
+        &["x", "s"],
+        &["a", "b", "c", "less"],
+        &["x", "s"],
+    ),
+    // Two lines split at `x_max`: the first up to it (`x <= x_max`, or `x < x_max` when
+    // `strict` is 1), the second above (3-2-2/3.1, 3-2-3/2.1.2(a), 5-1-1/3.1).
+    shape(
+        "linear-ls-split",
+        &["x", "s"],
+        &["a1", "b1", "c1", "a2", "b2", "c2", "x_max", "strict"],
+        &["x", "s"],
+    ),
+    // The same with x taken at most `x_cap` (3-2-2/3.5.1 and 5.1: L need not exceed 225 m).
+    shape(
+        "linear-ls-split-capped",
+        &["x", "s"],
+        &["a1", "b1", "c1", "a2", "b2", "c2", "x_max", "x_cap"],
+        &["x", "s"],
+    ),
+    // `s (Lb + c1) / (k Lb + c2)`, Lb = min(L, l_max) (3-2-3/2.1.2(b)).
+    shape(
+        "deck-b",
+        &["l", "s"],
+        &["l_max", "c1", "k", "c2"],
+        &["l", "s"],
+    ),
+    // SMb of 3-2-1/3.1 with K = 1: C1 C2 L^2 B (Cb + cb_add), C1 by L.
+    shape(
+        "abs-smr",
+        &["l", "b", "cb"],
+        &[
+            "c1_min", "l_a", "qa", "qb", "qc", "l_div", "l_b", "c1_max", "l_c", "l_d", "l_div_d",
+            "p", "c2", "cb_add",
+        ],
+        &["l", "b", "cb"],
+    ),
+    // `max(s k sqrt(h) / d + c, t_min, s / e + f)`, k of the panel aspect ratio (3-2-7/3.1, 3-2-6/5.1).
+    shape(
+        "plate-sqrt-head",
+        &["s", "aspect", "h"],
+        &[
+            "d", "c", "t_min", "e", "f", "a_max", "k_long", "a_min", "k1", "k2", "k3",
+        ],
+        &["s", "aspect", "h"],
+    ),
+    // `factor * k c h s l^2`: the section modulus of a stiffener (k = 7.8) or a primary member
+    // (k = 4.74) (3-2-6/5.3, 3-2-7/3.3, 5-2-1/7, 5-2-1/11, 5-2-2/3.5, 5-2-2/3.7).
+    shape(
+        "sm-chsl2",
+        &["h", "s", "l"],
+        &["factor", "k", "c"],
+        &["h", "s", "l"],
+    ),
+    // The same with c = 1 / (p - q k) for a longitudinal deck beam (5-1-1/3.1), k of the hull girder.
+    shape(
+        "sm-chsl2-hull-k",
+        &["h", "s", "l"],
+        &["k", "p", "q", "hull_k"],
+        &["h", "s", "l"],
+    ),
+    // The tank head of 5-2-1/3: the distance to the deck at side plus ha1 by L.
+    shape(
+        "tank-head",
+        &["l", "depth", "z"],
+        &["h_short", "l_short", "k", "l_long", "h_long"],
+        &["l", "depth", "z"],
+    ),
+    // The watertight bulkhead head of 3-2-6/5.3: the distance to the deck d, as `k d + c` below `d_max`.
+    shape(
+        "bulkhead-head",
+        &["depth", "z"],
+        &["d_max", "k", "c"],
+        &["depth", "z"],
+    ),
+    // The web of a girder, chord or transverse (3-2-4/3.11): `min(a depth + c, t_cap)`, not less than
+    // L1 / d1 + c1 (L >= l_min) or L1 / d2 + c2, L1 = max(L, l_floor).
+    shape(
+        "web-minimum",
+        &["l", "depth_mm"],
+        &[
+            "a", "c", "t_cap", "l_floor", "l_min", "d1", "c1", "d2", "c2",
+        ],
+        &["l", "depth_mm"],
+    ),
 ];
 
 const fn shape(
@@ -729,6 +821,103 @@ pub fn formula_value(
             } else {
                 by_tensile
             })
+        }
+        "linear-ls" => Ok(c("a")? * operand("x")? + c("b")? * operand("s")? + c("c")?),
+        "linear-ls-less" => {
+            Ok(c("a")? * operand("x")? + c("b")? * operand("s")? + c("c")? - c("less")?)
+        }
+        "linear-ls-split" | "linear-ls-split-capped" => {
+            let mut x = operand("x")?;
+            if shape == "linear-ls-split-capped" {
+                let cap = c("x_cap")?;
+                x = if cap < x { cap } else { x };
+            }
+            let s = operand("s")?;
+            let x_max = c("x_max")?;
+            let first = if shape == "linear-ls-split" && c("strict")? != 0.0 {
+                x < x_max
+            } else {
+                x <= x_max
+            };
+            Ok(if first {
+                c("a1")? * x + c("b1")? * s + c("c1")?
+            } else {
+                c("a2")? * x + c("b2")? * s + c("c2")?
+            })
+        }
+        "deck-b" => {
+            let (l, l_max) = (operand("l")?, c("l_max")?);
+            let lb = if l_max < l { l_max } else { l };
+            Ok(operand("s")? * (lb + c("c1")?) / (c("k")? * lb + c("c2")?))
+        }
+        "abs-smr" => {
+            let l = operand("l")?;
+            let c1 = if l < c("l_a")? {
+                c("c1_min")?
+            } else if l < c("l_b")? {
+                let r = l / c("l_div")?;
+                c("qa")? * libm::pow(r, 2.0) - c("qb")? * r + c("qc")?
+            } else if l <= c("l_c")? {
+                c("c1_max")? - libm::pow((c("l_c")? - l) / c("l_div")?, c("p")?)
+            } else if l < c("l_d")? {
+                c("c1_max")?
+            } else {
+                c("c1_max")? - libm::pow((l - c("l_d")?) / c("l_div_d")?, c("p")?)
+            };
+            Ok(c1 * c("c2")? * l * l * operand("b")? * (operand("cb")? + c("cb_add")?))
+        }
+        "plate-sqrt-head" => {
+            let a = operand("aspect")?;
+            let k = if a > c("a_max")? {
+                c("k_long")?
+            } else {
+                let a_min = c("a_min")?;
+                let a = if a < a_min { a_min } else { a };
+                (c("k1")? * libm::sqrt(a) - c("k2")?) / (a + c("k3")?)
+            };
+            let s = operand("s")?;
+            let h = operand("h")?;
+            let t = s * k * libm::sqrt(h.max(0.0)) / c("d")? + c("c")?;
+            Ok(t.max(c("t_min")?).max(s / c("e")? + c("f")?))
+        }
+        "sm-chsl2" => {
+            let sm =
+                c("k")? * c("c")? * operand("h")? * operand("s")? * operand("l")? * operand("l")?;
+            Ok(c("factor")? * sm)
+        }
+        "sm-chsl2-hull-k" => {
+            let cc = 1.0 / (c("p")? - c("q")? * c("hull_k")?);
+            Ok(c("k")? * cc * operand("h")? * operand("s")? * operand("l")? * operand("l")?)
+        }
+        "tank-head" => {
+            let l = operand("l")?;
+            let ha1 = if l <= c("l_short")? {
+                c("h_short")?
+            } else if l <= c("l_long")? {
+                c("k")? * l
+            } else {
+                c("h_long")?
+            };
+            Ok((operand("depth")? - operand("z")?).max(0.0) + ha1)
+        }
+        "bulkhead-head" => {
+            let d = (operand("depth")? - operand("z")?).max(0.0);
+            Ok(if d < c("d_max")? {
+                c("k")? * d + c("c")?
+            } else {
+                d
+            })
+        }
+        "web-minimum" => {
+            let (l, depth) = (operand("l")?, operand("depth_mm")?);
+            let by_depth = (c("a")? * depth + c("c")?).min(c("t_cap")?);
+            let l1 = l.max(c("l_floor")?);
+            let floor_t = if l >= c("l_min")? {
+                l1 / c("d1")? + c("c1")?
+            } else {
+                l1 / c("d2")? + c("c2")?
+            };
+            Ok(by_depth.max(floor_t))
         }
         other => Err(format!("unknown formula shape `{other}`")),
     }

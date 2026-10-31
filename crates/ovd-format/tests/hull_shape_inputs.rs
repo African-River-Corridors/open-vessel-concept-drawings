@@ -50,12 +50,20 @@ fn a_bilge_radius_takes_area_from_the_midship_section() {
 
 #[test]
 fn a_sheer_or_a_camber_moves_only_what_is_above_the_deck_edge() {
-    // A gas barge: its IS Code GZ curves heel the deck edge under.
-    let file = "gas_igc_2g_exact";
-    let base = results(file, &[]);
+    // A gas barge: its IS Code GZ curves heel the deck edge under. Issue #740: the self-propelled
+    // gas fixture, whose arrangement passes every check; the 76.5 m pushed barge of
+    // `gas_igc_2g_exact` has none since the rule length of ABS 3-1-1/3.1 lightened its hull.
+    // The tank is held at 7.4 m so the search keeps one arrangement: a sheer moves the deck edge,
+    // and with it the light condition's stability, which can switch the arrangement it picks.
+    let file = "gas_igc_2g_self_propelled";
+    let base = results(file, &[("max_tank_od_m", 7.4)]);
     for typed in [
-        &[("sheer_aft_m", 0.5), ("sheer_fwd_m", 1.0)][..],
-        &[("camber_m", 0.3)][..],
+        &[
+            ("max_tank_od_m", 7.4),
+            ("sheer_aft_m", 0.5),
+            ("sheer_fwd_m", 1.0),
+        ][..],
+        &[("max_tank_od_m", 7.4), ("camber_m", 0.3)][..],
     ] {
         let r = results(file, typed);
         // The float is below the deck edge: the same to rounding (the sheer adds Stations).

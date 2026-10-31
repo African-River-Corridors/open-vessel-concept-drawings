@@ -118,8 +118,11 @@ fn a_gas_file_without_the_inputs_holds_the_old_values_with_one_note_and_the_same
 #[test]
 fn a_smaller_end_space_carries_more_cargo() {
     // The type G rule takes 0.60 + 0.50 m less than the old figures only where the end space, not the
-    // 2.00 m opening setback, sets the length taken: at the forward end.
-    let mut file: Value = serde_json::from_str(&raw_fixture("gas_igc_2g_exact")).unwrap();
+    // 2.00 m opening setback, sets the length taken: at the forward end. Issue #740: on a hull whose
+    // base arrangement passes every check (the 76.5 m pushed barge of `gas_igc_2g_exact` has none
+    // since the rule length of ABS 3-1-1/3.1 lightened its hull, so its search shows the closest
+    // one), the self-propelled gas fixture.
+    let mut file: Value = serde_json::from_str(&raw_fixture("gas_igc_2g_self_propelled")).unwrap();
     let base = |f: &Value| {
         let mut f = f.clone();
         f["options"][0]
