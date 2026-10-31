@@ -37,7 +37,7 @@ from ovd.core.resistance import (EnvironmentInputs, ResistanceInputs, TugInputs,
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def calibration_dir(root: Path, cwd: Path, env: Mapping[str, str]) -> Path:
+def _calibration_dir(root: Path, cwd: Path, env: Mapping[str, str]) -> Path:
     """The calibration folder: `OVD_CALIBRATION_DIR` when set, else `calibration/` beside the package's
     repo root (a checkout or an editable install), else `calibration/` in the working directory.
 
@@ -55,7 +55,7 @@ def calibration_dir(root: Path, cwd: Path, env: Mapping[str, str]) -> Path:
 
 # The calibration folder. Importing this module reads no file, so it imports from an installed wheel
 # (issue #217). A caller may also set CAL.
-CAL = calibration_dir(ROOT, Path.cwd(), os.environ)
+CAL = _calibration_dir(ROOT, Path.cwd(), os.environ)
 RHO_FRESH = 1.0
 KMH_PER_KN = 1.852
 

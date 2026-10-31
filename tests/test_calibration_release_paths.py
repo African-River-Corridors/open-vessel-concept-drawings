@@ -41,13 +41,13 @@ def test_the_folder_comes_from_the_working_directory_when_the_install_root_has_n
     root.mkdir(parents=True)
     checkout = tmp_path / "checkout"
     (checkout / "calibration").mkdir(parents=True)
-    assert calibration.calibration_dir(root, checkout, {}) == checkout / "calibration"
+    assert calibration._calibration_dir(root, checkout, {}) == checkout / "calibration"
     # A checkout or editable install keeps its own folder, and the variable still wins.
     (root / "calibration").mkdir()
-    assert calibration.calibration_dir(root, checkout, {}) == root / "calibration"
-    assert calibration.calibration_dir(root, checkout, {"OVD_CALIBRATION_DIR": "/x"}) == Path("/x")
+    assert calibration._calibration_dir(root, checkout, {}) == root / "calibration"
+    assert calibration._calibration_dir(root, checkout, {"OVD_CALIBRATION_DIR": "/x"}) == Path("/x")
     # Neither folder: the root's folder, so the error names the path the install looked for.
-    assert calibration.calibration_dir(tmp_path / "a", tmp_path / "b", {}) == tmp_path / "a" / "calibration"
+    assert calibration._calibration_dir(tmp_path / "a", tmp_path / "b", {}) == tmp_path / "a" / "calibration"
 
 
 def test_the_release_check_runs_from_the_checkout_after_a_non_editable_install(tmp_path):
