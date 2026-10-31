@@ -35,9 +35,27 @@ from ovd.core.resistance import (EnvironmentInputs, ResistanceInputs, TugInputs,
                                              compute as resistance)
 
 ROOT = Path(__file__).resolve().parents[2]
-# The calibration folder. Importing this module reads no file, so it imports from an installed wheel,
-# where ROOT is in site-packages (issue #217): set OVD_CALIBRATION_DIR there. A caller may also set CAL.
-CAL = Path(os.environ.get("OVD_CALIBRATION_DIR") or ROOT / "calibration")
+
+
+def _calibration_dir(root: Path, cwd: Path, env: Mapping[str, str]) -> Path:
+    """The calibration folder: `OVD_CALIBRATION_DIR` when set, else `calibration/` beside the package's
+    repo root (a checkout or an editable install), else `calibration/` in the working directory.
+
+    After `pip install .` the root is in site-packages, which has no `calibration/` (issue #664), so the
+    release check run from the checkout finds the folder, and `CHANGELOG.md` beside it, in the working
+    directory. When neither folder exists the root's folder is returned, so the error names it.
+    """
+    if env.get("OVD_CALIBRATION_DIR"):
+        return Path(env["OVD_CALIBRATION_DIR"])
+    for base in (root, cwd):
+        if (base / "calibration").is_dir():
+            return base / "calibration"
+    return root / "calibration"
+
+
+# The calibration folder. Importing this module reads no file, so it imports from an installed wheel
+# (issue #217). A caller may also set CAL.
+CAL = _calibration_dir(ROOT, Path.cwd(), os.environ)
 RHO_FRESH = 1.0
 KMH_PER_KN = 1.852
 
@@ -917,6 +935,11 @@ def _release_problems(changelog_text: str, version: str) -> list[str]:
 def _main_release(version: str, changelog: Path | None = None) -> int:
     """Fail (exit 1) when a calibration case outside its band is not explained for the release `version`."""
     path = Path(changelog) if changelog else CAL.parent / "CHANGELOG.md"
+    missing = [str(p) for p in (CAL, path) if not p.exists()]
+    if missing:
+        print(f"::error title=Calibration release check cannot run::not found: {', '.join(missing)}. Run it "
+              f"from the repo checkout, or set OVD_CALIBRATION_DIR (and --changelog)")
+        return 2
     bad = _release_problems(path.read_text(encoding="utf-8"), version)
     for line in bad:
         print(f"::error file=CHANGELOG.md,title=Calibration band blocks the release::{line}: name the case in "
