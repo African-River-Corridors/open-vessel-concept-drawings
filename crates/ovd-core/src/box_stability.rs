@@ -570,13 +570,22 @@ pub(crate) fn screened_gz(
     free_surface_moment_tm: f64,
     density: f64,
     heel0: Option<&crate::sections::Equilibrium>,
+    memo: &mut crate::hydrostatics::LeverMemo,
 ) -> Result<Screened, PyError> {
     use crate::sections::SectionsError::TrimOutOfRange;
     let mut gz: Vec<(i32, f64)> = Vec::with_capacity(61);
     // Every `Err` here is a heel with no balance, or an error the full curve would also give.
     macro_rules! at {
         ($deg:expr) => {
-            match hull.gz_at(mass_t, g, free_surface_moment_tm, density, $deg, heel0) {
+            match memo.gz_at(
+                hull,
+                mass_t,
+                g,
+                free_surface_moment_tm,
+                density,
+                $deg,
+                heel0,
+            ) {
                 Ok(v) => gz.push(($deg, v)),
                 Err(TrimOutOfRange) => return Ok(Screened::Fails),
                 Err(e) => return Err(PyError::Value(e.to_string())),
@@ -638,6 +647,7 @@ pub(crate) fn hull_condition(
     criteria_set: &str,
     heel0: Option<&crate::sections::Equilibrium>,
     gz_worked: Option<Vec<(i32, f64)>>,
+    memo: &mut crate::hydrostatics::LeverMemo,
 ) -> Result<Condition, PyError> {
     // Issue #592: with no angle typed and openings listed, the angle is where the lowest opening
     // is immersed at this condition's own equilibrium. A typed angle wins.
@@ -655,7 +665,8 @@ pub(crate) fn hull_condition(
             heel0,
         )
     } else {
-        hull.gz_from(
+        memo.gz_from(
+            hull,
             mass_t,
             g,
             free_surface_m * mass_t,
@@ -831,7 +842,15 @@ mod screen_tests {
                             for fs in [0.0, 30.0] {
                                 let fs_moment = fs * mass / 20.0;
                                 let full = hull.gz_from(mass, g, fs_moment, 1.0, ANGLES_DEG, None);
-                                let screened = screened_gz(&hull, mass, g, fs_moment, 1.0, None);
+                                let screened = screened_gz(
+                                    &hull,
+                                    mass,
+                                    g,
+                                    fs_moment,
+                                    1.0,
+                                    None,
+                                    &mut crate::hydrostatics::LeverMemo::default(),
+                                );
                                 match (full, screened.unwrap()) {
                                     (Err(_), Screened::Fails) => stopped += 1,
                                     (Err(e), Screened::Curve(_)) => panic!("{e}"),
@@ -869,5 +888,60 @@ mod screen_tests {
             stopped > 20 && worked > 20,
             "{stopped} stopped, {worked} worked"
         );
+    }
+
+    /// Label: property. The lever memo of issue #567 gives the same bits as the solve it keeps, for
+    /// every heel and with or without the heel 0 float, and a second condition with the same mass
+    /// and G (another free surface) solves nothing again. A different G solves again.
+    #[test]
+    fn the_lever_memo_gives_the_same_bits_and_solves_each_heel_once() {
+        use crate::hydrostatics::LeverMemo;
+        let hull = Hull::build(&HullSpec {
+            loa: 76.5,
+            beam: 11.4,
+            depth: 4.5,
+            bow_rake_length_m: 10.0,
+            bow_rake_rise_m: 3.6,
+            stern: None,
+            shape: HullShape::default(),
+            downflooding_deg: None,
+            openings: Vec::new(),
+        })
+        .unwrap();
+        let mass = hull.volume_at(4.5) * 0.55;
+        let g = Gravity {
+            lcg_m: 38.0,
+            tcg_m: 0.0,
+            kg_m: 3.1,
+        };
+        let bits = |gz: &[(i32, f64)]| gz.iter().map(|p| (p.0, p.1.to_bits())).collect::<Vec<_>>();
+        let float = hull.float(mass, g, 1.0).unwrap();
+        let mut memo = LeverMemo::default();
+        assert_eq!(memo.float(&hull, mass, g, 1.0).unwrap(), float);
+        assert_eq!(memo.solves, 1);
+        for heel0 in [None, Some(&float.equilibrium)] {
+            for fs_moment in [0.0, 250.0] {
+                let want = hull
+                    .gz_from(mass, g, fs_moment, 1.0, ANGLES_DEG, heel0)
+                    .unwrap();
+                let got = memo
+                    .gz_from(&hull, mass, g, fs_moment, 1.0, ANGLES_DEG, heel0)
+                    .unwrap();
+                assert_eq!(bits(&got), bits(&want));
+            }
+        }
+        // The float, then heels 0 to 60 once each: the first curve had no heel 0 float.
+        assert_eq!(memo.solves, 1 + 61);
+        assert_eq!(memo.float(&hull, mass, g, 1.0).unwrap(), float);
+        assert_eq!(memo.solves, 1 + 61);
+        let higher = Gravity { kg_m: 3.2, ..g };
+        let want = hull
+            .gz_from(mass, higher, 0.0, 1.0, ANGLES_DEG, None)
+            .unwrap();
+        let got = memo
+            .gz_from(&hull, mass, higher, 0.0, 1.0, ANGLES_DEG, None)
+            .unwrap();
+        assert_eq!(bits(&got), bits(&want));
+        assert_eq!(memo.solves, 1 + 61 + 61);
     }
 }

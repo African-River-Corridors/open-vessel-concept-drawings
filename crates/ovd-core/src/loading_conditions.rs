@@ -20,7 +20,7 @@ use crate::box_stability::{
     Condition, PyError, criterion, div, failed_condition, hull_condition, trim_out_of_range,
 };
 use crate::compartments::{ClippedSpace, Space, SpaceKind};
-use crate::hydrostatics::Hull;
+use crate::hydrostatics::{Hull, LeverMemo};
 use crate::models::TrimResult;
 
 /// IS Code 2008 Part B 3.1.2: a tank filled to 98 % or more is nominally full and has no free
@@ -279,6 +279,9 @@ pub fn roles(may_sail_without_ballast: bool) -> Vec<Role> {
 /// Assess every condition that applies.
 pub fn assess(inp: &Inputs) -> Result<Vec<LoadedCondition>, PyError> {
     let mut out = Vec::new();
+    // Issue #567: conditions that share a mass and G (no stores and no ballast, say) solve each
+    // heel once.
+    let memo = &mut LeverMemo::default();
     for role in roles(inp.may_sail_without_ballast) {
         let c = if role.takes_ballast() {
             let plan = match role {
@@ -297,12 +300,12 @@ pub fn assess(inp: &Inputs) -> Result<Vec<LoadedCondition>, PyError> {
                                 .map_or(0.0, |(_, f)| f.clamp(0.0, 1.0))
                         })
                         .collect();
-                    condition(inp, role, &f)?
+                    condition(inp, role, &f, memo)?
                 }
-                BallastPlan::Auto => auto_plan(inp, role)?,
+                BallastPlan::Auto => auto_plan(inp, role, memo)?,
             }
         } else {
-            condition(inp, role, &alloc::vec![0.0; inp.ballast_tanks.len()])?
+            condition(inp, role, &alloc::vec![0.0; inp.ballast_tanks.len()], memo)?
         };
         out.push(c);
     }
@@ -311,12 +314,12 @@ pub fn assess(inp: &Inputs) -> Result<Vec<LoadedCondition>, PyError> {
 
 /// The least ballast, in the fill order of [`auto_groups`], in steps of [`AUTO_BALLAST_STEP`], that
 /// meets every criterion. If none does, the plan with every ballast tank full, marked not found.
-fn auto_plan(inp: &Inputs, role: Role) -> Result<LoadedCondition, PyError> {
+fn auto_plan(inp: &Inputs, role: Role, memo: &mut LeverMemo) -> Result<LoadedCondition, PyError> {
     let mut fills = alloc::vec![0.0; inp.ballast_tanks.len()];
     // Issue #448: a trial that fails a criterion known before the GZ curve (the air draft, the
     // fluid GM, the freeboard) is not ok whatever its curve, so it is screened out without one.
     // The trial found, or with none the last one, is worked in full, so no reported number differs.
-    if let Some(mut c) = trial(inp, role, &fills)? {
+    if let Some(mut c) = trial(inp, role, &fills, memo)? {
         c.plan_found = Some(true);
         return Ok(c);
     }
@@ -327,20 +330,25 @@ fn auto_plan(inp: &Inputs, role: Role) -> Result<LoadedCondition, PyError> {
             for &i in &group {
                 fills[i] = f;
             }
-            if let Some(mut c) = trial(inp, role, &fills)? {
+            if let Some(mut c) = trial(inp, role, &fills, memo)? {
                 c.plan_found = Some(true);
                 return Ok(c);
             }
         }
     }
-    let mut c = condition(inp, role, &fills)?;
+    let mut c = condition(inp, role, &fills, memo)?;
     c.plan_found = Some(false);
     Ok(c)
 }
 
 /// One trial of the automatic plan: the condition when it is ok, `None` when it is not.
-fn trial(inp: &Inputs, role: Role, fills: &[f64]) -> Result<Option<LoadedCondition>, PyError> {
-    let c = match condition_with(inp, role, fills, None, true)? {
+fn trial(
+    inp: &Inputs,
+    role: Role,
+    fills: &[f64],
+    memo: &mut LeverMemo,
+) -> Result<Option<LoadedCondition>, PyError> {
+    let c = match condition_with(inp, role, fills, None, true, memo)? {
         Some(c) => c,
         None => return Ok(None),
     };
@@ -400,8 +408,13 @@ fn consumables_at(c: &Consumables, fraction: f64) -> (Vec<Item>, f64) {
 }
 
 /// One condition at the given ballast fills (one per ballast tank).
-fn condition(inp: &Inputs, role: Role, fills: &[f64]) -> Result<LoadedCondition, PyError> {
-    Ok(condition_with(inp, role, fills, None, false)?
+fn condition(
+    inp: &Inputs,
+    role: Role,
+    fills: &[f64],
+    memo: &mut LeverMemo,
+) -> Result<LoadedCondition, PyError> {
+    Ok(condition_with(inp, role, fills, None, false, memo)?
         .expect("an unscreened condition is always worked"))
 }
 
@@ -434,6 +447,7 @@ fn condition_with(
     fills: &[f64],
     cargo_override: Option<f64>,
     screen: bool,
+    memo: &mut LeverMemo,
 ) -> Result<Option<LoadedCondition>, PyError> {
     let d = inp.depth;
     let mut items: Vec<Item> = inp.lightship.to_vec();
@@ -508,7 +522,7 @@ fn condition_with(
             },
         )
     } else {
-        let f = match inp.hull.float(disp, g, inp.water_density) {
+        let f = match memo.float(inp.hull, disp, g, inp.water_density) {
             Ok(f) => f,
             // No balance within the trim solver's range: the condition fails at its level draught.
             Err(crate::sections::SectionsError::TrimOutOfRange) => {
@@ -626,6 +640,7 @@ fn condition_with(
                 fs_m * disp,
                 inp.water_density,
                 heel0.as_ref(),
+                memo,
             )? {
                 crate::box_stability::Screened::Fails => return Ok(None),
                 crate::box_stability::Screened::Curve(gz) => Some(gz),
@@ -644,6 +659,7 @@ fn condition_with(
             inp.criteria_set,
             heel0.as_ref(),
             gz_worked,
+            memo,
         )?
     };
     c.name = role.name().to_string();
@@ -677,8 +693,9 @@ pub fn assess_slack(
 ) -> Result<Option<LoadedCondition>, PyError> {
     let none = alloc::vec![0.0; inp.ballast_tanks.len()];
     let mut worst: Option<LoadedCondition> = None;
+    let memo = &mut LeverMemo::default();
     for &m in candidates_t {
-        let c = condition_with(inp, Role::SlackCargo, &none, Some(m), false)?
+        let c = condition_with(inp, Role::SlackCargo, &none, Some(m), false, memo)?
             .expect("an unscreened condition is always worked");
         // The first of equal fluid GM stays, so the result does not depend on rounding.
         if worst
