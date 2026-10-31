@@ -482,8 +482,9 @@ mod tests {
         // counts in Vc, so results may change), and one for the hull end input a version 1 file
         // lacks (issue #4): it gets the fixed value the engine used. One more for the LPG carriage
         // condition the file lacks (issue #292): it is read as fully pressurised. One more for the
-        // block coefficient the file stores (issue #448): it is no longer an input.
-        assert_eq!(notes.len(), 7, "{notes:?}");
+        // block coefficient the file stores (issue #448): it is no longer an input. One more for the
+        // structure block of the Hull the file lacks (issue #739).
+        assert_eq!(notes.len(), 8, "{notes:?}");
         assert!(
             notes[0]
                 .as_str()
@@ -522,7 +523,15 @@ mod tests {
                 .contains("has no `lpg_carriage_condition`"),
             "{notes:?}"
         );
-        let last = notes[6].as_str().unwrap();
+        // Issue #739: the structure block's own note comes before the note of the fixed values.
+        assert!(
+            notes[6]
+                .as_str()
+                .unwrap()
+                .contains("before the structure block of the Hull"),
+            "{notes:?}"
+        );
+        let last = notes[7].as_str().unwrap();
         assert!(
             last.contains("has no `")
                 && last.contains("`bow_rake_length_m`")
@@ -540,7 +549,7 @@ mod tests {
         state.saved(Path::new("old.vdesign"));
         assert_eq!(state.snapshot()["migration_notes"], json!([]));
         let saved: Value = serde_json::from_str(&state.save_text().unwrap()).unwrap();
-        assert_eq!(saved["format_version"], 3);
+        assert_eq!(saved["format_version"], 4);
         // A file that needs no change has none.
         let fresh = AppState::open(Path::new("a.vdesign"), &starter_text()).unwrap();
         assert_eq!(fresh.snapshot()["migration_notes"], json!([]));
@@ -562,14 +571,15 @@ mod tests {
                 .clone()
         };
         let before = notes(&state);
-        // Six as above, and one for the stored block coefficient (issue #448).
-        assert_eq!(before.len(), 7);
+        // Six as above, one for the stored block coefficient (issue #448) and one for the structure
+        // block (issue #739).
+        assert_eq!(before.len(), 8);
         state.duplicate_option("Option 1").unwrap();
         assert_eq!(notes(&state), before, "a copy brings no notes of its own");
 
         state.rename_option("Option 1", "Laden case").unwrap();
         let after = notes(&state);
-        assert_eq!(after.len(), 7);
+        assert_eq!(after.len(), 8);
         for (old, new) in before.iter().zip(&after) {
             let old = old.as_str().unwrap();
             let new = new.as_str().unwrap();
