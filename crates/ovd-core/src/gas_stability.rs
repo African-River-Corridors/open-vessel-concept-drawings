@@ -447,6 +447,7 @@ pub fn assess_num(
             criteria_set,
             None,
             None,
+            &mut crate::hydrostatics::LeverMemo::default(),
         )?;
         c.name = name.to_string();
         c.cargo_t = cargo;

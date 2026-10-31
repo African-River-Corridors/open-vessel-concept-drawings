@@ -414,19 +414,28 @@ struct Cut {
     girth: f64,
 }
 
+/// One full section at one x, ready to cut: its vertices and `p · k − c` at each (issue #567: worked
+/// out once per x, and the end of one sub-interval is the start of the next).
+#[derive(Default)]
+struct Full {
+    poly: Vec<(f64, f64)>,
+    f: Vec<f64>,
+    /// Where the second polygon of a slotted section starts in `poly` (`poly.len()` when whole).
+    split: usize,
+}
+
 /// Buffers reused from cut to cut, so the solvers do not allocate in their inner loops.
 #[derive(Default)]
 struct Work {
-    /// The full section being cut.
-    poly: Vec<(f64, f64)>,
+    /// The full sections at the middle, the start and the end of a sub-interval.
+    mid: Full,
+    start: Full,
+    end: Full,
     /// Slope `(dy/dx, dz/dx)` of each vertex's point line.
     tan: Vec<(f64, f64)>,
     /// Which vertices are immersed.
     wet: Vec<bool>,
-    f: Vec<f64>,
     clipped: Vec<(f64, f64)>,
-    /// Where the second polygon of a slotted section starts in `poly` (`poly.len()` when whole).
-    split: usize,
     /// `(s, y, z)` of each crossing of the waterline.
     crossings: Vec<(f64, f64, f64)>,
     xs: Vec<f64>,
@@ -455,26 +464,32 @@ fn fill_full(
     if slot { n } else { dst.len() }
 }
 
-/// Cut the full section in `w.poly` at station `x`. `w.wet` says which vertices are immersed (fixed
-/// for the whole sub-interval, so an end of it takes the limit from inside). With `area_only`, only
-/// the area is worked out.
-fn cut(fr: &Frame, x: f64, w: &mut Work, area_only: bool) -> Cut {
-    let n = w.poly.len();
-    w.f.clear();
-    w.f.extend(w.poly.iter().map(|&p| fr.f(x, p)));
-    w.clipped.clear();
-    w.crossings.clear();
-    let (poly, tan, wet, f) = (&w.poly, &w.tan, &w.wet, &w.f);
+/// Cut the full section `full`. `wet` says which vertices are immersed (fixed for the whole
+/// sub-interval, so an end of it takes the limit from inside). With `area_only`, only the area is
+/// worked out. `clipped` and `crossings` are scratch.
+fn cut(
+    fr: &Frame,
+    full: &Full,
+    tan: &[(f64, f64)],
+    wet: &[bool],
+    clipped: &mut Vec<(f64, f64)>,
+    crossings: &mut Vec<(f64, f64, f64)>,
+    area_only: bool,
+) -> Cut {
+    let (poly, f) = (&full.poly, &full.f);
+    let n = poly.len();
+    clipped.clear();
+    crossings.clear();
     let mut out = Cut::default();
     // One polygon, or two for a slotted section; each closes on itself.
-    let rings = [(0, w.split), (w.split, n)];
+    let rings = [(0, full.split), (full.split, n)];
     let mut ends = [0; 2];
     for (r, &(start, end)) in rings.iter().enumerate() {
         for i in start..end {
             let j = if i + 1 == end { start } else { i + 1 };
             let (p, q) = (poly[i], poly[j]);
             if wet[i] {
-                w.clipped.push(p);
+                clipped.push(p);
             }
             if wet[i] && wet[j] {
                 if !area_only {
@@ -487,7 +502,7 @@ fn cut(fr: &Frame, x: f64, w: &mut Work, area_only: bool) -> Cut {
                     (f[i] / (f[i] - f[j])).clamp(0.0, 1.0)
                 };
                 let r = (p.0 + t * (q.0 - p.0), p.1 + t * (q.1 - p.1));
-                w.clipped.push(r);
+                clipped.push(r);
                 if !area_only {
                     let tr = (
                         tan[i].0 + t * (tan[j].0 - tan[i].0),
@@ -498,17 +513,18 @@ fn cut(fr: &Frame, x: f64, w: &mut Work, area_only: bool) -> Cut {
                     } else {
                         piece(r, q, tr, tan[j])
                     };
-                    w.crossings.push((fr.uy * r.0 + fr.uz * r.1, r.0, r.1));
+                    crossings.push((fr.uy * r.0 + fr.uz * r.1, r.0, r.1));
                 }
             }
         }
-        ends[r] = w.clipped.len();
+        ends[r] = clipped.len();
     }
     let (mut a, mut my, mut mz) = (0.0, 0.0, 0.0);
     for (start, end) in [(0, ends[0]), (ends[0], ends[1])] {
         let m = end - start;
         for i in 0..m {
-            let ((y0, z0), (y1, z1)) = (w.clipped[start + i], w.clipped[start + (i + 1) % m]);
+            let j = if i + 1 == m { 0 } else { i + 1 };
+            let ((y0, z0), (y1, z1)) = (clipped[start + i], clipped[start + j]);
             let c = y0 * z1 - y1 * z0;
             a += c;
             if !area_only {
@@ -523,8 +539,8 @@ fn cut(fr: &Frame, x: f64, w: &mut Work, area_only: bool) -> Cut {
     }
     out.my = my / 6.0;
     out.mz = mz / 6.0;
-    w.crossings.sort_by(|p, q| p.0.total_cmp(&q.0));
-    for pair in w.crossings.as_chunks::<2>().0 {
+    crossings.sort_by(|p, q| p.0.total_cmp(&q.0));
+    for pair in crossings.as_chunks::<2>().0 {
         let ((s0, y0, z0), (s1, y1, z1)) = (pair[0], pair[1]);
         let len = s1 - s0;
         out.chord += len;
@@ -533,7 +549,7 @@ fn cut(fr: &Frame, x: f64, w: &mut Work, area_only: bool) -> Cut {
         out.chord_s += (s1 * s1 - s0 * s0) / 2.0;
         out.chord_s2 += (s1 * s1 * s1 - s0 * s0 * s0) / 3.0;
     }
-    if let (Some(first), Some(last)) = (w.crossings.first(), w.crossings.last()) {
+    if let (Some(first), Some(last)) = (crossings.first(), crossings.last()) {
         out.breadth = last.0 - first.0;
     }
     out
@@ -603,15 +619,17 @@ impl<'a> Interval<'a> {
         }
     }
 
-    /// Put the full section at `x` into `w.poly`.
-    fn section_at(&self, x: f64, w: &mut Work) {
-        w.split = fill_full(
-            &mut w.poly,
+    /// Put the full section at `x`, and `p · k − c` at each of its vertices, into `dst`.
+    fn section_at(&self, fr: &Frame, x: f64, dst: &mut Full) {
+        dst.split = fill_full(
+            &mut dst.poly,
             self.a,
             self.b,
             (x - self.x0) / (self.x1 - self.x0),
             self.slot,
         );
+        dst.f.clear();
+        dst.f.extend(dst.poly.iter().map(|&p| fr.f(x, p)));
     }
 
     /// Put the slope of each vertex's point line into `w.tan`.
@@ -657,12 +675,12 @@ impl<'a> Interval<'a> {
     }
 
     /// Set `w.wet` for the open sub-interval `(a, b)`: no point line crosses inside it, so the sign
-    /// at its middle holds throughout.
+    /// at its middle holds throughout. Leaves the section at the middle in `w.mid`.
     fn wet(&self, fr: &Frame, a: f64, b: f64, w: &mut Work) {
         let m = (a + b) / 2.0;
-        self.section_at(m, w);
+        self.section_at(fr, m, &mut w.mid);
         w.wet.clear();
-        w.wet.extend(w.poly.iter().map(|&p| fr.f(m, p) < 0.0));
+        w.wet.extend(w.mid.f.iter().map(|&f| f < 0.0));
     }
 }
 
@@ -700,15 +718,29 @@ fn integrate(table: &SectionsTable, fr: &Frame, area_only: bool, w: &mut Work) -
         w.xs = xs;
         iv.splits(fr, w);
         xs = core::mem::take(&mut w.xs);
-        for ab in xs.windows(2) {
+        for (k, ab) in xs.windows(2).enumerate() {
             let (a, b) = (ab[0], ab[1]);
             let m = (a + b) / 2.0;
             iv.wet(fr, a, b, w);
-            let cm = cut(fr, m, w, area_only);
-            iv.section_at(a, w);
-            let ca = cut(fr, a, w, area_only);
-            iv.section_at(b, w);
-            let cb = cut(fr, b, w, area_only);
+            // The section at `a` is the one at the end of the sub-interval before, the same bits.
+            if k == 0 {
+                iv.section_at(fr, a, &mut w.start);
+            }
+            iv.section_at(fr, b, &mut w.end);
+            let Work {
+                mid,
+                start,
+                end,
+                tan,
+                wet,
+                clipped,
+                crossings,
+                ..
+            } = &mut *w;
+            let cm = cut(fr, mid, tan, wet, clipped, crossings, area_only);
+            let ca = cut(fr, start, tan, wet, clipped, crossings, area_only);
+            let cb = cut(fr, end, tan, wet, clipped, crossings, area_only);
+            core::mem::swap(start, end);
             let h = (b - a) / 6.0;
             out.sums.add(h, a, &ca);
             out.sums.add(4.0 * h, m, &cm);
@@ -802,8 +834,16 @@ fn station_cut(table: &SectionsTable, fr: &Frame, x: f64, w: &mut Work) -> Cut {
         w.xs = xs;
         if let Some((a, b)) = hit {
             iv.wet(fr, a, b, w);
-            iv.section_at(x, w);
-            return cut(fr, x, w, false);
+            iv.section_at(fr, x, &mut w.start);
+            return cut(
+                fr,
+                &w.start,
+                &w.tan,
+                &w.wet,
+                &mut w.clipped,
+                &mut w.crossings,
+                false,
+            );
         }
     }
     Cut::default()
@@ -1181,13 +1221,43 @@ pub fn gz_at(
     deg: i32,
     heel0: Option<&Equilibrium>,
 ) -> Result<f64, SectionsError> {
-    let fsc = free_surface_moment_tm / mass_t;
-    let heel = f64::from(deg);
     let lever = match heel0 {
         Some(eq) if deg == 0 => righting_lever(eq, g),
-        _ => righting_lever(&equilibrium(table, mass_t, g, heel, density)?, g),
+        _ => solved_lever(table, mass_t, g, density, deg)?,
     };
-    Ok(lever - fsc * sin(radians(heel)))
+    Ok(less_free_surface(
+        lever,
+        free_surface_moment_tm,
+        mass_t,
+        deg,
+    ))
+}
+
+/// The righting lever with free trim at one heel (degrees), from its own equilibrium solve: the part
+/// of [`gz_at`] that depends on the mass, G and the heel only, so it can be kept and reused (issue
+/// #567).
+pub(crate) fn solved_lever(
+    table: &SectionsTable,
+    mass_t: f64,
+    g: Gravity,
+    density: f64,
+    deg: i32,
+) -> Result<f64, SectionsError> {
+    Ok(righting_lever(
+        &equilibrium(table, mass_t, g, f64::from(deg), density)?,
+        g,
+    ))
+}
+
+/// A righting lever less the free surface term `FSM / Δ × sin φ`: the rest of [`gz_at`].
+pub(crate) fn less_free_surface(
+    lever: f64,
+    free_surface_moment_tm: f64,
+    mass_t: f64,
+    deg: i32,
+) -> f64 {
+    let fsc = free_surface_moment_tm / mass_t;
+    lever - fsc * sin(radians(f64::from(deg)))
 }
 
 /// An opening through which the hull may flood, as a point in hull axes: x from the aft end, y

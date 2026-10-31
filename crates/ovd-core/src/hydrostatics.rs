@@ -6,6 +6,7 @@
 //! same, including the free surface sum, which adds the same moment once per tank. Truthiness of
 //! `double_bottom_height` follows Python: `None` and `0.0` are false, `NaN` is true.
 
+use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
 
 use alloc::string::ToString;
@@ -337,6 +338,108 @@ impl core::fmt::Display for BuildError {
 pub struct Hull {
     pub spec: HullSpec,
     pub table: SectionsTable,
+}
+
+/// The bits of a mass, a centre of gravity and a density: the key of [`LeverMemo`].
+type MassKey = (u64, u64, u64, u64, u64);
+
+fn mass_key(mass_t: f64, g: Gravity, density: f64) -> MassKey {
+    (
+        mass_t.to_bits(),
+        g.lcg_m.to_bits(),
+        g.tcg_m.to_bits(),
+        g.kg_m.to_bits(),
+        density.to_bits(),
+    )
+}
+
+/// Issue #567: the free-trim solves already done on one hull, kept by the bits of their inputs (the
+/// mass, G, the density and the heel), so loading conditions that share a mass and G solve each heel
+/// once. A solve is a pure function of those inputs, so a kept answer is the answer, bit for bit.
+/// One memo serves one hull: make a new one for each.
+#[derive(Debug, Default)]
+pub(crate) struct LeverMemo {
+    floats: BTreeMap<MassKey, Result<Float, SectionsError>>,
+    levers: BTreeMap<(MassKey, i32), Result<f64, SectionsError>>,
+    /// How many equilibrium solves the memo did not have (heel 0 floats and levers).
+    pub(crate) solves: usize,
+}
+
+impl LeverMemo {
+    /// [`Hull::float`], kept.
+    pub(crate) fn float(
+        &mut self,
+        hull: &Hull,
+        mass_t: f64,
+        g: Gravity,
+        density: f64,
+    ) -> Result<Float, SectionsError> {
+        let key = mass_key(mass_t, g, density);
+        if let Some(f) = self.floats.get(&key) {
+            return *f;
+        }
+        self.solves += 1;
+        let f = hull.float(mass_t, g, density);
+        self.floats.insert(key, f);
+        f
+    }
+
+    /// [`Hull::gz_at`], with the lever kept.
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn gz_at(
+        &mut self,
+        hull: &Hull,
+        mass_t: f64,
+        g: Gravity,
+        free_surface_moment_tm: f64,
+        density: f64,
+        deg: i32,
+        heel0: Option<&crate::sections::Equilibrium>,
+    ) -> Result<f64, SectionsError> {
+        let lever = match heel0 {
+            Some(eq) if deg == 0 => crate::sections::righting_lever(eq, g),
+            _ => {
+                let key = (mass_key(mass_t, g, density), deg);
+                match self.levers.get(&key) {
+                    Some(l) => (*l)?,
+                    None => {
+                        self.solves += 1;
+                        let l = crate::sections::solved_lever(&hull.table, mass_t, g, density, deg);
+                        self.levers.insert(key, l);
+                        l?
+                    }
+                }
+            }
+        };
+        Ok(crate::sections::less_free_surface(
+            lever,
+            free_surface_moment_tm,
+            mass_t,
+            deg,
+        ))
+    }
+
+    /// [`Hull::gz_from`], with the levers kept.
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn gz_from(
+        &mut self,
+        hull: &Hull,
+        mass_t: f64,
+        g: Gravity,
+        free_surface_moment_tm: f64,
+        density: f64,
+        angles: impl IntoIterator<Item = i32>,
+        heel0: Option<&crate::sections::Equilibrium>,
+    ) -> Result<Vec<(i32, f64)>, SectionsError> {
+        let mut out = Vec::new();
+        for deg in angles {
+            out.push((
+                deg,
+                self.gz_at(hull, mass_t, g, free_surface_moment_tm, density, deg, heel0)?,
+            ));
+        }
+        Ok(out)
+    }
 }
 
 /// The free-trim floating position at heel 0, and the draughts at the ends and at mid-length (m,
