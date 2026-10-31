@@ -3,7 +3,7 @@
 //! rectangular and a trapezoidal prism (I = l b³ / 12 for a rectangular free surface).
 
 use ovd_core::barge_capacity::{BargeCapacityInputs, compute};
-use ovd_core::compartments::{Side, Space, SpaceKind, SpaceShape, ballast_tanks};
+use ovd_core::compartments::{Side, Space, SpaceKind, SpaceShape, ballast_tanks, gas_hold_bounds};
 
 fn close(a: f64, b: f64) {
     assert!((a - b).abs() < 1e-9, "{a} != {b}");
@@ -115,12 +115,13 @@ fn a_dry_hopper_barge_has_a_double_bottom_and_a_wing_tank_each_side() {
 #[test]
 fn a_default_gas_barge_has_no_wing_tank_because_the_clearance_is_below_the_wing_gap() {
     // IGC_2G gives a side clearance of about 0.55 m; the wing tank is the clearance less the wing
-    // gap, so it has no width (issue #283). The double bottom and the fore peak remain.
+    // gap, so it has no width (issue #283). The double bottom, one pair per hold (spec 0012 D6:
+    // two tanks in line), and the fore peak remain.
     let mut i = BargeCapacityInputs::new(90.0, 14.8, 6.5);
     i.cargo_type = "LPG_propane".to_string();
     let r = compute(&i).unwrap();
     let names: Vec<String> = ballast_tanks(&i, &r).into_iter().map(|t| t.name).collect();
-    assert_eq!(names, ["DB1P", "DB1S", "FP1C"]);
+    assert_eq!(names, ["DB1P", "DB1S", "DB2P", "DB2S", "FP1C"]);
 }
 
 #[test]
@@ -183,4 +184,88 @@ fn only_a_pushed_barge_has_an_aft_peak() {
     close(ap.x_aft, 0.0);
     close(ap.x_fwd, r.stern_void_length_m.unwrap());
     close(ap.fill(0.5).tcg_m, 0.0);
+}
+
+/// Spec 0012 D6: one hold per tank in line, a watertight bulkhead midway between the heads of two
+/// tanks in line, and the double bottom and the wing tanks cut at the same bulkheads.
+fn gas_with_wings() -> (
+    BargeCapacityInputs,
+    ovd_core::barge_capacity::BargeCapacityResult,
+) {
+    let mut i = BargeCapacityInputs::new(90.0, 14.8, 6.5);
+    i.cargo_type = "LPG_propane".to_string();
+    i.side_clearance_override_m = Some(2.0);
+    let r = compute(&i).unwrap();
+    (i, r)
+}
+
+#[test]
+fn a_gas_hold_bulkhead_stands_midway_between_the_heads_of_two_tanks_in_line() {
+    let (i, r) = gas_with_wings();
+    let g = r.gas_basis.as_ref().unwrap();
+    let layout = ovd_core::tanks::arrangement_layout(&g.inputs, &g.tanks, None).unwrap();
+    let rows: Vec<_> = layout.tanks.iter().filter(|t| t.column == 0).collect();
+    assert!(rows.len() >= 2, "a test of subdivision needs tanks in line");
+    let holds = gas_hold_bounds(&i, &r);
+    assert_eq!(holds.len(), rows.len());
+    // the holds run end to end over the cargo zone
+    close(holds[0].0, r.stern_void_length_m.unwrap_or(0.0));
+    close(
+        holds[holds.len() - 1].1,
+        i.loa - r.bow_void_length_m.unwrap_or(0.0),
+    );
+    for k in 1..holds.len() {
+        assert_eq!(holds[k].0, holds[k - 1].1);
+        close(
+            holds[k].0,
+            0.5 * (rows[k - 1].axis.x1_m + rows[k].axis.x0_m),
+        );
+    }
+    // each tank lies in its own hold
+    for (h, t) in holds.iter().zip(&rows) {
+        assert!(
+            h.0 <= t.axis.x0_m && t.axis.x1_m <= h.1,
+            "{h:?} {:?}",
+            t.axis
+        );
+    }
+}
+
+#[test]
+fn a_gas_double_bottom_and_wing_tank_are_cut_at_the_hold_bulkheads() {
+    let (i, r) = gas_with_wings();
+    let holds = gas_hold_bounds(&i, &r);
+    let n = holds.len();
+    let tanks = ballast_tanks(&i, &r);
+    let mut want: Vec<String> = Vec::new();
+    for prefix in ["DB", "WB"] {
+        for k in 1..=n {
+            want.push(format!("{prefix}{k}P"));
+            want.push(format!("{prefix}{k}S"));
+        }
+    }
+    want.push("FP1C".to_string());
+    let names: Vec<String> = tanks.iter().map(|t| t.name.clone()).collect();
+    assert_eq!(names, want);
+    for (k, h) in holds.iter().enumerate() {
+        for prefix in ["DB", "WB"] {
+            for side in ["P", "S"] {
+                let t = tanks
+                    .iter()
+                    .find(|t| t.name == format!("{prefix}{}{side}", k + 1))
+                    .unwrap();
+                assert_eq!((t.x_aft, t.x_fwd), *h);
+            }
+        }
+    }
+    // the cut keeps the total: half beam x double bottom x cargo zone, each side
+    let g = r.gas_basis.as_ref().unwrap();
+    let db = g.inputs.double_bottom_height.unwrap();
+    let l = holds[n - 1].1 - holds[0].0;
+    let total: f64 = tanks
+        .iter()
+        .filter(|t| t.kind == SpaceKind::DoubleBottomBallast)
+        .map(|t| t.volume_m3())
+        .sum();
+    assert!((total - 2.0 * 7.4 * db * l).abs() < 1e-9 * total);
 }

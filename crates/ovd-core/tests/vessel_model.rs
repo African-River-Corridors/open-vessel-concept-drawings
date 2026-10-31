@@ -8,7 +8,7 @@
 //! the inner bottom to the deck times the cargo zone length (issue #455).
 
 use ovd_core::barge_capacity::{BargeCapacityInputs, compute};
-use ovd_core::compartments::{SpaceKind, ballast_tanks};
+use ovd_core::compartments::{SpaceKind, ballast_tanks, gas_hold_bounds};
 use ovd_core::hydrostatics::Hull;
 use ovd_core::vessel_model::{VesselModelInputs, assemble};
 
@@ -97,4 +97,102 @@ fn a_dry_bulk_barge_has_its_holds_bulkheads_ballast_tanks_and_decks() {
                 .any(|s| s.space.name == "FP1C" && s.is_cut())
         );
     }
+}
+
+/// Spec 0012 D6 on a gas barge with wing tanks: one hold per tank in line between watertight
+/// bulkheads, each Type C tank in its hold, and above each wing tank, outboard of the hold, a void
+/// strip to the deck. The holds, wing tanks and strips fill the cargo zone above the double bottom:
+/// B x (D - db) x the cargo zone length.
+#[test]
+fn a_gas_barge_has_one_hold_per_tank_in_line_and_a_void_strip_above_each_wing_tank() {
+    let mut i = BargeCapacityInputs::new(90.0, 14.8, 6.5);
+    i.cargo_type = "LPG_propane".to_string();
+    i.side_clearance_override_m = Some(2.0);
+    // a wing tank that stops below the deck
+    i.wing_tank_height_ratio = 0.4;
+    let r = compute(&i).unwrap();
+    let g = r.gas_basis.as_ref().unwrap();
+    let top = g.inputs.double_bottom_height.unwrap()
+        + g.inputs.tank_support_height
+        + g.inputs.wing_tank_height_ratio * g.tanks.outer_diameter;
+    assert!(top < 6.5, "wing top {top}");
+    let hull = Hull::build(r.hull_spec.as_ref().unwrap()).unwrap().table;
+    let inp = VesselModelInputs {
+        capacity: i,
+        result: r,
+        hull,
+    };
+    let m = assemble(&inp);
+    let holds_x = gas_hold_bounds(&inp.capacity, &inp.result);
+    assert!(holds_x.len() >= 2);
+    let of = |k: SpaceKind| -> Vec<&ovd_core::compartments::Space> {
+        m.spaces
+            .iter()
+            .filter(|s| s.space.kind == k)
+            .map(|s| &s.space)
+            .collect()
+    };
+    let holds = of(SpaceKind::CargoHold);
+    let names: Vec<&str> = holds.iter().map(|h| h.name.as_str()).collect();
+    let want: Vec<String> = (1..=holds_x.len()).map(|k| format!("H{k}C")).collect();
+    assert_eq!(names, want);
+    for (h, x) in holds.iter().zip(&holds_x) {
+        assert_eq!((h.x_aft, h.x_fwd), *x);
+    }
+    // a watertight bulkhead at each joint
+    for x in &holds_x[1..] {
+        assert!(
+            m.bulkheads.iter().any(|b| b.x_m == x.0 && b.watertight),
+            "no bulkhead at {}: {:?}",
+            x.0,
+            m.bulkheads
+        );
+    }
+    // each tank in its hold, and the tanks follow the last hold in the list
+    let layout = m.tank_layout.as_ref().unwrap();
+    for t in &layout.tanks {
+        let h = &holds[t.row];
+        assert!(h.x_aft <= t.axis.x0_m && t.axis.x1_m <= h.x_fwd);
+    }
+    let last_hold = m
+        .spaces
+        .iter()
+        .rposition(|s| s.space.kind == SpaceKind::CargoHold)
+        .unwrap();
+    assert_eq!(m.spaces[last_hold + 1].space.kind, SpaceKind::CargoTank);
+    // a void strip each side per hold, from the wing tank top to the deck, as wide as the wing tank
+    let strips: Vec<_> = of(SpaceKind::Void)
+        .into_iter()
+        .filter(|s| s.name.starts_with("WV"))
+        .collect();
+    assert_eq!(strips.len(), 2 * holds_x.len());
+    let wings = of(SpaceKind::WingBallast);
+    for s in &strips {
+        let w = wings
+            .iter()
+            .find(|w| w.name[2..] == s.name[2..])
+            .expect("its wing tank");
+        assert_eq!((s.x_aft, s.x_fwd), (w.x_aft, w.x_fwd));
+        assert_eq!(s.side, w.side);
+        let (wz, sz) = (w.z_range(), s.z_range());
+        assert_eq!(sz, (wz.1, 6.5));
+        let ys = |sp: &ovd_core::compartments::Space| {
+            sp.section()
+                .iter()
+                .fold((f64::MAX, f64::MIN), |(a, b), &(y, _)| (a.min(y), b.max(y)))
+        };
+        assert_eq!(ys(s), ys(w));
+    }
+    // the holds, wing tanks and strips fill the zone above the double bottom
+    let g = inp.result.gas_basis.as_ref().unwrap();
+    let db = g.inputs.double_bottom_height.unwrap();
+    let l = holds_x[holds_x.len() - 1].1 - holds_x[0].0;
+    let sum: f64 = holds
+        .iter()
+        .chain(&wings)
+        .chain(&strips)
+        .map(|s| s.volume_m3())
+        .sum();
+    let want = 14.8 * (6.5 - db) * l;
+    assert!((sum - want).abs() < 1e-9 * want, "{sum} vs {want}");
 }
