@@ -41,7 +41,7 @@ Self-propelled gas barge, IGC Type C tanks, LNG, 140.0 m x 29.0 m, raked box hul
 | Boil-off (IGC 7.2 ambient) (kg/h) | 731 | 737 | 747 |
 | Gas use at the service speed (kg/h) | 261 | 261 | 291 |
 | Checks | boil-off within gas use | boil-off within gas use | boil-off within gas use |
-| Results hash | d537ec83e816 | b799936c336e | b0abac904acf |
+| Results hash | 4d50473eee45 | 70265db4ca58 | 07c5d624485b |
 
 Power curve, deep water (kW at kn): 8 kn 642; 9 kn 907; 10 kn 1,241; 11 kn 1,651; 12 kn 2,148 (A basis).
 

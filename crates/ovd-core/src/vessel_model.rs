@@ -19,7 +19,8 @@ use alloc::vec::Vec;
 use crate::barge_capacity::{BargeCapacityInputs, BargeCapacityResult};
 use crate::cargo::CargoClass;
 use crate::compartments::{
-    ClippedSpace, Side, Space, SpaceKind, SpaceShape, ballast_tanks, clip, tank_spaces,
+    ClippedSpace, Side, Space, SpaceKind, SpaceShape, ballast_tanks, clip, gas_hold_bounds, pair_n,
+    rect, tank_spaces,
 };
 use crate::sections::SectionsTable;
 use crate::tanks::TankLayout;
@@ -167,10 +168,10 @@ pub fn assemble(inp: &VesselModelInputs) -> VesselModel {
     let tank_layout = gas_tank_layout(c, r);
     let mut spaces = spaces(c, r);
     if let (Some(layout), Some(g)) = (tank_layout.as_ref(), r.gas_basis.as_ref()) {
-        // The Type C tanks follow the hold that houses them.
+        // The Type C tanks follow the holds that house them.
         let at = spaces
             .iter()
-            .position(|s| s.kind == SpaceKind::CargoHold)
+            .rposition(|s| s.kind == SpaceKind::CargoHold)
             .map_or(0, |i| i + 1);
         let tanks = tank_spaces(layout, g.tanks.volume_per_tank);
         spaces.splice(at..at, tanks);
@@ -257,17 +258,31 @@ fn spaces(c: &BargeCapacityInputs, r: &BargeCapacityResult) -> Vec<Space> {
             }
         }
         CargoClass::Gas => {
-            // The hold that houses the Type C tanks: inboard of the wing tanks, from the double
-            // bottom to the deck.
+            // The holds that house the Type C tanks, one per tank in line (spec 0012, D6): inboard
+            // of the wing tanks, from the double bottom to the deck. Above each wing tank, outboard
+            // of the hold, a void strip to the deck, cut at the same bulkheads.
             if let Some(g) = r.gas_basis.as_ref() {
                 let db = g.inputs.double_bottom_height.unwrap_or(0.0);
                 let w = g.inputs.wing_tank_width.unwrap_or(0.0).clamp(0.0, half_b);
-                out.push(centre(
-                    "H1C".to_string(),
-                    SpaceKind::CargoHold,
-                    (x0, x1),
-                    across(half_b - w, db, c.depth),
-                ));
+                let top = db
+                    + g.inputs.tank_support_height
+                    + g.inputs.wing_tank_height_ratio * g.tanks.outer_diameter;
+                let holds = gas_hold_bounds(c, r);
+                for (k, x) in holds.iter().enumerate() {
+                    out.push(centre(
+                        format!("H{}C", k + 1),
+                        SpaceKind::CargoHold,
+                        *x,
+                        across(half_b - w, db, c.depth),
+                    ));
+                }
+                if w > 0.0 && top.max(db) < c.depth {
+                    for (k, x) in holds.iter().enumerate() {
+                        out.extend(pair_n("WV", k + 1, SpaceKind::Void, *x, |s| {
+                            rect(s, half_b - w, half_b, top.max(db), c.depth)
+                        }));
+                    }
+                }
             }
         }
         CargoClass::LiquidBulk => {}
@@ -361,7 +376,7 @@ fn decks(c: &BargeCapacityInputs, spaces: &[Space]) -> Vec<Deck> {
 }
 
 /// The bulkheads the general arrangement draws: the ends of the cargo zone, the bulkheads between
-/// the holds, the ends of each Space of a liquid bulk tank block, the gas separation's, and the
+/// the holds (dry bulk, and gas: spec 0012 D6), the ends of each Space of a liquid bulk tank block, the gas separation's, and the
 /// forward end of each zone of the aft block. Inside the hull only, one per x (the first named).
 fn bulkheads(c: &BargeCapacityInputs, r: &BargeCapacityResult) -> Vec<Bulkhead> {
     let (x0, x1) = cargo_zone(c, r);
@@ -385,6 +400,11 @@ fn bulkheads(c: &BargeCapacityInputs, r: &BargeCapacityResult) -> Vec<Bulkhead> 
                 x0 + (x1 - x0) * i as f64 / n as f64,
                 true,
             );
+        }
+    }
+    if r.phase == CargoClass::Gas && r.gas_basis.is_some() {
+        for (k, h) in gas_hold_bounds(c, r).iter().enumerate().skip(1) {
+            add(format!("hold_{k}_{}", k + 1), h.0, true);
         }
     }
     if let Some(l) = r.liquid.as_ref() {

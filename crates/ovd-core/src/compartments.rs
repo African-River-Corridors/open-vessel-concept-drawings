@@ -744,13 +744,24 @@ pub(crate) fn poly(side: Side, corners: &[(f64, f64)]) -> Vec<(f64, f64)> {
 pub(crate) fn pair(
     prefix: &str,
     kind: SpaceKind,
+    x: (f64, f64),
+    section: impl Fn(Side) -> Vec<(f64, f64)>,
+) -> Vec<Space> {
+    pair_n(prefix, 1, kind, x, section)
+}
+
+/// A pair of Spaces, port and starboard, named `<prefix><n>P` and `<prefix><n>S`.
+pub(crate) fn pair_n(
+    prefix: &str,
+    n: usize,
+    kind: SpaceKind,
     (x_aft, x_fwd): (f64, f64),
     section: impl Fn(Side) -> Vec<(f64, f64)>,
 ) -> Vec<Space> {
     [Side::Port, Side::Starboard]
         .into_iter()
         .map(|side| Space {
-            name: alloc::format!("{prefix}1{}", side.letter()),
+            name: alloc::format!("{prefix}{n}{}", side.letter()),
             kind,
             side,
             x_aft,
@@ -764,8 +775,9 @@ pub(crate) fn pair(
 }
 
 /// The water ballast tanks of a barge-capacity result: a double-bottom tank and a wing tank on each
-/// side, the length of the cargo zone, and the peaks. One tank per side and kind: the engine has no
-/// ballast bulkheads along the hull yet. A tank of no volume is left out.
+/// side, the length of the cargo zone, and the peaks. One tank per side and kind, except on a gas
+/// hull, where they are cut at the hold bulkheads ([`gas_hold_bounds`], spec 0012 D6). A tank of no
+/// volume is left out.
 ///
 /// - Type C tanks: the double bottom (its height), and the wing tank (its width) from the double
 ///   bottom up to the wing plate, as the weights model has them.
@@ -792,12 +804,22 @@ pub fn ballast_tanks(inp: &BargeCapacityInputs, r: &BargeCapacityResult) -> Vec<
             let top = db
                 + g.inputs.tank_support_height
                 + g.inputs.wing_tank_height_ratio * g.tanks.outer_diameter;
-            out.extend(pair("DB", SpaceKind::DoubleBottomBallast, zone, |s| {
-                rect(s, 0.0, half_b, 0.0, db)
-            }));
-            out.extend(pair("WB", SpaceKind::WingBallast, zone, |s| {
-                rect(s, half_b - w, half_b, db, top.max(db))
-            }));
+            // Spec 0012 D6: cut at the hold bulkheads, one pair per hold.
+            let holds = gas_hold_bounds(inp, r);
+            for (k, x) in holds.iter().enumerate() {
+                out.extend(pair_n(
+                    "DB",
+                    k + 1,
+                    SpaceKind::DoubleBottomBallast,
+                    *x,
+                    |s| rect(s, 0.0, half_b, 0.0, db),
+                ));
+            }
+            for (k, x) in holds.iter().enumerate() {
+                out.extend(pair_n("WB", k + 1, SpaceKind::WingBallast, *x, |s| {
+                    rect(s, half_b - w, half_b, db, top.max(db))
+                }));
+            }
         }
         CargoClass::DryBulk => {
             let db = inp.double_bottom_height_bulk.clamp(0.0, inp.depth);
@@ -834,6 +856,39 @@ pub fn ballast_tanks(inp: &BargeCapacityInputs, r: &BargeCapacityResult) -> Vec<
     if !inp.self_propelled {
         out.extend(peak("AP1C", (0.0, stern), half_b, inp.depth));
     }
+    out
+}
+
+/// The holds of a gas hull along the cargo zone, aft to forward (spec 0012, D6): one hold per tank in
+/// line, with a watertight bulkhead midway between the heads of two tanks in line. The tanks are
+/// placed by [`crate::tanks::tank_layout`], the one position function (ADR 0021). The first hold starts
+/// at the aft end of the cargo zone and the last ends at its forward end. One hold over the cargo zone
+/// when the result has no gas basis or a head the engine does not model, or one tank in line.
+pub fn gas_hold_bounds(inp: &BargeCapacityInputs, r: &BargeCapacityResult) -> Vec<(f64, f64)> {
+    let stern = r.stern_void_length_m.unwrap_or(0.0);
+    let bow = r.bow_void_length_m.unwrap_or(0.0);
+    let zone = (stern, (inp.loa - bow).max(stern));
+    let layout = r
+        .gas_basis
+        .as_ref()
+        .and_then(|g| crate::tanks::arrangement_layout(&g.inputs, &g.tanks, None));
+    let Some(layout) = layout else {
+        return vec![zone];
+    };
+    let mut rows: Vec<(f64, f64)> = Vec::new();
+    for t in &layout.tanks {
+        if rows.len() == t.row {
+            rows.push((t.axis.x0_m, t.axis.x1_m));
+        }
+    }
+    let mut out = Vec::with_capacity(rows.len().max(1));
+    let mut aft = zone.0;
+    for k in 1..rows.len() {
+        let x = 0.5 * (rows[k - 1].1 + rows[k].0);
+        out.push((aft, x));
+        aft = x;
+    }
+    out.push((aft, zone.1));
     out
 }
 
