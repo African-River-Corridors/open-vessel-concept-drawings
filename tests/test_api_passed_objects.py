@@ -105,7 +105,9 @@ def test_a_result_rebuilt_with_replace_still_works():
     # 7.1794700173060155, 11.60946081779351).
     # Re-pinned (issue #722: the hull steel from the panel model); were (5.008782640783497,
     # 7.174444292789616, 11.599547988722012).
-    assert gm_fluid(gas) == close((5.20345064134188, 7.565823765632389, 12.558720422799523))
+    # Re-pinned (issue #740: the scantlings take the rule length of ABS 3-1-1/3.1); were
+    # (5.20345064134188, 7.565823765632389, 12.558720422799523).
+    assert gm_fluid(gas) == close((5.250643355578404, 7.661805406134341, 12.800389514554132))
     assert ga_adapter.is_gas(gas) is True
 
 
@@ -123,6 +125,9 @@ def test_assess_uses_the_gas_basis_and_density_it_is_given():
     # Re-pinned again (issue #381: the opening setback is measured from the cargo area).
     # Re-pinned (issue #722, the panel hull steel); were (4.835908862668017, 6.829230912263259,
     # 10.780673588019308) and (4.835908862668017, 6.901884484328002, 10.780673588019308).
-    assert gm_fluid(res) == close((5.015647067269182, 7.184305681917291, 11.61626393206274))
+    # Re-pinned (issue #740, the rule length of ABS 3-1-1/3.1); were (5.015647067269182,
+    # 7.184305681917291, 11.61626393206274) and (5.015647067269182, 7.260193501809239,
+    # 11.61626393206274).
+    assert gm_fluid(res) == close((5.059177590043261, 7.271197388617316, 11.825690145442854))
     res.cargo_density_t_per_m3 = 0.45
-    assert gm_fluid(res) == close((5.015647067269182, 7.260193501809239, 11.61626393206274))
+    assert gm_fluid(res) == close((5.059177590043261, 7.347871928812869, 11.825690145442854))
