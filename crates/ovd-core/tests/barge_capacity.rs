@@ -22,7 +22,9 @@ fn the_quickstart_propane_barge_matches_python() {
     // Re-pinned (#448); was 2.574557304382324.
     // Re-pinned again (issue #280); was 2.4156399922106404.
     // Re-pinned again (issue #722, the hull steel from the panel model); was 2.4187877904714594.
-    assert_eq!(r.full_load_draft_m, 2.337301693393503);
+    // Re-pinned again (issue #740, the scantlings take the rule length of ABS 3-1-1/3.1, not the
+    // length overall); was 2.337301693393503.
+    assert_eq!(r.full_load_draft_m, 2.318501845777376);
     assert_eq!(r.n_tanks_wide, Some(2));
     assert!(r.ok());
 }

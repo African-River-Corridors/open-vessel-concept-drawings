@@ -528,6 +528,9 @@ impl MeasureSource for OptionMeasures<'_> {
             | "wheelhouse.raised_stability"
             | "formation.separate_vessels"
             | "formation.notch_wing_walls" => true,
+            // Issue #740: the scantling Rules of `abs-steel-barges` size the hull steel; each is a
+            // `not evaluated` row with its gap.
+            id if id.starts_with("hull_steel.") => true,
             _ => self.measured.has(measure),
         }
     }

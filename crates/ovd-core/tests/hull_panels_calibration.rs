@@ -7,9 +7,11 @@
 //! of B/15 and a double side of 0.76 m (the MARPOL Annex I regulation 19.6 minimums for a tanker of
 //! under 5,000 t deadweight), a cargo zone of the middle 84 % of the length, one hold per 20 m, two
 //! tanks abreast, a closed deck, Cb 0.927 (the box-barge value of `factors.yaml`). These are inland
-//! barges, built to river rules lighter than the unrestricted-service rules the model uses.
+//! barges, built to river rules lighter than the unrestricted-service rules the model uses. The rule
+//! length (ABS 3-1-1/3.1, issue #740) is the box's: 96 % of the length overall, as no case publishes
+//! its rakes.
 
-use ovd_core::hull_panels::{DoubleHullSpec, ScantlingChoices, double_hull_panels};
+use ovd_core::hull_panels::{DoubleHullSpec, ScantlingChoices, double_hull_panels, rule_length_m};
 
 /// (case id, LOA, B, D, k_implied t/m3), from `calibration/tank_lightship.yaml` and `cases.yaml`.
 const CASES: &[(&str, f64, f64, f64, f64)] = &[
@@ -33,6 +35,7 @@ const CASES: &[(&str, f64, f64, f64, f64)] = &[
 fn tank_barge(l: f64, b: f64, d: f64) -> DoubleHullSpec {
     DoubleHullSpec {
         loa_m: l,
+        rule_length_m: rule_length_m(d, |_| l),
         beam_m: b,
         depth_m: d,
         block_coefficient: 0.927,

@@ -41,7 +41,8 @@ lightship.
    floors, wing web frames, side web frames and deck transverses. Each member is a record with its extent (x, y and z
    bounds), plate thickness, stiffener direction, spacing and section, its supporting primary members and its rule
    paragraphs (`cost_masses.hull_panels` in the results). The scantlings are the class minimums of the ABS Rules for
-   Building and Classing Steel Barges (2021), which ABS 5-5/11.1 applies to a liquefied gas tank barge. The hull
+   Building and Classing Steel Barges at the January 2026 Rules (Part 3 January 2026, Part 5 July 2025; the Rule Set
+   `abs-steel-barges`, issue #740), with the rule length L of 3-1-1/3.1, which ABS 5-5/11.1 applies to a liquefied gas tank barge. The hull
    girder check of ABS 3-2-1/3.1 (SMR = C1 C2 L^2 B (Cb + 0.7), no depth term, K = 1) thickens the deck or bottom
    over 0.4L amidships when the midship section falls short. Only continuous longitudinal structure counts in that
    section: the deck strips outside the tank cut-outs, not the covering above D (see 6). Cb is the
@@ -174,7 +175,7 @@ writes `calibration/factors.yaml`. Held-out cases are left out of the fit.
 
 | Id | Item | Value or method | Label | Source or basis | Where applied | If it is wrong |
 |---|---|---|---|---|---|---|
-| WC-A01 | Gas hull steel | the panel model: members with ABS Steel Barge 2021 minimum scantlings, plus 5 % for brackets, welds and small items | Method; the allowance is an Estimate | Issue #722 (maintainer decision 2026-10-30); the top-down 0.10 t/m³ is reported only | `hull_panels.rs`; `weights.rs` | Lightship, draught, stability and cost |
+| WC-A01 | Gas hull steel | the panel model: members with ABS Steel Barges minimum scantlings (the Rule Set `abs-steel-barges`, January 2026 Rules, issue #740; the rule length of 3-1-1/3.1), plus 5 % for brackets, welds and small items | Method; the allowance is an Estimate | Issue #722 (maintainer decision 2026-10-30); the top-down 0.10 t/m³ is reported only | `hull_panels.rs`; `weights.rs` | Lightship, draught, stability and cost |
 | WC-A02 | Hull depth for top-down steel; covering above D | Steel to D; wing plate, side plating and weather shield above D are lightship items at their own centres | Method | Maintainer decision (issue #410): the covering above D is non-structural by default; structural only where the user sets D over it | `weights::covering_items` | Moves cargo: the light KG rises, and some designs fail the IS Code angle of max GZ |
 | WC-A03 | Wing tank top | DB + h_support + 0.66 × OD | Estimate | Profile `wing_tank_height_ratio`, carried over from the original engine | `weights.rs:155-156`; `barge_capacity.rs:70` | Unknown |
 | WC-A04 | Gas piping and machinery | 0.04 × (panel hull steel + tank total) | Fixed in code | Original engine; no source | `models.rs:217`; `weights.rs:170` | Unknown |
@@ -182,7 +183,7 @@ writes `calibration/factors.yaml`. Held-out cases are left out of the fit.
 | WC-A06 | Gas lightship sum | panel hull steel + tank total + insulation + piping + outfitting | Method | Original engine | `weights.rs:176` | Unknown |
 | WC-A07 | Tank steel, internals, insulation | From the tank calculation | See page 04 | Page 04 | `weights.rs:75-79` | See page 04 |
 | WC-A08 | Hull steel density | 7.85 t/m³ | Fixed in code | Carbon steel | `models.rs:211`; `weights.rs:49` | Small effect; bottom-up only |
-| WC-A09 | Gas plate thicknesses | per member from the ABS Steel Barge 2021 formulas (the 12, 10 and 10 mm defaults are the legacy API only) | Method | Issue #722 | `hull_panels.rs` | Lightship and cost |
+| WC-A09 | Gas plate thicknesses | per member from the ABS Steel Barges formulas (Rule Set `abs-steel-barges` 1.0.0, issue #740) (the 12, 10 and 10 mm defaults are the legacy API only) | Method | Issue #722 | `hull_panels.rs` | Lightship and cost |
 | WC-A10 | Gas structure factor | retired (issue #722): the members are weighed one by one; the legacy API keeps 1.4 | Method | Issue #722 | `hull_panels.rs` | None |
 | WC-A11 | Rake plating thickness | mean of bottom and side thickness | Fixed in code | Original engine | `weights.rs:62-63` | None in the gas branch: the hull has no rakes (`barge_capacity.rs:570`) |
 | WC-A12 | Wing plate | deck thickness × (B − n_wide × chord) × tank zone + B × end zones, plus side extension above D | Method | Original engine | `weights.rs:81-122` | Bottom-up and cost only |

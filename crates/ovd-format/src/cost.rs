@@ -224,6 +224,9 @@ pub fn with_hull_panels(mut v: Value, m: &ovd_core::hull_panels::HullPanelModel)
                 "stiffeners_t": p.stiffeners_t,
                 "total_t": p.total_t,
                 "rule": p.rule,
+                "rule_set": p.rule_set,
+                "edition": p.edition,
+                "paragraph": p.paragraph,
                 "basis": p.basis,
                 "note": p.note,
             })

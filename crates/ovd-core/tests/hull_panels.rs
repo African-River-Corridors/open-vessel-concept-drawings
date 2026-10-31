@@ -1,18 +1,21 @@
 //! Issue #722: the hull steel built up from structural members (`ovd_core::hull_panels`).
-//! Label: sourced - ABS Rules for Building and Classing Steel Barges 2021 (3-2-1/3.1, 3-2-2/3.5.1,
-//! 3-2-3/1.1.2, 3-2-6/5.1, 3-2-7/3.1, 3-2-4/3.11), each value worked out by hand from the printed
-//! formula in the test that uses it; the other tests are properties.
+//! Label: sourced - ABS Rules for Building and Classing Steel Barges, Part 3 January 2026 and Part 5
+//! July 2025, read in the July 2025 Rules (3-1-1/3.1, 3-2-1/3.1, 3-2-2/3.5.1, 3-2-3/2.1.2, 3-2-6/5.1,
+//! 3-2-7/3.1, 3-2-4/3.11; the same numbers as the 2021 edition), each value worked out by hand from
+//! the printed formula in the test that uses it; the other tests are properties.
 
 use ovd_core::barge_capacity::{BargeCapacityInputs, compute};
 use ovd_core::hull_panels::{
     DoubleHullSpec, ScantlingChoices, Section, double_hull_panels, gas_hull_spec,
-    required_section_modulus, tank_boundary_plate_mm, watertight_bulkhead_plate_mm,
+    required_section_modulus, rule_length_m, tank_boundary_plate_mm, watertight_bulkhead_plate_mm,
     web_thickness_mm,
 };
 
 fn spec(depth: f64) -> DoubleHullSpec {
     DoubleHullSpec {
         loa_m: 140.0,
+        // The rule length is an input of the spec; the hand values below take L = 140 m.
+        rule_length_m: 140.0,
         beam_m: 29.0,
         depth_m: depth,
         block_coefficient: 0.9,
@@ -236,4 +239,40 @@ mod the_switch {
             .sum();
         assert!((b.weights.wing_plate + b.weights.weather_shield - cover).abs() < 1e-9);
     }
+}
+
+/// Issue #740: the rule length of ABS 3-1-1/3.1, 96 % of the length on a waterline at 85 % of the
+/// depth. A box: 0.96 x LOA. A raked box (bow rake 8 m rising to the deck of D = 6 m, no stern rake):
+/// the waterline at 5.1 m ends 8 x (6 - 5.1) / 6 = 1.2 m aft of the stem, so L = 0.96 x 138.8.
+#[test]
+fn the_rule_length_is_3_1_1_3_1() {
+    assert!((rule_length_m(6.0, |_| 140.0) - 134.4).abs() < 1e-12);
+    let raked = ovd_core::hull::hull_form::RakedBox::new(140.0, 29.0, 6.0, 8.0, 6.0, 0.0, 6.0);
+    let l = rule_length_m(6.0, |z| raked.waterplane_area(z) / 29.0);
+    assert!((l - 0.96 * 138.8).abs() < 1e-9, "{l}");
+}
+
+/// Issue #740: every member names the Rule Set, the edition and its first paragraph.
+#[test]
+fn every_member_carries_the_rule_set_edition_and_paragraph() {
+    let m = double_hull_panels(&spec(12.0), &ScantlingChoices::default());
+    assert_eq!(m.rule_edition, ovd_core::scantling_rules::EDITION);
+    for p in &m.members {
+        assert_eq!(p.rule_set, "abs-steel-barges", "{}", p.member);
+        assert_eq!(p.edition, ovd_core::scantling_rules::EDITION);
+        assert!(
+            p.paragraph.starts_with("3-") || p.paragraph.starts_with("5-"),
+            "{}: {}",
+            p.member,
+            p.paragraph
+        );
+        assert!(p.basis == "rule" || p.basis == "estimate", "{}", p.member);
+        assert!(p.rule.contains(&p.paragraph), "{}", p.member);
+    }
+    let deck = m
+        .members
+        .iter()
+        .find(|p| p.member.starts_with("strength deck, midship"))
+        .unwrap();
+    assert_eq!(deck.paragraph, "3-2-3/2.1.2(a)(b)");
 }

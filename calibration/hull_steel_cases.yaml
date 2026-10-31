@@ -17,6 +17,10 @@ rule_source:
     5-1-1/3.1, 5-1-2/5.1-5.17, 5-2-1/3, 7, 11, 5-2-2/3-9, 5-5/11.1 (a liquefied gas tank barge takes the barge hull rules)"
   note: "The 2024 edition is the one the abs-barges Rule Set cites; the 2021 archive is the free copy read here. The
     paragraphs used were not checked against 2024."
+  current_edition: "Issue #740: the Rule Set abs-steel-barges 1.0.0 holds the scantlings at the January 2026 Rules (Part 3
+    January 2026, Part 5 July 2025), every paragraph read in the July 2025 Rules; the numbers are the 2021 ones. The
+    scantlings now take the rule length of 3-1-1/3.1 (96 % of the length on a waterline at 85 % of D), not the LOA.
+    The library and gas figures below are re-reported after that change in `library.after_740`; nothing is tuned."
 
 reference_vessels:
   - id: lng-bunker-4200-concept
@@ -61,6 +65,11 @@ library:
     their steel is itself implied from a deadweight. Expect the model above them."
   median_residual_pct: 23.8
   range_pct: [4, 209]
+  after_740:
+    note: "Re-printed on 2026-10-31 (branch ticket/740-abs-steel-barges), the rule length of each case taken as the box's,
+      0.96 x LOA (no case publishes its rakes). Not tuned."
+    median_residual_pct: 22.8
+    range_pct: [4, 193]
   outliers:
     meb-rob20-belmax: "+209 %: B/D = 5.7, outside the B/D of about 4 that ABS 3-2-1/1 accepts; the hull girder rule thickens the deck and bottom"
     kirby-32300b-297x54: "+111 %: its implied k (0.080) is the lowest of the Kirby group of the same size (0.114 to 0.142)"

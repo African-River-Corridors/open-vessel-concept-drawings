@@ -106,97 +106,97 @@
 <line data-origin="sheet.zone_mark" data-layer="TITLEBLOCK" x1="420" y1="148.5" x2="410" y2="148.5" fill="none" stroke="#000" stroke-width="0.35"/>
 <line data-origin="sheet.zone_mark" data-layer="TITLEBLOCK" x1="420" y1="194.667" x2="410" y2="194.667" fill="none" stroke="#000" stroke-width="0.35"/>
 <line data-origin="sheet.zone_mark" data-layer="TITLEBLOCK" x1="420" y1="240.833" x2="410" y2="240.833" fill="none" stroke="#000" stroke-width="0.35"/>
-<path data-origin="viewport.main" data-layer="HIDDEN" d="M121.375 85.571 A12 12 0 0 0 121.375 109.571" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<path data-origin="viewport.main" data-layer="HIDDEN" d="M186.863 109.571 A12 12 0 0 0 186.863 85.571" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<path data-origin="viewport.main" data-layer="HIDDEN" d="M214.863 85.571 A12 12 0 0 0 214.863 109.571" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<path data-origin="viewport.main" data-layer="HIDDEN" d="M280.351 109.571 A12 12 0 0 0 280.351 85.571" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<circle data-origin="viewport.main" data-layer="EQUIP" cx="67.891" cy="110.278" r="2.1" fill="none" stroke="#000" stroke-width="0.35"/>
-<line data-origin="viewport.main" data-layer="HIDDEN" x1="69.391" y1="112.778" x2="69.391" y2="80.878" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<line data-origin="viewport.main" data-layer="HIDDEN" x1="79.191" y1="112.778" x2="79.191" y2="80.878" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<line data-origin="viewport.main" data-layer="HIDDEN" x1="94.084" y1="110.571" x2="296.881" y2="110.571" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<line data-origin="viewport.main" data-layer="HIDDEN" x1="96.055" y1="112.778" x2="96.055" y2="80.878" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<line data-origin="viewport.main" data-layer="HIDDEN" x1="100.055" y1="112.778" x2="100.055" y2="80.878" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<line data-origin="viewport.main" data-layer="HIDDEN" x1="104.174" y1="112.778" x2="104.174" y2="80.878" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<line data-origin="viewport.main" data-layer="HIDDEN" x1="105.375" y1="112.778" x2="105.375" y2="80.878" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<line data-origin="viewport.main" data-layer="HIDDEN" x1="121.375" y1="85.571" x2="186.863" y2="85.571" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<line data-origin="viewport.main" data-layer="HIDDEN" x1="121.375" y1="109.571" x2="186.863" y2="109.571" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<line data-origin="viewport.main" data-layer="HIDDEN" x1="214.863" y1="85.571" x2="280.351" y2="85.571" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<line data-origin="viewport.main" data-layer="HIDDEN" x1="214.863" y1="109.571" x2="280.351" y2="109.571" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<line data-origin="viewport.main" data-layer="HIDDEN" x1="293.351" y1="112.778" x2="293.351" y2="80.878" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<line data-origin="viewport.main" data-layer="OUTLINE" x1="64.391" y1="80.878" x2="344.39" y2="80.878" fill="none" stroke="#000" stroke-width="0.35"/>
-<line data-origin="viewport.main" data-layer="WATER" x1="92.295" y1="108.783" x2="299.743" y2="108.783" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="4.32 0.54 0.09 0.54 0.09 0.54"/>
-<line data-origin="viewport.main" data-layer="WATER" x1="87.667" y1="104.155" x2="307.148" y2="104.155" fill="none" stroke="#000" stroke-width="0.18"/>
-<line data-origin="viewport.main" data-layer="WATER" x1="90.351" y1="106.839" x2="302.854" y2="106.839" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<line data-origin="viewport.main" data-layer="ZONE" x1="64.391" y1="74.078" x2="344.39" y2="74.078" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<line data-origin="viewport.main" data-layer="ZONE" x1="109.375" y1="112.778" x2="109.375" y2="80.878" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<line data-origin="viewport.main" data-layer="ZONE" x1="292.351" y1="112.778" x2="292.351" y2="80.878" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<path data-origin="viewport.main" data-layer="CENTRE" d="M96.975 70.772 L104.174 70.772 L104.174 63.972 L96.975 63.972 Z" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="4.32 0.54 0.09 0.54"/>
-<path data-origin="viewport.main" data-layer="EQUIP" d="M79.791 80.878 L104.174 80.878 L104.174 74.486 L79.791 74.486 Z" fill="none" stroke="#000" stroke-width="0.35"/>
-<path data-origin="viewport.main" data-layer="HIDDEN" d="M109.375 110.571 L109.375 93.731 L292.351 93.731 L292.351 110.571" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<path data-origin="viewport.main" data-layer="HIDDEN" d="M152.191 85.571 L152.432 84.668 L152.673 83.885 L152.914 83.222 L153.155 82.68 L153.396 82.258 L153.637 81.957 L153.878 81.776 L154.119 81.716 L154.359 81.776 L154.6 81.957 L154.841 82.258 L155.082 82.68 L155.323 83.222 L155.564 83.885 L155.805 84.668 L156.046 85.571" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<path data-origin="viewport.main" data-layer="HIDDEN" d="M245.679 85.571 L245.92 84.668 L246.161 83.885 L246.402 83.222 L246.643 82.68 L246.884 82.258 L247.125 81.957 L247.366 81.776 L247.607 81.716 L247.847 81.776 L248.088 81.957 L248.329 82.258 L248.57 82.68 L248.811 83.222 L249.052 83.885 L249.293 84.668 L249.534 85.571" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
-<path data-origin="viewport.main" data-layer="OBJECT" d="M96.975 80.878 L104.174 80.878 L104.174 74.078 L96.975 74.078 Z" fill="none" stroke="#000" stroke-width="0.18"/>
-<path data-origin="viewport.main" data-layer="OUTLINE" d="M64.391 80.878 L96.291 112.778 L293.351 112.778 L344.39 80.878" fill="none" stroke="#000" stroke-width="0.35"/>
-<path data-origin="viewport.main.dimension" data-layer="DIMENSIONS" d="M52.391 80.878 L51.941 84.478 L52.841 84.478 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
-<path data-origin="viewport.main.dimension" data-layer="DIMENSIONS" d="M52.391 112.778 L52.841 109.178 L51.941 109.178 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
-<path data-origin="viewport.main.dimension" data-layer="DIMENSIONS" d="M64.391 124.778 L67.99 125.228 L67.99 124.328 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
-<path data-origin="viewport.main.dimension" data-layer="DIMENSIONS" d="M344.39 124.778 L340.79 124.328 L340.79 125.228 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
-<line data-origin="viewport.main.dimension" data-layer="DIMENSIONS" x1="52.391" y1="112.778" x2="52.391" y2="80.878" fill="none" stroke="#000" stroke-width="0.18"/>
-<line data-origin="viewport.main.dimension" data-layer="DIMENSIONS" x1="63.491" y1="80.878" x2="50.591" y2="80.878" fill="none" stroke="#000" stroke-width="0.18"/>
-<line data-origin="viewport.main.dimension" data-layer="DIMENSIONS" x1="63.491" y1="112.778" x2="50.591" y2="112.778" fill="none" stroke="#000" stroke-width="0.18"/>
-<line data-origin="viewport.main.dimension" data-layer="DIMENSIONS" x1="64.391" y1="113.678" x2="64.391" y2="126.578" fill="none" stroke="#000" stroke-width="0.18"/>
-<line data-origin="viewport.main.dimension" data-layer="DIMENSIONS" x1="64.391" y1="124.778" x2="344.39" y2="124.778" fill="none" stroke="#000" stroke-width="0.18"/>
-<line data-origin="viewport.main.dimension" data-layer="DIMENSIONS" x1="344.39" y1="113.678" x2="344.39" y2="126.578" fill="none" stroke="#000" stroke-width="0.18"/>
-<text data-origin="viewport.main.dimension" data-layer="DIMENSIONS" x="51.491" y="101.628" font-size="5" textLength="9.6" lengthAdjust="spacing" fill="#000" transform="rotate(-90 51.491 101.628)">15.95</text>
-<text data-origin="viewport.main.dimension" data-layer="DIMENSIONS" x="198.06" y="123.878" font-size="5" textLength="12.66" lengthAdjust="spacing" fill="#000">140.00</text>
-<path data-origin="viewport.main.leader" data-layer="ANNO" d="M67.891 112.378 L68.535 115.948 L69.394 115.68 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
-<path data-origin="viewport.main.leader" data-layer="ANNO" d="M91.983 74.486 L90.123 71.371 L89.413 71.925 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
-<path data-origin="viewport.main.leader" data-layer="ANNO" d="M100.575 74.078 L99.605 70.582 L98.775 70.928 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
-<path data-origin="viewport.main.leader" data-layer="ANNO" d="M104.174 63.972 L106.546 61.226 L105.797 60.727 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
-<path data-origin="viewport.main.leader" data-layer="ANNO" d="M104.775 112.778 L105.486 116.336 L106.34 116.051 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
-<path data-origin="viewport.main.leader" data-layer="ANNO" d="M107.375 80.878 L108.94 77.605 L108.086 77.321 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
-<path data-origin="viewport.main.leader" data-layer="ANNO" d="M247.607 81.716 L251.189 82.289 L251.22 81.39 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
-<path data-origin="viewport.main.leader" data-layer="ANNO" d="M292.351 102.151 L295.976 102.297 L295.9 101.4 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
-<path data-origin="viewport.main.leader" data-layer="ANNO" d="M292.851 80.878 L296.457 80.487 L296.25 79.611 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
-<path data-origin="viewport.main.leader" data-layer="ANNO" d="M296.881 110.571 L300.323 111.718 L300.5 110.835 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
-<path data-origin="viewport.main.leader" data-layer="ANNO" d="M299.743 108.783 L303.257 109.685 L303.371 108.793 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
-<path data-origin="viewport.main.leader" data-layer="ANNO" d="M302.854 106.839 L306.426 107.471 L306.472 106.572 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
-<path data-origin="viewport.main.leader" data-layer="ANNO" d="M307.148 104.155 L310.757 104.53 L310.738 103.63 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
-<path data-origin="viewport.main.leader" data-layer="ANNO" d="M318.37 80.878 L321.989 81.145 L321.943 80.247 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
-<path data-origin="viewport.main.leader" data-layer="ANNO" d="M325.769 92.516 L329.388 92.782 L329.342 91.883 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
-<path data-origin="viewport.main.leader" data-layer="ANNO" d="M344.39 74.078 L348.018 74.036 L347.896 73.144 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
-<line data-origin="viewport.main.leader" data-layer="ANNO" x1="69.891" y1="118.778" x2="67.891" y2="112.378" fill="none" stroke="#000" stroke-width="0.18"/>
-<line data-origin="viewport.main.leader" data-layer="ANNO" x1="86.983" y1="68.078" x2="91.983" y2="74.486" fill="none" stroke="#000" stroke-width="0.18"/>
-<line data-origin="viewport.main.leader" data-layer="ANNO" x1="95.575" y1="62.078" x2="100.575" y2="74.078" fill="none" stroke="#000" stroke-width="0.18"/>
-<line data-origin="viewport.main.leader" data-layer="ANNO" x1="106.775" y1="118.778" x2="104.775" y2="112.778" fill="none" stroke="#000" stroke-width="0.18"/>
-<line data-origin="viewport.main.leader" data-layer="ANNO" x1="108.174" y1="57.972" x2="104.174" y2="63.972" fill="none" stroke="#000" stroke-width="0.18"/>
-<line data-origin="viewport.main.leader" data-layer="ANNO" x1="109.375" y1="74.878" x2="107.375" y2="80.878" fill="none" stroke="#000" stroke-width="0.18"/>
-<line data-origin="viewport.main.leader" data-layer="ANNO" x1="350.39" y1="67.257" x2="292.851" y2="80.878" fill="none" stroke="#000" stroke-width="0.18"/>
-<line data-origin="viewport.main.leader" data-layer="ANNO" x1="350.39" y1="73.257" x2="344.39" y2="74.078" fill="none" stroke="#000" stroke-width="0.18"/>
-<line data-origin="viewport.main.leader" data-layer="ANNO" x1="350.39" y1="79.257" x2="318.37" y2="80.878" fill="none" stroke="#000" stroke-width="0.18"/>
-<line data-origin="viewport.main.leader" data-layer="ANNO" x1="350.39" y1="85.257" x2="247.607" y2="81.716" fill="none" stroke="#000" stroke-width="0.18"/>
-<line data-origin="viewport.main.leader" data-layer="ANNO" x1="350.39" y1="91.257" x2="325.769" y2="92.516" fill="none" stroke="#000" stroke-width="0.18"/>
-<line data-origin="viewport.main.leader" data-layer="ANNO" x1="350.39" y1="97.257" x2="292.351" y2="102.151" fill="none" stroke="#000" stroke-width="0.18"/>
-<line data-origin="viewport.main.leader" data-layer="ANNO" x1="350.39" y1="103.257" x2="307.148" y2="104.155" fill="none" stroke="#000" stroke-width="0.18"/>
-<line data-origin="viewport.main.leader" data-layer="ANNO" x1="350.39" y1="109.257" x2="302.854" y2="106.839" fill="none" stroke="#000" stroke-width="0.18"/>
-<line data-origin="viewport.main.leader" data-layer="ANNO" x1="350.39" y1="115.257" x2="299.743" y2="108.783" fill="none" stroke="#000" stroke-width="0.18"/>
-<line data-origin="viewport.main.leader" data-layer="ANNO" x1="350.39" y1="121.257" x2="296.881" y2="110.571" fill="none" stroke="#000" stroke-width="0.18"/>
-<text data-origin="viewport.main.leader" data-layer="ANNO" x="70.791" y="120.528" font-size="5" textLength="29.205" lengthAdjust="spacing" fill="#000">THRUSTERS (2)</text>
-<text data-origin="viewport.main.leader" data-layer="ANNO" x="49.578" y="69.828" font-size="5" textLength="36.505" lengthAdjust="spacing" fill="#000">CONTAINERS (2 x 1)</text>
-<text data-origin="viewport.main.leader" data-layer="ANNO" x="27.884" y="63.828" font-size="5" textLength="66.79" lengthAdjust="spacing" fill="#000">WHEELHOUSE, BLOCK TOP 19.35 m</text>
-<text data-origin="viewport.main.leader" data-layer="ANNO" x="107.675" y="120.528" font-size="5" textLength="23.75" lengthAdjust="spacing" fill="#000">COFFERDAM</text>
-<text data-origin="viewport.main.leader" data-layer="ANNO" x="109.075" y="59.722" font-size="5" textLength="14.16" lengthAdjust="spacing" fill="#000">RAISED</text>
-<text data-origin="viewport.main.leader" data-layer="ANNO" x="110.275" y="76.628" font-size="5" textLength="30.535" lengthAdjust="spacing" fill="#000">SERVICE SPACE</text>
-<text data-origin="viewport.main.leader" data-layer="ANNO" x="351.29" y="69.007" font-size="5" textLength="34.57" lengthAdjust="spacing" fill="#000">FWD SEPARATION</text>
-<text data-origin="viewport.main.leader" data-layer="ANNO" x="351.29" y="75.007" font-size="5" textLength="35.775" lengthAdjust="spacing" fill="#000">AIR DRAFT 15.04 m</text>
-<text data-origin="viewport.main.leader" data-layer="ANNO" x="351.29" y="81.007" font-size="5" textLength="22.78" lengthAdjust="spacing" fill="#000">FWD EQUIP.</text>
-<text data-origin="viewport.main.leader" data-layer="ANNO" x="351.29" y="87.007" font-size="5" textLength="11.08" lengthAdjust="spacing" fill="#000">DOME</text>
-<text data-origin="viewport.main.leader" data-layer="ANNO" x="351.29" y="93.007" font-size="5" textLength="38.125" lengthAdjust="spacing" fill="#000">FREEBOARD 11.64 m</text>
-<text data-origin="viewport.main.leader" data-layer="ANNO" x="351.29" y="99.007" font-size="5" textLength="35.495" lengthAdjust="spacing" fill="#000">WBT (BOTH SIDES)</text>
-<text data-origin="viewport.main.leader" data-layer="ANNO" x="351.29" y="105.007" font-size="5" textLength="31.75" lengthAdjust="spacing" fill="#000">DRAUGHT 4.31 m</text>
-<text data-origin="viewport.main.leader" data-layer="ANNO" x="351.29" y="111.007" font-size="5" textLength="50.825" lengthAdjust="spacing" fill="#000">BALLAST DRAUGHT 2.97 m</text>
-<text data-origin="viewport.main.leader" data-layer="ANNO" x="351.29" y="117.007" font-size="5" textLength="45.445" lengthAdjust="spacing" fill="#000">LIGHT DRAUGHT 2.00 m</text>
-<text data-origin="viewport.main.leader" data-layer="ANNO" x="351.29" y="123.007" font-size="5" textLength="33.03" lengthAdjust="spacing" fill="#000">DOUBLE BOTTOM</text>
+<path data-origin="viewport.main" data-layer="HIDDEN" d="M121.267 85.575 A12 12 0 0 0 121.267 109.575" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<path data-origin="viewport.main" data-layer="HIDDEN" d="M186.755 109.575 A12 12 0 0 0 186.755 85.575" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<path data-origin="viewport.main" data-layer="HIDDEN" d="M214.755 85.575 A12 12 0 0 0 214.755 109.575" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<path data-origin="viewport.main" data-layer="HIDDEN" d="M280.243 109.575 A12 12 0 0 0 280.243 85.575" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<circle data-origin="viewport.main" data-layer="EQUIP" cx="67.783" cy="110.282" r="2.1" fill="none" stroke="#000" stroke-width="0.35"/>
+<line data-origin="viewport.main" data-layer="HIDDEN" x1="69.283" y1="112.782" x2="69.283" y2="80.882" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<line data-origin="viewport.main" data-layer="HIDDEN" x1="79.083" y1="112.782" x2="79.083" y2="80.882" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<line data-origin="viewport.main" data-layer="HIDDEN" x1="93.976" y1="110.575" x2="296.774" y2="110.575" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<line data-origin="viewport.main" data-layer="HIDDEN" x1="95.947" y1="112.782" x2="95.947" y2="80.882" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<line data-origin="viewport.main" data-layer="HIDDEN" x1="99.947" y1="112.782" x2="99.947" y2="80.882" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<line data-origin="viewport.main" data-layer="HIDDEN" x1="104.067" y1="112.782" x2="104.067" y2="80.882" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<line data-origin="viewport.main" data-layer="HIDDEN" x1="105.267" y1="112.782" x2="105.267" y2="80.882" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<line data-origin="viewport.main" data-layer="HIDDEN" x1="121.267" y1="85.575" x2="186.755" y2="85.575" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<line data-origin="viewport.main" data-layer="HIDDEN" x1="121.267" y1="109.575" x2="186.755" y2="109.575" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<line data-origin="viewport.main" data-layer="HIDDEN" x1="214.755" y1="85.575" x2="280.243" y2="85.575" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<line data-origin="viewport.main" data-layer="HIDDEN" x1="214.755" y1="109.575" x2="280.243" y2="109.575" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<line data-origin="viewport.main" data-layer="HIDDEN" x1="293.243" y1="112.782" x2="293.243" y2="80.882" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<line data-origin="viewport.main" data-layer="OUTLINE" x1="64.283" y1="80.882" x2="344.283" y2="80.882" fill="none" stroke="#000" stroke-width="0.35"/>
+<line data-origin="viewport.main" data-layer="WATER" x1="92.203" y1="108.802" x2="299.611" y2="108.802" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="4.32 0.54 0.09 0.54 0.09 0.54"/>
+<line data-origin="viewport.main" data-layer="WATER" x1="87.574" y1="104.173" x2="307.017" y2="104.173" fill="none" stroke="#000" stroke-width="0.18"/>
+<line data-origin="viewport.main" data-layer="WATER" x1="90.259" y1="106.858" x2="302.722" y2="106.858" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<line data-origin="viewport.main" data-layer="ZONE" x1="64.283" y1="74.082" x2="344.283" y2="74.082" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<line data-origin="viewport.main" data-layer="ZONE" x1="109.267" y1="112.782" x2="109.267" y2="80.882" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<line data-origin="viewport.main" data-layer="ZONE" x1="292.243" y1="112.782" x2="292.243" y2="80.882" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<path data-origin="viewport.main" data-layer="CENTRE" d="M96.867 70.768 L104.067 70.768 L104.067 63.968 L96.867 63.968 Z" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="4.32 0.54 0.09 0.54"/>
+<path data-origin="viewport.main" data-layer="EQUIP" d="M79.683 80.882 L104.067 80.882 L104.067 74.49 L79.683 74.49 Z" fill="none" stroke="#000" stroke-width="0.35"/>
+<path data-origin="viewport.main" data-layer="HIDDEN" d="M109.267 110.575 L109.267 93.735 L292.243 93.735 L292.243 110.575" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<path data-origin="viewport.main" data-layer="HIDDEN" d="M152.083 85.575 L152.324 84.672 L152.565 83.888 L152.806 83.226 L153.047 82.684 L153.288 82.262 L153.529 81.961 L153.77 81.78 L154.011 81.72 L154.252 81.78 L154.493 81.961 L154.734 82.262 L154.975 82.684 L155.216 83.226 L155.457 83.888 L155.698 84.672 L155.939 85.575" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<path data-origin="viewport.main" data-layer="HIDDEN" d="M245.571 85.575 L245.812 84.672 L246.053 83.888 L246.294 83.226 L246.535 82.684 L246.776 82.262 L247.017 81.961 L247.258 81.78 L247.499 81.72 L247.74 81.78 L247.981 81.961 L248.222 82.262 L248.463 82.684 L248.704 83.226 L248.945 83.888 L249.186 84.672 L249.427 85.575" fill="none" stroke="#000" stroke-width="0.18" stroke-dasharray="2.16 0.54"/>
+<path data-origin="viewport.main" data-layer="OBJECT" d="M96.867 80.882 L104.067 80.882 L104.067 74.082 L96.867 74.082 Z" fill="none" stroke="#000" stroke-width="0.18"/>
+<path data-origin="viewport.main" data-layer="OUTLINE" d="M64.283 80.882 L96.183 112.782 L293.243 112.782 L344.283 80.882" fill="none" stroke="#000" stroke-width="0.35"/>
+<path data-origin="viewport.main.dimension" data-layer="DIMENSIONS" d="M52.283 80.882 L51.833 84.482 L52.733 84.482 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
+<path data-origin="viewport.main.dimension" data-layer="DIMENSIONS" d="M52.283 112.782 L52.733 109.182 L51.833 109.182 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
+<path data-origin="viewport.main.dimension" data-layer="DIMENSIONS" d="M64.283 124.782 L67.883 125.232 L67.883 124.332 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
+<path data-origin="viewport.main.dimension" data-layer="DIMENSIONS" d="M344.283 124.782 L340.683 124.332 L340.683 125.232 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
+<line data-origin="viewport.main.dimension" data-layer="DIMENSIONS" x1="52.283" y1="112.782" x2="52.283" y2="80.882" fill="none" stroke="#000" stroke-width="0.18"/>
+<line data-origin="viewport.main.dimension" data-layer="DIMENSIONS" x1="63.383" y1="80.882" x2="50.483" y2="80.882" fill="none" stroke="#000" stroke-width="0.18"/>
+<line data-origin="viewport.main.dimension" data-layer="DIMENSIONS" x1="63.383" y1="112.782" x2="50.483" y2="112.782" fill="none" stroke="#000" stroke-width="0.18"/>
+<line data-origin="viewport.main.dimension" data-layer="DIMENSIONS" x1="64.283" y1="113.682" x2="64.283" y2="126.582" fill="none" stroke="#000" stroke-width="0.18"/>
+<line data-origin="viewport.main.dimension" data-layer="DIMENSIONS" x1="64.283" y1="124.782" x2="344.283" y2="124.782" fill="none" stroke="#000" stroke-width="0.18"/>
+<line data-origin="viewport.main.dimension" data-layer="DIMENSIONS" x1="344.283" y1="113.682" x2="344.283" y2="126.582" fill="none" stroke="#000" stroke-width="0.18"/>
+<text data-origin="viewport.main.dimension" data-layer="DIMENSIONS" x="51.383" y="101.632" font-size="5" textLength="9.6" lengthAdjust="spacing" fill="#000" transform="rotate(-90 51.383 101.632)">15.95</text>
+<text data-origin="viewport.main.dimension" data-layer="DIMENSIONS" x="197.953" y="123.882" font-size="5" textLength="12.66" lengthAdjust="spacing" fill="#000">140.00</text>
+<path data-origin="viewport.main.leader" data-layer="ANNO" d="M67.783 112.382 L68.427 115.952 L69.286 115.684 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
+<path data-origin="viewport.main.leader" data-layer="ANNO" d="M91.875 74.49 L90.015 71.375 L89.306 71.928 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
+<path data-origin="viewport.main.leader" data-layer="ANNO" d="M100.467 74.082 L99.498 70.586 L98.667 70.932 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
+<path data-origin="viewport.main.leader" data-layer="ANNO" d="M104.067 63.968 L106.438 61.222 L105.689 60.723 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
+<path data-origin="viewport.main.leader" data-layer="ANNO" d="M104.667 112.782 L105.379 116.339 L106.232 116.055 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
+<path data-origin="viewport.main.leader" data-layer="ANNO" d="M107.267 80.882 L108.832 77.609 L107.979 77.324 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
+<path data-origin="viewport.main.leader" data-layer="ANNO" d="M247.499 81.72 L251.081 82.293 L251.112 81.394 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
+<path data-origin="viewport.main.leader" data-layer="ANNO" d="M292.243 102.155 L295.868 102.301 L295.793 101.405 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
+<path data-origin="viewport.main.leader" data-layer="ANNO" d="M292.743 80.882 L296.35 80.491 L296.143 79.615 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
+<path data-origin="viewport.main.leader" data-layer="ANNO" d="M296.774 110.575 L300.216 111.722 L300.392 110.839 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
+<path data-origin="viewport.main.leader" data-layer="ANNO" d="M299.611 108.802 L303.125 109.704 L303.239 108.811 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
+<path data-origin="viewport.main.leader" data-layer="ANNO" d="M302.722 106.858 L306.294 107.489 L306.34 106.59 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
+<path data-origin="viewport.main.leader" data-layer="ANNO" d="M307.017 104.173 L310.625 104.548 L310.607 103.648 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
+<path data-origin="viewport.main.leader" data-layer="ANNO" d="M318.263 80.882 L321.881 81.15 L321.836 80.251 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
+<path data-origin="viewport.main.leader" data-layer="ANNO" d="M325.65 92.528 L329.268 92.793 L329.222 91.894 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
+<path data-origin="viewport.main.leader" data-layer="ANNO" d="M344.283 74.082 L347.911 74.042 L347.789 73.151 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
+<line data-origin="viewport.main.leader" data-layer="ANNO" x1="69.783" y1="118.782" x2="67.783" y2="112.382" fill="none" stroke="#000" stroke-width="0.18"/>
+<line data-origin="viewport.main.leader" data-layer="ANNO" x1="86.875" y1="68.082" x2="91.875" y2="74.49" fill="none" stroke="#000" stroke-width="0.18"/>
+<line data-origin="viewport.main.leader" data-layer="ANNO" x1="95.467" y1="62.082" x2="100.467" y2="74.082" fill="none" stroke="#000" stroke-width="0.18"/>
+<line data-origin="viewport.main.leader" data-layer="ANNO" x1="106.667" y1="118.782" x2="104.667" y2="112.782" fill="none" stroke="#000" stroke-width="0.18"/>
+<line data-origin="viewport.main.leader" data-layer="ANNO" x1="108.067" y1="57.968" x2="104.067" y2="63.968" fill="none" stroke="#000" stroke-width="0.18"/>
+<line data-origin="viewport.main.leader" data-layer="ANNO" x1="109.267" y1="74.882" x2="107.267" y2="80.882" fill="none" stroke="#000" stroke-width="0.18"/>
+<line data-origin="viewport.main.leader" data-layer="ANNO" x1="350.283" y1="67.266" x2="292.743" y2="80.882" fill="none" stroke="#000" stroke-width="0.18"/>
+<line data-origin="viewport.main.leader" data-layer="ANNO" x1="350.283" y1="73.266" x2="344.283" y2="74.082" fill="none" stroke="#000" stroke-width="0.18"/>
+<line data-origin="viewport.main.leader" data-layer="ANNO" x1="350.283" y1="79.266" x2="318.263" y2="80.882" fill="none" stroke="#000" stroke-width="0.18"/>
+<line data-origin="viewport.main.leader" data-layer="ANNO" x1="350.283" y1="85.266" x2="247.499" y2="81.72" fill="none" stroke="#000" stroke-width="0.18"/>
+<line data-origin="viewport.main.leader" data-layer="ANNO" x1="350.283" y1="91.266" x2="325.65" y2="92.528" fill="none" stroke="#000" stroke-width="0.18"/>
+<line data-origin="viewport.main.leader" data-layer="ANNO" x1="350.283" y1="97.266" x2="292.243" y2="102.155" fill="none" stroke="#000" stroke-width="0.18"/>
+<line data-origin="viewport.main.leader" data-layer="ANNO" x1="350.283" y1="103.266" x2="307.017" y2="104.173" fill="none" stroke="#000" stroke-width="0.18"/>
+<line data-origin="viewport.main.leader" data-layer="ANNO" x1="350.283" y1="109.266" x2="302.722" y2="106.858" fill="none" stroke="#000" stroke-width="0.18"/>
+<line data-origin="viewport.main.leader" data-layer="ANNO" x1="350.283" y1="115.266" x2="299.611" y2="108.802" fill="none" stroke="#000" stroke-width="0.18"/>
+<line data-origin="viewport.main.leader" data-layer="ANNO" x1="350.283" y1="121.266" x2="296.774" y2="110.575" fill="none" stroke="#000" stroke-width="0.18"/>
+<text data-origin="viewport.main.leader" data-layer="ANNO" x="70.683" y="120.532" font-size="5" textLength="29.205" lengthAdjust="spacing" fill="#000">THRUSTERS (2)</text>
+<text data-origin="viewport.main.leader" data-layer="ANNO" x="49.47" y="69.832" font-size="5" textLength="36.505" lengthAdjust="spacing" fill="#000">CONTAINERS (2 x 1)</text>
+<text data-origin="viewport.main.leader" data-layer="ANNO" x="27.777" y="63.832" font-size="5" textLength="66.79" lengthAdjust="spacing" fill="#000">WHEELHOUSE, BLOCK TOP 19.35 m</text>
+<text data-origin="viewport.main.leader" data-layer="ANNO" x="107.567" y="120.532" font-size="5" textLength="23.75" lengthAdjust="spacing" fill="#000">COFFERDAM</text>
+<text data-origin="viewport.main.leader" data-layer="ANNO" x="108.967" y="59.718" font-size="5" textLength="14.16" lengthAdjust="spacing" fill="#000">RAISED</text>
+<text data-origin="viewport.main.leader" data-layer="ANNO" x="110.167" y="76.632" font-size="5" textLength="30.535" lengthAdjust="spacing" fill="#000">SERVICE SPACE</text>
+<text data-origin="viewport.main.leader" data-layer="ANNO" x="351.183" y="69.016" font-size="5" textLength="34.57" lengthAdjust="spacing" fill="#000">FWD SEPARATION</text>
+<text data-origin="viewport.main.leader" data-layer="ANNO" x="351.183" y="75.016" font-size="5" textLength="35.665" lengthAdjust="spacing" fill="#000">AIR DRAFT 15.05 m</text>
+<text data-origin="viewport.main.leader" data-layer="ANNO" x="351.183" y="81.016" font-size="5" textLength="22.78" lengthAdjust="spacing" fill="#000">FWD EQUIP.</text>
+<text data-origin="viewport.main.leader" data-layer="ANNO" x="351.183" y="87.016" font-size="5" textLength="11.08" lengthAdjust="spacing" fill="#000">DOME</text>
+<text data-origin="viewport.main.leader" data-layer="ANNO" x="351.183" y="93.016" font-size="5" textLength="38.015" lengthAdjust="spacing" fill="#000">FREEBOARD 11.65 m</text>
+<text data-origin="viewport.main.leader" data-layer="ANNO" x="351.183" y="99.016" font-size="5" textLength="35.495" lengthAdjust="spacing" fill="#000">WBT (BOTH SIDES)</text>
+<text data-origin="viewport.main.leader" data-layer="ANNO" x="351.183" y="105.016" font-size="5" textLength="32.755" lengthAdjust="spacing" fill="#000">DRAUGHT 4.30 m</text>
+<text data-origin="viewport.main.leader" data-layer="ANNO" x="351.183" y="111.016" font-size="5" textLength="51.04" lengthAdjust="spacing" fill="#000">BALLAST DRAUGHT 2.96 m</text>
+<text data-origin="viewport.main.leader" data-layer="ANNO" x="351.183" y="117.016" font-size="5" textLength="44.185" lengthAdjust="spacing" fill="#000">LIGHT DRAUGHT 1.99 m</text>
+<text data-origin="viewport.main.leader" data-layer="ANNO" x="351.183" y="123.016" font-size="5" textLength="33.03" lengthAdjust="spacing" fill="#000">DOUBLE BOTTOM</text>
 <path data-origin="viewport.main.scale_bar" data-layer="TITLEBLOCK" d="M26 178.5 L34 178.5 L34 181.5 L26 181.5 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
 <path data-origin="viewport.main.scale_bar" data-layer="TITLEBLOCK" d="M42 178.5 L50 178.5 L50 181.5 L42 181.5 Z" fill="#000" fill-rule="evenodd" stroke="none"/>
 <path data-origin="viewport.main.scale_bar" data-layer="TITLEBLOCK" d="M58 178.5 L66 178.5 L66 181.5 L58 181.5 Z" fill="#000" fill-rule="evenodd" stroke="none"/>

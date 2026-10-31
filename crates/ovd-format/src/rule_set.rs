@@ -63,6 +63,11 @@ const BUILT_IN: &[(&str, &str)] = &[
         "rules/abs-barges/1.0.0.json",
         include_str!("../rules/abs-barges/1.0.0.json"),
     ),
+    // Issue #740 (spec 0013): the scantling Rules the panel model sizes with.
+    (
+        "rules/abs-steel-barges/1.0.0.json",
+        include_str!("../rules/abs-steel-barges/1.0.0.json"),
+    ),
     (
         "rules/igc-2g/1.0.0.json",
         include_str!("../rules/igc-2g/1.0.0.json"),

@@ -60,8 +60,9 @@ def test_gas_golden_example():
     assert abs(r.cargo_capacity_t - 1789) < 5
     # Re-pinned (#448); were draught 2.64 m and air draft 7.13 m: the hull's sections, not Cb.
     # Re-pinned (#722, the hull steel from the panel model); were draught 2.43 m and air draft 7.34 m.
-    assert abs(r.full_load_draft_m - 2.48) < 0.02
-    assert abs(r.air_draft_m - 7.29) < 0.05
+    # Re-pinned (#740, the rule length of ABS 3-1-1/3.1); were draught 2.48 m and air draft 7.29 m.
+    assert abs(r.full_load_draft_m - 2.45) < 0.02
+    assert abs(r.air_draft_m - 7.31) < 0.05
     assert abs(r.cargo_zone_length_m - 68.108) < 0.05    # was 68.01 (#280), 68.308 (#381)
     assert r.ok and not r.overloaded
 
