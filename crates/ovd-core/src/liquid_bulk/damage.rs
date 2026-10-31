@@ -1,5 +1,5 @@
 //! The damage cases of a liquid bulk layout (issue #341, spec 0006 section 5, ADN 2025 9.3.2.15 and
-//! 9.3.3.15), as flooded boxes for [`crate::damage_stability`].
+//! 9.3.3.15), as Flooded Volumes (boxes) for [`crate::damage_stability`].
 //!
 //! The cargo zone is the Spaces. A ballast space (a double bottom or a wing tank) is cut at the transverse
 //! bulkheads of the cargo tanks beside it, so a damage floods one compartment of it, not the whole length of
@@ -25,7 +25,7 @@ use alloc::string::String;
 use alloc::vec::Vec;
 
 use crate::compartments::{Space, SpaceKind};
-use crate::damage_stability::FloodedBox;
+use crate::damage_stability::FloodedVolume;
 
 /// The extents of the assumed damage (ADN 2025 9.3.2.15.1 and 9.3.3.15.1).
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -63,7 +63,7 @@ pub fn longitudinal_extent_m(loa_m: f64) -> f64 {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DamageCase {
     pub name: String,
-    pub flooded: Vec<FloodedBox>,
+    pub flooded: Vec<FloodedVolume>,
 }
 
 /// The extents of the assumed damage of MARPOL Annex I regulation 28.2, for a hull of length L and beam B.
@@ -248,16 +248,7 @@ pub fn damage_cases(
                 ),
                 flooded: hit
                     .iter()
-                    .map(|c| FloodedBox {
-                        name: c.name.clone(),
-                        x_aft_m: c.x.0,
-                        x_fwd_m: c.x.1,
-                        y_min_m: c.y.0,
-                        y_max_m: c.y.1,
-                        z_min_m: c.z.0,
-                        z_max_m: c.z.1,
-                        permeability: permeability(c.kind),
-                    })
+                    .map(|c| FloodedVolume::from_box(&c.name, c.x, c.y, c.z, permeability(c.kind)))
                     .collect(),
             });
         }
@@ -326,18 +317,9 @@ pub fn marpol_damage_cases(spaces: &[Space], loa_m: f64, beam_m: f64) -> Vec<Dam
             })
             .collect()
     };
-    let flooded_of = |hit: &[&Compartment]| -> Vec<FloodedBox> {
+    let flooded_of = |hit: &[&Compartment]| -> Vec<FloodedVolume> {
         hit.iter()
-            .map(|c| FloodedBox {
-                name: c.name.clone(),
-                x_aft_m: c.x.0,
-                x_fwd_m: c.x.1,
-                y_min_m: c.y.0,
-                y_max_m: c.y.1,
-                z_min_m: c.z.0,
-                z_max_m: c.z.1,
-                permeability: 0.95,
-            })
+            .map(|c| FloodedVolume::from_box(&c.name, c.x, c.y, c.z, 0.95))
             .collect()
     };
     let mut cases: Vec<DamageCase> = Vec::new();

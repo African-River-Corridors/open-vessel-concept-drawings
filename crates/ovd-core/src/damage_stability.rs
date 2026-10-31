@@ -1,11 +1,16 @@
 //! Damage stability by the lost buoyancy method (issue #341, spec 0006, ADN 2025 9.3.2.15 and 9.3.3.15).
 //!
-//! The hull is the Sections Table. A damage floods boxes (compartments): the sea fills them, so the
-//! water in a flooded compartment is not displaced by the hull any more. With the lost buoyancy method
-//! the mass and the centre of gravity do not change; the displaced volume of the damaged hull is the
-//! immersed volume of the intact hull less the permeable volume of each flooded box that lies below the
+//! The hull is the Sections Table. A damage floods Flooded Volumes (spec 0012, "Domain model"): the sea
+//! fills them, so the water in a flooded space is not displaced by the hull any more. With the lost
+//! buoyancy method the mass and the centre of gravity do not change; the displaced volume of the damaged
+//! hull is the immersed volume of the intact hull less the water in each Flooded Volume below the
 //! waterplane. The floating position (height of the waterplane, trim and heel) is where that displaced
 //! volume equals the mass over the density and its centre of buoyancy is on the vertical through G.
+//!
+//! A Flooded Volume is a Space shape (a prism or a Type C tank, [`SpaceShape`]) with a permeability and
+//! a list of Intact Inclusions: Spaces inside it that keep their buoyancy, such as an intact tank in a
+//! flooded hold (spec 0012, D7). The water in it is its permeability times its part below the waterplane
+//! less the parts of its inclusions below the waterplane. A box is the prism with four corners.
 //!
 //! Heel is positive to starboard and trim positive by the bow, as in [`crate::sections`]. The solves are
 //! damped Newton solves with a finite difference Jacobian, so a damage costs a few tens of cuts of the
@@ -18,24 +23,104 @@
 use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
-use libm::{cos, fabs, sqrt};
+use libm::{acos, cos, fabs, sqrt};
 
+use crate::compartments::{Space, SpaceShape};
 use crate::sections::{Gravity, SectionsTable, Waterplane, immersed};
+use crate::tanks::TankHead;
 
 const RAD_PER_DEG: f64 = core::f64::consts::PI / 180.0;
 
-/// A flooded compartment: a box in hull axes, with the fraction of its volume the water fills.
+/// A flooded space (spec 0012, "Domain model"): a Space shape from `x_aft_m` to `x_fwd_m`, the fraction
+/// of it the water fills, and the Spaces inside it that stay intact.
 #[derive(Debug, Clone, PartialEq)]
-pub struct FloodedBox {
+pub struct FloodedVolume {
     pub name: String,
     pub x_aft_m: f64,
     pub x_fwd_m: f64,
-    pub y_min_m: f64,
-    pub y_max_m: f64,
-    pub z_min_m: f64,
-    pub z_max_m: f64,
+    /// A prism (a section swept from `x_aft_m` to `x_fwd_m`) or a Type C tank, at its outer shape.
+    pub shape: SpaceShape,
     /// 0 to 1: ADN 9.3.2.15.1: 95 % where the space is empty at the maximum draught, 0 % where it is full.
     pub permeability: f64,
+    /// Spaces inside this one that keep their buoyancy (an intact Type C tank in a flooded hold). Each lies
+    /// wholly inside the Flooded Volume; it is not clipped to it.
+    pub inclusions: Vec<IntactInclusion>,
+}
+
+/// An Intact Inclusion (spec 0012, D7): a Space inside a Flooded Volume that keeps its buoyancy, so the
+/// water of the Flooded Volume does not fill it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct IntactInclusion {
+    pub name: String,
+    pub x_aft_m: f64,
+    pub x_fwd_m: f64,
+    pub shape: SpaceShape,
+}
+
+impl FloodedVolume {
+    /// An axis-aligned box: the prism with the four corners (y_min, z_min), (y_max, z_min),
+    /// (y_max, z_max), (y_min, z_max), and no inclusion.
+    pub fn from_box(
+        name: &str,
+        x: (f64, f64),
+        y: (f64, f64),
+        z: (f64, f64),
+        permeability: f64,
+    ) -> Self {
+        Self {
+            name: String::from(name),
+            x_aft_m: x.0,
+            x_fwd_m: x.1,
+            shape: SpaceShape::Prism {
+                section: vec![(y.0, z.0), (y.1, z.0), (y.1, z.1), (y.0, z.1)],
+            },
+            permeability,
+            inclusions: Vec::new(),
+        }
+    }
+
+    /// A Space flooded at `permeability`, with no inclusion. A tank floods at its outer shape.
+    pub fn of_space(space: &Space, permeability: f64) -> Self {
+        Self {
+            name: space.name.clone(),
+            x_aft_m: space.x_aft,
+            x_fwd_m: space.x_fwd,
+            shape: space.shape.clone(),
+            permeability,
+            inclusions: Vec::new(),
+        }
+    }
+
+    /// The volume of water in the space below a waterplane, m³: the permeability times its part below
+    /// the waterplane less the parts of its inclusions below it.
+    pub fn water_m3(&self, wp: &Waterplane) -> f64 {
+        self.permeability * self.below(wp).v
+    }
+
+    /// The part of the space below the waterplane, its inclusions taken out.
+    fn below(&self, wp: &Waterplane) -> Part {
+        let mut p = shape_below(wp, self.x_aft_m, self.x_fwd_m, &self.shape);
+        for i in &self.inclusions {
+            let q = shape_below(wp, i.x_aft_m, i.x_fwd_m, &i.shape);
+            p.v -= q.v;
+            p.mx -= q.mx;
+            p.my -= q.my;
+            p.mz -= q.mz;
+        }
+        p
+    }
+}
+
+impl IntactInclusion {
+    /// A Space that stays intact inside a Flooded Volume. A tank keeps its outer shape.
+    pub fn of_space(space: &Space) -> Self {
+        Self {
+            name: space.name.clone(),
+            x_aft_m: space.x_aft,
+            x_fwd_m: space.x_fwd,
+            shape: space.shape.clone(),
+        }
+    }
 }
 
 /// The part of a body below a waterplane: its volume and the moments of that volume about the origin.
@@ -80,30 +165,46 @@ fn area_moments(poly: &[(f64, f64)]) -> (f64, f64, f64) {
     (fabs(a), my / 6.0 * a.signum(), mz / 6.0 * a.signum())
 }
 
-/// The part of the box below the waterplane. The area of the cut section is quadratic in x between the
-/// x at which the waterline crosses a corner of the box, and the first moments are cubic, so Simpson's
+/// The part of a Space shape below the waterplane.
+fn shape_below(wp: &Waterplane, x_aft: f64, x_fwd: f64, shape: &SpaceShape) -> Part {
+    match shape {
+        SpaceShape::Prism { section } => prism_below(wp, x_aft, x_fwd, section),
+        SpaceShape::Tank {
+            axis_x0,
+            axis_x1,
+            y,
+            z,
+            outer_diameter,
+            head,
+            ..
+        } => tank_below(
+            wp,
+            (*axis_x0, *axis_x1),
+            (*y, *z),
+            outer_diameter / 2.0,
+            *head,
+        ),
+    }
+}
+
+/// The part of the prism below the waterplane. The area of the cut section is quadratic in x between the
+/// x at which the waterline crosses a corner of the section, and the first moments are cubic, so Simpson's
 /// rule on each of those intervals is exact.
-fn box_below(wp: &Waterplane, b: &FloodedBox) -> Part {
+fn prism_below(wp: &Waterplane, x_aft: f64, x_fwd: f64, corners: &[(f64, f64)]) -> Part {
     let (kx, ky, kz) = wp.normal();
-    let corners = [
-        (b.y_min_m, b.z_min_m),
-        (b.y_max_m, b.z_min_m),
-        (b.y_max_m, b.z_max_m),
-        (b.y_min_m, b.z_max_m),
-    ];
     let section = |x: f64| -> (f64, f64, f64) {
         let d = wp.c - kx * x;
-        let poly = clip(&corners, ky, kz, d);
+        let poly = clip(corners, ky, kz, d);
         if poly.len() < 3 {
             return (0.0, 0.0, 0.0);
         }
         area_moments(&poly)
     };
-    let mut cuts = vec![b.x_aft_m, b.x_fwd_m];
+    let mut cuts = vec![x_aft, x_fwd];
     if fabs(kx) > 1e-12 {
-        for &(y, z) in &corners {
+        for &(y, z) in corners {
             let x = (wp.c - ky * y - kz * z) / kx;
-            if x > b.x_aft_m && x < b.x_fwd_m {
+            if x > x_aft && x < x_fwd {
                 cuts.push(x);
             }
         }
@@ -128,6 +229,122 @@ fn box_below(wp: &Waterplane, b: &FloodedBox) -> Part {
     p
 }
 
+/// The 10-point Gauss-Legendre rule on [-1, 1]: (node, weight), the positive half.
+const GAUSS_10: [(f64, f64); 5] = [
+    (0.148_874_338_981_631_2, 0.295_524_224_714_752_9),
+    (0.433_395_394_129_247_2, 0.269_266_719_309_996_4),
+    (0.679_409_568_299_024_4, 0.219_086_362_515_982),
+    (0.865_063_366_688_984_5, 0.149_451_349_150_580_6),
+    (0.973_906_528_517_171_7, 0.066_671_344_308_688_1),
+];
+/// Each smooth interval of a tank is split into this many equal parts for the Gauss-Legendre rule.
+const TANK_PARTS: usize = 8;
+
+/// The part of a circle of radius `r` centred at the origin on the side `s <= h` of a line at signed
+/// distance `h` from the centre: its area and the first moment of that area along the line's normal `s`.
+fn circle_segment(r: f64, h: f64) -> (f64, f64) {
+    if r <= 0.0 || h <= -r {
+        return (0.0, 0.0);
+    }
+    if h >= r {
+        return (core::f64::consts::PI * r * r, 0.0);
+    }
+    let w = sqrt(r * r - h * h);
+    (r * r * acos(-h / r) + h * w, -2.0 / 3.0 * w * w * w)
+}
+
+/// The part of a Type C tank below the waterplane, at its outer shape: a horizontal cylinder of radius
+/// `r` on the axis from `axis.0` to `axis.1` at `(y, z)`, with a Tank Head at each end, each half an
+/// ellipsoid as long as the head and as wide as the tank (as [`crate::mesh::tank_mesh`]). Each cross
+/// section is a circle cut by a line; its area and moments are closed forms. They are integrated along x
+/// by Gauss-Legendre on the cylinder and each head, split where the waterline is tangent to the circle
+/// (where the integrand is not smooth). A tank wholly below or above the waterplane is exact.
+fn tank_below(
+    wp: &Waterplane,
+    axis: (f64, f64),
+    centre: (f64, f64),
+    r: f64,
+    head: TankHead,
+) -> Part {
+    let (kx, ky, kz) = wp.normal();
+    let n = sqrt(ky * ky + kz * kz);
+    let (x0, x1) = axis;
+    let (yc, zc) = centre;
+    let a = head.length_m.clamp(0.0, 0.5 * (x1 - x0));
+    let mut p = Part::default();
+    if n < 1e-12 || r <= 0.0 || x1 <= x0 {
+        return p;
+    }
+    let (ny, nz) = (ky / n, kz / n);
+    // The distance of the line from the axis in the section at x: h(x) = h0 + h1 x.
+    let h0 = (wp.c - ky * yc - kz * zc) / n;
+    let h1 = -kx / n;
+    // Each piece: its ends, and r^2 = q0 + q1 x + q2 x^2 on it.
+    let head_r2 = |xj: f64| -> (f64, f64, f64) {
+        // r^2 = r^2 (1 - ((x - xj) / a)^2), xj the joint of head and cylinder
+        let k = r * r / (a * a);
+        (r * r - k * xj * xj, 2.0 * k * xj, -k)
+    };
+    let mut pieces: Vec<(f64, f64, (f64, f64, f64))> = Vec::with_capacity(3);
+    if a > 0.0 {
+        pieces.push((x0, x0 + a, head_r2(x0 + a)));
+    }
+    if x1 - a > x0 + a {
+        pieces.push((x0 + a, x1 - a, (r * r, 0.0, 0.0)));
+    }
+    if a > 0.0 {
+        pieces.push((x1 - a, x1, head_r2(x1 - a)));
+    }
+    for (xa, xb, (q0, q1, q2)) in pieces {
+        let r2 = |x: f64| (q0 + q1 * x + q2 * x * x).max(0.0);
+        // Tangency: h(x)^2 = r(x)^2, a quadratic in x.
+        let (qa, qb, qc) = (h1 * h1 - q2, 2.0 * h0 * h1 - q1, h0 * h0 - q0);
+        let mut cuts = vec![xa, xb];
+        let mut root = |x: f64| {
+            if x.is_finite() && x > xa && x < xb {
+                cuts.push(x);
+            }
+        };
+        if fabs(qa) > 1e-14 {
+            let disc = qb * qb - 4.0 * qa * qc;
+            if disc.is_finite() && disc >= 0.0 {
+                let sq = sqrt(disc);
+                root((-qb - sq) / (2.0 * qa));
+                root((-qb + sq) / (2.0 * qa));
+            }
+        } else if fabs(qb) > 1e-14 {
+            root(-qc / qb);
+        }
+        cuts.sort_by(f64::total_cmp);
+        let section = |x: f64| -> (f64, f64, f64) {
+            let (area, m) = circle_segment(sqrt(r2(x)), h0 + h1 * x);
+            (area, area * yc + m * ny, area * zc + m * nz)
+        };
+        for pair in cuts.windows(2) {
+            let (u0, u1) = (pair[0], pair[1]);
+            if u1 - u0 < 1e-12 {
+                continue;
+            }
+            let step = (u1 - u0) / TANK_PARTS as f64;
+            for k in 0..TANK_PARTS {
+                let lo = u0 + k as f64 * step;
+                let (mid, half) = (lo + 0.5 * step, 0.5 * step);
+                for &(t, w) in &GAUSS_10 {
+                    for x in [mid - half * t, mid + half * t] {
+                        let (area, my, mz) = section(x);
+                        let w = w * half;
+                        p.v += w * area;
+                        p.mx += w * x * area;
+                        p.my += w * my;
+                        p.mz += w * mz;
+                    }
+                }
+            }
+        }
+    }
+    p
+}
+
 /// The displaced volume and the centre of buoyancy of the damaged hull at a waterplane.
 #[derive(Debug, Clone, Copy)]
 struct Buoyancy {
@@ -137,12 +354,12 @@ struct Buoyancy {
     kb: f64,
 }
 
-fn buoyancy(table: &SectionsTable, flooded: &[FloodedBox], wp: &Waterplane) -> Buoyancy {
+fn buoyancy(table: &SectionsTable, flooded: &[FloodedVolume], wp: &Waterplane) -> Buoyancy {
     let im = immersed(table, wp);
     let mut v = im.volume_m3;
     let (mut mx, mut my, mut mz) = (v * im.lcb_m, v * im.tcb_m, v * im.kb_m);
     for b in flooded {
-        let p = box_below(wp, b);
+        let p = b.below(wp);
         v -= b.permeability * p.v;
         mx -= b.permeability * p.mx;
         my -= b.permeability * p.my;
@@ -181,10 +398,10 @@ fn earth_axes(wp: &Waterplane) -> (V3, V3) {
     (u, w)
 }
 
-/// What the solves read: the hull, the flooded boxes, the mass and its centre of gravity.
+/// What the solves read: the hull, the Flooded Volumes, the mass and its centre of gravity.
 struct Problem<'a> {
     table: &'a SectionsTable,
-    flooded: &'a [FloodedBox],
+    flooded: &'a [FloodedVolume],
     /// The volume of water displaced, m³: the mass over the density.
     target_m3: f64,
     g: Gravity,
@@ -408,13 +625,13 @@ impl DamageOutcome {
     }
 }
 
-/// The floating position and the residual stability of a hull with flooded boxes.
+/// The floating position and the residual stability of a hull with Flooded Volumes.
 ///
 /// `start` is the intact floating position (height of the waterplane, trim in degrees); the solves
 /// begin from it. `mass_t` and `g` are those of the loading condition, unchanged by the damage.
 pub fn assess(
     table: &SectionsTable,
-    flooded: &[FloodedBox],
+    flooded: &[FloodedVolume],
     mass_t: f64,
     g: Gravity,
     density: f64,
@@ -425,7 +642,7 @@ pub fn assess(
     if target.is_nan() || target <= 0.0 {
         return DamageOutcome::failed(Floats::NoEquilibrium);
     }
-    // The whole hull below the waterplane, less every flooded box: the most the hull can displace.
+    // The whole hull below the waterplane, less every Flooded Volume: the most the hull can displace.
     let top = Waterplane {
         heel_deg: 0.0,
         trim_deg: 0.0,
@@ -532,7 +749,7 @@ pub fn assess(
 /// `start` is the intact (height, trim in degrees). `None` when the solve does not converge.
 pub fn righting_lever_at(
     table: &SectionsTable,
-    flooded: &[FloodedBox],
+    flooded: &[FloodedVolume],
     mass_t: f64,
     g: Gravity,
     density: f64,
