@@ -95,6 +95,10 @@ open exports.
 - **Define an Option by a standard Vessel Class** ([#94](https://github.com/African-River-Corridors/open-vessel-designer/issues/94)) — pick a class
   (e.g. CEMT Va) instead of typing length and beam. **Done**: length and beam decide the class; picking
   one sets them, the Formation and the draught and air-draft limits.
+- **Openings in the Vessel Model** (spec 0012, D11): down-flooding and non-weathertight openings as
+  points, so the damage checks can test them: IGC 2.7.1.1 (as replaced by MSC.492(104)) and 2.7.2.1,
+  ADN 9.3.x.15 (0.10 m above the damage waterline) and ES-TRIN 28.03(6)(a). Until then those rows are
+  `not evaluated`.
 - **Close the mutation test gaps from the Rust port** ([#123](https://github.com/African-River-Corridors/open-vessel-designer/issues/123)) — tests
   only; no result changes.
 
