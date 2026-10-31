@@ -253,13 +253,14 @@ fn the_propulsor_type_decides_which_inputs_are_held() {
 }
 
 #[test]
-fn saving_writes_version_3_and_the_saved_file_validates() {
-    assert_eq!(FORMAT_VERSION, 3);
+fn saving_writes_the_current_version_and_the_saved_file_validates() {
+    // Version 3 brought these inputs; version 4 (issue #739) the structure block.
+    const { assert!(FORMAT_VERSION >= 3) };
     let (s, _) =
         DesignSession::open(&legacy("v2_gas_lpg_before_313"), Profile::built_in()).unwrap();
     let text = s.save().unwrap();
     let saved: Value = serde_json::from_str(&text).unwrap();
-    assert_eq!(saved["format_version"], 3);
+    assert_eq!(saved["format_version"], FORMAT_VERSION);
     let again = check(&text, &Profile::built_in());
     assert!(again.report.errors.is_empty());
     // The legacy note is gone (the file keeps only its own S690QL1 stress warning of #313).

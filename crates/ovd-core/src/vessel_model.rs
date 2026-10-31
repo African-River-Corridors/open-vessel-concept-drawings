@@ -9,6 +9,10 @@
 //! general arrangement draws. Each Space is clipped by the hull (issue #455): a Space wholly inside
 //! keeps its prism volume and centroid, and a tank passes through unchanged.
 //!
+//! The Structure Layer (spec 0013, issue #739; ADR 0018 layer 3): the `structure` block of the
+//! Hull ([`StructureBlock`]) and the frames it sets, named reference planes FR0, FR1, ... at the
+//! frame spacing ([`frames_of`]).
+//!
 //! No result reads the model, so it moves no results hash.
 
 use alloc::format;
@@ -31,6 +35,110 @@ pub struct VesselModelInputs {
     pub capacity: BargeCapacityInputs,
     pub result: BargeCapacityResult,
     pub hull: SectionsTable,
+    /// The `structure` block of the Hull (spec 0013).
+    pub structure: StructureBlock,
+}
+
+/// The steel grade of the hull structure (spec 0013, "Format"). Only ordinary-strength hull steel
+/// today, as the panel model (`hull_panels`: Q = 1); the higher-strength grades come with their
+/// material factors in the rule set (spec 0013, T2).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum SteelGrade {
+    /// Ordinary-strength hull steel, material factor Q = 1.
+    #[default]
+    Ordinary,
+}
+
+impl SteelGrade {
+    /// The `.vdesign` key of the grade.
+    pub fn key(self) -> &'static str {
+        match self {
+            SteelGrade::Ordinary => "ordinary",
+        }
+    }
+
+    /// The grade of a `.vdesign` key; `None` for a key that is not a grade.
+    pub fn from_key(key: &str) -> Option<SteelGrade> {
+        match key {
+            "ordinary" => Some(SteelGrade::Ordinary),
+            _ => None,
+        }
+    }
+}
+
+/// The `structure` block of the Hull (spec 0013, "Format"; the Structure Layer): the inputs the
+/// plate model lays its plates, stiffeners and primary members out on. The defaults are the spec's
+/// (see [`StructureBlock::default`]). Inputs only in issue #739: no result reads them yet.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct StructureBlock {
+    /// The spacing of the web frames and floors (m). It sets the frames.
+    pub frame_spacing_m: f64,
+    /// The spacing of the longitudinals (mm).
+    pub longitudinal_spacing_mm: f64,
+    /// The stock plate a yard buys, width x length (m).
+    pub stock_plate_width_m: f64,
+    pub stock_plate_length_m: f64,
+    /// The step the rule-net thickness is rounded up to (mm).
+    pub thickness_step_mm: f64,
+    pub steel_grade: SteelGrade,
+    /// Whether the wing deck counts in the hull girder (spec 0013, D15).
+    pub structural_wing_deck: bool,
+}
+
+impl Default for StructureBlock {
+    /// The spec 0013 defaults: the frame spacing and the longitudinal spacing of the panel model
+    /// (`hull_panels::DEFAULT_WEB_SPACING_M`, `DEFAULT_LONGITUDINAL_SPACING_MM`), a 3.0 x 12.0 m stock
+    /// plate and a 0.5 mm thickness step (both Estimates), ordinary-strength steel and no structural
+    /// wing deck.
+    fn default() -> Self {
+        StructureBlock {
+            frame_spacing_m: crate::hull_panels::DEFAULT_WEB_SPACING_M,
+            longitudinal_spacing_mm: crate::hull_panels::DEFAULT_LONGITUDINAL_SPACING_MM,
+            stock_plate_width_m: 3.0,
+            stock_plate_length_m: 12.0,
+            thickness_step_mm: 0.5,
+            steel_grade: SteelGrade::Ordinary,
+            structural_wing_deck: false,
+        }
+    }
+}
+
+/// A frame: a named transverse reference plane at `x_m` (spec 0013; OCX names frames the same way).
+#[derive(Debug, Clone, PartialEq)]
+pub struct Frame {
+    /// `FR0`, `FR1`, ... from the aft end.
+    pub name: String,
+    /// m from the aft end of the hull axes.
+    pub x_m: f64,
+}
+
+/// The most frames [`frames_of`] makes: a guard for a spacing that validation would refuse.
+const MAX_FRAMES: usize = 100_000;
+
+/// The frames of a hull: FR0 at the aft end of the Sections Table, then one every `spacing_m` up to
+/// the forward end (the last is less than one spacing from it). None for a spacing that is not a
+/// positive finite number, or a table with no Sections.
+pub fn frames_of(hull: &SectionsTable, spacing_m: f64) -> Vec<Frame> {
+    let (Some(first), Some(last)) = (hull.sections.first(), hull.sections.last()) else {
+        return Vec::new();
+    };
+    if !(spacing_m.is_finite() && spacing_m > 0.0) {
+        return Vec::new();
+    }
+    let (x0, x1) = (first.x, last.x);
+    let mut out = Vec::new();
+    while out.len() < MAX_FRAMES {
+        let i = out.len();
+        let x = x0 + spacing_m * i as f64;
+        if x > x1 + SAME_X_M {
+            break;
+        }
+        out.push(Frame {
+            name: format!("FR{i}"),
+            x_m: x,
+        });
+    }
+    out
 }
 
 /// A deck: a horizontal plane at `z_m` from `x_aft_m` to `x_fwd_m`, clipped by the hull.
@@ -154,8 +262,10 @@ pub struct VesselModel {
     /// The weather shield over the tanks of a gas hull (issue #410); `None` without one.
     pub weather_shield: Option<WeatherShield>,
     pub outfit: Outfit,
-    /// Frame stations; empty until phase 3.
-    pub frames: Vec<f64>,
+    /// The `structure` block of the Hull (spec 0013).
+    pub structure: StructureBlock,
+    /// The frames: named reference planes at the frame spacing (spec 0013), aft to forward.
+    pub frames: Vec<Frame>,
 }
 
 /// Two bulkheads closer than this (m) are one.
@@ -187,7 +297,8 @@ pub fn assemble(inp: &VesselModelInputs) -> VesselModel {
             wheelhouse_lift: wheelhouse_lift(c, r),
             propulsors: crate::machinery::layout_of(c, r),
         },
-        frames: Vec::new(),
+        structure: inp.structure,
+        frames: frames_of(&inp.hull, inp.structure.frame_spacing_m),
     }
 }
 

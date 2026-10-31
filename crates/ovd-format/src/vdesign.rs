@@ -35,8 +35,9 @@ use std::fmt;
 /// The `.vdesign` format version this tool writes. Version 2 changed the gas tank inputs (issue
 /// #175: `adn_tank_cap_m3` and the `ADN_G` ruleset went, `max_tank_od_m` came). A later change to
 /// the input table that needs the same kind of reading step reuses version 2 only while it is
-/// unreleased; see ADR 0007.
-pub const FORMAT_VERSION: u64 = 3;
+/// unreleased; see ADR 0007. Version 4 (issue #739, spec 0013) adds the `structure` block of the
+/// Hull, the group "Structure" ([`STRUCTURE_INPUTS`]).
+pub const FORMAT_VERSION: u64 = 4;
 
 /// The oldest `.vdesign` format version this tool still reads. A version 1 file is changed to
 /// the current inputs as it is read, with a warning for each change (see [`migrate_v1_option`]).
@@ -236,6 +237,29 @@ pub fn table_combinations() -> Vec<[(&'static str, String); 3]> {
     out
 }
 
+/// The inputs of the `structure` block of the Hull (issue #739, spec 0013, "Format"), the group
+/// "Structure". A file saved before format version 4 lacks them and reads the spec defaults (the
+/// legacy tables below hold the same values), with one note per Option.
+pub const STRUCTURE_INPUTS: &[&str] = &[
+    "frame_spacing_m",
+    "longitudinal_spacing_mm",
+    "stock_plate_width_m",
+    "stock_plate_length_m",
+    "thickness_step_mm",
+    "steel_grade",
+    "structural_wing_deck",
+];
+
+/// The hull steel grades (issue #739): ordinary-strength only, as the panel model (Q = 1). The
+/// keys are `ovd_core::vessel_model::SteelGrade` keys.
+pub const STEEL_GRADES: &[&str] = &["ordinary"];
+
+/// The note the form shows under the group "Structure".
+pub const STRUCTURE_NOTE: &str = "The structure of the hull: the frame and longitudinal spacing, \
+the stock plate a yard buys and the step plate thickness is rounded up to. The frames FR0, FR1, ... \
+are named reference planes at the frame spacing from the aft end. Concept and preliminary design \
+only, never approval. Each value shows its source or marks an estimate.";
+
 /// The Hull Forms of spec 0008 (issue #446).
 pub const HULL_FORMS: &[&str] = &["box", "raked_box", "v_bottom", "chine", "shipd", "offsets"];
 /// The Hull Forms the engine computes today. The others are inputs only until their generator and
@@ -383,6 +407,14 @@ pub fn cost_prices_basis(price_base_date: Option<&str>) -> String {
     }
 }
 
+/// The spec 0013 defaults of the `structure` block (issue #739), as a file saved before it reads
+/// them. A test holds them equal to the Defaults Profile and to `ovd_core::vessel_model::StructureBlock`.
+pub const STRUCTURE_FRAME_SPACING_M: f64 = 3.66;
+pub const STRUCTURE_LONGITUDINAL_SPACING_MM: f64 = 700.0;
+pub const STRUCTURE_STOCK_PLATE_WIDTH_M: f64 = 3.0;
+pub const STRUCTURE_STOCK_PLATE_LENGTH_M: f64 = 12.0;
+pub const STRUCTURE_THICKNESS_STEP_MM: f64 = 0.5;
+
 /// Both dry-bulk holds.
 const DRY_HOLDS: &[&str] = &["box_hold", "sloped_hopper_hold"];
 
@@ -405,6 +437,39 @@ pub struct LegacyFixed {
 ///
 /// A profile that has no entry for one of these inputs takes the built-in profile's entry.
 pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
+    // Issue #739 (spec 0013): a file saved before the `structure` block reads the spec defaults,
+    // with its own note ([`STRUCTURE_INPUTS`]). The frame and longitudinal spacing are the ones
+    // the panel model used (`hull_panels`); no result reads any of them yet.
+    LegacyFixed {
+        name: "frame_spacing_m",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: STRUCTURE_FRAME_SPACING_M,
+    },
+    LegacyFixed {
+        name: "longitudinal_spacing_mm",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: STRUCTURE_LONGITUDINAL_SPACING_MM,
+    },
+    LegacyFixed {
+        name: "stock_plate_width_m",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: STRUCTURE_STOCK_PLATE_WIDTH_M,
+    },
+    LegacyFixed {
+        name: "stock_plate_length_m",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: STRUCTURE_STOCK_PLATE_LENGTH_M,
+    },
+    LegacyFixed {
+        name: "thickness_step_mm",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: STRUCTURE_THICKNESS_STEP_MM,
+    },
     // Issue #402: a file saved before prices all of the surplus at the supports rate.
     LegacyFixed {
         name: "tank_internals_fraction",
@@ -898,6 +963,17 @@ pub struct LegacyFixedJson {
 
 /// See [`LegacyFixedJson`]. Read by a file that lacks the input, like [`LEGACY_FIXED_INPUTS`].
 pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
+    // Issue #739: ordinary-strength steel and no structural wing deck, as the panel model.
+    LegacyFixedJson {
+        name: "steel_grade",
+        applies_to: AppliesTo::All,
+        value: "\"ordinary\"",
+    },
+    LegacyFixedJson {
+        name: "structural_wing_deck",
+        applies_to: AppliesTo::All,
+        value: "false",
+    },
     // Issue #675: a file saved before let the search try 1, 2 and 3 tanks across.
     LegacyFixedJson {
         name: "tanks_across",
@@ -1495,6 +1571,8 @@ pub enum Group {
     VesselClass,
     HullAndContainment,
     HullForm,
+    /// Issue #739 (spec 0013): the `structure` block of the Hull.
+    Structure,
     GasTanks,
     DryBulkHold,
     /// Issue #331: the cargo tanks of a liquid bulk Cargo (crude oil).
@@ -1512,11 +1590,12 @@ pub enum Group {
 
 impl Group {
     /// Every group, in the order a form shows them.
-    pub const ALL: [Group; 16] = [
+    pub const ALL: [Group; 17] = [
         Group::Required,
         Group::VesselClass,
         Group::HullAndContainment,
         Group::HullForm,
+        Group::Structure,
         Group::GasTanks,
         Group::DryBulkHold,
         Group::LiquidTanks,
@@ -1538,6 +1617,7 @@ impl Group {
             Group::VesselClass => "Vessel Class",
             Group::HullAndContainment => "Hull and containment",
             Group::HullForm => "Hull Form",
+            Group::Structure => "Structure",
             Group::GasTanks => "Gas tanks",
             Group::DryBulkHold => "Dry-bulk hold",
             Group::LiquidTanks => "Liquid cargo tanks",
@@ -1559,6 +1639,7 @@ impl Group {
             Group::CostRates => Some(COST_RATES_BASIS),
             Group::GasTanks => Some(GAS_TANKS_NOTE),
             Group::LiquidTanks => Some(LIQUID_TANKS_NOTE),
+            Group::Structure => Some(STRUCTURE_NOTE),
             _ => None,
         }
     }
@@ -1576,6 +1657,8 @@ pub const CHOICE_LABELS: &[(&str, &str)] = &[
     ("raked_box", "Raked box"),
     ("covered", "Covered"),
     ("open", "Open"),
+    // Issue #739.
+    ("ordinary", "Ordinary strength (Q = 1)"),
     ("tank_end", "From the tank end"),
     ("cargo_area", "From the cargo area"),
     // Issue #723: the resistance methods.
@@ -2055,6 +2138,57 @@ pub const INPUTS: &[InputSpec] = &[
         ),
         "hull_form",
         &["offsets"],
+    ),
+    // Issue #739 (spec 0013, "Format"): the `structure` block of the Hull. Inputs only: the Vessel
+    // Model sets its frames from the frame spacing; no result reads them yet.
+    spec(
+        "frame_spacing_m",
+        "Frame spacing (web frames and floors)",
+        NUM,
+        false,
+        Group::Structure,
+    ),
+    spec(
+        "longitudinal_spacing_mm",
+        "Longitudinal spacing",
+        NUM,
+        false,
+        Group::Structure,
+    ),
+    spec(
+        "stock_plate_width_m",
+        "Stock plate width",
+        NUM,
+        false,
+        Group::Structure,
+    ),
+    spec(
+        "stock_plate_length_m",
+        "Stock plate length",
+        NUM,
+        false,
+        Group::Structure,
+    ),
+    spec(
+        "thickness_step_mm",
+        "Plate thickness step",
+        NUM,
+        false,
+        Group::Structure,
+    ),
+    spec(
+        "steel_grade",
+        "Hull steel grade",
+        InputKind::Choice(STEEL_GRADES),
+        false,
+        Group::Structure,
+    ),
+    spec(
+        "structural_wing_deck",
+        "Wing deck in the hull girder",
+        InputKind::Bool,
+        false,
+        Group::Structure,
     ),
     spec(
         "min_freeboard_m",
@@ -4360,6 +4494,24 @@ fn read_option(
             condition = DEFAULT_CARRIAGE_CONDITION
         );
         report.migration_note(of_option(name, text), &["lpg_carriage_condition"]);
+    }
+    // Issue #739: a file saved before format version 4 has no `structure` block. It reads the spec
+    // defaults, with one note of its own.
+    let structure: Vec<&str> = legacy_added
+        .iter()
+        .copied()
+        .filter(|n| STRUCTURE_INPUTS.contains(n))
+        .collect();
+    if !structure.is_empty() {
+        legacy_added.retain(|n| !STRUCTURE_INPUTS.contains(n));
+        let text = Text::fixed(
+            "msg-legacy-structure",
+            "this file was saved before the structure block of the Hull (format version 4); it \
+             now holds the defaults (marked default): frame spacing 3.66 m, longitudinal spacing \
+             700 mm, stock plate 3.0 x 12.0 m, thickness step 0.5 mm, ordinary-strength steel, no \
+             structural wing deck. No result reads them yet, so the results are unchanged",
+        );
+        report.migration_note(of_option(name, text), &structure);
     }
     if let [one] = legacy_added.as_slice() {
         let text = text!(

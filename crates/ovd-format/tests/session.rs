@@ -557,6 +557,7 @@ fn the_schema_lists_every_input_in_table_order_with_its_group() {
             "Vessel Class",
             "Hull and containment",
             "Hull Form",
+            "Structure",
             "Gas tanks",
             "Dry-bulk hold",
             "Liquid cargo tanks",

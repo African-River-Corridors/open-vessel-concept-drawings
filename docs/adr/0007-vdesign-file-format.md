@@ -125,6 +125,17 @@ save writes the current version.
   newer built-in version with other content gives a warning, never a swap; a stored hash that differs from
   the built-in hash of that version gives a warning that the rules differ from the file; a stored version
   the engine lacks, with no `--rule-set` supplying it, refuses the Option with a message naming the set.
+- **4** (issue #739, spec 0013, "Format"): the `structure` block of the Hull, a group "Structure" of seven
+  inputs that apply to every Cargo Containment and Formation: `frame_spacing_m` (3.66 m, the rule maximum of ABS
+  Steel Barges 5-1-2/5.7.1, Part 5 July 2025, the current Part 5; sourced),
+  `longitudinal_spacing_mm` (700 mm), `stock_plate_width_m` and `stock_plate_length_m` (3.0 x 12.0 m; the spec's
+  `stock_plate_m`, width x length, as two numbers so each has its own range), `thickness_step_mm` (0.5 mm),
+  `steel_grade` (`ordinary`, Q = 1; the only grade until the rule set brings the higher-strength factors) and
+  `structural_wing_deck` (false). All but the frame spacing are estimates. A file of version 1, 2 or 3 reads
+  these defaults (a table in `vdesign.rs`, marked `default`), with one note per Option that names them; no result
+  reads them yet, so its results hash is unchanged. The Vessel Model holds the block and sets its frames from
+  the frame spacing: named reference planes `FR0`, `FR1`, ... from the aft end of the hull. Saving writes
+  version 4.
 - **Inputs added after the first files** (issue #4: the dry-bulk hold, the bow rake over depth, the stern void of a pushed barge, the end bulkhead allowance, the gas tank arrangement values, the water density, the squat safety margin, the 14 cost rates, the 17 aft block values of a self-propelled hull): a file that lacks one of these
   inputs, in version 1 or in a version 2 file from a test build, is read with the fixed value the engine
   used before the input existed (a table in `vdesign.rs`, not the Defaults Profile), marked `default`, with

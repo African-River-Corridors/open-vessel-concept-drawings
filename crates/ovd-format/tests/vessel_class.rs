@@ -287,7 +287,7 @@ fn the_class_survives_save_and_open_and_the_markers_are_kept() {
         .unwrap();
     let text = s.save().unwrap();
     let saved: Value = serde_json::from_str(&text).unwrap();
-    assert_eq!(saved["format_version"], 3);
+    assert_eq!(saved["format_version"], 4);
     let inputs = &saved["options"][0]["inputs"];
     assert_eq!(
         inputs["vessel_scheme"],

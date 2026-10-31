@@ -196,7 +196,7 @@ fn a_file_saved_before_gets_the_default_stack_marked_default_with_one_warning_an
 }
 
 #[test]
-fn a_new_option_takes_the_default_stack_and_the_saved_file_is_version_3_and_validates() {
+fn a_new_option_takes_the_default_stack_and_the_saved_file_is_version_4_and_validates() {
     let design = dry();
     let sets = stored(&design);
     assert_eq!(
@@ -214,7 +214,7 @@ fn a_new_option_takes_the_default_stack_and_the_saved_file_is_version_3_and_vali
         json!("river-only")
     );
     let saved: Value = serde_json::from_str(&design.to_text()).unwrap();
-    assert_eq!(saved["format_version"], 3);
+    assert_eq!(saved["format_version"], 4);
     let again = check(&design.to_text(), &Profile::built_in());
     assert_eq!(again.report.errors, Vec::<String>::new());
     assert_eq!(again.report.warnings, Vec::<String>::new());

@@ -8,6 +8,8 @@ group-required = Required
 group-vessel-class = Vessel Class
 group-hull-and-containment = Hull and containment
 group-hull-form = Hull Form
+group-structure = Structure
+group-note-structure = The structure of the hull: the frame and longitudinal spacing, the stock plate a yard buys and the step plate thickness is rounded up to. The frames FR0, FR1, ... are named reference planes at the frame spacing from the aft end. Concept and preliminary design only, never approval. Each value shows its source or marks an estimate.
 group-gas-tanks = Gas tanks
 group-note-gas-tanks = The tank outer diameter (the cap below and the result) is measured to the outside of the insulation; the clearances and the drawing use that face. The steel diameter is that less twice the insulation thickness. The wall thickness is worked out from the pressure-vessel formula unless a thickness is typed. The design values below depend on the Cargo and, for LPG, on the carriage condition; each shows its source or marks an estimate.
 group-dry-bulk-hold = Dry-bulk hold
@@ -91,6 +93,21 @@ input-chine-height-m = Chine height above base
 input-shipd-parameters = ShipD parameters
 
 input-hull-offsets = Offsets table
+
+input-frame-spacing-m = Frame spacing (web frames and floors)
+
+input-longitudinal-spacing-mm = Longitudinal spacing
+
+input-stock-plate-width-m = Stock plate width
+
+input-stock-plate-length-m = Stock plate length
+
+input-thickness-step-mm = Plate thickness step
+
+input-steel-grade = Hull steel grade
+choice-steel-grade-ordinary = Ordinary strength (Q = 1)
+
+input-structural-wing-deck = Wing deck in the hull girder
 
 input-min-freeboard-m = Minimum freeboard (safety clearance)
 
