@@ -1,0 +1,197 @@
+# Plate-level hull steel benchmarks (issue #751, spec 0013 "Calibration" and D16).
+# Hand-written. Read by no code yet. Pattern: calibration/hull_steel_cases.yaml (one entry per source, with its URL,
+# retrieval date and the SHA-256 of the bytes served, the source text as printed in `published`, a `confidence`
+# and `flags`). Research note: docs/research/plate-steel-benchmarks.md (the search line and why each candidate failed).
+#
+# Concept and preliminary design only (ADR 0011). These are published scantlings of other vessels. They are a
+# benchmark to compare the plate model with, never a target to tune to (D16).
+#
+# Rules for this file:
+# - Every value is in the cited text, which was read on the retrieval date. Page, table or section is given.
+# - Units are as printed. Where a value is converted, the printed value is kept and the conversion is marked `derived`.
+# - A value the source does not give is left out. Nothing is estimated or filled in.
+# - Licence: values are extracted as facts with attribution. No figure or long text is copied.
+#
+# Ranked by fit (plate-level detail, barge type, size near 140 x 29 m, completeness). Rank 1 is the best.
+
+retrieved: '2026-10-31'
+
+benchmarks:
+  - id: lr-ocean-deck-barge-122x30-mx
+    rank: 1
+    what: "A built, Lloyd's Register classed, non-self-propelled oceangoing deck barge (jackets and heavy cargo up to
+      14,000 t on deck), laid up in Tamaulipas, Mexico; midship section analysed for deck corrosion"
+    source:
+      citation: "Salazar-Dominguez, C.M.; Hernandez-Hernandez, J.; Rosas-Huerta, E.D.; Iturbe-Rosas, G.E.;
+        Herrera-May, A.L. Structural Analysis of a Barge Midship Section Considering the Still Water and Wave Load
+        Effects. J. Mar. Sci. Eng. 2021, 9, 99"
+      doi: https://doi.org/10.3390/jmse9010099
+      url: https://mdpi-res.com/d_attachment/jmse/jmse-09-00099/article_deploy/jmse-09-00099.pdf
+      retrieved: '2026-10-31'
+      sha256: 2481b0c9d8355d302462547f8d5a09f41064873353234e386108c0e2ad821773
+      licence: "CC BY 4.0 (page 1: open access under the Creative Commons Attribution (CC BY) license)"
+    published:
+      main_dimensions: "Table 1: overall length 122.45 m; loadline length (L) 119.95 m; breadth (B) 30.5 m; depth (D)
+        7.60 m; loadline draft (T) 6.21 m; deadweight 15,550 ton"
+      arrangement: "Section 2.1: single hull; three longitudinal bulkheads between stations 3 and 44, the outer two
+        7.7 m from the centreline; midship section 45 m long, three cargo tanks, stations 15 to 33; transversal frames
+        at 2.5 m; longitudinal stiffeners at 0.7 m, except close to the bilge"
+      deck_plate_original_mm: "Section 1 (page 2): original deck thickness 22 mm, taken from the class-approved
+        midship section drawing; corrosion has reduced it by up to 36.4 %"
+      deck_plate_evaluated_mm: "Section 2.2 and Table 5: 14 mm (the reduced deck thickness checked); rule minimum
+        tmin 9.562 mm"
+      bottom_plate_mm: "Table 7: tp (bottom) 22 mm"
+      deck_and_bottom_longitudinal: "Table 7, angle-bar stiffener, deck and bottom alike: a (length between frames)
+        2500 mm; b (plate breadth) 700 mm; hw (web height) 282.6 mm; tw (web) 17.4 mm; bf (flange breadth) 90 mm;
+        t (flange) 17.4 mm; yield 250 MPa"
+      hull_girder: "Table 5 (with the 14 mm deck): ZD 5.338 m3; ZB 5.974 m3; Zmin 4.961 m3; INA 21.426 m4;
+        Imin 17.247 m4"
+      thickness_range_mm: "Figure 7 colour bar: the FEM model's plate thicknesses run from 9 to 25.4 mm (per-member
+        values are colour-coded only and were not read)"
+    not_given: "side shell, bilge, bulkhead, web frame and girder thicknesses (colour-coded only, Figure 7); steel
+      weight; lightship"
+    confidence: medium
+    flags: "A real vessel, but the paper gives only the deck and bottom panels as numbers. Section modulus is with the
+      corroded 14 mm deck, not as built. Classed to Lloyd's Register, not ABS, so rule minima will differ from the
+      OVD ABS rule set. Single hull deck barge, not a tank barge. Closest size to the 140 x 29 m example."
+
+  - id: lr-inland-container-push-barge-83x11-design
+    rank: 2
+    what: "A master's thesis design of a pushed inland container barge (144 to 192 TEU), longitudinally framed, double
+      bottom and double skin, checked to Lloyd's Register inland rules; full ship structure modelled in Siemens NX"
+    source:
+      citation: "Victor, E.O. Development of a pushed barge with optimum performance on shallow draught (Public
+        Version). Master thesis, EMship (Advanced Ship Design), University of Liege / University of Rostock, submitted
+        23 August 2021"
+      handle: http://hdl.handle.net/2268.2/13665
+      url: "https://matheo.uliege.be/bitstream/2268.2/13665/4/MASTER%20THESIS%20REPORT%20-%20DEVELOPMEMNT%20OF%20A%20PUSHED%20BARGE%20WITH%20OPTIMUM%20PERFORMANCE%20ON%20SHALLOW%20DRAUGHT%20-%20Public%20Version.pdf"
+      retrieved: '2026-10-31'
+      sha256: 02647dc74070eaf83317d5892bbe182e5cb66913eb2de0e3573806deaee0ab7f
+      licence: "MatheO open access under BOAI principles: read, download, index and use as data for software for any
+        lawful purpose, with full attribution; commercial use of the document is forbidden; modifying or summarising
+        the document needs the author's consent (cover page notice). Numbers are taken here as facts with attribution;
+        the maintainer to confirm before merge."
+    published:
+      main_dimensions: "Table 3 (page 31): length 83 m; breadth 11.45 m; depth 2.8 m; draught 2.6 m"
+      spacing: "Section 3.4.1 (page 39): frame spacing 511.16 mm in the cargo hold (500 mm aft and in the fore peak);
+        web frames and plate floors every 3rd frame (1533.48 mm); watertight frame every 8th web frame"
+      material: "Section 3.4.2: mostly grade A mild steel (S235)"
+      midship_scantlings_initial: "Table 17 (page 61), initial value:
+        outer bottom plate 10 mm;
+        outer bottom longitudinals (8 x HP) 120 x 7 mm;
+        outer bottom reinforcement at wing tank (HP) 120 x 7 mm;
+        centre and side girders, double bottom, 600 x 10 mm;
+        bilge plate 12 mm;
+        inner bottom / cargo deck plate 10 mm;
+        outer side shell 9 mm;
+        outer side shell reinforcement (4 x HP) 120 x 6 mm;
+        mountain plate / sheer strake 20 mm;
+        weather deck / main deck plate 15 mm;
+        inner wall (cargo hold longitudinal bulkhead) 10 mm;
+        inner wall reinforcement (4 x HP) 100 x 6 mm;
+        hatch coaming 15 mm;
+        hatch coaming reinforcement (U-profile) 100 x 200 x 14 mm;
+        weather deck reinforcement (1 x HP) 120 x 7 mm;
+        inner bottom reinforcement (8 x HP) 100 x 7 mm;
+        inner bottom reinforcement at wing tanks (HP) 120 x 7 mm"
+      midship_scantlings_optimised: "Table 17, new value, same items in order: 8; 100 x 6; 100 x 7; 600 x 8; 10; 6; 8;
+        100 x 6; 10; 7; 6; 80 x 6; 8; 100 x 200 x 10; 100 x 6; 80 x 6; 100 x 6 (mm)"
+      rule_minimum_plate_mm: "Table 5 (page 41), LR minimum values: deck 6.2; hatch coaming 12.9; bottom 7.1; bilge 9.1;
+        side shell 7.0; sheer strake 12.1; double bottom depth at centreline 400 (mm); centre and side girders 8.0;
+        floors 8.0; watertight floors 8.0; inner bottom 6.0"
+      steel_weight_list_t: "Table 9 (page 47), hull structure steel weight, initial structure: deck 26.49;
+        collision bulkhead centre girder 0.06; cargo hold bulkhead forward 2.85; upper side shell cargo hold 20.42
+        (port) and 20.42 (starboard); inner bottom cargo hold deck 79.08; centre girder forward 0.38; cargo hold
+        bulkhead aft 3.05; upper coamings cargo hold 6.89; centre girder bottom 2.52; collision bulkhead 2.62;
+        U-profile coamings 3.52; transverse frames 29.17; outer shell 132.62; forward frames 5.20; mid cargo hold
+        stiffeners 3.60; inner side walls 40.66; total 379.56 (LCG 41.01 m, VCG 1.35 m)"
+      lightship_t: "Table 18 (page 62): initial structure steel 379.55 t, lightship 455.24 t, deadweight 1975.8 t at
+        2.6 m; first iteration steel 268.93 t, lightship 344.62 t, deadweight 2086.4 t"
+    confidence: low
+    flags: "A student design, not a built or weighed vessel. Inland service (BV NR217 territory, but checked to LR
+      inland rules). Small (83 x 11.45 x 2.8 m). It is the only source found with both a plate-level midship section
+      and a steel weight list by item; the two are from the same model, so the list can test the plate model's
+      arithmetic end to end on an inland hull. Table 9 lists the upper side shell twice (port and starboard)."
+
+  - id: abs-ocean-deck-barge-260x72-ninilchik
+    rank: 3
+    what: "A built ABS Ocean deck barge (owner's spec sheet), 15 midbody compartments, two watertight and one non-tight
+      longitudinal bulkhead, six transverse bulkheads"
+    source:
+      citation: "Crowley Maritime, NINILCHIK - 260' x 72' x 16' spec sheet (2 pages)"
+      url: https://www.crowley.com/wp-content/uploads/2020/11/CM_NinilchikBarge_SpecSheet.pdf
+      retrieved: '2026-10-31'
+      sha256: 9f975af233c250b0afc92ba02ef65d88f08ded0891f00e321adcf1dea892ea62
+      licence: "Owner's published spec sheet, copyright reserved; marked 'believed to be correct, but is not
+        guaranteed'. Facts extracted with attribution."
+    published:
+      main_dimensions: "Page 1: length overall 260'-0\"; breadth 72'-0\"; depth 16'-0\"; max deck load 5000 PSF"
+      class: "Page 1: ABS Class-Ocean Rules, Ocean Service with Load Line, Class A-1 Maltese Cross"
+      plating: "Page 1, Scantlings and Plate Sizes: bottom plate 1/2\"; side shell plate 1/2\"; deck plate 9/16\";
+        bilge knuckle plating 1/2\"; all bulkhead plating 3/8\""
+      stiffeners: "Page 1: bottom longitudinals 5\" x 3-1/2\" x 5/16\" (2 o.b. 6\" x 3-1/2\" x 5/16\");
+        deck longitudinals 8\" x 4\" x 1/2\"; side shell longitudinals 5\" x 3-1/2\" x 5/16\";
+        transverse bulkhead vertical stiffeners 6\" x 4\" x 3/8\" (o.b. 6\" x 4\" x 1/2\");
+        longitudinal bulkhead vertical stiffeners 17\" x 4\" fl x 5/16\" and 6\" x 4\" x 1/2\""
+      primary_members: "Page 1: bottom transverse chord 17\" x 4\" fl x 5/16\"; deck transverse chord 22\" x 4\" fl x
+        3/8\"; side shell vertical chord 19\" x 4\" fl x 5/16\""
+    derived:
+      main_dimensions_m: "79.25 x 21.95 x 4.88 (1 ft = 0.3048 m)"
+      plating_mm: "1/2\" = 12.7; 9/16\" = 14.3; 3/8\" = 9.5; 5/16\" = 7.9 (1 in = 25.4 mm)"
+    not_given: "stiffener and frame spacing; build year; steel weight; lightship"
+    confidence: medium
+    flags: "A real ABS Ocean barge, the rule family OVD uses for coastal and unrestricted service. Every main member
+      has a size, but no spacing, so a panel check needs an assumed spacing. Smaller than the 140 x 29 m example."
+
+  - id: abs-inland-tank-barges-275-290-uscg
+    rank: 4
+    what: "Two longitudinally framed inland tank barges that failed by deck buckling (USCG Marine Safety Center study
+      of the inland tank barge fleet)"
+    source:
+      citation: "Cameron, J.; Nadeau, J.; LoSciuto, J. Ultimate Strength Analysis of Inland Tank Barges. USCG Marine
+        Safety Center, 16 June 1997 (ROSA P dot:33808)"
+      url: https://rosap.ntl.bts.gov/view/dot/33808/dot_33808_DS1.pdf
+      retrieved: '2026-10-31'
+      sha256: be17e134a9720e10c603e3ecb89ce32b7912d9f7fdff178554278193e00ceb3a
+      licence: "US Government work (US Coast Guard); no copyright statement on the record page"
+    published:
+      barge_1: "Table 3.5: length 275'; depth 12'; beam 54'; 6 pairs of tanks; section modulus 3386 in2ft; deck plating
+        5/16\"; deck longitudinals 5 1/2 x 2 1/2 x 5/16\" serrated; built July 1968"
+      barge_2: "Table 3.5: length 290'; depth 11' 6\"; beam 54'; 6 pairs of tanks; section modulus 3257 in2ft; deck
+        plating 5/16\"; deck longitudinals 5 1/2 x 2 1/2 x 5/16\" serrated; built December 1969"
+      fleet: "Section 3.1: of 26 inland tank barges (195' to 297', built 1962 to 1996) drawn from builders' drawings,
+        23 had 0.3125\" deck plating, and the longitudinal stiffener spacing varied only from 23.5\" to 26\""
+      section_modulus_vs_length: "Table 5.3(a), deck section modulus (in2 ft) against length (ft): 195, 2444;
+        236, 4410; 240, 2726; 245, 3173; 248, 3055; 276, 4176; 297.5, 3335"
+      rule_note: "Section 4.2: barge 2 met the 1965 ABS Inland Rules but not 3/3.5.1 of the 1995 edition, which required
+        0.343\"; its 0.3125\" deck was 9 % less"
+    not_given: "bottom, side and bulkhead scantlings; web frame spacing; steel weight. Appendix B (the worked example
+      of a typical longitudinally framed tank barge) is not in the served PDF."
+    confidence: low
+    flags: "Deck only. Older inland barges built to pre-1995 ABS Inland Rules, lighter than the model's rule set. Useful
+      as a lower bound on deck plating and as a fleet-wide deck spacing range."
+
+  - id: bki-coal-barge-330ft-id
+    rank: 5
+    what: "A 330 ft longitudinally framed coal barge (Indonesian practice, BKI class), midship stiffener counts reduced
+      to near the class minimum"
+    source:
+      citation: "Setyaji, F.; Mulyatno, I.P.; Zakki, A.F. Analisa Hull Girder Strength Akibat Modifikasi Layout
+        Penampang Midship Section Pada Tongkang 330 Feet. Jurnal Teknik Perkapalan 13(1), January 2025"
+      url: https://ejournal3.undip.ac.id/index.php/naval/article/download/49876/33400
+      retrieved: '2026-10-31'
+      sha256: 7f820710dd4a11e4e5fc3d648c86f640359d542db59058bbd51d3dbfc70fbc9f
+      licence: "CC BY-SA 4.0 (journal page)"
+    published:
+      main_dimensions: "Section 2: LOA 100.58 m; B 27.432 m; H 6.096 m; T 4.797 m"
+      lightship_t: "Section 2.4: lightship 1669 ton"
+      stiffeners: "Table 1: bottom 150x90x9 (38 initial, 32 renewed); deck 150x90x9 (40, 32); transverse bulkhead
+        125x75x9 (40, 32)"
+      hull_girder: "Tables 2 and 3: Wreq 3.124 m3; Wact deck 3.287 and bottom 3.233 m3 before; 3.193 and 3.157 m3 after"
+      material: "Section 2.3: KI-A36, yield 235 MPa"
+      steel_change: "Conclusion 2: model 2 construction weight 1.97 % less than model 1"
+    not_given: "plate thicknesses (only in Figure 2, the midship section drawing, which is not legible at the published
+      resolution); stiffener spacing; steel weight"
+    confidence: low
+    flags: "Good size and beam (27.4 m) but no readable plate thickness. Kept for the stiffener sizes, the lightship and
+      the hull girder modulus; promote it only if a legible midship section is found."
