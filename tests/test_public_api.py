@@ -13,6 +13,7 @@ import importlib
 import inspect
 import json
 import pkgutil
+import re
 from pathlib import Path
 
 import ovd
@@ -189,8 +190,40 @@ def test_a_restored_name_is_the_object_of_its_defining_module():
     assert electric_energy.R is resistance
 
 
+def optional_of(hint):
+    """The X of `Optional[X]`, or None when `hint` is not an optional. It reads the type, not its
+    text: from Python 3.14 `repr(Optional[float])` is `float | None` (issue #724). An optional is a
+    union of exactly two members, one of them `NoneType`; `typing.Union` and `X | None` both count."""
+    import types
+    import typing
+    if typing.get_origin(hint) not in (typing.Union, types.UnionType):
+        return None
+    rest = [a for a in typing.get_args(hint) if a is not type(None)]
+    return rest[0] if len(typing.get_args(hint)) == 2 and len(rest) == 1 else None
+
+
+def named_type(name):
+    """The class a 0.1.0 type text names: `float`, `dict` or a dotted `ovd.core.<module>.<Class>`."""
+    import builtins
+    if "." not in name:
+        return getattr(builtins, name)
+    module, cls_name = name.rsplit(".", 1)
+    return getattr(importlib.import_module(module), cls_name)
+
+
+def is_type_of_text(hint, text):
+    """`hint` is the type that `text` (as Python 3.12 printed it for 0.1.0) names. `typing.Optional[X]`
+    is compared as a type, because its text differs from Python 3.14 on; every other text still
+    prints the same on every supported version, so it is compared as text."""
+    optional = re.fullmatch(r"typing\.Optional\[([\w.]+)\]", text)
+    if optional:
+        return optional_of(hint) is named_type(optional[1])
+    return str(hint) == text
+
+
 def test_field_types_are_the_types_of_0_1_0():
-    # The snapshot above compares field names. This compares their types, as text.
+    # The snapshot above compares field names. This compares their types: as types for an optional,
+    # as text for the rest (issue #724).
     import typing
     expected = json.loads((Path(__file__).parent / "data" / "importable_names_0_1_0.json").read_text(encoding="utf-8"))["field_types"]
     assert sum(len(c) for c in expected.values()) > 30, "scanning too little"
@@ -204,14 +237,14 @@ def test_field_types_are_the_types_of_0_1_0():
                     assert name not in hints
                     continue
                 if (module, cls_name, name) in OPTIONAL_NOW:
-                    assert str(hints[name]).startswith("typing.Optional["), name
-                    inner = "float" if name == "beam_m" else "typing.Tuple[float, float]"
-                    assert inner in str(hints[name]), name
+                    inner = float if name == "beam_m" else typing.Tuple[float, float]
+                    assert optional_of(hints[name]) == inner, f"{name}: {hints[name]}"
                     continue
                 # Known change (CHANGELOG.md): a bare `list` of 0.1.0 is `List[...]` now, because the
                 # bridge reads the item type to build the result objects.
                 refined = text == "<class 'list'>" and str(hints[name]).startswith("typing.List[")
-                changed = CHANGED_FIELD_TYPES.get((module, cls_name, name)) == str(hints[name])
-                if str(hints[name]) != text and not refined and not changed:
+                now = CHANGED_FIELD_TYPES.get((module, cls_name, name))
+                changed = now is not None and is_type_of_text(hints[name], now)
+                if not is_type_of_text(hints[name], text) and not refined and not changed:
                     wrong.append(f"{module}.{cls_name}.{name}: {hints[name]} != {text}")
     assert wrong == []
