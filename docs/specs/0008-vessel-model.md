@@ -550,6 +550,9 @@ Every Measure that reads the draught, Cb or GZ moves with the switch-over and is
 
 Each later phase gets its own spec. In short:
 
+> **Phases 3 and 4, and the structural export of phase 6, are spec 0013** (plate-level hull steel). It
+> exports to OCX (Open Class 3D Exchange) instead of STEP or IFC. Phase 5 stays a separate spec.
+
 - **Phase 3: structure layout.** Frame spacing, longitudinals, stiffener spacing and plate zones as
   parameters tied to the frame stations, in the Vessel Model and the viewer (the structure toggle).
 - **Phase 4: rule scantlings.** Through the rules engine, starting `unverified`: Bureau Veritas NR217
