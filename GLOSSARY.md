@@ -245,6 +245,16 @@ hull) and the compartments it floods, checked on the laden departure Loading Con
 the damaged hull, then its righting lever. The result is a verdict for one Rule object.
 _Avoid_: damage scenario, damage condition (a Loading Condition is intact)
 
+**Flooded Volume**:
+A space the sea fills in a Damage Case: a Space shape (a prism or a Type C tank), the fraction of it the water
+fills (its permeability), and its Intact Inclusions. A box is the prism with four corners.
+_Avoid_: flooded box, flooded compartment (in code)
+
+**Intact Inclusion**:
+A Space inside a Flooded Volume that keeps its buoyancy, such as an intact Type C tank in a flooded hold. The
+water of the Flooded Volume does not fill it.
+_Avoid_: intact tank (when the general term is meant)
+
 **Water Ballast**:
 Water taken into ballast tanks to bring a vessel to a safe Draught, trim or stability in a Loading Condition.
 _Avoid_: ballast (when the solid kind could be meant)

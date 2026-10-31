@@ -1,7 +1,8 @@
 //! Seam: `ovd_core::damage_stability`, the lost buoyancy method on the Sections Table (issue #341).
 //!
 //! Label: sourced - closed forms for a wall-sided box barge, worked out here, and an independent
-//! numerical integration of the box less its flooded boxes for the equilibrium conditions.
+//! numerical integration of the box less its flooded boxes for the equilibrium conditions; for the Flooded
+//! Volumes of spec 0012, closed forms of a tank and a hold, worked out at the section below.
 //!
 //! The box hull L x B x D = 60 x 10 x 4 m floats at 1,200 t (density 1.0), KG 1.8 m, LCG at mid-length.
 //! A flooded double bottom 5 x 10 x 1 m under the middle of the hull at 95 % permeability takes away
@@ -12,8 +13,10 @@
 //! (y_c = 0) at height 0.5 m, so GZ = (M_y cos(phi) + (M_z / V - KG) sin(phi)) with M_y the transverse moment
 //! over the net volume V = 1200 and M_z the vertical moment less 47.5 x 0.5, over V.
 
-use libm::{cos, sin, sqrt, tan};
-use ovd_core::damage_stability::{DamageCriteria, Floats, FloodedBox, assess, righting_lever_at};
+use libm::{acos, cos, sin, sqrt, tan};
+use ovd_core::damage_stability::{
+    DamageCriteria, Floats, FloodedVolume, IntactInclusion, assess, righting_lever_at,
+};
 use ovd_core::hull::hull_form::{HullFormInputs, HullFormKind, HullShape, generate};
 use ovd_core::sections::{Gravity, SectionsTable, equilibrium};
 
@@ -53,20 +56,11 @@ fn flooded(
     z: (f64, f64),
     permeability: f64,
     name: &str,
-) -> FloodedBox {
-    FloodedBox {
-        name: name.to_string(),
-        x_aft_m: x.0,
-        x_fwd_m: x.1,
-        y_min_m: y.0,
-        y_max_m: y.1,
-        z_min_m: z.0,
-        z_max_m: z.1,
-        permeability,
-    }
+) -> FloodedVolume {
+    FloodedVolume::from_box(name, x, y, z, permeability)
 }
 
-fn centred_double_bottom(permeability: f64) -> FloodedBox {
+fn centred_double_bottom(permeability: f64) -> FloodedVolume {
     flooded((27.5, 32.5), (-5.0, 5.0), (0.0, 1.0), permeability, "DB")
 }
 
@@ -141,7 +135,7 @@ fn grid_buoyancy(
     c: f64,
     trim_deg: f64,
     heel_deg: f64,
-    boxes: &[FloodedBox],
+    boxes: &[FloodedVolume],
 ) -> (f64, f64, f64, f64) {
     let (th, ph) = (trim_deg.to_radians(), heel_deg.to_radians());
     let k = (-sin(th), -sin(ph) * cos(th), cos(ph) * cos(th));
@@ -159,13 +153,8 @@ fn grid_buoyancy(
                 }
                 let mut w = 1.0;
                 for b in boxes {
-                    if x > b.x_aft_m
-                        && x < b.x_fwd_m
-                        && y > b.y_min_m
-                        && y < b.y_max_m
-                        && z > b.z_min_m
-                        && z < b.z_max_m
-                    {
+                    let (y0, y1, z0, z1) = box_bounds(b);
+                    if x > b.x_aft_m && x < b.x_fwd_m && y > y0 && y < y1 && z > z0 && z < z1 {
                         w -= b.permeability;
                     }
                 }
@@ -178,6 +167,17 @@ fn grid_buoyancy(
         }
     }
     (v, mx / v, my / v, mz / v)
+}
+
+/// The (y, z) bounds of a box's section.
+fn box_bounds(b: &FloodedVolume) -> (f64, f64, f64, f64) {
+    let SpaceShape::Prism { section } = &b.shape else {
+        panic!("not a box: {b:?}");
+    };
+    section.iter().fold(
+        (f64::MAX, f64::MIN, f64::MAX, f64::MIN),
+        |(y0, y1, z0, z1), &(y, z)| (y0.min(y), y1.max(y), z0.min(z), z1.max(z)),
+    )
 }
 
 #[test]
@@ -576,4 +576,210 @@ fn the_marpol_criteria_need_the_range_the_lever_and_the_area() {
     let n = assess(&t, &flood, MASS, gravity(), 1.0, s, &strict);
     assert_eq!(n.floats, Floats::Yes);
     assert!(!n.ok);
+}
+
+// ---- Flooded Volumes: prisms, tanks and intact inclusions (spec 0012, D7) ----------------------------
+//
+// Closed forms worked out here. A Type C tank of outer radius R and overall length Lt with a head of
+// length a at each end (half an ellipsoid of semi-axes a, R, R) has the outer volume
+// pi R^2 (Lt - 2 a) + (4/3) pi R^2 a. The tank and a box are each symmetric about their centre point, so a
+// plane through that point, at any heel and trim, leaves exactly half of each below it.
+
+use ovd_core::sections::Waterplane;
+use ovd_core::tanks::{HeadKind, TankHead};
+
+const PI: f64 = core::f64::consts::PI;
+
+/// A hold 20 m long, 8 m wide, from the double bottom (1 m) to the deck (4 m), centred at (30, 0, 2.5).
+fn hold(permeability: f64, inclusions: Vec<IntactInclusion>) -> FloodedVolume {
+    FloodedVolume {
+        inclusions,
+        ..FloodedVolume::from_box("H1", (20.0, 40.0), (-4.0, 4.0), (1.0, 4.0), permeability)
+    }
+}
+
+/// A tank on the hold's centre: axis 21 to 39 m, at y 0 and z 2.5, outer diameter 2 m.
+fn tank_shape(kind: HeadKind, head_m: f64) -> SpaceShape {
+    SpaceShape::Tank {
+        axis_x0: 21.0,
+        axis_x1: 39.0,
+        y: 0.0,
+        z: 2.5,
+        outer_diameter: 2.0,
+        head: TankHead {
+            kind,
+            length_m: head_m,
+        },
+        inner_volume_m3: 0.0,
+    }
+}
+
+fn tank(kind: HeadKind, head_m: f64) -> IntactInclusion {
+    IntactInclusion {
+        name: "CT1C".to_string(),
+        x_aft_m: 21.0,
+        x_fwd_m: 39.0,
+        shape: tank_shape(kind, head_m),
+    }
+}
+
+fn tank_volume(head_m: f64) -> f64 {
+    PI * (18.0 - 2.0 * head_m) + 4.0 / 3.0 * PI * head_m
+}
+
+/// The waterplane at a heel and trim through the point (x, y, z).
+fn plane_through(heel_deg: f64, trim_deg: f64, p: (f64, f64, f64)) -> Waterplane {
+    let wp = Waterplane {
+        heel_deg,
+        trim_deg,
+        c: 0.0,
+    };
+    let (kx, ky, kz) = wp.normal();
+    Waterplane {
+        c: kx * p.0 + ky * p.1 + kz * p.2,
+        ..wp
+    }
+}
+
+#[test]
+fn a_box_is_the_prism_with_four_corners() {
+    let b = FloodedVolume::from_box("DB", (27.5, 32.5), (-5.0, 5.0), (0.0, 1.0), 0.95);
+    assert_eq!(
+        b.shape,
+        SpaceShape::Prism {
+            section: vec![(-5.0, 0.0), (5.0, 0.0), (5.0, 1.0), (-5.0, 1.0)]
+        }
+    );
+    assert_eq!((b.x_aft_m, b.x_fwd_m, b.permeability), (27.5, 32.5, 0.95));
+    assert!(b.inclusions.is_empty());
+}
+
+#[test]
+fn an_intact_tank_is_subtracted_from_the_flooded_hold_at_any_plane_through_their_centre() {
+    for (kind, head_m) in [
+        (HeadKind::Hemisphere, 1.0),
+        (HeadKind::Ellipsoidal2To1, 0.5),
+    ] {
+        let full = hold(1.0, vec![]);
+        let with_tank = hold(1.0, vec![tank(kind, head_m)]);
+        let deep = plane_through(0.0, 0.0, (30.0, 0.0, 1e6));
+        // wholly below: the hold less the tank's outer volume
+        assert!((full.water_m3(&deep) - 480.0).abs() < 1e-9);
+        let want = 480.0 - tank_volume(head_m);
+        let got = with_tank.water_m3(&deep);
+        assert!((got - want).abs() < 1e-9, "{kind:?}: {got} against {want}");
+        // any plane through the common centre: half of each
+        for (heel, trim) in [
+            (0.0, 0.0),
+            (10.0, 0.0),
+            (0.0, 2.0),
+            (25.0, -3.0),
+            (60.0, 5.0),
+        ] {
+            let wp = plane_through(heel, trim, (30.0, 0.0, 2.5));
+            let got = with_tank.water_m3(&wp);
+            let want = 0.5 * (480.0 - tank_volume(head_m));
+            assert!(
+                (got - want).abs() < 1e-6,
+                "{kind:?} heel {heel} trim {trim}: {got} against {want}"
+            );
+        }
+        // the permeability scales the water, the tank stays out of it
+        let wp = plane_through(10.0, 1.0, (30.0, 0.0, 2.5));
+        let p = FloodedVolume {
+            permeability: 0.95,
+            ..with_tank.clone()
+        };
+        assert!((p.water_m3(&wp) - 0.95 * with_tank.water_m3(&wp)).abs() < 1e-9);
+    }
+}
+
+/// A plane at distance h from the tank axis, parallel to it (any heel, no trim; the tank is a body of
+/// revolution about its axis, so the heel does not matter). The cylinder keeps the circular segment
+/// R^2 acos(-h / R) + h sqrt(R^2 - h^2) along its length; the two heads together are an ellipsoid of semi-axes
+/// a, R, R, which is a sphere of radius R scaled by a / R along x, so they keep (a / R) pi (R + h)^2 (2 R - h) / 3.
+#[test]
+fn a_flooded_tank_cut_parallel_to_its_axis_keeps_the_closed_form_segment() {
+    let r: f64 = 1.0;
+    for (kind, head_m) in [
+        (HeadKind::Hemisphere, 1.0),
+        (HeadKind::Ellipsoidal2To1, 0.5),
+    ] {
+        let breached = FloodedVolume {
+            name: "CT1C".to_string(),
+            x_aft_m: 21.0,
+            x_fwd_m: 39.0,
+            shape: tank_shape(kind, head_m),
+            permeability: 1.0,
+            inclusions: vec![],
+        };
+        for heel in [0.0_f64, 30.0, -70.0] {
+            for h in [0.4_f64, -0.7, 0.95] {
+                let (sp, cp) = (sin(heel.to_radians()), cos(heel.to_radians()));
+                // the point at distance h from the axis along the earth vertical (-sin phi, cos phi)
+                let wp = plane_through(heel, 0.0, (30.0, -sp * h, 2.5 + cp * h));
+                let segment = r * r * acos(-h / r) + h * sqrt(r * r - h * h);
+                let heads = head_m / r * PI * (r + h) * (r + h) * (2.0 * r - h) / 3.0;
+                let want = (18.0 - 2.0 * head_m) * segment + heads;
+                let got = breached.water_m3(&wp);
+                assert!(
+                    (got - want).abs() < 1e-6,
+                    "{kind:?} heel {heel} h {h}: {got} against {want}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn a_flooded_tank_takes_its_outer_volume_of_water_when_wholly_below() {
+    let breached = FloodedVolume {
+        name: "CT1C".to_string(),
+        x_aft_m: 21.0,
+        x_fwd_m: 39.0,
+        shape: tank_shape(HeadKind::Hemisphere, 1.0),
+        permeability: 0.95,
+        inclusions: vec![],
+    };
+    let deep = plane_through(0.0, 0.0, (30.0, 0.0, 1e6));
+    assert!((breached.water_m3(&deep) - 0.95 * tank_volume(1.0)).abs() < 1e-9);
+    let dry = plane_through(0.0, 0.0, (30.0, 0.0, 1.0));
+    assert_eq!(breached.water_m3(&dry), 0.0);
+}
+
+/// The box hull at 1,800 t with the hold flooded (permeability 1) and an intact tank in it, the tank wholly
+/// below the waterline. Wall-sided, upright, level: 600 T - 160 (T - 1) + V_tank = 1800, so
+/// T = (1800 - 160 - V_tank) / 440 = 3.6035 m, above the tank top (3.5 m). Without the tank T = 1640 / 440.
+#[test]
+fn the_damaged_hull_floats_on_the_intact_tank_in_its_flooded_hold() {
+    let t = hull();
+    let mass = 1800.0;
+    let g = Gravity {
+        lcg_m: L / 2.0,
+        tcg_m: 0.0,
+        kg_m: KG,
+    };
+    let eq = equilibrium(&t, mass, g, 0.0, 1.0).unwrap();
+    let s = (eq.waterplane.c, eq.waterplane.trim_deg);
+    let crit = DamageCriteria::ADN_2025;
+    let with_tank = assess(
+        &t,
+        &[hold(1.0, vec![tank(HeadKind::Hemisphere, 1.0)])],
+        mass,
+        g,
+        1.0,
+        s,
+        &crit,
+    );
+    assert_eq!(with_tank.floats, Floats::Yes);
+    assert!(with_tank.heel_deg.abs() < 1e-6 && with_tank.trim_deg.abs() < 1e-6);
+    let want = (mass - 160.0 - tank_volume(1.0)) / 440.0;
+    assert!(want > 3.5);
+    assert!(
+        (with_tank.draught_mid_m - want).abs() < 1e-6,
+        "{} {want}",
+        with_tank.draught_mid_m
+    );
+    let without = assess(&t, &[hold(1.0, vec![])], mass, g, 1.0, s, &crit);
+    assert!((without.draught_mid_m - (mass - 160.0) / 440.0).abs() < 1e-6);
 }
