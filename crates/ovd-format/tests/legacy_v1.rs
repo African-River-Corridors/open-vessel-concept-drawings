@@ -78,7 +78,7 @@ fn fill_writes_a_version_2_file_that_validates_without_those_warnings() {
     assert!(has(&filled.report.warnings, ADN));
     let text = filled.design.unwrap().to_text();
     let saved: Value = serde_json::from_str(&text).unwrap();
-    assert_eq!(saved["format_version"], 3);
+    assert_eq!(saved["format_version"], ovd_format::vdesign::FORMAT_VERSION);
     // Issue #274: the ruleset is no longer an input, so it is not written.
     assert!(saved["options"][0]["inputs"].get("ruleset").is_none());
     assert!(
@@ -116,7 +116,7 @@ fn the_design_session_opens_it_with_the_warnings_and_runs_it_as_igc_2g() {
     assert!(!text.contains("ADN_G"), "{text}");
     // Saving writes the current format.
     let saved: Value = serde_json::from_str(&session.save().unwrap()).unwrap();
-    assert_eq!(saved["format_version"], 3);
+    assert_eq!(saved["format_version"], ovd_format::vdesign::FORMAT_VERSION);
 }
 
 #[test]
@@ -145,8 +145,10 @@ fn a_version_1_dry_bulk_file_gets_only_the_note_about_the_new_hold_inputs() {
     let checked = check(&legacy("v1_dry_bulk_box_hold"), &Profile::built_in());
     assert_eq!(checked.report.errors, Vec::<String>::new());
     let w = &checked.report.warnings;
-    // Issue #448: and the stored block coefficient, now a result of the hull, is dropped.
-    assert_eq!(w.len(), 2, "{w:?}");
+    // Issue #448: and the stored block coefficient, now a result of the hull, is dropped. Issue
+    // #739: and the structure block of the Hull, which the file lacks.
+    assert_eq!(w.len(), 3, "{w:?}");
+    assert!(has(w, "before the structure block of the Hull"), "{w:?}");
     assert!(
         has(w, "fixed value the engine used before it was an input"),
         "{w:?}"

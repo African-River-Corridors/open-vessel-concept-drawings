@@ -107,7 +107,7 @@ fn new_writes_one_option_with_engine_version_and_si_inputs() {
     let dir = temp_dir("new-shape");
     let (_, design) = new_design(&dir);
     assert_eq!(design["format"], "vdesign");
-    assert_eq!(design["format_version"], 3);
+    assert_eq!(design["format_version"], 4);
     assert_eq!(design["engine_version"], env!("CARGO_PKG_VERSION"));
     assert_eq!(design["units"], "SI");
     let options = design["options"].as_array().unwrap();
@@ -872,8 +872,9 @@ fn validate_opens_a_version_1_adn_g_file_as_igc_2g_and_warns() {
         // Three for the version 1 changes, one for the dome diameter a version 1 file lacks (issue
         // #237), one for the hull end input a version 1 file lacks, one for the LPG carriage
         // condition the file lacks (issue #292: read as fully pressurised), one for the block
-        // coefficient the file stores, now a result of the hull (issue #448).
-        stdout(&out).contains("0 error(s), 7 warning(s)"),
+        // coefficient the file stores, now a result of the hull (issue #448), one for the structure
+        // block of the Hull the file lacks (issue #739).
+        stdout(&out).contains("0 error(s), 8 warning(s)"),
         "{}",
         stdout(&out)
     );
@@ -895,7 +896,7 @@ fn fill_writes_a_version_1_adn_g_file_as_a_version_2_igc_2g_file_and_warns() {
         "{err}"
     );
     let design = read_json(&out_file);
-    assert_eq!(design["format_version"], 3);
+    assert_eq!(design["format_version"], 4);
     let inputs = &design["options"][0]["inputs"];
     assert!(inputs.get("ruleset").is_none());
     assert!(inputs.get("adn_tank_cap_m3").is_none());
@@ -951,7 +952,7 @@ fn new_class_writes_an_option_defined_by_the_class_and_it_validates() {
     let out = ovd(&["new", "--class", "CEMT-VIa", path_str(&file)]);
     assert!(out.status.success(), "{}", stderr(&out));
     let design = read_json(&file);
-    assert_eq!(design["format_version"], 3);
+    assert_eq!(design["format_version"], 4);
     let inputs = &design["options"][0]["inputs"];
     assert_eq!(
         inputs["vessel_class"],

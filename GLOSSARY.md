@@ -222,6 +222,16 @@ _Avoid_: freeboard margin
 The displaced volume over the box of Length of Waterline × beam × Draught that holds it.
 _Avoid_: fullness, Cb without its length basis
 
+**Structure Layer**:
+The `structure` block of a Hull (frame spacing, longitudinal spacing, stock plate, thickness step, steel
+grade, structural wing deck) and the Frames it sets (spec 0013).
+_Avoid_: scantlings block, structure settings
+
+**Frame**:
+A named transverse reference plane of the Structure Layer: FR0 at the aft end of the Hull, then one at each
+frame spacing forward (spec 0013; OCX names frames the same way).
+_Avoid_: station (a Section of the Sections Table), frame line
+
 **Lightship**:
 The mass of the vessel ready for service, without cargo, consumables, stores or water ballast.
 _Avoid_: light weight, empty weight

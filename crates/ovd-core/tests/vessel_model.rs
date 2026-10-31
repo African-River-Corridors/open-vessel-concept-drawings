@@ -2,7 +2,8 @@
 //!
 //! Label: property - the model holds the hull it is given, the holds of the volume model split
 //! evenly with a bulkhead between each two, the ballast tanks of `compartments::ballast_tanks`
-//! unchanged, an inner bottom at the double-bottom height and no frames. Label: sourced - closed
+//! unchanged, an inner bottom at the double-bottom height, and frames FR0, FR1, ... at the frame
+//! spacing of the structure block (spec 0013, issue #739). Label: sourced - closed
 //! form, the hold prisms sum to the volume model's hold volume (section area times cargo zone
 //! length, `containment_inner_volume_m3`), and the hull clips them at the deck: the trapezoid from
 //! the inner bottom to the deck times the cargo zone length (issue #455).
@@ -10,7 +11,7 @@
 use ovd_core::barge_capacity::{BargeCapacityInputs, compute};
 use ovd_core::compartments::{SpaceKind, ballast_tanks};
 use ovd_core::hydrostatics::Hull;
-use ovd_core::vessel_model::{VesselModelInputs, assemble};
+use ovd_core::vessel_model::{StructureBlock, VesselModelInputs, assemble, frames_of};
 
 fn dry_bulk(n_holds: i64) -> VesselModelInputs {
     let mut i = BargeCapacityInputs::new(80.0, 11.4, 4.0);
@@ -24,6 +25,7 @@ fn dry_bulk(n_holds: i64) -> VesselModelInputs {
         capacity: i,
         result: r,
         hull,
+        structure: StructureBlock::default(),
     }
 }
 
@@ -34,7 +36,7 @@ fn a_dry_bulk_barge_has_its_holds_bulkheads_ballast_tanks_and_decks() {
         let m = assemble(&inp);
         let r = &inp.result;
         assert_eq!(m.hull, inp.hull);
-        assert!(m.frames.is_empty());
+        assert_eq!(m.structure, StructureBlock::default());
         let holds: Vec<_> = m
             .spaces
             .iter()
@@ -97,4 +99,58 @@ fn a_dry_bulk_barge_has_its_holds_bulkheads_ballast_tanks_and_decks() {
                 .any(|s| s.space.name == "FP1C" && s.is_cut())
         );
     }
+}
+
+/// Spec 0013 (issue #739): the frames are named reference planes FR0, FR1, ... at the frame
+/// spacing, from the aft end of the hull to its forward end.
+#[test]
+fn frames_are_named_reference_planes_at_the_frame_spacing() {
+    let mut inp = dry_bulk(3);
+    let x0 = inp.hull.sections[0].x;
+    let x1 = inp.hull.sections[inp.hull.sections.len() - 1].x;
+    for spacing in [3.66, 2.5, 0.7] {
+        inp.structure.frame_spacing_m = spacing;
+        let m = assemble(&inp);
+        assert_eq!(m.structure.frame_spacing_m, spacing);
+        let n = ((x1 - x0) / spacing).floor() as usize + 1;
+        assert_eq!(m.frames.len(), n, "spacing {spacing}");
+        for (i, f) in m.frames.iter().enumerate() {
+            assert_eq!(f.name, format!("FR{i}"));
+            assert!((f.x_m - (x0 + spacing * i as f64)).abs() < 1e-9);
+            assert!(f.x_m <= x1 + 1e-9);
+        }
+        // The last frame is less than one spacing from the forward end.
+        assert!(x1 - m.frames[n - 1].x_m < spacing);
+        assert_eq!(m.frames, frames_of(&inp.hull, spacing));
+    }
+}
+
+/// A spacing that is not a positive finite number gives no frames (validation refuses it first).
+#[test]
+fn no_frames_without_a_positive_spacing() {
+    let inp = dry_bulk(1);
+    for s in [0.0, -1.0, f64::NAN, f64::INFINITY] {
+        assert!(frames_of(&inp.hull, s).is_empty(), "{s}");
+    }
+}
+
+/// Spec 0013, "Format": the defaults of the structure block.
+#[test]
+fn the_structure_block_has_the_spec_defaults() {
+    let s = StructureBlock::default();
+    assert_eq!(s.frame_spacing_m, 3.66);
+    assert_eq!(s.longitudinal_spacing_mm, 700.0);
+    assert_eq!((s.stock_plate_width_m, s.stock_plate_length_m), (3.0, 12.0));
+    assert_eq!(s.thickness_step_mm, 0.5);
+    assert_eq!(s.steel_grade, ovd_core::vessel_model::SteelGrade::Ordinary);
+    assert!(!s.structural_wing_deck);
+    // The panel model's own defaults are the same numbers.
+    assert_eq!(
+        s.frame_spacing_m,
+        ovd_core::hull_panels::DEFAULT_WEB_SPACING_M
+    );
+    assert_eq!(
+        s.longitudinal_spacing_mm,
+        ovd_core::hull_panels::DEFAULT_LONGITUDINAL_SPACING_MM
+    );
 }

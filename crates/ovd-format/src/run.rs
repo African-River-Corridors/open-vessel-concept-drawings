@@ -142,6 +142,10 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     put("hull_form", "hull_form");
     put("hull_offsets", "hull_offsets");
     put("shipd_parameters", "shipd_parameters");
+    // Issue #739 (spec 0013): the `structure` block of the Hull, for the Vessel Model.
+    for name in crate::vdesign::STRUCTURE_INPUTS {
+        put(name, name);
+    }
     put("freeboard_min_m", "min_freeboard_m");
     put("lightship_k_t_per_m3", "lightship_factor_t_per_m3");
     put("fill_ratio", "fill_ratio");

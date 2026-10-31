@@ -148,6 +148,30 @@ fn opt_float(p: &Map<String, Value>, key: &str) -> R<Option<f64>> {
     }
 }
 
+/// The `structure` block of the Hull (issue #739, spec 0013): each input as given, or the spec
+/// default when it is left out. No result reads it; the Vessel Model sets its frames from it.
+fn structure_block(p: &Map<String, Value>) -> R<ovd_core::vessel_model::StructureBlock> {
+    use ovd_core::vessel_model::{SteelGrade, StructureBlock};
+    let d = StructureBlock::default();
+    let steel_grade = match p.get("steel_grade") {
+        None | Some(Value::Null) => d.steel_grade,
+        Some(Value::String(k)) => match SteelGrade::from_key(k) {
+            Some(g) => g,
+            None => return bad(format!("`params.steel_grade` {k:?} is not a steel grade")),
+        },
+        Some(_) => return bad("`params.steel_grade` must be a text".to_string()),
+    };
+    Ok(StructureBlock {
+        frame_spacing_m: get_or(p, "frame_spacing_m", d.frame_spacing_m)?,
+        longitudinal_spacing_mm: get_or(p, "longitudinal_spacing_mm", d.longitudinal_spacing_mm)?,
+        stock_plate_width_m: get_or(p, "stock_plate_width_m", d.stock_plate_width_m)?,
+        stock_plate_length_m: get_or(p, "stock_plate_length_m", d.stock_plate_length_m)?,
+        thickness_step_mm: get_or(p, "thickness_step_mm", d.thickness_step_mm)?,
+        steel_grade,
+        structural_wing_deck: p.get("structural_wing_deck").is_some_and(truthy),
+    })
+}
+
 /// Python `min(items, key=value)`: the first of equal values (NaN never replaces the first).
 fn min_item(items: &[(&str, f64)]) -> (String, f64) {
     let mut best = items[0];
@@ -1423,6 +1447,7 @@ fn simulate_once(p: &Map<String, Value>, measured: &mut Measured, rules: &RunRul
         capacity: inp.clone(),
         result: r.clone(),
         hull: hull.table.clone(),
+        structure: structure_block(p)?,
     });
     // Issue #448: Cb and the hydrostatics at the laden level draught; the reported draught is the
     // one at mid-length of the free-trim float when the hull has LCG data (a dry bulk hull with
@@ -2970,6 +2995,8 @@ fn simulate_gas(
     drawing_parts.extend(midship_outline(&fit_hull));
     let drawing = drawing_json(drawing_parts);
     let air_loaded = r.air_draft_top_above_keel_m - t;
+    // Issue #739: the `structure` block of the Hull, for the Vessel Model.
+    let structure = structure_block(p)?;
     with_blocks_and_text_ids(
         powering_block.clone(),
         sightline_json(r),
@@ -3058,6 +3085,7 @@ fn simulate_gas(
                     capacity: f.engine_inputs.clone(),
                     result: f.engine_result.clone(),
                     hull: fit_hull.table.clone(),
+                    structure,
                 }),
                 ..Measured::default()
             },

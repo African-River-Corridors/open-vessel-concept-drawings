@@ -1,6 +1,6 @@
 {
   "format": "vdesign",
-  "format_version": 3,
+  "format_version": 4,
   "engine_version": "0.2.0",
   "units": "SI",
   "options": [
@@ -61,6 +61,34 @@
         },
         "camber_m": {
           "value": 0.0,
+          "source": "default"
+        },
+        "frame_spacing_m": {
+          "value": 3.66,
+          "source": "default"
+        },
+        "longitudinal_spacing_mm": {
+          "value": 700.0,
+          "source": "default"
+        },
+        "stock_plate_width_m": {
+          "value": 3.0,
+          "source": "default"
+        },
+        "stock_plate_length_m": {
+          "value": 12.0,
+          "source": "default"
+        },
+        "thickness_step_mm": {
+          "value": 0.5,
+          "source": "default"
+        },
+        "steel_grade": {
+          "value": "ordinary",
+          "source": "default"
+        },
+        "structural_wing_deck": {
+          "value": false,
           "source": "default"
         },
         "min_freeboard_m": {

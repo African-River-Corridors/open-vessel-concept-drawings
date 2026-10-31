@@ -189,6 +189,22 @@ OPTIONAL_INPUT_CASES = (
     # a design that types one has the same results as one that gives none.
     ("downflooding_angle_deg", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"downflooding_angle_deg": 60.0}),
+    # The structure block of the Hull (issue #739, spec 0013): inputs only, no result reads them yet, so
+    # a design that sets them has the same results as one that leaves them out.
+    ("frame_spacing_m", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"frame_spacing_m": 2.4}),
+    ("longitudinal_spacing_mm", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"longitudinal_spacing_mm": 610.0}),
+    ("stock_plate_width_m", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
+     {"stock_plate_width_m": 2.5}),
+    ("stock_plate_length_m", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
+     {"stock_plate_length_m": 10.0}),
+    ("thickness_step_mm", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"thickness_step_mm": 1.0}),
+    ("steel_grade", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"steel_grade": "ordinary"}),
+    ("structural_wing_deck", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"structural_wing_deck": True}),
     # The lock (issue #358): the check of the overall size.
     ("lock_length_m", "bauxite", "box_hold", "self_propelled", 90.0, 14.0, 4.5, {"lock_length_m": 85.0}),
     ("lock_width_m", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5, {"lock_width_m": 13.0}),

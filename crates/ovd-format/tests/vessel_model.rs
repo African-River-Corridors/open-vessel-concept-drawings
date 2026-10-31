@@ -126,7 +126,12 @@ fn every_fixture_option_has_its_hull_the_ga_bulkheads_named_spaces_and_their_cap
             assert!(!s.space.kind.key().is_empty());
             assert!(s.volume_m3 > 0.0, "{at}: {}", s.space.name);
         }
-        assert!(model.frames.is_empty());
+        // Issue #739: the frames at the frame spacing of the structure block, FR0 at the aft end.
+        let spacing = model.structure.frame_spacing_m;
+        assert_eq!(model.frames[0].name, "FR0", "{at}");
+        for w in model.frames.windows(2) {
+            assert!((w[1].x_m - w[0].x_m - spacing).abs() < 1e-9, "{at}");
+        }
         assert_eq!(model.decks[0].name, "main_deck");
         let kinds: Vec<SpaceKind> = model.spaces.iter().map(|s| s.space.kind).collect();
         let cargo = if file.starts_with("crude") {

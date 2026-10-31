@@ -139,6 +139,57 @@
       "status": "estimate",
       "basis": "For an offsets hull: the typed or imported offsets table, one row per point (station_x_m, y_m, z_m), keel to deck centre line at each station (spec 0008, \"Offsets table\"). none: no table. `ovd hull import` or the app's Import button reads an offsets CSV into it, and the Option's length, beam and depth take the table's values (issue #451)."
     },
+    "frame_spacing_m": {
+      "default": 3.66,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 20 },
+      "soft": { "min": 1.5, "max": 3.66 },
+      "status": "sourced",
+      "source": "ABS Rules for Building and Classing Steel Barges, Part 5 July 2025 (the Part 5 of the January 2026 Rules, Notices Table 1), 5-1-2/5.7.1: solid floors of a longitudinally framed double bottom spaced not more than 3.66 meters apart (the same in the July 2021 edition)",
+      "basis": "The spacing of the web frames and floors, a rule maximum (spec 0013). The frames FR0, FR1, ... of the Vessel Model are named reference planes at this spacing from the aft end. The panel model cites the same paragraph of the 2021 edition; the rule set of the current edition (issue #740) carries it as a Rule. A file saved before format version 4 reads 3.66 m"
+    },
+    "longitudinal_spacing_mm": {
+      "default": 700,
+      "unit": "mm",
+      "hard": { "gt": 0, "le": 2000 },
+      "soft": { "min": 500, "max": 915 },
+      "status": "estimate",
+      "basis": "The spacing of the longitudinals (spec 0013): an estimate inside the 610 to 915 mm frame spacings that ABS Steel Barges 5-1-2/5.17 (Part 5, July 2025; also July 2021) names for inner-bottom plating, and the value the panel model used. A file saved before format version 4 reads 700 mm"
+    },
+    "stock_plate_width_m": {
+      "default": 3.0,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 5 },
+      "soft": { "min": 1.5, "max": 3.95 },
+      "status": "estimate",
+      "basis": "The width of the stock plate a yard buys (spec 0013, D11). A yard's stock size is its own choice; no open source gives a typical one. Shipbuilding heavy plate is rolled up to about 3.95 m wide (voestalpine), the soft maximum. A file saved before format version 4 reads 3.0 m"
+    },
+    "stock_plate_length_m": {
+      "default": 12.0,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 30 },
+      "soft": { "min": 6.0, "max": 18.7 },
+      "status": "estimate",
+      "basis": "The length of the stock plate a yard buys (spec 0013, D11). An estimate, as the width. Heavy plate is rolled up to about 18.7 m long (voestalpine) and 28 m (Dillinger); the soft maximum is the shorter. A file saved before format version 4 reads 12.0 m"
+    },
+    "thickness_step_mm": {
+      "default": 0.5,
+      "unit": "mm",
+      "hard": { "gt": 0, "le": 5 },
+      "soft": { "min": 0.5, "max": 2.0 },
+      "status": "estimate",
+      "basis": "The step the rule-net plate thickness is rounded up to, to give the ordered thickness (spec 0013, D10). An estimate. A file saved before format version 4 reads 0.5 mm"
+    },
+    "steel_grade": {
+      "default": "ordinary",
+      "status": "estimate",
+      "basis": "The hull steel grade (spec 0013). Ordinary-strength hull steel, material factor Q = 1, as the panel model uses; the higher-strength grades come with the rule set of the current ABS edition. A file saved before format version 4 reads ordinary"
+    },
+    "structural_wing_deck": {
+      "default": false,
+      "status": "estimate",
+      "basis": "Whether the wing deck counts in the hull girder (spec 0013, D15). Off: the conservative default of issue #722; the plate model scantles it as a strength deck when on (a later ticket). A file saved before format version 4 reads false"
+    },
     "min_freeboard_m": {
       "default": 0.3,
       "unit": "m",
